@@ -1,0 +1,7 @@
+[submodule]
+	recurse = true
+[core]
+	excludesfile = ~/.gitignore.global
+[user]
+	name = Alexandru Ciobanu
+	email = alex+git@ciobanu.org
