@@ -1,0 +1,11 @@
+﻿<settings>
+  <setting name="window-size-width" type="System.Int32">1100</setting>
+  <setting name="window-size-height" type="System.Int32">750</setting>
+  <setting name="ruler-metric" type="System.Int32">0</setting>
+  <setting name="window-maximized" type="System.Boolean">False</setting>
+  <setting name="ruler-shown" type="System.Boolean">False</setting>
+  <setting name="image-tabs-shown" type="System.Boolean">True</setting>
+  <setting name="toolbar-shown" type="System.Boolean">True</setting>
+  <setting name="pixel-grid-shown" type="System.Boolean">False</setting>
+  <setting name="last-dialog-directory" type="System.String">/home/alex/Pictures</setting>
+</settings>
