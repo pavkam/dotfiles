@@ -14,7 +14,9 @@ behave mswin
 let mapleader=","
 let maplocalleader="\\"
 
-set showmode
+set noshowmode
+set noruler
+set noshowcmd
 set nowrap
 set tabstop=4
 set softtabstop=4
@@ -53,7 +55,7 @@ set termencoding=utf-8
 set encoding=utf-8
 set lazyredraw
 set laststatus=2
-set cmdheight=2
+set cmdheight=1
 
 " Vim behaviour
 set hidden
@@ -87,7 +89,9 @@ nnoremap <leader>N :setlocal number!<cr>
 nnoremap / /\v
 vnoremap / /\v
 
-nnoremap <leader>r :let @/='\<<C-R>=expand("<cword>")<CR>\>'<CR>:set hls<CR>:%s//
+nnoremap <C-H> :let @/='\<<C-R>=expand("<cword>")<CR>\>'<CR>:set hls<CR>:%s//
+inoremap <C-H> <Esc>:let @/='\<<C-R>=expand("<cword>")<CR>\>'<CR>:set hls<CR>:%s//
+
 vnoremap <BS> d
 
 " Buffer switching using ALT + Left & Right
@@ -133,30 +137,30 @@ nnoremap <Tab> <c-w>w
 
 " File management
 noremap <C-O> :FZF<CR>
-inoremap <C-O> <Esc>:FZF<CR>
+inoremap <C-O> <C-O>:FZF<CR>
 vnoremap <C-O> <C-C>:FZF<CR>
 
 noremap <C-T> :NERDTreeToggle<CR>
 vnoremap <C-T> <C-C>:NERDTreeToggle<CR>
-inoremap <C-T> <Esc>:NERDTreeToggle<CR>gi
+inoremap <C-T> <C-O>:NERDTreeToggle<CR>
 
 noremap <C-S> :update<CR>
 noremap <F2> :update<CR>
 vnoremap <C-S> <C-C>:update<CR>
 vnoremap <F2> <C-C>:update<CR> 
-inoremap <C-S> <Esc>:update<CR>gi
-inoremap <F2> <ESC>:update<CR>gi
+inoremap <C-S> <C-O>:update<CR>
+inoremap <F2> <C-O>:update<CR>
 
 " Editor stuff
 noremap <C-F> :BLines<CR>
-inoremap <C-F> <Esc>:BLines<CR>
+inoremap <C-F> <C-O>:BLines<CR>
 vnoremap <C-F> <C-C>:BLines<CR>
 
 " Tab handling
 noremap <S-Tab> <<
 inoremap <S-Tab> <C-d>
 
-" source $VIMRUNTIME/mswin.vim
+" Editor and selection mapping.
 
 if has("clipboard")
     vnoremap <C-X> "+x
@@ -178,6 +182,9 @@ else
     cmap <S-Insert>		<Esc>pi
     imap <C-v> <Esc>pi
 endif
+
+inoremap <C-X> <C-O>dd
+nnoremap <C-X> dd
 
 imap <S-Insert>		<C-V>
 vmap <S-Insert>		<C-V>
@@ -267,6 +274,7 @@ autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_
 autocmd BufWinEnter * silent NERDTreeMirror
 
 let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
 let g:airline_solarized_bg='dark'
 
 let g:fzf_buffers_jump = 1

@@ -1,0 +1,12 @@
+# https://github.com/git/git/blob/master/userdiff.c
+
+*.css	diff=css
+*.go	diff=golang
+*.html	diff=html
+*.md	diff=markdown
+*.php	diff=php
+*.py	diff=python
+*.rb	diff=ruby
+*.sh	diff=bash
+*.java	diff=java
+*.kt	diff=kotlin

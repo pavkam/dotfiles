@@ -59,7 +59,9 @@ function link() {
 
     HAS_BACKUP=0
     if [ -e "$HOME/$TO" ]; then
+        warn "LINK: The file or directory '$HOME/$TO' already exists. Backing up and replacing..."
 
+        rm -r -f -d "$HOME/$TO.old" >/dev/null 2>/dev/null
         mv "$HOME/$TO" "$HOME/$TO.old" >/dev/null 2>/dev/null
         if [ $? -ne 0 ]; then
             err "LINK: Failed to backup file '$HOME/$TO'."
@@ -68,9 +70,15 @@ function link() {
         HAS_BACKUP=1
     fi
 
-    DIR_OF_TO="`dirname -- $HOME/$TO`"
+    DIR_OF_TO="`dirname -- '$HOME/$TO'`"
     if [ ! -d "$DIR_OF_TO" ]; then
+        info "LINK: The destination directory '$DIR_OF_TO' does not exist. Creating..."
         mkdir -p "$DIR_OF_TO" >/dev/null 2>/dev/null
+        if [ $? -ne 0 ]; then
+            err "LINK: Failed to create the destination directory '$DIR_OF_TO'."
+        fi
+
+        info "LINK: Created the destination directory '$DIR_OF_TO'."
     fi
 
     ln -s "$DF/$FROM" "$HOME/$TO" 2>/dev/null
@@ -80,7 +88,6 @@ function link() {
             mv "$HOME/$TO.old" "$HOME/$TO" >/dev/null 2>/dev/null
             if [ $? -ne 0 ]; then
                 warn "LINK: Failed to restore file '$HOME/$TO' from its backup."
-        
             fi
         fi
 
@@ -192,6 +199,8 @@ info "LINK: Creating all symlinks..."
 link .dir_colors
 link .gitconfig
 link .gitignore.global
+link .gitattributes.global
+link .editorconfig
 link .vimrc
 link Pipfile
 link .zshrc
@@ -208,6 +217,8 @@ link .config/hexchat
 link .config/caffeine
 link .config/Pinta
 link .config/Kvantum
+link .config/Code/User/settings.json
+link .config/Code/User/settings.json "./.config/Code - OSS/User/settings.json"
 
 # Setup vim
 info "VIM: Setting up vim..."

@@ -1,7 +1,63 @@
 [submodule]
 	recurse = true
+
+[pull]
+	ff = only
+
+[fetch]
+	prune = true
+
+[grep]
+	extendedregexp = true
+	linenumber = true
+
 [core]
 	excludesfile = ~/.gitignore.global
+	attributesfile = ~/.gitattributes.global
+	editor = vim
+	whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
+    pager = less --tabs 4
+	untrackedcache = true
+	autocrlf = input
+
+[init]
+	defaultBranch = main
+
 [user]
 	name = Alexandru Ciobanu
 	email = alex+git@ciobanu.org
+
+[alias]
+	ci = commit
+    co = checkout
+    st = status -sb
+	au = add --update
+	aa = add --all
+	lg = log --decorate=short --graph --pretty=format:\"%C(red)%h%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset) %C(blue)%C(bold)<%an>%C(auto)%d\"
+	sl = stash list --pretty=format:\"%C(red)%gd%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset)\"
+	ba = branch --all --list --verbose --verbose
+
+[color]
+	ui = true
+    branch = auto
+    diff = auto
+    interactive = auto
+    pager = true
+    status = auto
+
+[color "branch"]
+	current = yellow bold
+	local = green bold
+	remote = cyan bold
+
+[color "diff"]
+	meta = yellow bold
+	frag = magenta bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse
+
+[color "status"]
+	added = green bold
+	changed = yellow bold
+	untracked = red bold
