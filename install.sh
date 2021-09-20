@@ -22,7 +22,7 @@ DFN=`realpath $0`
 DF=`dirname $DFN`
 
 function die() {
-    echo "Terminating due to an error!"
+    echo "Terminating due to an error! Check '$LOG_FILE' for details."
 
     if [ $$ -eq $TOP_PID ]; then
         exit 1
@@ -38,13 +38,23 @@ NORMAL=`tput sgr0`
 CLEARRET="\r`tput el`"
 ROLLING=0
 
+function log() {
+    TIME=`date '+%d/%m/%Y %H:%M:%S'`
+    echo "[$TIME] $1" | sed -r "s/\\x1B\\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g" >> $LOG_FILE
+}
+
+function log_echo() {
+    log "$1"
+    echo "$1"
+}
+
+
 function whoops() {
     if [ $ROLLING -eq 1 ]; then
         echo
     fi
 
-    echo "Whoops: $1" >> $LOG_FILE
-    echo "$RED      Whoops: $1"
+    log_echo "$RED      Whoops: $1"
     die
 }
  
@@ -53,8 +63,7 @@ function err() {
         echo
     fi
 
-    echo "Error: $1" >> $LOG_FILE
-    echo "$RED      Error: $1"
+    log_echo "$RED      Error: $1"
     die
 }
 
@@ -63,8 +72,7 @@ function warn() {
         echo
     fi
 
-    echo "Warning: $1" >> $LOG_FILE
-    echo "$BROWN    Warning: $1"
+    log_echo "$BROWN    Warning: $1"
     ROLLING=0
 }
 
@@ -72,16 +80,31 @@ function info() {
     if [ $ROLLING -eq 1 ]; then
         echo
     fi
-
-    echo "$1" >> $LOG_FILE
-    echo "${NORMAL}$1"   
+    
+    log_echo "${NORMAL}$1"   
     ROLLING=0
 }
 
 function roll() {
-    echo "$1" >> $LOG_FILE
+    log "$1"
     echo -ne "${CLEARRET}${NORMAL}$1"
     ROLLING=1
+}
+
+# Deal with backups.
+
+BACKUP=$HOME/.dotfiles.backup
+
+function force_dir() {
+    if [ "$1" = "" ]; then
+        whoops "Expected one argument to function."
+    fi  
+ 
+    DN=`dirname -- "$1"`
+    mkdir -p "$DN" >/dev/null 2>/dev/null 
+    if [ $? -ne 0 ]; then
+        err "Failed to create the directory '$DN'."
+    fi  
 }
 
 function link() {
@@ -102,43 +125,47 @@ function link() {
     roll "Creating a symlink from '$DF/$FROM' to '$HOME/$TO'..."
 
     HAS_BACKUP=0
+    DO_LN=1
     if [ -e "$HOME/$TO" ]; then
-        warn "The file or directory '$HOME/$TO' already exists. Backing up and replacing..."
+        roll "The file or directory '$HOME/$TO' already exists. Checking if backup necessary..."
 
-        rm -r -f -d "$HOME/$TO.old" >/dev/null 2>/dev/null
-        mv "$HOME/$TO" "$HOME/$TO.old" >/dev/null 2>/dev/null
-        if [ $? -ne 0 ]; then
-            err "Failed to backup file '$HOME/$TO'."
-        fi
-
-        HAS_BACKUP=1
-    fi
-
-    DIR_OF_TO=`dirname -- "$HOME/$TO"`
-    if [ ! -d "$DIR_OF_TO" ]; then
-        roll "The destination directory '$DIR_OF_TO' does not exist. Creating..."
-        mkdir -p "$DIR_OF_TO" >/dev/null 2>/dev/null
-        if [ $? -ne 0 ]; then
-            err "Failed to create the destination directory '$DIR_OF_TO'."
-        fi
-
-        roll "Created the destination directory '$DIR_OF_TO'."
-    fi
-
-    ln -s "$DF/$FROM" "$HOME/$TO" 2>/dev/null
-
-    if [ $? -ne 0 ]; then
-        if [ $HAS_BACKUP -eq 1 ]; then
-            mv "$HOME/$TO.old" "$HOME/$TO" >/dev/null 2>/dev/null
+        CHECK_DEST=`readlink -f "$HOME/$TO"`
+        if [ "$CHECK_DEST" != "$DF/$FROM" ]; then
+            warn "Backing up '$HOME/$TO'..."
+        
+            force_dir "$BACKUP/$TO"
+        
+            rm -r -f -d "$BACKUP/$TO" >/dev/null 2>/dev/null
+            mv "$HOME/$TO" "$BACKUP/$TO" >/dev/null 2>/dev/null
             if [ $? -ne 0 ]; then
-                warn "LINK: Failed to restore file '$HOME/$TO' from its backup."
+                err "Failed to backup file '$HOME/$TO'."
             fi
-        fi
 
-        err "Symlink between '$DF/$FROM' and '$HOME/$TO' failed."
-    else
-        roll "Symlink between '$DF/$FROM' and '$HOME/$TO' created."
+            roll "Backed up file '$HOME/$TO' to `$BACKUP/$TO`."
+            HAS_BACKUP=1
+        else
+            DO_LN=0
+            roll "The file of directory '$HOME/$TO' points to .dotfiles. No backup will be performed." 
+        fi
     fi
+
+    if [ $DO_LN -eq 1 ]; then
+        force_dir "$HOME/$TO"
+        ln -s "$DF/$FROM" "$HOME/$TO" 2>/dev/null
+     
+        if [ $? -ne 0 ]; then
+            if [ $HAS_BACKUP -eq 1 ]; then
+                mv "$BACKUP/$TO" "$HOME/$TO" >/dev/null 2>/dev/null
+                if [ $? -ne 0 ]; then
+                    warn "Failed to restore file '$HOME/$TO' from its backup."
+                fi
+            fi
+
+            err "Symlink between '$DF/$FROM' and '$HOME/$TO' failed."
+        else
+            roll "Symlink between '$DF/$FROM' and '$HOME/$TO' created."
+        fi
+    fi  
 }
 
 function check_installed() {
@@ -204,7 +231,7 @@ function is_package_installed() {
     fi
 }
 
- function install_packages() {
+function install_packages() {
     if [ "$1" = "" ]; then
         whoops "Expected one arguments to function."
     fi
@@ -215,45 +242,80 @@ function is_package_installed() {
         err "Failed to install one or more packages from the list ['$1']."
     fi
 }
- 
+
+function check_or_install_zsh() {
+    roll "Checking if the the current shell is zsh..."
+    SHELL_NAME=`basename -- $SHELL`
+    if [ "$SHELL_NAME" != "zsh" ]; then
+        warn "The current shell ('$SHELL_NAME') is not zsh. Setting zsh as default..."
+        chsh -s $(which zsh)
+        if [ $? -ne 0 ]; then
+            err "Failed to switch shell to zsh."
+        fi
+    else
+        roll "Nothing to do, current shell is already set to zsh."
+    fi
+}
+
 info ".----------------------------------------------------------------------."
 info "| Welcome to pavkam's .dotfiles installer. Hope you enjoy the proces!  |"
 info "| This installer will perform the following changes:                   |"
 info "|     *   Installs dependencies (on Arch-based distros),               |"
 info "|     *   Configures zsh, oh-my-zsh and plugins,                       |"
-info "|     *   Configures git and its settings                              |"
-info "|     *   Confugures vim, Vundle and plugins                           |"
+info "|     *   Configures git and its settings,                             |"
+info "|     *   Configures vim, Vundle and plugins.                          |"
 info ":----------------------------------------------------------------------:"
 info "| ${RED}WARNING: This installer comes with absolutely no guarantees!${NORMAL}         |"
 info "| ${RED}Please backup your home directory for safety reasons.${NORMAL}                |"
 info "------------------------------------------------------------------------"
 info
 
-# Check dependencies (commands that should be installed)
-roll "Checking dependencies..."
-
-PACKS=(
-    yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm pyenv tree gcc go automake binutils bc 
-    bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono perl pyenv python python2 ruby wget 
-    zip dotnet-runtime dotnet-sdk
-)
-
-TO_INSTALL=""
-for i in "${PACKS[@]}"
-do
-    is_package_installed $i
+# Setup the backup
+roll "Checking if the backup directory '$BACKUP' already exists..." 
+if [ ! -d "$BACKUP" ]; then
+    roll "The backup directory '$BACKUP' does not exist. Creating..." 
+    mkdir -p "$BACKUP" >/dev/null 2>/dev/null
     if [ $? -ne 0 ]; then
-        TO_INSTALL="$TO_INSTALL $i"
+        err "Failed to create the backup directory '$BACKUP'."
     fi
-done
 
-if [ "$TO_INSTALL" != "" ]; then
-    install_packages "$TO_INSTALL"
+    roll "Created the backup directory '$BACKUP'."  
+else
+    roll "The backup directory '$BACKUP' already exists."
+fi  
+
+# Check dependencies (commands that should be installed)
+roll "Checking your GNU/Linux distribution..."
+
+DISTRO_ARCH=`cat /etc/arch-release`
+if [ $? -ne 0 ]; then
+    warn "This GNU/Linux distribution is no Arch-based. Install the dependancies by hand."
+else
+    roll "This is an Arch-based ditribution '$DISTRO_ARCH'. Checking installed packages..."
+
+    PACKS=(
+        yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm pyenv tree gcc go automake binutils bc 
+        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono perl pyenv python python2 ruby wget 
+        zip dotnet-runtime dotnet-sdk 
+    )
+
+    TO_INSTALL=""
+    for i in "${PACKS[@]}"
+    do
+        is_package_installed $i
+        if [ $? -ne 0 ]; then
+            TO_INSTALL="$TO_INSTALL $i"
+        fi
+    done
+
+    if [ "$TO_INSTALL" != "" ]; then
+        install_packages "$TO_INSTALL"
+    fi
 fi
 
 # ...
 
-DEPS=( git vim zsh fzf fd "$HOME/.nvm/nvm.sh" mc gcc java diff make less rg sed bat head chsh go node npm pyenv tree )
+DEPS=( git vim zsh fzf fd "$HOME/.nvm/nvm.sh" mc gcc java diff make less rg sed bat head chsh go node npm pyenv tree ln readlink )
 MUST_DIE=0
 for i in "${DEPS[@]}"
 do
@@ -300,17 +362,8 @@ link Pipfile
 link .zshrc
 link .zshrc.p10k
 link .nuget/NuGet/NuGet.Config
-link .config/zoomus.conf
-link .config/vlc
-link .config/qt5ct
-link .config/nautilus
 link .config/mc
-link .config/lutris
 link .config/htop
-link .config/hexchat
-link .config/caffeine
-link .config/Pinta
-link .config/Kvantum
 link .config/Code/User/settings.json
 link .config/Code/User/settings.json "./.config/Code - OSS/User/settings.json"
 
@@ -340,4 +393,6 @@ roll "Building YouCompleteMe plugin..."
     fi
 )
 
-roll "All done! You're good to go!"
+info
+info "All done! You're good to go!"
+info "Consider creating a new '~/.zshrc.local' file to hold your personal settings."
