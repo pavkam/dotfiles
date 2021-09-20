@@ -14,7 +14,15 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# "Die" handling. Wil be used to exit the shell when requested by child script (functions).
+# Colors .
+RED=`tput setaf 1`
+BROWN=`tput setaf 3`
+NORMAL=`tput sgr0`
+BLUE=`tput setaf 4`
+CLEARRET="\r`tput el`"
+ROLLING=0             
+
+# Death
 trap "exit 1" TERM
 export TOP_PID=$$
 
@@ -22,7 +30,8 @@ DFN=`realpath $0`
 DF=`dirname $DFN`
 
 function die() {
-    echo "Terminating due to an error! Check '$LOG_FILE' for details."
+    echo
+    echo "${RED}Terminating due to an error! Check '$LOG_FILE' for details."
 
     if [ $$ -eq $TOP_PID ]; then
         exit 1
@@ -31,13 +40,7 @@ function die() {
     fi
 }
 
-# Colors and output.
-RED=`tput setaf 1`
-BROWN=`tput setaf 3`
-NORMAL=`tput sgr0`
-CLEARRET="\r`tput el`"
-ROLLING=0
-
+# Logging
 function log() {
     TIME=`date '+%d/%m/%Y %H:%M:%S'`
     echo "[$TIME] $1" | sed -r "s/\\x1B\\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g" >> $LOG_FILE
@@ -257,7 +260,9 @@ function check_or_install_zsh() {
     fi
 }
 
-info ".----------------------------------------------------------------------."
+info "${BLUE}                              MEOW        |\__/,|   (\`\                "
+info "${BLUE}                                  MEOW  _.|o o  |_   ) )                "
+info ".--------------------------------------${BLUE}(((${BLUE}---${BLUE}(((${NORMAL}-----------------------."
 info "| Welcome to pavkam's .dotfiles installer. Hope you enjoy the proces!  |"
 info "| This installer will perform the following changes:                   |"
 info "|     *   Installs dependencies (on Arch-based distros),               |"
@@ -269,6 +274,35 @@ info "| ${RED}WARNING: This installer comes with absolutely no guarantees!${NORM
 info "| ${RED}Please backup your home directory for safety reasons.${NORMAL}                |"
 info "------------------------------------------------------------------------"
 info
+
+# Auto-update code
+roll "Checking for the latest version of these .dotfiles..."
+(
+    cd "$DF"
+    CURB=`git branch --show-current`
+    CREV=`git rev-parse HEAD`
+
+    if [ "$CURB" != "main" ]; then
+        warn "Failed to update the .dotfiles located at '$DF'. The current branch is not 'master'."
+    else
+        git pull >/dev/null 2>/dev/null         
+        if [ $? -ne 0 ]; then
+            warn "Failed to update the .dotfiles located at '$DF'."
+        else
+            VREV=`git rev-parse HEAD`
+            if [ "$CREV" != "$VREV" ]; then
+                exit 1
+            fi
+        fi      
+    fi
+
+    exit 0
+)
+
+if [ $? -ne 0 ]; then
+    warn "A new version of the .dorfiles has been pulled. Please run the installer again."
+    die
+fi
 
 # Setup the backup
 roll "Checking if the backup directory '$BACKUP' already exists..." 
@@ -389,10 +423,17 @@ roll "Building YouCompleteMe plugin..."
     cd ~/.vim/bundle/youcompleteme
     ./install.sh >/dev/null 2>/dev/null
     if [ $? -ne 0 ]; then
-        err "VIM: Failed to build the YCM plugin."
+        err "Failed to build the YouCompleteMe plugin."
     fi
 )
 
+roll "YouCompleteMe plugin was re-built."
+
 info
+info "${BLUE}                                   |\      _,,,---,,_        "
+info "${BLUE}                              ZZZzz /,\`.-'\`'    -.  ;-;;,_  "
+info "${BLUE}                                   |,4-  ) )-,_. ,\ (  \`'-'  "
+info "${BLUE}                                  '---''(_/--'  \`-'\_)       "
+info                                
 info "All done! You're good to go!"
 info "Consider creating a new '~/.zshrc.local' file to hold your personal settings."

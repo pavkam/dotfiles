@@ -204,7 +204,7 @@ add-zsh-hook preexec mzc_termsupport_preexec
 
 # FZF-ness
 
-FD_OPTIONS="--follow --exclude .git --exclude node_modules"
+FD_OPTIONS="--follow --hidden --exclude .git --exclude node_modules"
 export FZF_COMPLETION_TRIGGER='**'
 export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | fd --type f --type l $FD_OPTIONS"
 export FZF_CTRL_T_COMMAND="fd $FD_OPTIONS"
@@ -215,15 +215,14 @@ export FZF_DEFAULT_OPTS="
 --layout=reverse
 --info=inline
 --height=80%
---multi
---preview-window=:hidden
 --preview '([[ -f {} ]] && (bat --style=numbers --color=always {} || cat {})) || ([[ -d {} ]] && (tree -C {} | less)) || echo {} 2> /dev/null | head -200'
---color='hl:148,hl+:154,pointer:032,marker:010,bg+:237,gutter:008'
+--color=dark
+--color=fg:-1,bg:-1,hl:#5fff87,fg+:-1,bg+:-1,hl+:#ffaf5f
+--color=info:#af87ff,prompt:#5fff87,pointer:#ff87d7,marker:#ff87d7,spinner:#ff87d7
 --prompt='∼ ' --pointer='▶' --marker='✓'
 --bind '?:toggle-preview'
---bind 'ctrl-a:select-all'
---bind 'ctrl-y:execute-silent(echo {+} | pbcopy)'
---bind 'ctrl-v:execute(xdg-open {+})'
+--bind 'ctrl-y:execute-silent(echo {+} | xclip -selection clipboard)'
+--bind 'alt-enter:execute(clear && xdg-open {+})'
 "
 
 fzf_compgen_path() {
@@ -253,6 +252,7 @@ alias cp='cp -i'
 alias df='df -h'
 alias free='free -m'
 alias yolo='git add . && git commit && git push'
+alias decolorize='sed -r "s/\\x1B\\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g"'
 
 SDKMAN_DIR="$HOME/.sdkman"
 if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
