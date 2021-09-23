@@ -248,6 +248,16 @@ z() {
     cd "$(_z -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
 }
 
+QMGR=$HOME/.qmgr.sh
+if [ -f "$QMGR" ]; then
+    q() {
+        SCRIPT=$(sh -c "$QMGR --list" | fzf --height=20% --preview-window down,2,border-horizontal --preview "sh -c '$QMGR --details {}'")
+        if [ "$SCRIPT" != "" ]; then
+            sh -c "$QMGR --execute $SCRIPT"  
+        fi
+    }
+fi
+
 alias cp='cp -i'
 alias df='df -h'
 alias free='free -m'
@@ -267,6 +277,6 @@ fi
 
 # Import the local configuration
 LOCAL_INIT="$HOME/.zshrc.local"
-if [ -s "$LOCAL_INIT" ]; then
+if [ -f "$LOCAL_INIT" ]; then
      source $LOCAL_INIT
 fi

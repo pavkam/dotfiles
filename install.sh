@@ -386,6 +386,7 @@ pull_or_clone_repo "Zsh Syntax Highlighting" "$ZSH_SYNTAX_HIGHLIGHTING_DIR" "htt
 
 # Create all the symlinks
 roll "Creating all symlinks..."
+
 link .dir_colors
 link .gitconfig
 link .gitignore.global
@@ -400,6 +401,11 @@ link .config/mc
 link .config/htop
 link .config/Code/User/settings.json
 link .config/Code/User/settings.json "./.config/Code - OSS/User/settings.json"
+
+link ./.qmgr.sh ./.qmgr.sh
+link .quickies/git-add-commit-push.sh
+link .quickies/arch-system-upgrade.sh
+link .quickies/red-shift-tunnel-in-production.sh
 
 # Setup vim
 roll "Setting up vim..."
