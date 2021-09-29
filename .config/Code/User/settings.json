@@ -6,5 +6,6 @@
     "workbench.iconTheme": "vscode-icons",
     "terminal.integrated.cursorBlinking": true,
     "terminal.integrated.cursorStyle": "underline",
-    "terminal.integrated.cursorWidth": 2
+    "terminal.integrated.cursorWidth": 2,
+    "explorer.confirmDelete": false
 }

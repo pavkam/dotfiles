@@ -29,8 +29,15 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# Force locale 
+export LANG='en_US.UTF-8'
+export LC_ALL='en_US.UTF-8'
+export PYTHONIOENCODING='UTF-8'
+
 # Other settings and general options
 export EDITOR='vim'
+export MANPAGER='less -X'
+export LESS_TERMCAP_md="${yellow}"
 export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
 
@@ -114,21 +121,17 @@ function title {
 
   [[ "$EMACS" == *term* ]] && return
 
-  # if $2 is unset use $1 as default
-  # if it is set and empty, leave it as is
   : ${2=$1}
 
   case "$TERM" in
     xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st*)
-      print -Pn "\e]2;${2:q}\a" # set window name
-      print -Pn "\e]1;${1:q}\a" # set tab name
+      print -Pn "\e]2;${2:q}\a"
+      print -Pn "\e]1;${1:q}\a"
       ;;
     screen*|tmux*)
-      print -Pn "\ek${1:q}\e\\" # set screen hardstatus
+      print -Pn "\ek${1:q}\e\\"
       ;;
     *)
-    # Try to use terminfo to set the title
-    # If the feature is available set title
     if [[ -n "$terminfo[fsl]" ]] && [[ -n "$terminfo[tsl]" ]]; then
       echoti tsl
       print -Pn "$1"
@@ -152,45 +155,29 @@ function mzc_termsupport_preexec {
   [[ "${DISABLE_AUTO_TITLE:-}" == true ]] && return
 
   emulate -L zsh
-
-  # split command into array of arguments
   local -a cmdargs
   cmdargs=("${(z)2}")
-  # if running fg, extract the command from the job description
   if [[ "${cmdargs[1]}" = fg ]]; then
-    # get the job id from the first argument passed to the fg command
     local job_id jobspec="${cmdargs[2]#%}"
-    # logic based on jobs arguments:
-    # http://zsh.sourceforge.net/Doc/Release/Jobs-_0026-Signals.html#Jobs
-    # https://www.zsh.org/mla/users/2007/msg00704.html
     case "$jobspec" in
-      <->) # %number argument:
-        # use the same <number> passed as an argument
+      <->)
         job_id=${jobspec} ;;
-      ""|%|+) # empty, %% or %+ argument:
-        # use the current job, which appears with a + in $jobstates:
-        # suspended:+:5071=suspended (tty output)
+      ""|%|+)
         job_id=${(k)jobstates[(r)*:+:*]} ;;
-      -) # %- argument:
-        # use the previous job, which appears with a - in $jobstates:
-        # suspended:-:6493=suspended (signal)
+      -)
         job_id=${(k)jobstates[(r)*:-:*]} ;;
-      [?]*) # %?string argument:
-        # use $jobtexts to match for a job whose command *contains* <string>
+      [?]*)
         job_id=${(k)jobtexts[(r)*${(Q)jobspec}*]} ;;
-      *) # %string argument:
-        # use $jobtexts to match for a job whose command *starts with* <string>
+      *)
         job_id=${(k)jobtexts[(r)${(Q)jobspec}*]} ;;
     esac
 
-    # override preexec function arguments with job command
     if [[ -n "${jobtexts[$job_id]}" ]]; then
       1="${jobtexts[$job_id]}"
       2="${jobtexts[$job_id]}"
     fi
   fi
 
-  # cmd name only, or if this is sudo or ssh, the next cmd
   local CMD=${1[(wr)^(*=*|sudo|ssh|mosh|rake|-*)]:gs/%/%%}
   local LINE="${2:gs/%/%%}"
 
@@ -253,16 +240,42 @@ if [ -f "$QMGR" ]; then
     q() {
         SCRIPT=$(sh -c "$QMGR --list" | fzf --height=20% --preview-window down,2,border-horizontal --preview "sh -c '$QMGR --details {}'")
         if [ "$SCRIPT" != "" ]; then
-            sh -c "$QMGR --execute $SCRIPT"  
+            . "$QMGR" --execute "$SCRIPT"
+            echo "$PWD"
         fi
     }
 fi
 
-alias cp='cp -i'
+# Helper aliases and functions
+
+alias cp='cp -iv'
+alias mkdir='mkdir -pv'
+alias mv='mv -iv'
+alias rm='rm -rf --'
 alias df='df -h'
 alias free='free -m'
 alias yolo='git add . && git commit && git push'
 alias decolorize='sed -r "s/\\x1B\\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g"'
+alias cd..='cd ..'
+alias sudo='sudo '
+alias map='xargs -n1'
+alias reload='exec ${SHELL} -l'
+
+if command -v dig &> /dev/null; then
+  alias ip='dig +short myip.opendns.com @resolver1.opendns.com'
+fi
+
+if command -v xdg-open &> /dev/null; then
+  function open() {
+    if [ $# -eq 0 ]; then
+      xdg-open .;
+    else
+      xdg-open "$@";
+    fi;
+  }
+fi
+
+# Custom imports based on installed tooling
 
 SDKMAN_DIR="$HOME/.sdkman"
 if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then

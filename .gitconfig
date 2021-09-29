@@ -1,16 +1,3 @@
-[submodule]
-	recurse = true
-
-[pull]
-	ff = only
-
-[fetch]
-	prune = true
-
-[grep]
-	extendedregexp = true
-	linenumber = true
-
 [core]
 	excludesfile = ~/.gitignore.global
 	attributesfile = ~/.gitattributes.global
@@ -19,13 +6,44 @@
     pager = less --tabs 4
 	untrackedcache = true
 	autocrlf = input
+	precomposeunicode = false
 
 [init]
 	defaultBranch = main
 
+[apply]
+	whitespace = fix
+
+[branch]
+	sort = -committerdate
+
 [user]
 	name = Alexandru Ciobanu
 	email = alex+git@ciobanu.org
+
+[submodule]
+	recurse = true
+
+[push]
+	default = simple
+	followTags = true
+
+[pull]
+	ff = only
+
+[pull]
+	log = true
+
+[fetch]
+	prune = true
+	pruneTags = true
+
+[grep]
+	extendedregexp = true
+	linenumber = true
+
+[help]
+	autocorrect = 1
 
 [alias]
 	ci = commit
@@ -36,6 +54,12 @@
 	lg = log --decorate=short --graph --pretty=format:\"%C(red)%h%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset) %C(blue)%C(bold)<%an>%C(auto)%d\"
 	sl = stash list --pretty=format:\"%C(red)%gd%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset)\"
 	ba = branch --all --list --verbose --verbose
+
+[diff "bin"]
+	textconv = hexdump -v -C
+
+[diff]
+	renames = copies
 
 [color]
 	ui = true
@@ -61,3 +85,19 @@
 	added = green bold
 	changed = yellow bold
 	untracked = red bold
+
+[url "git@github.com:"]
+	insteadOf = "gh:"
+	pushInsteadOf = "github:"
+	pushInsteadOf = "git://github.com/"
+
+[url "git://gist.github.com/"]
+	insteadOf = "gist:"
+
+[url "git@gist.github.com:"]
+	insteadOf = "gst:"
+	pushInsteadOf = "gist:"
+	pushInsteadOf = "git://gist.github.com/"
+
+[url "git://github.com/"]
+	insteadOf = "github:"

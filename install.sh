@@ -330,7 +330,7 @@ else
     PACKS=(
         yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm pyenv tree gcc go automake binutils bc 
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono perl pyenv python python2 ruby wget 
-        zip dotnet-runtime dotnet-sdk 
+        zip dotnet-runtime dotnet-sdk mono dig
     )
 
     TO_INSTALL=""
@@ -396,6 +396,8 @@ link .vimrc
 link Pipfile
 link .zshrc
 link .zshrc.p10k
+link .curlrc
+link .wgetrc
 link .nuget/NuGet/NuGet.Config
 link .config/mc
 link .config/htop
