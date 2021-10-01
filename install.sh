@@ -330,7 +330,7 @@ else
     PACKS=(
         yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm pyenv tree gcc go automake binutils bc 
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono perl pyenv python python2 ruby wget 
-        zip dotnet-runtime dotnet-sdk mono dig
+        zip dotnet-runtime dotnet-sdk mono dig nerd-fonts-noto-sans-mono
     )
 
     TO_INSTALL=""
