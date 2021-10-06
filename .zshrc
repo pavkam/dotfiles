@@ -5,17 +5,17 @@
 # |                                                                         |
 # | I apologize in advance if I did not mention the sources explicitly      |
 # ---------------------------------------------------------------------------
-                                                                       
+
 # Oh-My-Zsh Setup.
 export ZSH="$HOME/.oh-my-zsh"
 
 plugins=( git z fzf fd docker zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting )
-                                            
+
 COMM=$(basename "$(cat "/proc/$PPID/comm")")
 if [ "$COMM" = "login" ] || [ "$TERM" = "linux" ]; then
-  export ZSH_THEME="clean"    
+  export ZSH_THEME="clean"
 else
-  export ZSH_THEME="powerlevel10k/powerlevel10k"   
+  export ZSH_THEME="powerlevel10k/powerlevel10k"
 fi
 
 source $ZSH/oh-my-zsh.sh
@@ -29,7 +29,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# Force locale 
+# Force locale
 export LANG='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
 export PYTHONIOENCODING='UTF-8'
@@ -41,7 +41,7 @@ export LESS_TERMCAP_md="${yellow}"
 export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
 
-setopt correct                                                  
+setopt correct
 setopt extendedglob
 setopt nocaseglob
 setopt rcexpandparam
@@ -65,7 +65,7 @@ HISTSIZE=10000
 SAVEHIST=10000
 WORDCHARS=${WORDCHARS//\/[&.;]}
 
-# Keys 
+# Keys
 bindkey -e
 bindkey '^[[7~' beginning-of-line
 bindkey '^[[H' beginning-of-line
@@ -106,7 +106,7 @@ zmodload zsh/terminfo
 
 bindkey "$terminfo[kcuu1]" history-substring-search-up
 bindkey "$terminfo[kcud1]" history-substring-search-down
-bindkey '^[[A' history-substring-search-up			
+bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
 # Arch/Manjaro-specific feaure. Offer to install missing package if command is not found.
@@ -225,7 +225,7 @@ fif() {
     echo "Need a string to search for!";
     return 1;
   fi
-  
+
   rg --files-with-matches --no-messages "$1" | fzf $FZF_PREVIEW_WINDOW --preview "rg --ignore-case --pretty --context 10 '$1' {}"
 }
 
@@ -276,6 +276,15 @@ if command -v xdg-open &> /dev/null; then
 fi
 
 # Custom imports based on installed tooling
+
+if command -v lpass &>/dev/null; then
+	if  [ "$LAST_PASS_EMAIL" != "" ]; then
+		unalias pass &>/dev/null
+		function pass() {
+			lpass status &>/dev/null || lpass login "$LAST_PASS_EMAIL" &>/dev/null && lpass ls --sync=auto --color=never | grep -E "[0-9]{10}" | fzf --preview-window=default --preview 'lpass show `echo "{}" | sed -n "s/.*\[id\:\ \([0-9]*\)\].*/\1/p"`' | sed -n "s/.*\[id\:\ \([0-9]*\)\].*/\1/p" | xargs lpass show
+		}
+	fi
+fi
 
 SDKMAN_DIR="$HOME/.sdkman"
 if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then

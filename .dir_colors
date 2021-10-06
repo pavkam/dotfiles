@@ -241,3 +241,45 @@ EXEC 01;32
 .oga 00;36
 .spx 00;36
 .xspf 00;36
+
+# Files of special interest (base1 + bold)
+.tex             01;38;5;245
+.rdf             01;38;5;245
+.owl             01;38;5;245
+.n3              01;38;5;245
+.ttl             01;38;5;245
+.nt              01;38;5;245
+.torrent         01;38;5;245
+*Makefile        01;38;5;245
+*Rakefile        01;38;5;245
+*build.xml       01;38;5;245
+*rc              01;38;5;245
+*1               01;38;5;245
+.nfo             01;38;5;245
+*README          01;38;5;245
+*README.txt      01;38;5;245
+*readme.txt      01;38;5;245
+*README.md       01;38;5;245
+*README.markdown 01;38;5;245
+*ini             01;38;5;245
+*yml             01;38;5;245
+*cfg             01;38;5;245
+*conf            01;38;5;245
+
+# "unimportant" files as logs and backups (base01)
+.log        00;38;5;240
+.bak        00;38;5;240
+.aux        00;38;5;240
+.bbl        00;38;5;240
+.blg        00;38;5;240
+*~          00;38;5;240
+*#          00;38;5;240
+.part       00;38;5;240
+.incomplete 00;38;5;240
+.swp        00;38;5;240
+.tmp        00;38;5;240
+.temp       00;38;5;240
+.o          00;38;5;240
+.pyc        00;38;5;240
+.class      00;38;5;240
+.cache      00;38;5;240

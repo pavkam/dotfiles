@@ -3,7 +3,7 @@
     "window.zoomLevel": 1,
     "security.workspace.trust.untrustedFiles": "open",
     "workbench.colorTheme": "Dracula",
-    "workbench.iconTheme": "vscode-icons",
+    "workbench.iconTheme": "material-icon-theme",
     "terminal.integrated.cursorBlinking": true,
     "terminal.integrated.cursorStyle": "underline",
     "terminal.integrated.cursorWidth": 2,
