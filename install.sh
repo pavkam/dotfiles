@@ -283,15 +283,16 @@ roll "Checking for the latest version of these .dotfiles..."
     CREV=`git rev-parse HEAD`
 
     if [ "$CURB" != "main" ]; then
-        warn "Failed to update the .dotfiles located at '$DF'. The current branch is not 'master'."
+        warn "Skipping the update of .dotfiles located at '$DF'. The current branch is not 'master'."
     else
         git pull &>> $LOG_FILE
         if [ $? -ne 0 ]; then
-            warn "Failed to update the .dotfiles located at '$DF'."
+            err "Failed to update the .dotfiles located at '$DF'."
+            exit 1
         else
             VREV=`git rev-parse HEAD`
             if [ "$CREV" != "$VREV" ]; then
-                exit 1
+                exit 2
             fi
         fi
     fi
@@ -299,9 +300,13 @@ roll "Checking for the latest version of these .dotfiles..."
     exit 0
 )
 
-if [ $? -ne 0 ]; then
-    warn "A new version of the .dotfiles has been pulled. Please run the installer again."
-    die
+PULL_CODE=$?
+if [ PULL_CODE -eq 2 ]; then
+    warn "A new version of the .dotfiles has been pulled. Re-running the install script..."
+    . $0
+    exit $?
+elif [ PULL_CODE -eq 1 ]; then
+    exit 1
 fi
 
 # Setup the backup

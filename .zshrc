@@ -261,8 +261,16 @@ alias sudo='sudo '
 alias map='xargs -n1'
 alias reload='exec ${SHELL} -l'
 
+# Import the local configuration, if any.
+LOCAL_INIT="$HOME/.zshrc.local"
+if [ -f "$LOCAL_INIT" ]; then
+     source $LOCAL_INIT
+fi
+
+# And now define all other goodies.
+
 if command -v dig &> /dev/null; then
-  alias ip='dig +short myip.opendns.com @resolver1.opendns.com'
+    alias ip='dig +short myip.opendns.com @resolver1.opendns.com'
 fi
 
 if command -v xdg-open &> /dev/null; then
@@ -275,10 +283,9 @@ if command -v xdg-open &> /dev/null; then
   }
 fi
 
-# Custom imports based on installed tooling
-
+# Custom imports based on installed tooling.
 if command -v lpass &>/dev/null; then
-	if  [ "$LAST_PASS_EMAIL" != "" ]; then
+	if [ "$LAST_PASS_EMAIL" != "" ]; then
 		unalias pass &>/dev/null
 		function pass() {
 			lpass status &>/dev/null || lpass login "$LAST_PASS_EMAIL" &>/dev/null && lpass ls --sync=auto --color=never | grep -E "[0-9]{10}" | fzf --preview-window=default --preview 'lpass show `echo "{}" | sed -n "s/.*\[id\:\ \([0-9]*\)\].*/\1/p"`' | sed -n "s/.*\[id\:\ \([0-9]*\)\].*/\1/p" | xargs lpass show
@@ -286,19 +293,15 @@ if command -v lpass &>/dev/null; then
 	fi
 fi
 
+# Java SDK manager.
 SDKMAN_DIR="$HOME/.sdkman"
 if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
     export SDK_MAN
     source $SDKMAN_DIR/bin/sdkman-init.sh
 fi
 
+# NodeJS version manager.
 NVM_INIT="/usr/share/nvm/init-nvm.sh"
 if [ -s "$NVM_INIT" ]; then
     source $NVM_INIT
-fi
-
-# Import the local configuration
-LOCAL_INIT="$HOME/.zshrc.local"
-if [ -f "$LOCAL_INIT" ]; then
-     source $LOCAL_INIT
 fi

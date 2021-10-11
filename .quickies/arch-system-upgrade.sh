@@ -13,4 +13,4 @@ case "$1" in
         exit 0 ;;
 esac
 
-sudo sh -c "pacman-mirrors -g && sudo pamac upgrade --no-confirm && sudo yay --nodiffmenu --noeditmenu --nouseask --nocleanmenu --noupgrademenu --noconfirm"
+sudo pacman-mirrors -g && sudo pamac upgrade --no-confirm && sudo yay --nodiffmenu --noeditmenu --nouseask --nocleanmenu --noupgrademenu --noconfirm
