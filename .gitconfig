@@ -54,7 +54,8 @@
 	pt = !git tag -l | xargs git tag -d && git fetch -t
 	lg = log --decorate=short --graph --pretty=format:\"%C(red)%h%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset) %C(blue)%C(bold)<%an>%C(auto)%d\"
 	sl = stash list --pretty=format:\"%C(red)%gd%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset)\"
-	ba = branch --all --list --verbose --verbose
+	ba = branch --all --list --verbose
+	bs = !git branch --no-color | fzf | xargs git checkout
 
 [diff "bin"]
 	textconv = hexdump -v -C
