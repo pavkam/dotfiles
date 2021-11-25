@@ -51,11 +51,15 @@
     st = status -sb
 	au = add --update
 	aa = add --all
-	pt = !git tag -l | xargs git tag -d && git fetch -t
-	lg = log --decorate=short --graph --pretty=format:\"%C(red)%h%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset) %C(blue)%C(bold)<%an>%C(auto)%d\"
-	sl = stash list --pretty=format:\"%C(red)%gd%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset)\"
-	ba = branch --all --list --verbose
-	bs = !git branch --no-color | fzf | xargs git checkout
+	yolo = !git add . && git commit && git push
+	prunea = !git branch -r | awk '{print $1}' | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk '{print $1}' | xargs git branch -D
+	pulla = !git pull || git pull || git pull 
+	taga = !git tag -l | xargs git tag -d && git fetch -t || git fetch -t || git fetch -t
+	sync = !git prunea && git taga && git pulla
+	lc = log --decorate=short --graph --pretty=format:\"%C(red)%h%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset) %C(blue)%C(bold)<%an>%C(auto)%d\" --color=always
+	ls = stash list --pretty=format:\"%C(red)%gd%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset)\"
+	lb = branch --all --list --verbose
+	bs = !git branch --no-color --no-column | sed 's/^[\\ *]*//' | fzf --preview-window=default --preview 'git lc {}' | (read X && git checkout $X)
 
 [diff "bin"]
 	textconv = hexdump -v -C
