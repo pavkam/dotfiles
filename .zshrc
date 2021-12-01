@@ -237,13 +237,15 @@ z() {
 
 QMGR=$HOME/.qmgr.sh
 if [ -f "$QMGR" ]; then
-    q() {
+    quickies_menu() {
         SCRIPT=$(sh -c "$QMGR --list" | fzf --height=20% --preview-window down,2,border-horizontal --preview "sh -c '$QMGR --details {}'")
         if [ "$SCRIPT" != "" ]; then
             . "$QMGR" --execute "$SCRIPT"
-            echo "$PWD"
         fi
     }
+
+    bindkey -s "^\`" 'quickies_menu^M'
+    bindkey -s "^~" 'quickies_menu^M'
 fi
 
 # Helper aliases and functions

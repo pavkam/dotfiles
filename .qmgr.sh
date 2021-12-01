@@ -45,9 +45,9 @@ case "$1" in
         fi
 
         . "$QUICKIES_DIR/$2.sh"
+
         return $? ;;
 esac
-
 
 echo "Invalid command: $1"
 exit 1
