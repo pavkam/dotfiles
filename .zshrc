@@ -262,6 +262,15 @@ alias cd..='cd ..'
 alias sudo='sudo '
 alias map='xargs -n1'
 alias reload='exec ${SHELL} -l'
+alias ts='date -d @1639018800 "+%F %T"'
+
+epoch() {
+  if [ "$1" = "" ]; then
+    date '+%s'  
+  else
+    date -d @$1 '+%F %T'
+  fi
+}
 
 # Import the local configuration, if any.
 LOCAL_INIT="$HOME/.zshrc.local"
