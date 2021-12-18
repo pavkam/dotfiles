@@ -8,5 +8,6 @@
     "terminal.integrated.cursorStyle": "underline",
     "terminal.integrated.cursorWidth": 2,
     "explorer.confirmDelete": false,
-    "git.enableSmartCommit": true
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false
 }
