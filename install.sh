@@ -362,7 +362,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     PACKS=(
         zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono-runtime perl python python2 ruby wget
-        zip bind9-tools bluez-tools
+        zip bind9-tools bluez-utils
     )
 
     TO_INSTALL=""
@@ -378,22 +378,6 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
         install_packages "apt install -y" "$TO_INSTALL"
     fi
 
-    wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb &>> $LOG_FILE && \
-        sudo dpkg -i packages-microsoft-prod.deb &>> $LOG_FILE && \ 
-        rm packages-microsoft-prod.deb &>> $LOG_FILE 
-
-    if [ $? -ne 0 ]; then
-        warn "Failed to download and prepare dotnet repository settings."
-    else 
-        sudo apt-get update
-        sudo apt-get install -y apt-transport-https && \
-            sudo apt-get update && \
-            sudo apt-get install -y dotnet-sdk-6.0 aspnetcore-runtime-6.0
-
-        if [ $? -ne 0 ]; then
-            warn "Failed to install dotnet packages."
-        fi
-    fi
 else
     warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
 fi
