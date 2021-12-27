@@ -5,7 +5,7 @@
 # | This specific file is a helper used by the "q" command of zsh to manage |
 # | quickie scripts. See ".quickies" for more details                       |
 # ---------------------------------------------------------------------------
-              
+
 
 QUICKIES_DIR=~/.quickies
 case "$1" in
@@ -16,21 +16,33 @@ case "$1" in
                 continue
             fi
 
-            sh -c "$script --query"
+            K=`sh -c "$script --query"`
             if [ $? -eq 0 ]; then
-                FN=`basename "$script"`
+              FN=`basename "$script"`
+
+              if [ "$K" != "" ]; then
+                while IFS= read -r op; do
+                  echo "${FN%.*}:${op}"
+                done <<< "$K"
+              else
                 echo "${FN%.*}"
+              fi
+
             fi
         done
 
         exit 0 ;;
     "--details" )
-        if [ "$2" = "" ]; then
+        SCRIPT=$2
+        if [ "$SCRIPT" = "" ]; then
             echo "No suitable quickie escript name has been provided to query details for."
-            exit 1    
+            exit 1
         fi
 
-        sh -c "$QUICKIES_DIR/$2.sh --details"
+        ARG="$(cut -d':' -f2 <<< $SCRIPT)"
+        SCRIPT="$(cut -d':' -f1 <<< $SCRIPT)"
+
+        sh -c "$QUICKIES_DIR/$SCRIPT.sh --details $ARG"
         if [ $? -ne 0 ]; then
             echo "Failed to obtain details for the given quickie script."
             exit 1
@@ -38,13 +50,17 @@ case "$1" in
 
         exit 0 ;;
     "--execute" )
-        # This part of the code is "magical" because its being used as a sourced script.
+        SCRIPT=$2
         if [ "$2" = "" ]; then
             echo "No suitable quickie script name has been provided for execution."
-            return 1    
+            return 1
         fi
 
-        . "$QUICKIES_DIR/$2.sh"
+        ARG="$(cut -d':' -f2 <<< $SCRIPT)"
+        SCRIPT="$(cut -d':' -f1 <<< $SCRIPT)"
+
+         # This part of the code is "magical" because its being used as a sourced script.
+        . "$QUICKIES_DIR/$SCRIPT.sh"
 
         return $? ;;
 esac

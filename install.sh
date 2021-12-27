@@ -197,7 +197,7 @@ function pull_or_clone_repo() {
 
     roll "Installing $NAME using git..."
     if [ -d "$DIR" ]; then
-        warn "$NAME is already installed. Pulling..."
+        info "$NAME is already installed. Pulling..."
         (
             cd "$DIR"
             git pull &>> $LOG_FILE
@@ -301,11 +301,11 @@ roll "Checking for the latest version of these .dotfiles..."
 )
 
 PULL_CODE=$?
-if [ PULL_CODE -eq 2 ]; then
+if [ $PULL_CODE -eq 2 ]; then
     warn "A new version of the .dotfiles has been pulled. Re-running the install script..."
     . $0
     exit $?
-elif [ PULL_CODE -eq 1 ]; then
+elif [ $PULL_CODE -eq 1 ]; then
     exit 1
 fi
 
@@ -335,7 +335,7 @@ else
     PACKS=(
         yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm pyenv tree gcc go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono perl pyenv python python2 ruby wget
-        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono
+        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools
     )
 
     TO_INSTALL=""
@@ -410,7 +410,7 @@ link .config/Code/User/settings.json
 link .config/Code/User/settings.json "./.config/Code - OSS/User/settings.json"
 
 link ./.qmgr.sh ./.qmgr.sh
-link .quickies/git-add-commit-push.sh
+link .quickies/git-command.sh
 link .quickies/arch-system-upgrade.sh
 link .quickies/red-shift-tunnel-in-production.sh
 
@@ -441,6 +441,14 @@ roll "Building YouCompleteMe plugin..."
 )
 
 roll "YouCompleteMe plugin was re-built."
+
+check_installed "code"
+if [ $? -eq 0 ]; then
+    roll "Installing VS Code extensions..."
+    cat $DF/vs-extensions.txt | xargs -L 1 code --install-extension
+else
+    warn "VS Code not installed. Skipping extension installation."
+fi
 
 info
 info "${BLUE}                                   |\      _,,,---,,_        "

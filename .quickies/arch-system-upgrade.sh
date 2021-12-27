@@ -2,12 +2,8 @@
 
 case "$1" in
     "--query" )
-        if [ -e "/etc/arch-release" ]; then
-            exit 0
-        else 
-            exit 1
-        fi
-        ;;
+        [ ! -e "/etc/arch-release" ] && exit 1
+        exit 0 ;;
     "--details" )
         echo "This script updates all the mirrors; then it upgrades all the packages, and finally, updates all AUR dependancies."
         exit 0 ;;
