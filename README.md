@@ -7,11 +7,13 @@ Inside these dotfiles you will be able to find the following setup:
 * `zsh`, including `oh-my-zsh` plus plugins,
 * `powerline` for `vim` and `zsh`,
 * `git` defaults and aliases,
+* `.editorconfig` with tons of settings for `JetBrains` IDEs. 
 * other stuff... 
 
-Note, the dotfiles were developed on **Manjaro Linux** and will only install dependencies on **Arch** (and related) distributions. On other OSes ot will be up to you to install the dependancies.
-
-My workflow is deeply influenced by `fzf` as well so a lot of commands will pipe out put through the fuzzy finder. Start by pressing `CTRL + tilde` in the zsh shell to see the core menu "_quickies-menu_".
+# Noteworthy things
+* The dotfiles were developed on **Manjaro Linux** and will only install dependencies on **Arch** (and related) distributions. On other OSes ot will be up to you to install the dependancies.
+* My workflow is deeply influenced by `fzf` as well so a lot of commands will pipe out put through the fuzzy finder. Start by pressing `CTRL + tilde` in the zsh shell to see the core menu "_quickies-menu_".
+* I am not a `vim` user (nor emacs!) so my setup of is heavily skewed towards my way of working which is basecd on IDEs. Also, I use `vim` sparingly so I don't need much productivity.   
 
 # Screens
 ![image](https://user-images.githubusercontent.com/7327309/147490998-1a600287-3555-4bce-9a29-d06c2e476aee.png)
