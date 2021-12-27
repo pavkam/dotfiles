@@ -362,7 +362,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     PACKS=(
         zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono-runtime perl python python2 ruby wget
-        zip bind9-tools bluez-utils
+        zip bind9-utils bluez-utils
     )
 
     TO_INSTALL=""
