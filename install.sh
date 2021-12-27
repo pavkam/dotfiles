@@ -275,6 +275,17 @@ info "| ${RED}Please backup your home directory for safety reasons.${NORMAL}    
 info "------------------------------------------------------------------------"
 info
 
+roll "Checking for basic dependencies..."
+
+
+CORE_DEPS=( sudo git )
+for i in "${PACKS[@]}"
+do
+    if [ "`which $i`" == "" ]; then
+        err "The core utility '$i' is not installed."
+    fi
+done
+
 # Auto-update code
 roll "Checking for the latest version of these .dotfiles..."
 (
