@@ -326,8 +326,8 @@ fi
 # Check dependencies (commands that should be installed)
 roll "Checking your GNU/Linux distribution..."
 
-DISTRO_ARCH=`cat /etc/arch-release 2>/dev/null`
-DISTRO_DEBIAN=`cat /etc/debian_version 2>/dev/null`
+DISTRO_ARCH="`cat /etc/arch-release 2>/dev/null`"
+DISTRO_DEBIAN="`cat /etc/debian_version 2>/dev/null`"
 
 if [ "$DISTRO_ARCH" != "" ]; then
     roll "This is an Arch-based ditribution '$DISTRO_ARCH'. Checking installed packages..."
