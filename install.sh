@@ -219,30 +219,30 @@ function pull_or_clone_repo() {
 }
 
 function is_package_installed() {
-    if [ "$1" = "" ]; then
-        whoops "Expected one arguments to function."
+    if [ "$2" = "" ]; then
+        whoops "Expected two arguments to function."
     fi
 
-    roll "Checking if package '$1' is installed..."
-    pacman -Q "$1" &>> $LOG_FILE
+    roll "Checking if package '$2' is installed..."
+    $1 "$2" &>> $LOG_FILE
     if [ $? -ne 0 ]; then
-        roll "Package '$1' not installed."
+        roll "Package '$2' not installed."
         return 1
     else
-        roll "Package '$1' is already installed."
+        roll "Package '$2' is already installed."
         return 0
     fi
 }
 
 function install_packages() {
-    if [ "$1" = "" ]; then
-        whoops "Expected one arguments to function."
+    if [ "$2" = "" ] then
+        whoops "Expected two arguments to function."
     fi
 
-    warn "Installing packages ['$1']..."
-    sudo pacman -S --noconfirm $1 &>> $LOG_FILE
+    warn "Installing packages ['$2']..."
+    $1 $2 &>> $LOG_FILE
     if [ $? -ne 0 ]; then
-        err "Failed to install one or more packages from the list ['$1']."
+        err "Failed to install one or more packages from the list ['$2']."
     fi
 }
 
@@ -326,10 +326,10 @@ fi
 # Check dependencies (commands that should be installed)
 roll "Checking your GNU/Linux distribution..."
 
-DISTRO_ARCH=`cat /etc/arch-release`
-if [ $? -ne 0 ]; then
-    warn "This GNU/Linux distribution is no Arch-based. Install the dependancies by hand."
-else
+DISTRO_ARCH=`cat /etc/arch-release 2>/dev/null`
+DISTRO_DEBIAN=`cat /etc/debian_version 2>/dev/null`
+
+if [ "$DISTRO_ARCH" != "" ]; then
     roll "This is an Arch-based ditribution '$DISTRO_ARCH'. Checking installed packages..."
 
     PACKS=(
@@ -341,15 +341,38 @@ else
     TO_INSTALL=""
     for i in "${PACKS[@]}"
     do
-        is_package_installed $i
+        is_package_installed "pacman -Q" $i
         if [ $? -ne 0 ]; then
             TO_INSTALL="$TO_INSTALL $i"
         fi
     done
 
     if [ "$TO_INSTALL" != "" ]; then
-        install_packages "$TO_INSTALL"
+        install_packages "sudo pacman -S --noconfirm" "$TO_INSTALL"
     fi
+elif ["$DISTRO_DEBIAN" != "" ]; then
+    roll "This is a Debian-based ditribution '$DISTRO_DEBIAN'. Checking installed packages..."
+
+    PACKS=(
+        yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm pyenv tree gcc go automake binutils bc
+        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono perl pyenv python python2 ruby wget
+        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools
+    )
+
+    TO_INSTALL=""
+    for i in "${PACKS[@]}"
+    do
+        is_package_installed "apt show" $i
+        if [ $? -ne 0 ]; then
+            TO_INSTALL="$TO_INSTALL $i"
+        fi
+    done
+
+    if [ "$TO_INSTALL" != "" ]; then
+        install_packages "apt install --noconfirm" "$TO_INSTALL"
+    fi
+else
+    warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
 fi
 
 # ...
