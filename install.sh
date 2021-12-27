@@ -235,7 +235,7 @@ function is_package_installed() {
 }
 
 function install_packages() {
-    if [ "$2" = "" ] then
+    if [ "$2" = "" ]; then
         whoops "Expected two arguments to function."
     fi
 
