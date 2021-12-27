@@ -277,9 +277,8 @@ info
 
 roll "Checking for basic dependencies..."
 
-
 CORE_DEPS=( sudo git )
-for i in "${PACKS[@]}"
+for i in "${CORE_DEPS[@]}"
 do
     if [ "`which $i`" == "" ]; then
         err "The core utility '$i' is not installed."
