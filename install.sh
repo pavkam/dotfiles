@@ -333,8 +333,8 @@ if [ "$DISTRO_ARCH" != "" ]; then
     roll "This is an Arch-based ditribution '$DISTRO_ARCH'. Checking installed packages..."
 
     PACKS=(
-        yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm pyenv tree gcc go automake binutils bc
-        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono perl pyenv python python2 ruby wget
+        yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go automake binutils bc
+        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv python python2 ruby wget
         zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools
     )
 
@@ -353,10 +353,16 @@ if [ "$DISTRO_ARCH" != "" ]; then
 elif [ "$DISTRO_DEBIAN" != "" ]; then
     roll "This is a Debian-based ditribution '$DISTRO_DEBIAN'. Checking installed packages..."
 
+    # curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
+    # git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+    # cd ~/.pyenv && src/configure && make -C src
+    # dotnet-runtime dotnet-sdk
+    # nerd-fonts-noto-sans-mono
+
     PACKS=(
-        yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm pyenv tree gcc go automake binutils bc
-        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono perl pyenv python python2 ruby wget
-        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools
+        zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
+        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 mono-runtime perl python python2 ruby wget
+        zip bind9-tools bluez-tools
     )
 
     TO_INSTALL=""
@@ -369,7 +375,24 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     done
 
     if [ "$TO_INSTALL" != "" ]; then
-        install_packages "apt install --noconfirm" "$TO_INSTALL"
+        install_packages "apt install -y" "$TO_INSTALL"
+    fi
+
+    wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb &>> $LOG_FILE && \
+        sudo dpkg -i packages-microsoft-prod.deb &>> $LOG_FILE && \ 
+        rm packages-microsoft-prod.deb &>> $LOG_FILE 
+
+    if [ $? -ne 0 ]; then
+        warn "Failed to download and prepare dotnet repository settings."
+    else 
+        sudo apt-get update
+        sudo apt-get install -y apt-transport-https && \
+            sudo apt-get update && \
+            sudo apt-get install -y dotnet-sdk-6.0 aspnetcore-runtime-6.0
+
+        if [ $? -ne 0 ]; then
+            warn "Failed to install dotnet packages."
+        fi
     fi
 else
     warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
