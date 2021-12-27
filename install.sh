@@ -197,7 +197,7 @@ function pull_or_clone_repo() {
 
     roll "Installing $NAME using git..."
     if [ -d "$DIR" ]; then
-        info "$NAME is already installed. Pulling..."
+        roll "$NAME is already installed. Pulling..."
         (
             cd "$DIR"
             git pull &>> $LOG_FILE
@@ -407,9 +407,11 @@ link .nuget/NuGet/NuGet.Config
 link .config/mc
 link .config/htop
 link .config/Code/User/settings.json
+link .config/Code/User/keybindings.json
 link .config/Code/User/settings.json "./.config/Code - OSS/User/settings.json"
+link .config/Code/User/keybindings.json "./.config/Code - OSS/User/keybindings.json"
 
-link ./.qmgr.sh ./.qmgr.sh
+link .qmgr.sh
 link .quickies/git-command.sh
 link .quickies/arch-system-upgrade.sh
 link .quickies/red-shift-tunnel-in-production.sh
@@ -445,7 +447,12 @@ roll "YouCompleteMe plugin was re-built."
 check_installed "code"
 if [ $? -eq 0 ]; then
     roll "Installing VS Code extensions..."
-    cat $DF/vs-extensions.txt | xargs -L 1 code --install-extension
+    cat $DF/vs-extensions.txt | xargs -L 1 code --install-extension &>> $LOG_FILE
+    if [ $? -ne 0 ]; then
+        err "Failed install VS Code extensions."
+    fi
+
+    roll "Finished installing VS Code extensions."
 else
     warn "VS Code not installed. Skipping extension installation."
 fi
