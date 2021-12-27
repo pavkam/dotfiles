@@ -378,7 +378,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     TO_INSTALL=""
     for i in "${PACKS[@]}"
     do
-        is_package_installed "apt show" $i
+        is_package_installed "dpkg -s" $i
         if [ $? -ne 0 ]; then
             TO_INSTALL="$TO_INSTALL $i"
         fi
