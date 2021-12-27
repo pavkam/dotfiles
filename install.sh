@@ -350,7 +350,7 @@ if [ "$DISTRO_ARCH" != "" ]; then
     if [ "$TO_INSTALL" != "" ]; then
         install_packages "sudo pacman -S --noconfirm" "$TO_INSTALL"
     fi
-elif ["$DISTRO_DEBIAN" != "" ]; then
+elif [ "$DISTRO_DEBIAN" != "" ]; then
     roll "This is a Debian-based ditribution '$DISTRO_DEBIAN'. Checking installed packages..."
 
     PACKS=(
