@@ -191,15 +191,18 @@ add-zsh-hook preexec mzc_termsupport_preexec
 
 # FZF-ness
 
-FD_OPTIONS="--follow --hidden --exclude .git --exclude node_modules"
+FD_EXE=""
 if [ "`which fdfind`" != "" ]; then
-  export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | fdfind --type f --type l $FD_OPTIONS"
-  export FZF_CTRL_T_COMMAND="fdfind $FD_OPTIONS"
-  export FZF_ALT_C_COMMAND="fdfind --type d $FD_OPTIONS"
-elif [ "`which fd`" != "" ]; then
-  export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | fd --type f --type l $FD_OPTIONS"
-  export FZF_CTRL_T_COMMAND="fd $FD_OPTIONS"
-  export FZF_ALT_C_COMMAND="fd --type d $FD_OPTIONS"
+  FD_EXE="fdfind"
+else [ "`which fd`" != "" ]; then
+  FD_EXE="fd"
+fi
+
+if [ "$FD_EXE" != "" ]; then
+  FD_OPTIONS="--follow --hidden --exclude .git --exclude node_modules"
+  export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | $FD_EXE --type f --type l $FD_OPTIONS"
+  export FZF_CTRL_T_COMMAND="$FD_EXE $FD_OPTIONS"
+  export FZF_ALT_C_COMMAND="$FD_EXE --type d $FD_OPTIONS"
 else
   export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | find"
   export FZF_CTRL_T_COMMAND="find"
@@ -208,6 +211,13 @@ fi
 
 export FZF_COMPLETION_TRIGGER='**'
 export BAT_PAGER="less -R"
+
+PREVIEW_CAT="cat"
+if [ "`which bat`" != "" ]; then
+  PREVIEW_CAT="bat --style=numbers --color=always"
+else [ "`which batcat`" != "" ]; then
+  PREVIEW_CAT="batcat --style=numbers --color=always"
+fi
 
 export FZF_DEFAULT_OPTS="
 --layout=reverse
@@ -267,7 +277,6 @@ alias mv='mv -iv'
 alias rm='rm -rf --'
 alias df='df -h'
 alias free='free -m'
-alias yolo='git add . && git commit && git push'
 alias decolorize='sed -r "s/\\x1B\\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g"'
 alias cd..='cd ..'
 alias sudo='sudo '

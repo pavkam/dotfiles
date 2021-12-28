@@ -371,8 +371,8 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
 
     PACKS=(
         zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
-        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl python python2 ruby wget
-        zip bind9-utils bluez fzf apt-utils
+        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl python2 python3 ruby wget
+        zip bind9-utils bluez fzf apt-utils default-jre
     )
 
     TO_INSTALL=""
@@ -394,7 +394,18 @@ fi
 
 # ...
 
-DEPS=( git vim zsh fzf fd "$HOME/.nvm/nvm.sh" mc gcc java diff make less rg sed bat head chsh go node npm pyenv tree ln readlink )
+CORE_DEPS=( git vim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink )
+ARCH_DEPS=( fzf fd "$HOME/.nvm/nvm.sh" rg bat pyenv )
+DEBIAN_DEPS=( fzf fdfind "$HOME/.nvm/nvm.sh" rg batcat pyenv )
+
+if [ "$DISTRO_ARCH" != "" ]; then
+    DEPS=( "${CORE_DEPS[@]}" "${ARCH_DEPS[@]}" )
+elif [ "$DISTRO_DEBIAN" != "" ]; then
+    DEPS=( "${CORE_DEPS[@]}" "${DEBIAN_DEPS[@]}" )
+else
+    DEPS=( "${CORE_DEPS[@]}" "${ARCH_DEPS[@]}" )
+fi
+
 MUST_DIE=0
 for i in "${DEPS[@]}"
 do
