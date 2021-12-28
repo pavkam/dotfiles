@@ -192,10 +192,21 @@ add-zsh-hook preexec mzc_termsupport_preexec
 # FZF-ness
 
 FD_OPTIONS="--follow --hidden --exclude .git --exclude node_modules"
+if [ "`which fdfind`" != "" ]; then
+  export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | fdfind --type f --type l $FD_OPTIONS"
+  export FZF_CTRL_T_COMMAND="fdfind $FD_OPTIONS"
+  export FZF_ALT_C_COMMAND="fdfind --type d $FD_OPTIONS"
+elif [ "`which fd`" != "" ]; then
+  export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | fd --type f --type l $FD_OPTIONS"
+  export FZF_CTRL_T_COMMAND="fd $FD_OPTIONS"
+  export FZF_ALT_C_COMMAND="fd --type d $FD_OPTIONS"
+else
+  export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | find"
+  export FZF_CTRL_T_COMMAND="find"
+  export FZF_ALT_C_COMMAND="find"
+fi
+
 export FZF_COMPLETION_TRIGGER='**'
-export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | fd --type f --type l $FD_OPTIONS"
-export FZF_CTRL_T_COMMAND="fd $FD_OPTIONS"
-export FZF_ALT_C_COMMAND="fd --type d $FD_OPTIONS"
 export BAT_PAGER="less -R"
 
 export FZF_DEFAULT_OPTS="

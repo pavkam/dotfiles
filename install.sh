@@ -345,7 +345,7 @@ if [ "$DISTRO_ARCH" != "" ]; then
     PACKS=(
         yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv python python2 ruby wget
-        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools
+        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf
     )
 
     TO_INSTALL=""
@@ -372,7 +372,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     PACKS=(
         zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl python python2 ruby wget
-        zip bind9-utils bluez
+        zip bind9-utils bluez fzf apt-utils
     )
 
     TO_INSTALL=""
