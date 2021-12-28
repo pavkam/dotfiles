@@ -363,7 +363,6 @@ if [ "$DISTRO_ARCH" != "" ]; then
 elif [ "$DISTRO_DEBIAN" != "" ]; then
     roll "This is a Debian-based ditribution '$DISTRO_DEBIAN'. Checking installed packages..."
 
-    # curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
     # git clone https://github.com/pyenv/pyenv.git ~/.pyenv
     # cd ~/.pyenv && src/configure && make -C src
     # dotnet-runtime dotnet-sdk
@@ -389,20 +388,43 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     fi
 
     # Special case over here for bat/rip on some Debians
+    roll "Checking if there are issues between 'ripgrep' and 'bat' due to bad packaging..."
     apt install -y ripgrep bat &>> $LOG_FILE
     if [ $? -ne 0 ]; then
-        warn "Forcing the installation of 'ripgrep' and 'bat' due to issue in packaging..."
+        warn "Forcing the installation of 'ripgrep' and 'bat'..."
         sudo apt install -y -o Dpkg::Options::="--force-overwrite" bat ripgrep &>> $LOG_FILE
         if [ $? -ne 0 ]; then
             warn "Failed to instakk 'ripgrep' and 'bat' in parallel. Fix it by hand."
         fi
     fi
 
-    # Check for tools not in repos. 
-    if [ ! -e "$HOME/.nvm/nvm.sh" ]; then
+    # Check for tools not in repos - nvm.
+    if [ ! -e "$HOME/.nvm/nvm.sh" ] && [ "`which nvm`" == "" ]; then
         curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash &>> $LOG_FILE
         if [ $? -ne 0 ]; then
             warn "Failed to install nvm script. Please install by hand."
+        fi
+    fi
+
+    # Check for tools not in repos - pyenv.
+    if [ ! -d "$HOME/.pyenv" ] && [ "`which pyenv`" == "" ]; then
+        (
+            git clone https://github.com/pyenv/pyenv.git ~/.pyenv &>> $LOG_FILE || exit 1
+            cd ~/.pyenv || exit 1
+            src/configure &>> $LOG_FILE || exit 1
+            make -C src &>> $LOG_FILE || exit 1
+
+            echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zprofile
+            echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zprofile
+            echo 'eval "$(pyenv init --path)"' >> ~/.zprofile
+            echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.profile
+            echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.profile
+            echo 'eval "$(pyenv init --path)"' >> ~/.profile
+            echo 'eval "$(pyenv init -)"' >> ~/.zshrc
+        )
+
+        if [ $? -ne 0 ]; then
+            warn "Failed to install pyenv script. Please install by hand."
         fi
     fi
 else
