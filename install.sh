@@ -388,6 +388,13 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
         install_packages "apt install -y" "$TO_INSTALL"
     fi
 
+    # Check for tools not in repos. 
+    if [ ! -e "$HOME/.nvm/nvm.sh" ]; then
+        curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash &>> $LOG_FILE
+        if [ $? -ne 0 ]; then
+            warn "Failed to install nvm script. Please install by hand."
+        fi
+    fi
 else
     warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
 fi
@@ -395,8 +402,8 @@ fi
 # ...
 
 CORE_DEPS=( git vim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink )
-ARCH_DEPS=( fzf fd "$HOME/.nvm/nvm.sh" rg bat pyenv )
-DEBIAN_DEPS=( fzf fdfind "$HOME/.nvm/nvm.sh" rg batcat pyenv )
+ARCH_DEPS=( fd "$HOME/.nvm/nvm.sh" rg bat pyenv )
+DEBIAN_DEPS=( fdfind "$HOME/.nvm/nvm.sh" rg batcat pyenv )
 
 if [ "$DISTRO_ARCH" != "" ]; then
     DEPS=( "${CORE_DEPS[@]}" "${ARCH_DEPS[@]}" )
