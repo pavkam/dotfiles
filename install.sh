@@ -388,6 +388,16 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
         install_packages "apt install -y" "$TO_INSTALL"
     fi
 
+    # Special case over here for bat/rip on some Debians
+    apt install -y ripgrep bat &>> $LOG_FILE
+    if [ $? -ne 0 ]; then
+        warn "Forcing the installation of 'ripgrep' and 'bat' due to issue in packaging..."
+        sudo apt install -y -o Dpkg::Options::="--force-overwrite" bat ripgrep &>> $LOG_FILE
+        if [ $? -ne 0 ]; then
+            warn "Failed to instakk 'ripgrep' and 'bat' in parallel. Fix it by hand."
+        fi
+    fi
+
     # Check for tools not in repos. 
     if [ ! -e "$HOME/.nvm/nvm.sh" ]; then
         curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash &>> $LOG_FILE
