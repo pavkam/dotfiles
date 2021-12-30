@@ -398,8 +398,11 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
         fi
     fi
 
+    roll "Checking for packages outside repositories..."
+
     # Check for tools not in repos - nvm.
     if [ ! -e "$HOME/.nvm/nvm.sh" ] && [ "`which nvm`" == "" ]; then
+        roll "Installing 'nvm'..."
         curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash &>> $LOG_FILE
         if [ $? -ne 0 ]; then
             warn "Failed to install nvm script. Please install by hand."
@@ -407,20 +410,13 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     fi
 
     # Check for tools not in repos - pyenv.
-    if [ ! -d "$HOME/.pyenv" ] && [ "`which pyenv`" == "" ]; then
+    if [ ! -e "$HOME/.pyenv/bin/pyenv" ] && [ "`which pyenv`" == "" ]; then
+        roll "Installing 'pyenv'..."
         (
             git clone https://github.com/pyenv/pyenv.git ~/.pyenv &>> $LOG_FILE || exit 1
             cd ~/.pyenv || exit 1
             src/configure &>> $LOG_FILE || exit 1
             make -C src &>> $LOG_FILE || exit 1
-
-            echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zprofile
-            echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zprofile
-            echo 'eval "$(pyenv init --path)"' >> ~/.zprofile
-            echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.profile
-            echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.profile
-            echo 'eval "$(pyenv init --path)"' >> ~/.profile
-            echo 'eval "$(pyenv init -)"' >> ~/.zshrc
         )
 
         if [ $? -ne 0 ]; then
@@ -490,6 +486,7 @@ link .editorconfig
 link .vimrc
 link Pipfile
 link .zshrc
+link .zlogin
 link .zshrc.p10k
 link .curlrc
 link .wgetrc
