@@ -431,7 +431,7 @@ fi
 
 CORE_DEPS=( git vim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink )
 ARCH_DEPS=( fd "$HOME/.nvm/nvm.sh" rg bat pyenv )
-DEBIAN_DEPS=( fdfind "$HOME/.nvm/nvm.sh" rg batcat pyenv )
+DEBIAN_DEPS=( fdfind "$HOME/.nvm/nvm.sh" rg batcat "$HOME/.pyenv/bin/pyenv" )
 
 if [ "$DISTRO_ARCH" != "" ]; then
     DEPS=( "${CORE_DEPS[@]}" "${ARCH_DEPS[@]}" )
