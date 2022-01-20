@@ -38,7 +38,7 @@ fi
 
 # PyEnv version manager.
 PYENV_ROOT="$HOME/.pyenv"
-if [ -e "$PYENV_ROOT/bin/pyenv" ]; then
+if command -v pyenv 1>/dev/null 2>&1; then
   export PYENV_ROOT
   export PATH="$PYENV_ROOT/bin:$PATH"
 

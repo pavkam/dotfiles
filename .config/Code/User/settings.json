@@ -10,7 +10,6 @@
     "explorer.confirmDelete": false,
     "git.enableSmartCommit": true,
     "git.confirmSync": false,
-    "python.defaultInterpreterPath": "/bin/python",
     "editor.renderWhitespace": "trailing",
     "files.exclude": {
         "**/bin": true,

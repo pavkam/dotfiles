@@ -192,10 +192,10 @@ add-zsh-hook preexec mzc_termsupport_preexec
 # FZF-ness
 
 FD_EXE=""
-if [ "`which fdfind`" != "" ]; then
-  FD_EXE="fdfind"
-else [ "`which fd`" != "" ]; then
-  FD_EXE="fd"
+if command -v fdfind &>/dev/null; then
+  FD_EXE=fdfind
+else command -v fd &>/dev/null then
+  FD_EXE=fd
 fi
 
 if [ "$FD_EXE" != "" ]; then
@@ -213,9 +213,9 @@ export FZF_COMPLETION_TRIGGER='**'
 export BAT_PAGER="less -R"
 
 PREVIEW_CAT="cat"
-if [ "`which bat`" != "" ]; then
+if command -v bat &>/dev/null; then
   PREVIEW_CAT="bat --style=numbers --color=always"
-else [ "`which batcat`" != "" ]; then
+elif command -v batcat &>/dev/null; then
   PREVIEW_CAT="batcat --style=numbers --color=always"
 fi
 
