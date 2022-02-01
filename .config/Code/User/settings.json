@@ -1,6 +1,5 @@
 {
     "git.autofetch": true,
-    "window.zoomLevel": 1,
     "security.workspace.trust.untrustedFiles": "open",
     "workbench.colorTheme": "Dracula",
     "workbench.iconTheme": "vscode-icons",
@@ -13,7 +12,11 @@
     "editor.renderWhitespace": "trailing",
     "files.exclude": {
         "**/bin": true,
-        "**/obj": true
+        "**/obj": true,
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
     },
     "editor.bracketPairColorization.enabled": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -22,5 +25,8 @@
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "modificationsIfAvailable",
-    "terminal.integrated.fontFamily": "NotoSansMono Nerd Font"
+    "terminal.integrated.fontFamily": "NotoSansMono Nerd Font",
+    "workbench.startupEditor": "none",
+    "window.zoomLevel": 1,
+    "workbench.tree.indent": 20
 }
