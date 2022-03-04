@@ -28,5 +28,7 @@
     "terminal.integrated.fontFamily": "NotoSansMono Nerd Font",
     "workbench.startupEditor": "none",
     "window.zoomLevel": 1,
-    "workbench.tree.indent": 20
+    "workbench.tree.indent": 20,
+    "editor.suggestSelection": "first",
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue"
 }
