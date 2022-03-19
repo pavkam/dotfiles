@@ -42,7 +42,7 @@ case "$1" in
         ARG="$(cut -d':' -f2 <<< $SCRIPT)"
         SCRIPT="$(cut -d':' -f1 <<< $SCRIPT)"
 
-        sh -c "$QUICKIES_DIR/$SCRIPT.sh --details $ARG"
+        ARG=$ARG sh -c "$QUICKIES_DIR/$SCRIPT.sh --details '$ARG'"
         if [ $? -ne 0 ]; then
             echo "Failed to obtain details for the given quickie script."
             exit 1

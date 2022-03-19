@@ -9,7 +9,7 @@
 # Oh-My-Zsh Setup.
 export ZSH="$HOME/.oh-my-zsh"
 
-plugins=( git z fzf fd docker zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting )
+plugins=( git z fzf fd docker zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting pyenv sdk vscode )
 
 COMM=$(basename "$(cat "/proc/$PPID/comm")")
 if [ "$COMM" = "login" ] || [ "$TERM" = "linux" ]; then
@@ -259,8 +259,10 @@ z() {
 QMGR=$HOME/.qmgr.sh
 if [ -f "$QMGR" ]; then
     quickies_menu() {
-        SCRIPT=$(sh -c "$QMGR --list" | fzf --height=20% --preview-window down,2,border-horizontal --preview "sh -c '$QMGR --details {}'")
+        title "Quickies"
+        SCRIPT=$($QMGR --list | fzf --height=20% --preview-window down,2,border-horizontal --preview "$QMGR --details {}")
         if [ "$SCRIPT" != "" ]; then
+            title "$SCRIPT"
             . "$QMGR" --execute "$SCRIPT"
         fi
     }

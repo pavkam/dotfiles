@@ -15,7 +15,7 @@ case "$1" in
         
         exit 0 ;;
     "--details" )
-        echo "Executes the $ARG command(s) in the current git directory."
+        echo "Executes the \"$ARG\" command(s) in the current git directory."
         exit 0 ;;
 esac
 
