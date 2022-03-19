@@ -500,6 +500,7 @@ link .config/Code/User/keybindings.json "./.config/Code - OSS/User/keybindings.j
 
 link .qmgr.sh
 link .quickies/git.sh
+link .quickies/nvm.sh
 link .quickies/history.sh
 link .quickies/arch-system-upgrade.sh
 link .quickies/red-shift-tunnel-in-production.sh
