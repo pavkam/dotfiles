@@ -269,6 +269,7 @@ if [ -f "$QMGR" ]; then
 
     bindkey -s "^\`" 'quickies_menu^M'
     bindkey -s "^~" 'quickies_menu^M'
+    bindkey -s "\EOP" 'quickies_menu^M'
 fi
 
 # Helper aliases and functions
