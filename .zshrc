@@ -9,7 +9,7 @@
 # Oh-My-Zsh Setup.
 export ZSH="$HOME/.oh-my-zsh"
 
-plugins=( git z fzf fd docker zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting )
+plugins=( git z fzf fd docker zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting pyenv sdk vscode )
 
 COMM=$(basename "$(cat "/proc/$PPID/comm")")
 if [ "$COMM" = "login" ] || [ "$TERM" = "linux" ]; then
@@ -259,8 +259,10 @@ z() {
 QMGR=$HOME/.qmgr.sh
 if [ -f "$QMGR" ]; then
     quickies_menu() {
-        SCRIPT=$(sh -c "$QMGR --list" | fzf --height=20% --preview-window down,2,border-horizontal --preview "sh -c '$QMGR --details {}'")
+        title "Quickies"
+        SCRIPT=$($QMGR --list | fzf --height=20% --preview-window down,2,border-horizontal --preview "$QMGR --details {}")
         if [ "$SCRIPT" != "" ]; then
+            title "$SCRIPT"
             . "$QMGR" --execute "$SCRIPT"
         fi
     }
@@ -324,6 +326,82 @@ if command -v lpass &>/dev/null; then
 	fi
 fi
 
+###-begin-npm-completion-###
+#
+# npm command completion script
+#
+# Installation: npm completion >> ~/.bashrc  (or ~/.zshrc)
+# Or, maybe: npm completion > /usr/local/etc/bash_completion.d/npm
+#
+
+if type complete &>/dev/null; then
+  _npm_completion () {
+    local words cword
+    if type _get_comp_words_by_ref &>/dev/null; then
+      _get_comp_words_by_ref -n = -n @ -n : -w words -i cword
+    else
+      cword="$COMP_CWORD"
+      words=("${COMP_WORDS[@]}")
+    fi
+
+    local si="$IFS"
+    if ! IFS=$'\n' COMPREPLY=($(COMP_CWORD="$cword" \
+                           COMP_LINE="$COMP_LINE" \
+                           COMP_POINT="$COMP_POINT" \
+                           npm completion -- "${words[@]}" \
+                           2>/dev/null)); then
+      local ret=$?
+      IFS="$si"
+      return $ret
+    fi
+    IFS="$si"
+    if type __ltrim_colon_completions &>/dev/null; then
+      __ltrim_colon_completions "${words[cword]}"
+    fi
+  }
+  complete -o default -F _npm_completion npm
+elif type compdef &>/dev/null; then
+  _npm_completion() {
+    local si=$IFS
+    compadd -- $(COMP_CWORD=$((CURRENT-1)) \
+                 COMP_LINE=$BUFFER \
+                 COMP_POINT=0 \
+                 npm completion -- "${words[@]}" \
+                 2>/dev/null)
+    IFS=$si
+  }
+  compdef _npm_completion npm
+elif type compctl &>/dev/null; then
+  _npm_completion () {
+    local cword line point words si
+    read -Ac words
+    read -cn cword
+    let cword-=1
+    read -l line
+    read -ln point
+    si="$IFS"
+    if ! IFS=$'\n' reply=($(COMP_CWORD="$cword" \
+                       COMP_LINE="$line" \
+                       COMP_POINT="$point" \
+                       npm completion -- "${words[@]}" \
+                       2>/dev/null)); then
+
+      local ret=$?
+      IFS="$si"
+      return $ret
+    fi
+    IFS="$si"
+  }
+  compctl -K _npm_completion npm
+fi
+###-end-npm-completion-###
+
+# Import the local configuration, if any.
+LOCAL_INIT="$HOME/.zshrc.local"
+if [ -f "$LOCAL_INIT" ]; then
+     source $LOCAL_INIT
+fi
+
 # Java SDK manager.
 SDKMAN_DIR="$HOME/.sdkman"
 if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
@@ -333,6 +411,20 @@ fi
 
 # NodeJS version manager.
 NVM_INIT="/usr/share/nvm/init-nvm.sh"
+[ -e "$NVM_DIR" ] || NVM_DIR="$HOME/.nvm"
+
 if [ -s "$NVM_INIT" ]; then
-    source $NVM_INIT
+  source "$NVM_INIT"
+elif [ -e "$NVM_DIR/bin/nvm.sh" ]; then
+  source "$NVM_DIR/nvm.sh"
+  source "$NVM_DIR/bash_completion"
+fi
+
+# PyEnv version manager.
+PYENV_ROOT="$HOME/.pyenv"
+if command -v pyenv 1>/dev/null 2>&1; then
+  export PYENV_ROOT
+  export PATH="$PYENV_ROOT/bin:$PATH"
+
+  eval "$(pyenv init --path)"
 fi

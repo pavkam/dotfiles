@@ -553,7 +553,9 @@ link .config/Code/User/settings.json "./.config/Code - OSS/User/settings.json"
 link .config/Code/User/keybindings.json "./.config/Code - OSS/User/keybindings.json"
 
 link .qmgr.sh
-link .quickies/git-command.sh
+link .quickies/git.sh
+link .quickies/nvm.sh
+link .quickies/history.sh
 link .quickies/arch-system-upgrade.sh
 link .quickies/red-shift-tunnel-in-production.sh
 
