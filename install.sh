@@ -239,7 +239,7 @@ function install_packages() {
     fi
 
     warn "Installing packages ['$2']..."
-    $1 $2
+    $1 $2 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ]; then
         err "Failed to install one or more packages from the list ['$2']."
     fi
@@ -431,6 +431,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         brew update 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew tap homebrew/cask 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew tap adoptopenjdk/openjdk 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
+        brew tap homebrew/cask-fonts 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
     )
 
     if [ $? -ne 0 ]; then
@@ -439,9 +440,9 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     fi
 
     PACKS=(
-        vim git ffind mc make diffutils less ripgrep gnu-sed bat tree gcc 
+        vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc 
         golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop 
-        llvm lz4 perl ruby wget zip fzf lua bind nvm
+        llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv node npm
     )
 
     TO_INSTALL=""
@@ -458,7 +459,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     fi
 
     PACKS=(
-        adoptopenjdk13
+        adoptopenjdk13 font-hack-nerd-font
     )
 
     TO_INSTALL=""
@@ -477,13 +478,12 @@ else
     warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
 fi
 
-die
 # ...
 
 CORE_DEPS=( git vim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink )
 ARCH_DEPS=( fd "$HOME/.nvm/nvm.sh" rg bat pyenv )
 DEBIAN_DEPS=( fdfind "$HOME/.nvm/nvm.sh" rg batcat "$HOME/.pyenv/bin/pyenv" )
-DARWIN_DEPS=( fd "/opt/opt/nvm/nvm.sh" rg bat pyenv )
+DARWIN_DEPS=( fd "/opt/homebrew/opt/nvm/nvm.sh" rg bat pyenv )
 
 if [ "$DISTRO_ARCH" != "" ]; then
     DEPS=( "${CORE_DEPS[@]}" "${ARCH_DEPS[@]}" )
