@@ -230,7 +230,7 @@ export FZF_DEFAULT_OPTS="
 --prompt='∼ ' --pointer='▶' --marker='✓'
 --bind '?:toggle-preview'
 --bind 'ctrl-y:execute-silent(echo {+} | xclip -selection clipboard)'
---bind 'alt-enter:execute(clear && xdg-open {+})'
+--bind 'alt-enter:execute(clear && open {+})'
 "
 
 fzf_compgen_path() {
