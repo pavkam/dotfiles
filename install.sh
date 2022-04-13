@@ -486,7 +486,7 @@ link .editorconfig
 link .vimrc
 link Pipfile
 link .zshrc
-link .zlogin
+link .zshenv
 link .zshrc.p10k
 link .curlrc
 link .wgetrc

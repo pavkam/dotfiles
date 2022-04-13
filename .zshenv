@@ -12,3 +12,12 @@ export LANG='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
 export PYTHONIOENCODING='UTF-8'
 export ZSH_PYENV_QUIET=true
+
+# PyEnv version manager.
+PYENV_ROOT="$HOME/.pyenv"
+if command -v pyenv 1>/dev/null 2>&1; then
+  export PYENV_ROOT
+  export PATH="$PYENV_ROOT/bin:$PATH"
+
+  eval "$(pyenv init --path)"
+fi

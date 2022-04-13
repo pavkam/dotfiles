@@ -419,12 +419,3 @@ elif [ -e "$NVM_DIR/bin/nvm.sh" ]; then
   source "$NVM_DIR/nvm.sh"
   source "$NVM_DIR/bash_completion"
 fi
-
-# PyEnv version manager.
-PYENV_ROOT="$HOME/.pyenv"
-if command -v pyenv 1>/dev/null 2>&1; then
-  export PYENV_ROOT
-  export PATH="$PYENV_ROOT/bin:$PATH"
-
-  eval "$(pyenv init --path)"
-fi
