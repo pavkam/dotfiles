@@ -51,13 +51,12 @@ function log_echo() {
     echo "$1"
 }
 
-
 function whoops() {
     if [ $ROLLING -eq 1 ]; then
         echo
     fi
 
-    log_echo "$RED      Whoops: $1"
+    log_echo "${RED}Whoops: $1"
     die
 }
 
@@ -66,7 +65,7 @@ function err() {
         echo
     fi
 
-    log_echo "$RED      Error: $1"
+    log_echo "${RED}Error: $1"
     die
 }
 
@@ -75,7 +74,7 @@ function warn() {
         echo
     fi
 
-    log_echo "$BROWN    Warning: $1"
+    log_echo "${BROWN}Warning: $1"
     ROLLING=0
 }
 
@@ -104,7 +103,7 @@ function force_dir() {
     fi
 
     DN=`dirname -- "$1"`
-    mkdir -p "$DN" &>> $LOG_FILE
+    mkdir -p "$DN" 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ]; then
         err "Failed to create the directory '$DN'."
     fi
@@ -138,8 +137,8 @@ function link() {
 
             force_dir "$BACKUP/$TO"
 
-            rm -r -f -d "$BACKUP/$TO" &>> $LOG_FILE
-			mv "$HOME/$TO" "$BACKUP/$TO" &>> $LOG_FILE
+            rm -r -f -d "$BACKUP/$TO" 1>> $LOG_FILE 2>> $LOG_FILE
+			mv "$HOME/$TO" "$BACKUP/$TO" 1>> $LOG_FILE 2>> $LOG_FILE
             if [ $? -ne 0 ]; then
                 err "Failed to backup file '$HOME/$TO'."
             fi
@@ -154,11 +153,11 @@ function link() {
 
     if [ $DO_LN -eq 1 ]; then
         force_dir "$HOME/$TO"
-        ln -s "$DF/$FROM" "$HOME/$TO" &>> $LOG_FILE
+        ln -s "$DF/$FROM" "$HOME/$TO" 1>> $LOG_FILE 2>> $LOG_FILE
 
         if [ $? -ne 0 ]; then
             if [ $HAS_BACKUP -eq 1 ]; then
-                mv "$BACKUP/$TO" "$HOME/$TO" &>> $LOG_FILE
+                mv "$BACKUP/$TO" "$HOME/$TO" 1>> $LOG_FILE 2>> $LOG_FILE
                 if [ $? -ne 0 ]; then
                     warn "Failed to restore file '$HOME/$TO' from its backup."
                 fi
@@ -176,7 +175,7 @@ function check_installed() {
         whoops "Expected one argument to function."
     fi
 
-    which "$1" &>> $LOG_FILE
+    which "$1" 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ] && [ ! -f "$1" ]; then
         warn "Command '$1' not found."
         return 1
@@ -200,7 +199,7 @@ function pull_or_clone_repo() {
         roll "$NAME is already installed. Pulling..."
         (
             cd "$DIR"
-            git pull &>> $LOG_FILE
+            git pull 1>> $LOG_FILE 2>> $LOG_FILE
             if [ $? -ne 0 ]; then
                 err "Failed to update '$NAME' git repository."
             else
@@ -209,7 +208,7 @@ function pull_or_clone_repo() {
     )
     else
         roll "Cloning '$NAME' repository from '$URL'..."
-        git clone "$URL" "$DIR" &>> $LOG_FILE
+        git clone "$URL" "$DIR" 1>> $LOG_FILE 2>> $LOG_FILE
         if [ $? -ne 0 ]; then
             err "Failed to clone '$NAME' git repository."
         fi
@@ -224,7 +223,7 @@ function is_package_installed() {
     fi
 
     roll "Checking if package '$2' is installed..."
-    $1 "$2" &>> $LOG_FILE
+    $1 "$2" 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ]; then
         roll "Package '$2' not installed."
         return 1
@@ -240,7 +239,7 @@ function install_packages() {
     fi
 
     warn "Installing packages ['$2']..."
-    $1 $2 &>> $LOG_FILE
+    $1 $2 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ]; then
         err "Failed to install one or more packages from the list ['$2']."
     fi
@@ -295,7 +294,7 @@ roll "Checking for the latest version of these .dotfiles..."
     if [ "$CURB" != "main" ]; then
         warn "Skipping the update of .dotfiles located at '$DF'. The current branch is not 'master'."
     else
-        git pull &>> $LOG_FILE
+        git pull 1>> $LOG_FILE 2>> $LOG_FILE
         if [ $? -ne 0 ]; then
             err "Failed to update the .dotfiles located at '$DF'."
             exit 1
@@ -323,7 +322,7 @@ fi
 roll "Checking if the backup directory '$BACKUP' already exists..."
 if [ ! -d "$BACKUP" ]; then
     roll "The backup directory '$BACKUP' does not exist. Creating..."
-    mkdir -p "$BACKUP" &>> $LOG_FILE
+    mkdir -p "$BACKUP" 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ]; then
         err "Failed to create the backup directory '$BACKUP'."
     fi
@@ -338,9 +337,10 @@ roll "Checking your GNU/Linux distribution..."
 
 DISTRO_ARCH="`cat /etc/arch-release 2>/dev/null`"
 DISTRO_DEBIAN="`cat /etc/debian_version 2>/dev/null`"
+DISTRO_DARWIN="`uname -a | grep Darwin`"
 
 if [ "$DISTRO_ARCH" != "" ]; then
-    roll "This is an Arch-based ditribution '$DISTRO_ARCH'. Checking installed packages..."
+    roll "This is an Arch-based distribution '$DISTRO_ARCH'. Checking installed packages..."
 
     PACKS=(
         yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go automake binutils bc
@@ -361,12 +361,7 @@ if [ "$DISTRO_ARCH" != "" ]; then
         install_packages "sudo pacman -S --noconfirm" "$TO_INSTALL"
     fi
 elif [ "$DISTRO_DEBIAN" != "" ]; then
-    roll "This is a Debian-based ditribution '$DISTRO_DEBIAN'. Checking installed packages..."
-
-    # git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-    # cd ~/.pyenv && src/configure && make -C src
-    # dotnet-runtime dotnet-sdk
-    # nerd-fonts-noto-sans-mono
+    roll "This is a Debian-based distribution '$DISTRO_DEBIAN'. Checking installed packages..."
 
     PACKS=(
         zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
@@ -389,10 +384,10 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
 
     # Special case over here for bat/rip on some Debians
     roll "Checking if there are issues between 'ripgrep' and 'bat' due to bad packaging..."
-    apt install -y ripgrep bat &>> $LOG_FILE
+    apt install -y ripgrep bat 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ]; then
         warn "Forcing the installation of 'ripgrep' and 'bat'..."
-        sudo apt install -y -o Dpkg::Options::="--force-overwrite" bat ripgrep &>> $LOG_FILE
+        sudo apt install -y -o Dpkg::Options::="--force-overwrite" bat ripgrep 1>> $LOG_FILE 2>> $LOG_FILE
         if [ $? -ne 0 ]; then
             warn "Failed to instakk 'ripgrep' and 'bat' in parallel. Fix it by hand."
         fi
@@ -403,7 +398,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     # Check for tools not in repos - nvm.
     if [ ! -e "$HOME/.nvm/nvm.sh" ] && [ "`which nvm`" == "" ]; then
         roll "Installing 'nvm'..."
-        curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash &>> $LOG_FILE
+        curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash 1>> $LOG_FILE 2>> $LOG_FILE
         if [ $? -ne 0 ]; then
             warn "Failed to install nvm script. Please install by hand."
         fi
@@ -413,15 +408,71 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     if [ ! -e "$HOME/.pyenv/bin/pyenv" ] && [ "`which pyenv`" == "" ]; then
         roll "Installing 'pyenv'..."
         (
-            git clone https://github.com/pyenv/pyenv.git ~/.pyenv &>> $LOG_FILE || exit 1
+            git clone https://github.com/pyenv/pyenv.git ~/.pyenv 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
             cd ~/.pyenv || exit 1
-            src/configure &>> $LOG_FILE || exit 1
-            make -C src &>> $LOG_FILE || exit 1
+            src/configure 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
+            make -C src 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         )
 
         if [ $? -ne 0 ]; then
             warn "Failed to install pyenv script. Please install by hand."
         fi
+    fi
+elif [ "$DISTRO_DARWIN" != "" ]; then
+    roll "This is Mac. Checking installed packages using brew..."
+     if [ "`which brew`" == "" ]; then
+        err "Can only proceed if 'homebrew' is installed already."
+        die
+    fi
+
+    roll "Preparing brew ..."
+    (
+        brew tap homebrew/cask-versions 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
+        brew update 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
+        brew tap homebrew/cask 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
+        brew tap adoptopenjdk/openjdk 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
+        brew tap homebrew/cask-fonts 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
+    )
+
+    if [ $? -ne 0 ]; then
+        err "Failed to prepare 'brew' for our needs."
+        die
+    fi
+
+    PACKS=(
+        vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc 
+        golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop 
+        llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv node npm
+    )
+
+    TO_INSTALL=""
+    for i in "${PACKS[@]}"
+    do
+        is_package_installed "brew list" $i
+        if [ $? -ne 0 ]; then
+            TO_INSTALL="$TO_INSTALL $i"
+        fi
+    done
+
+    if [ "$TO_INSTALL" != "" ]; then
+        install_packages "brew install" "$TO_INSTALL"
+    fi
+
+    PACKS=(
+        adoptopenjdk13 font-hack-nerd-font
+    )
+
+    TO_INSTALL=""
+    for i in "${PACKS[@]}"
+    do
+        is_package_installed "brew list" $i
+        if [ $? -ne 0 ]; then
+            TO_INSTALL="$TO_INSTALL $i"
+        fi
+    done
+
+    if [ "$TO_INSTALL" != "" ]; then
+        install_packages "brew install --cask" "$TO_INSTALL"
     fi
 else
     warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
@@ -432,13 +483,16 @@ fi
 CORE_DEPS=( git vim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink )
 ARCH_DEPS=( fd "$HOME/.nvm/nvm.sh" rg bat pyenv )
 DEBIAN_DEPS=( fdfind "$HOME/.nvm/nvm.sh" rg batcat "$HOME/.pyenv/bin/pyenv" )
+DARWIN_DEPS=( fd "/opt/homebrew/opt/nvm/nvm.sh" rg bat pyenv )
 
 if [ "$DISTRO_ARCH" != "" ]; then
     DEPS=( "${CORE_DEPS[@]}" "${ARCH_DEPS[@]}" )
 elif [ "$DISTRO_DEBIAN" != "" ]; then
     DEPS=( "${CORE_DEPS[@]}" "${DEBIAN_DEPS[@]}" )
+elif [ "$DISTRO_DARWIN" != "" ]; then
+    DEPS=( "${CORE_DEPS[@]}" "${DARWIN_DEPS[@]}" )
 else
-    DEPS=( "${CORE_DEPS[@]}" "${ARCH_DEPS[@]}" )
+    DEPS=( "${CORE_DEPS[@]}" )
 fi
 
 MUST_DIE=0
@@ -451,7 +505,7 @@ do
 done
 
 if [ $MUST_DIE -eq 1 ]; then
-    warn "Please install the missing dependencies before continuing the installation!"
+    err "Please install the missing dependencies before continuing the installation!"
     die
 else
     roll "All dependencies are installed."
@@ -511,12 +565,12 @@ VUNDLE_DIR=$HOME/.vim/bundle/Vundle.vim
 pull_or_clone_repo "Vundle" "$VUNDLE_DIR" "https://github.com/VundleVim/Vundle.vim.git"
 
 roll "Vundle is installed and at the latest version. Installing plugins..."
-vim +PluginInstall +qall &>> $LOG_FILE
+vim +PluginInstall +qall 1>> $LOG_FILE 2>> $LOG_FILE
 if [ $? -ne 0 ]; then
     err "Failed to install Vundle plugins."
 fi
 
-vim +PluginUpdate +qall &>> $LOG_FILE
+vim +PluginUpdate +qall 1>> $LOG_FILE 2>> $LOG_FILE
 if [ $? -ne 0 ]; then
     err "Failed to update Vundle plugins."
 fi
@@ -525,7 +579,7 @@ roll "All Vundle plugins have been installed & updated."
 roll "Building YouCompleteMe plugin..."
 (
     cd ~/.vim/bundle/youcompleteme
-    ./install.sh &>> $LOG_FILE
+    ./install.sh 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ]; then
         err "Failed to build the YouCompleteMe plugin."
     fi
@@ -536,7 +590,7 @@ roll "YouCompleteMe plugin was re-built."
 check_installed "code"
 if [ $? -eq 0 ]; then
     roll "Installing VS Code extensions..."
-    cat $DF/vs-extensions.txt | xargs -L 1 code --install-extension &>> $LOG_FILE
+    cat $DF/vs-extensions.txt | xargs -L 1 code --install-extension 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ]; then
         err "Failed install VS Code extensions."
     fi

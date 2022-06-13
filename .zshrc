@@ -9,9 +9,9 @@
 # Oh-My-Zsh Setup.
 export ZSH="$HOME/.oh-my-zsh"
 
-plugins=( git z fzf fd docker zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting pyenv sdk vscode )
+plugins=( git z fzf fd docker zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting sdk vscode )
 
-COMM=$(basename "$(cat "/proc/$PPID/comm")")
+COMM=$(basename "$(cat "/proc/$PPID/comm" 1>/dev/null 2>/dev/null)")
 if [ "$COMM" = "login" ] || [ "$TERM" = "linux" ]; then
   export ZSH_THEME="clean"
 else
@@ -230,7 +230,7 @@ export FZF_DEFAULT_OPTS="
 --prompt='∼ ' --pointer='▶' --marker='✓'
 --bind '?:toggle-preview'
 --bind 'ctrl-y:execute-silent(echo {+} | xclip -selection clipboard)'
---bind 'alt-enter:execute(clear && xdg-open {+})'
+--bind 'alt-enter:execute(clear && open {+})'
 "
 
 fzf_compgen_path() {
@@ -269,6 +269,7 @@ if [ -f "$QMGR" ]; then
 
     bindkey -s "^\`" 'quickies_menu^M'
     bindkey -s "^~" 'quickies_menu^M'
+    bindkey -s "\EOP" 'quickies_menu^M'
 fi
 
 # Helper aliases and functions
@@ -288,7 +289,7 @@ alias ts='date -d @1639018800 "+%F %T"'
 
 epoch() {
   if [ "$1" = "" ]; then
-    date '+%s'  
+    date '+%s'
   else
     date -d @$1 '+%F %T'
   fi
@@ -418,4 +419,16 @@ if [ -s "$NVM_INIT" ]; then
 elif [ -e "$NVM_DIR/bin/nvm.sh" ]; then
   source "$NVM_DIR/nvm.sh"
   source "$NVM_DIR/bash_completion"
+elif [ -s "/opt/opt/nvm/nvm.sh" ]; then
+  source "/opt/opt/nvm/nvm.sh"
+  source "/etc/bash_completion.d/nvm"
+fi
+
+# PyEnv version manager.
+PYENV_ROOT="$HOME/.pyenv"
+if command -v pyenv 1>/dev/null 2>&1; then
+  export PYENV_ROOT
+  export PATH="$PYENV_ROOT/bin:$PATH"
+
+  eval "$(pyenv init --path)"
 fi
