@@ -42,3 +42,4 @@ __pypackages__/
 .vscode/
 .history/
 .ionide/
+.DS_Store
