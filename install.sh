@@ -131,7 +131,7 @@ function link() {
     if [ -e "$HOME/$TO" ]; then
         roll "The file or directory '$HOME/$TO' already exists. Checking if backup necessary..."
 
-        CHECK_DEST=`readlink -f "$HOME/$TO"`
+        CHECK_DEST=`readlink "$HOME/$TO" || echo "$HOME/$TO"`
         if [ "$CHECK_DEST" != "$DF/$FROM" ]; then
             warn "Backing up '$HOME/$TO'..."
 
@@ -440,8 +440,8 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     fi
 
     PACKS=(
-        vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc 
-        golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop 
+        vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc
+        golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
         llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv node npm
     )
 
