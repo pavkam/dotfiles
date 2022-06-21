@@ -264,7 +264,7 @@ info "${BLUE}                                  MEOW  _.|o o  |_   ) )           
 info ".--------------------------------------${BLUE}(((${NORMAL}---${BLUE}(((${NORMAL}-----------------------."
 info "| Welcome to pavkam's .dotfiles installer. Hope you enjoy the proces!  |"
 info "| This installer will perform the following changes:                   |"
-info "|     *   Installs dependencies (on Arch-based distros),               |"
+info "|     *   Installs dependencies (Arch/Debian/Darwin),                  |"
 info "|     *   Configures zsh, oh-my-zsh and plugins,                       |"
 info "|     *   Configures git and its settings,                             |"
 info "|     *   Configures vim, Vundle and plugins.                          |"
@@ -439,10 +439,13 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         die
     fi
 
+    # Brew packages 
+    roll "Installing brew packages ..."
     PACKS=(
         vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc
         golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
-        llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv node npm
+        llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn pipx 
+        awscli awsume session-manager-plugin grep jq moreutils
     )
 
     TO_INSTALL=""
@@ -458,6 +461,8 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         install_packages "brew install" "$TO_INSTALL"
     fi
 
+    # Brew cask packages
+    roll "Installing brew cask packages ..."
     PACKS=(
         adoptopenjdk13 font-hack-nerd-font
     )
@@ -474,6 +479,20 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     if [ "$TO_INSTALL" != "" ]; then
         install_packages "brew install --cask" "$TO_INSTALL"
     fi
+
+    # Pipx packages
+    roll "Installing pipx packages ..."
+
+    pipx ensurepath 1>> $LOG_FILE 2>> $LOG_FILE
+    if [ $? -ne 0 ]; then
+        whoops "Failed to prepare pipx."
+    fi
+
+    pipx install aws-sso-util 1>> $LOG_FILE 2>> $LOG_FILE
+    if [ $? -ne 0 ]; then
+        whoops "Failed to install pipx packages."
+    fi
+
 else
     warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
 fi
@@ -551,7 +570,7 @@ link .config/Code/User/settings.json
 link .config/Code/User/keybindings.json
 link .config/Code/User/settings.json "./.config/Code - OSS/User/settings.json"
 link .config/Code/User/keybindings.json "./.config/Code - OSS/User/keybindings.json"
-
+link .aws/cli/alias
 link .qmgr.sh
 link .quickies/git.sh
 link .quickies/nvm.sh

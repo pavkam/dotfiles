@@ -387,9 +387,8 @@ fi
 ###-end-npm-completion-###
 
 # Import the local configuration, if any.
-LOCAL_INIT="$HOME/.zshrc.local"
-if [ -f "$LOCAL_INIT" ]; then
-     source $LOCAL_INIT
+if [ -f "$HOME/.zshrc.local" ]; then
+  source "$HOME/.zshrc.local"
 fi
 
 # PyEnv version manager.
@@ -399,6 +398,7 @@ if command -v pyenv 1>/dev/null 2>&1; then
   export PATH="$PYENV_ROOT/bin:$PATH"
 
   eval "$(pyenv init --path)"
+  eval "$(pyenv virtualenv-init -)"
 fi
 
 # Java SDK manager.
@@ -420,4 +420,22 @@ elif [ -e "$NVM_DIR/bin/nvm.sh" ]; then
 elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
   source "/opt/homebrew/opt/nvm/nvm.sh"
   source "/opt/homebrew/etc/bash_completion.d/nvm"
+fi
+
+# AWS
+if command -v awsume &> /dev/null; then
+  alias awsume=". awsume"
+fi
+
+# Mac-specific stuff
+if [ $IS_ARM64_DARWIN -eq 1 ]; then
+  if [ ! -x "/opt/homebrew/bin/brew" ]; then
+    alias brew='/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+  fi
+
+  if [ -x "/usr/local/Homebrew/bin/brew" ]; then
+    alias ibrew='arch --x86_64 /usr/local/Homebrew/bin/brew'
+  else 
+    alias ibrew='arch --x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
+  fi
 fi
