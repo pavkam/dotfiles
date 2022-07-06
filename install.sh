@@ -439,12 +439,12 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         die
     fi
 
-    # Brew packages 
+    # Brew packages
     roll "Installing brew packages ..."
     PACKS=(
         vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc
         golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
-        llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn pipx 
+        llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn pipx
         awscli awsume session-manager-plugin grep jq moreutils thefuck
     )
 
@@ -566,10 +566,15 @@ link .wgetrc
 link .nuget/NuGet/NuGet.Config
 link .config/mc
 link .config/htop
-link .config/Code/User/settings.json
-link .config/Code/User/keybindings.json
-link .config/Code/User/settings.json "./.config/Code - OSS/User/settings.json"
-link .config/Code/User/keybindings.json "./.config/Code - OSS/User/keybindings.json"
+
+if [ "$DISTRO_DARWIN" = "" ]; then
+    link .config/Code/User/settings.json
+    link .config/Code/User/keybindings.json
+else
+    link .config/Code/User/settings.json "./Application Support/Code/User/settings.json"
+    link .config/Code/User/keybindings.json "./Application Support/Code/User/keybindings.json"
+fi
+
 link .aws/cli/alias
 link .qmgr.sh
 link .quickies/git.sh
