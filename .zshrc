@@ -391,16 +391,6 @@ if [ -f "$HOME/.zshrc.local" ]; then
   source "$HOME/.zshrc.local"
 fi
 
-# PyEnv version manager.
-PYENV_ROOT="$HOME/.pyenv"
-if command -v pyenv 1>/dev/null 2>&1; then
-  export PYENV_ROOT
-  export PATH="$PYENV_ROOT/bin:$PATH"
-
-  eval "$(pyenv init --path)"
-  eval "$(pyenv virtualenv-init -)"
-fi
-
 # Java SDK manager.
 SDKMAN_DIR="$HOME/.sdkman"
 if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
@@ -422,9 +412,14 @@ elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
   source "/opt/homebrew/etc/bash_completion.d/nvm"
 fi
 
+# Little helper
+if command -v thefuck &> /dev/null; then
+  eval $(thefuck --alias)
+fi
+
 # AWS
 if command -v awsume &> /dev/null; then
-  alias awsume=". awsume"
+    alias awsume=". awsume"
 fi
 
 # Mac-specific stuff
@@ -433,9 +428,10 @@ if [ $IS_ARM64_DARWIN -eq 1 ]; then
     alias brew='/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
   fi
 
+  alias x64="arch --x86_64"
   if [ -x "/usr/local/Homebrew/bin/brew" ]; then
-    alias ibrew='arch --x86_64 /usr/local/Homebrew/bin/brew'
+    alias x64-brew='arch --x86_64 /usr/local/Homebrew/bin/brew'
   else 
-    alias ibrew='arch --x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
+    alias x64-brew='arch --x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
   fi
 fi
