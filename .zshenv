@@ -45,15 +45,15 @@ fi
 # Import the local configuration, if any.
 local P=$HOME/.zshenv.local
 if [ -f "$P" ]; then
-  source "$P"
+    source "$P"
 fi
 
 # PyEnv version manager.
 PYENV_ROOT="$HOME/.pyenv"
 if command -v pyenv 1>/dev/null 2>&1; then
-  export PYENV_ROOT
-  export PATH="$PYENV_ROOT/bin:$PATH"
+    export PYENV_ROOT
+    export PATH="$PYENV_ROOT/bin:$PATH"
 
-  eval "$(pyenv init --path)"
-  eval "$(pyenv virtualenv-init -)"
+    eval "$(pyenv init --path)"
+    eval "$(pyenv virtualenv-init -)"
 fi

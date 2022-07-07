@@ -345,7 +345,7 @@ if [ "$DISTRO_ARCH" != "" ]; then
     PACKS=(
         yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv python python2 ruby wget
-        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck
+        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck pipx
     )
 
     TO_INSTALL=""
@@ -366,7 +366,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     PACKS=(
         zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl python2 python3 ruby wget
-        zip bind9-utils bluez fzf apt-utils default-jre thefuck
+        zip bind9-utils bluez fzf apt-utils default-jre thefuck pipx
     )
 
     TO_INSTALL=""
@@ -479,8 +479,21 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     if [ "$TO_INSTALL" != "" ]; then
         install_packages "brew install --cask" "$TO_INSTALL"
     fi
+else
+    warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
+fi
 
-    # Pipx packages
+# Optional dependancies
+if command -v npm 1>$LOG_FILE 2>&1; then
+    roll "Installing npm packages ..."
+
+    npm install -g editorconfig 1>> $LOG_FILE 2>> $LOG_FILE
+    if [ $? -ne 0 ]; then
+        whoops "Failed to install npm packages."
+    fi
+fi
+
+if command -v pipx 1>$LOG_FILE 2>&1; then
     roll "Installing pipx packages ..."
 
     pipx ensurepath 1>> $LOG_FILE 2>> $LOG_FILE
@@ -492,9 +505,6 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     if [ $? -ne 0 ]; then
         whoops "Failed to install pipx packages."
     fi
-
-else
-    warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
 fi
 
 # ...
@@ -624,6 +634,19 @@ else
     warn "VS Code not installed. Skipping extension installation."
 fi
 
+
+LOCALF="$HOME/.zshrc.local1"
+if [ ! -f "$LOCALF" ]; then
+    echo "# Place all your personalized '.zshrc' commands in this file." > $LOCALF
+    roll "Created the $LOCALF file to hold personalized commands."
+fi
+
+LOCALF="$HOME/.zshenv.local1"
+if [ ! -f "$LOCALF" ]; then
+    echo "# Place all your personalized '.zshenv' commands in this file." > $LOCALF
+    roll "Created the $LOCALF file to hold personalized commands."
+fi
+
 info
 info "${BLUE}                                   |\      _,,,---,,_        "
 info "${BLUE}                              ZZZzz /,\`.-'\`'    -.  ;-;;,_  "
@@ -631,4 +654,3 @@ info "${BLUE}                                   |,4-  ) )-,_. ,\ (  \`'-'  "
 info "${BLUE}                                  '---''(_/--'  \`-'\_)       "
 info
 info "All done! You're good to go!"
-info "Consider creating a new '~/.zshrc.local' file to hold your personal settings."
