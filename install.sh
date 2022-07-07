@@ -635,13 +635,13 @@ else
 fi
 
 
-LOCALF="$HOME/.zshrc.local1"
+LOCALF="$HOME/.zshrc.local"
 if [ ! -f "$LOCALF" ]; then
     echo "# Place all your personalized '.zshrc' commands in this file." > $LOCALF
     roll "Created the $LOCALF file to hold personalized commands."
 fi
 
-LOCALF="$HOME/.zshenv.local1"
+LOCALF="$HOME/.zshenv.local"
 if [ ! -f "$LOCALF" ]; then
     echo "# Place all your personalized '.zshenv' commands in this file." > $LOCALF
     roll "Created the $LOCALF file to hold personalized commands."
