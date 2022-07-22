@@ -1,14 +1,19 @@
 antfu.icons-carbon
+christian-kohler.npm-intellisense
 DavidAnson.vscode-markdownlint
 dbaeumer.vscode-eslint
 dracula-theme.theme-dracula
 eamodio.gitlens
+EditorConfig.EditorConfig
 esbenp.prettier-vscode
+firefox-devtools.vscode-firefox-debug
 GitHub.vscode-pull-request-github
 iocave.customize-ui
 iocave.monkey-patch
 mathiasfrohlich.Kotlin
 ms-azuretools.vscode-docker
+ms-edgedevtools.vscode-edge-devtools
+ms-kubernetes-tools.vscode-kubernetes-tools
 ms-python.python
 ms-python.vscode-pylance
 ms-toolsai.jupyter
@@ -18,6 +23,7 @@ ms-vscode-remote.remote-containers
 ms-vscode.cpptools
 ms-vsliveshare.vsliveshare
 redhat.java
+redhat.vscode-yaml
 VisualStudioExptTeam.vscodeintellicode
 vscjava.vscode-java-debug
 vscjava.vscode-java-dependency
