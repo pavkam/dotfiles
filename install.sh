@@ -429,6 +429,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     (
         brew tap homebrew/cask-versions 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew update 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
+        brew upgrade 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew tap homebrew/cask 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew tap adoptopenjdk/openjdk 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew tap homebrew/cask-fonts 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
