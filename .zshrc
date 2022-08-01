@@ -414,3 +414,23 @@ if [ $IS_ARM64_DARWIN -eq 1 ]; then
     alias x64-brew='arch --x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
   fi
 fi
+
+# Kube
+if command -v kubectl &> /dev/null; then
+
+    pods () {
+        if [ "$1" != "" ]; then
+            kubectl get pods -n $1
+        else
+            kubectl get pods --all-namespaces
+        fi
+    }
+
+    pod () {
+        if [ "$2" != "" ]; then
+            pods $2 | sed -n "s/^\($1[[:alnum:],-]\{1,\}\)[[:space:]]\{1,\}.\{1,\}$/\1/p"
+        else
+            pods | sed -n "s/^.\{1,\}[[:space:]]\{1,\}\($1[[:alnum:],-]\{1,\}\)[[:space:]]\{1,\}.\{1,\}$/\1/p"
+        fi
+    }
+fi

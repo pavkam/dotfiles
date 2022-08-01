@@ -345,7 +345,8 @@ if [ "$DISTRO_ARCH" != "" ]; then
     PACKS=(
         yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv python python2 ruby wget
-        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck pipx
+        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck pipx ncdu
+        kubectl helm
     )
 
     TO_INSTALL=""
@@ -366,7 +367,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     PACKS=(
         zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl python2 python3 ruby wget
-        zip bind9-utils bluez fzf apt-utils default-jre thefuck pipx
+        zip bind9-utils bluez fzf apt-utils default-jre thefuck pipx ncdu kubectl helm
     )
 
     TO_INSTALL=""
@@ -446,7 +447,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc
         golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
         llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn pipx
-        awscli awsume session-manager-plugin grep jq moreutils thefuck
+        awscli awsume session-manager-plugin grep jq moreutils thefuck ncdu kubectl helm
     )
 
     TO_INSTALL=""
