@@ -147,7 +147,7 @@ function link() {
             HAS_BACKUP=1
         else
             DO_LN=0
-            roll "The file of directory '$HOME/$TO' points to .dotfiles. No backup will be performed."
+            roll "The file or directory '$HOME/$TO' points to .dotfiles. No backup will be performed."
         fi
     fi
 
@@ -571,6 +571,7 @@ link .vimrc
 link Pipfile
 link .zshrc
 link .zshenv
+link .zprofile
 link .zshrc.p10k
 link .curlrc
 link .wgetrc

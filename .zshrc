@@ -391,27 +391,6 @@ if [ -f "$HOME/.zshrc.local" ]; then
   source "$HOME/.zshrc.local"
 fi
 
-# Java SDK manager.
-SDKMAN_DIR="$HOME/.sdkman"
-if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
-    export SDK_MAN
-    source $SDKMAN_DIR/bin/sdkman-init.sh
-fi
-
-# NodeJS version manager.
-NVM_INIT="/usr/share/nvm/init-nvm.sh"
-[ -e "$NVM_DIR" ] || NVM_DIR="$HOME/.nvm"
-
-if [ -s "/usr/share/nvm/init-nvm.sh" ]; then
-  source "/usr/share/nvm/init-nvm.sh"
-elif [ -e "$NVM_DIR/bin/nvm.sh" ]; then
-  source "$NVM_DIR/nvm.sh"
-  source "$NVM_DIR/bash_completion"
-elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
-  source "/opt/homebrew/opt/nvm/nvm.sh"
-  source "/opt/homebrew/etc/bash_completion.d/nvm"
-fi
-
 # Little helper
 if command -v thefuck &> /dev/null; then
   eval $(thefuck --alias)
@@ -431,7 +410,7 @@ if [ $IS_ARM64_DARWIN -eq 1 ]; then
   alias x64="arch --x86_64"
   if [ -x "/usr/local/Homebrew/bin/brew" ]; then
     alias x64-brew='arch --x86_64 /usr/local/Homebrew/bin/brew'
-  else 
+  else
     alias x64-brew='arch --x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
   fi
 fi

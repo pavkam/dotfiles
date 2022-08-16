@@ -7,6 +7,8 @@
 # | I apologize in advance if I did not mention the sources explicitly.     |
 # ---------------------------------------------------------------------------
 
+typeset -U PATH
+
 # Force locale
 export LANG='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
@@ -18,7 +20,7 @@ export IS_DARWIN=0
 
 local P="$HOME/.local/bin"
 if [ -d "$P" ]; then
-    export PATH="$PATH:$P"
+    export PATH="$P:$PATH"
 fi
 
 if [ "`uname`" = "Darwin" ]; then
@@ -29,11 +31,13 @@ if [ "`uname`" = "Darwin" ]; then
     fi
 fi
 
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
 if [ $IS_DARWIN -eq 1 ] && command -v brew &>/dev/null; then
     _gnu_version () {
         local P="$(brew --prefix)/opt/$1/libexec/gnubin"
         if [ -d "$P" ]; then
-            PATH="$P:$PATH"
+            export PATH="$P:$PATH"
         fi
     }
 
@@ -56,4 +60,25 @@ if command -v pyenv 1>/dev/null 2>&1; then
 
     eval "$(pyenv init --path)"
     eval "$(pyenv virtualenv-init -)"
+fi
+
+# Java SDK manager.
+SDKMAN_DIR="$HOME/.sdkman"
+SDKMAN_INIT="$SDKMAN_DIR/bin/sdkman-init.sh"
+if [ -s "$SDKMAN_INIT" ]; then
+    export SDKMAN_DIR
+    source "$SDKMAN_INIT"
+fi
+
+# NodeJS version manager.
+[ -e "$NVM_DIR" ] || NVM_DIR="$HOME/.nvm"
+
+if [ -s "/usr/share/nvm/init-nvm.sh" ]; then
+  source "/usr/share/nvm/init-nvm.sh"
+elif [ -e "$NVM_DIR/bin/nvm.sh" ]; then
+  source "$NVM_DIR/nvm.sh"
+  source "$NVM_DIR/bash_completion"
+elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
+  source "/opt/homebrew/opt/nvm/nvm.sh"
+  source "/opt/homebrew/etc/bash_completion.d/nvm"
 fi
