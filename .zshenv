@@ -23,17 +23,22 @@ if [ -d "$P" ]; then
     export PATH="$P:$PATH"
 fi
 
+DARWIN_HAS_BREW=0
 if [ "`uname`" = "Darwin" ]; then
     IS_DARWIN=1
 
     if command -v arch &> /dev/null && [ "`arch`" = "arm64" ]; then
         IS_ARM64_DARWIN=1
     fi
+
+    if command -v brew &>/dev/null; then
+        DARWIN_HAS_BREW=1
+    fi
 fi
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-if [ $IS_DARWIN -eq 1 ] && command -v brew &>/dev/null; then
+if [ $DARWIN_HAS_BREW -eq 1 ]; then
     _gnu_version () {
         local P="$(brew --prefix)/opt/$1/libexec/gnubin"
         if [ -d "$P" ]; then
@@ -74,11 +79,19 @@ fi
 [ -e "$NVM_DIR" ] || NVM_DIR="$HOME/.nvm"
 
 if [ -s "/usr/share/nvm/init-nvm.sh" ]; then
-  source "/usr/share/nvm/init-nvm.sh"
+    source "/usr/share/nvm/init-nvm.sh"
 elif [ -e "$NVM_DIR/bin/nvm.sh" ]; then
-  source "$NVM_DIR/nvm.sh"
-  source "$NVM_DIR/bash_completion"
-elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
-  source "/opt/homebrew/opt/nvm/nvm.sh"
-  source "/opt/homebrew/etc/bash_completion.d/nvm"
+    source "$NVM_DIR/nvm.sh"
+    source "$NVM_DIR/bash_completion"
+elif [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ]; then
+    source "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
+    source "$HOMEBREW_PREFIX/etc/bash_completion.d/nvm"
+fi
+
+if [ -s "$HOMEBREW_PREFIX/opt/chruby/share/chruby/chruby.sh" ]; then
+    source $HOMEBREW_PREFIX/opt/chruby/share/chruby/chruby.sh
+fi
+
+if [ -s "$HOMEBREW_PREFIX/opt/chruby/share/chruby/auto.sh" ]; then
+    source $HOMEBREW_PREFIX/opt/chruby/share/chruby/auto.sh
 fi

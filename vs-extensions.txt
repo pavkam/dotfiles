@@ -21,8 +21,10 @@ ms-toolsai.jupyter-keymap
 ms-toolsai.jupyter-renderers
 ms-vscode-remote.remote-containers
 ms-vscode.cpptools
+ms-vscode.hexeditor
 ms-vsliveshare.vsliveshare
 redhat.java
+streetsidesoftware.code-spell-checker
 redhat.vscode-yaml
 VisualStudioExptTeam.vscodeintellicode
 vscjava.vscode-java-debug

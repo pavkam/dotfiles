@@ -417,7 +417,6 @@ fi
 
 # Kube
 if command -v kubectl &> /dev/null; then
-
     pods () {
         if [ "$1" != "" ]; then
             kubectl get pods -n $1
