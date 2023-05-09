@@ -95,3 +95,9 @@ fi
 if [ -s "$HOMEBREW_PREFIX/opt/chruby/share/chruby/auto.sh" ]; then
     source $HOMEBREW_PREFIX/opt/chruby/share/chruby/auto.sh
 fi
+
+# Prepare GO, is installed.
+if command -v go &>/dev/null; then
+    export GOPATH="$HOME/.go"
+    export PATH="$PATH:$GOPATH/bin"
+fi

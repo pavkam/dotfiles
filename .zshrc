@@ -269,6 +269,7 @@ fi
 
 # Helper aliases and functions
 
+alias ls='ls --color=auto'
 alias cp='cp -iv'
 alias mkdir='mkdir -pv'
 alias mv='mv -iv'
@@ -304,16 +305,6 @@ if command -v xdg-open &> /dev/null; then
       xdg-open "$@";
     fi;
   }
-fi
-
-# Custom imports based on installed tooling.
-if command -v lpass &>/dev/null; then
-	if [ "$LAST_PASS_EMAIL" != "" ]; then
-		unalias pass &>/dev/null
-		function pass() {
-			lpass status &>/dev/null || lpass login "$LAST_PASS_EMAIL" &>/dev/null && lpass ls --sync=auto --color=never | grep -E "[0-9]{10}" | fzf --preview-window=default --preview 'lpass show `echo "{}" | sed -n "s/.*\[id\:\ \([0-9]*\)\].*/\1/p"`' | sed -n "s/.*\[id\:\ \([0-9]*\)\].*/\1/p" | xargs lpass show
-		}
-	fi
 fi
 
 ###-begin-npm-completion-###
