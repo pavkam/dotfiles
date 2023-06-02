@@ -344,9 +344,8 @@ if [ "$DISTRO_ARCH" != "" ]; then
 
     PACKS=(
         yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go automake binutils bc
-        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv python python2 ruby wget
-        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck pipx ncdu
-        kubectl helm pre-commit
+        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv python ruby wget
+        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck ncdu
     )
 
     TO_INSTALL=""
@@ -366,8 +365,8 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
 
     PACKS=(
         zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
-        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl python2 python3 ruby wget
-        zip bind9-utils bluez fzf apt-utils default-jre thefuck pipx ncdu kubectl helm pre-commit
+        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl python3 ruby wget
+        zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
     )
 
     TO_INSTALL=""
@@ -446,8 +445,8 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     PACKS=(
         vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc
         golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
-        llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn pipx
-        awscli awsume session-manager-plugin grep jq moreutils thefuck ncdu kubectl helm pre-commit
+        llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn
+        grep jq moreutils thefuck ncdu protobuf proto-gen-go
     )
 
     TO_INSTALL=""
@@ -492,20 +491,6 @@ if command -v npm 1>$LOG_FILE 2>&1; then
     npm install -g editorconfig 1>> $LOG_FILE 2>> $LOG_FILE
     if [ $? -ne 0 ]; then
         whoops "Failed to install npm packages."
-    fi
-fi
-
-if command -v pipx 1>$LOG_FILE 2>&1; then
-    roll "Installing pipx packages ..."
-
-    pipx ensurepath 1>> $LOG_FILE 2>> $LOG_FILE
-    if [ $? -ne 0 ]; then
-        whoops "Failed to prepare pipx."
-    fi
-
-    pipx install aws-sso-util 1>> $LOG_FILE 2>> $LOG_FILE
-    if [ $? -ne 0 ]; then
-        whoops "Failed to install pipx packages."
     fi
 fi
 
@@ -589,12 +574,6 @@ else
 fi
 
 link .aws/cli/alias
-link .qmgr.sh
-link .quickies/git.sh
-link .quickies/nvm.sh
-link .quickies/history.sh
-link .quickies/arch-system-upgrade.sh
-link .quickies/red-shift-tunnel-in-production.sh
 
 # Setup vim
 roll "Setting up vim..."

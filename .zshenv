@@ -17,13 +17,12 @@ export ZSH_PYENV_QUIET=true
 
 export IS_ARM64_DARWIN=0
 export IS_DARWIN=0
+export DARWIN_HAS_BREW=0
 
-local P="$HOME/.local/bin"
-if [ -d "$P" ]; then
-    export PATH="$P:$PATH"
+if [ -d "$HOME/.local/bin" ]; then
+    export PATH="$HOME/.local/bin:$PATH"
 fi
 
-DARWIN_HAS_BREW=0
 if [ "`uname`" = "Darwin" ]; then
     IS_DARWIN=1
 
@@ -36,9 +35,9 @@ if [ "`uname`" = "Darwin" ]; then
     fi
 fi
 
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
 if [ $DARWIN_HAS_BREW -eq 1 ]; then
+    eval "$(brew shellenv)"
+
     _gnu_version () {
         local P="$(brew --prefix)/opt/$1/libexec/gnubin"
         if [ -d "$P" ]; then
@@ -99,5 +98,12 @@ fi
 # Prepare GO, is installed.
 if command -v go &>/dev/null; then
     export GOPATH="$HOME/.go"
-    export PATH="$PATH:$GOPATH/bin"
+
+    if [ -d "$GOPATH/bin" ]; then
+        export PATH="$PATH:$GOPATH/bin"
+    fi
 fi
+
+# Set a marker that the configuration was loaded. Used in .zprofile to avoid
+# loading the configuration twice.
+export PAVKAM_ZSH_CONFIG_SETUP=1

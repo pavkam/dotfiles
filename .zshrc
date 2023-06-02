@@ -251,25 +251,9 @@ z() {
     cd "$(_z -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
 }
 
-QMGR=$HOME/.qmgr.sh
-if [ -f "$QMGR" ]; then
-    quickies_menu() {
-        title "Quickies"
-        SCRIPT=$($QMGR --list | fzf --height=20% --preview-window down,2,border-horizontal --preview "$QMGR --details {}")
-        if [ "$SCRIPT" != "" ]; then
-            title "$SCRIPT"
-            . "$QMGR" --execute "$SCRIPT"
-        fi
-    }
-
-    bindkey -s "^\`" 'quickies_menu^M'
-    bindkey -s "^~" 'quickies_menu^M'
-    bindkey -s "\EOP" 'quickies_menu^M'
-fi
-
 # Helper aliases and functions
 
-alias ls='ls --color=auto'
+alias ls='ls --color'
 alias cp='cp -iv'
 alias mkdir='mkdir -pv'
 alias mv='mv -iv'
@@ -282,6 +266,7 @@ alias sudo='sudo '
 alias map='xargs -n1'
 alias reload='exec ${SHELL} -l'
 alias ts='date -d @1639018800 "+%F %T"'
+alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu | tail -10
 
 epoch() {
   if [ "$1" = "" ]; then
@@ -394,9 +379,9 @@ fi
 
 # Mac-specific stuff
 if [ $IS_ARM64_DARWIN -eq 1 ]; then
-  if [ ! -x "/opt/homebrew/bin/brew" ]; then
-    alias brew='/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-  fi
+    if [ $DARWIN_HAS_BREW -eq 0 ]; then
+        alias brew='/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+    fi
 
   alias x64="arch --x86_64"
   if [ -x "/usr/local/Homebrew/bin/brew" ]; then

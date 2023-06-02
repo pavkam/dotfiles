@@ -7,7 +7,8 @@
 # | I apologize in advance if I did not mention the sources explicitly.     |
 # ---------------------------------------------------------------------------
 
-if [ $IS_DARWIN -eq 1 ] && [ -s "$HOME/.zshenv" ]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-    . "$HOME/.zshenv"
+if [ "$PAVKAM_ZSH_CONFIG_SETUP" != "1" ]; then
+  . "$HOME/.zshenv"
 fi
+
+unset PAVKAM_ZSH_CONFIG_SETUP
