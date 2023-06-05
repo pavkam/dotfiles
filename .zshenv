@@ -28,6 +28,14 @@ if [ "`uname`" = "Darwin" ]; then
 
     if command -v arch &> /dev/null && [ "`arch`" = "arm64" ]; then
         IS_ARM64_DARWIN=1
+
+        if [ -d "/opt/homebrew/bin" ]; then
+            export PATH="/opt/homebrew/bin:$PATH"
+        fi
+    else
+         if [ -d "/usr/local/bin" ]; then
+            export PATH="/usr/local/bin:$PATH"
+        fi
     fi
 
     if command -v brew &>/dev/null; then

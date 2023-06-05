@@ -420,7 +420,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     fi
 elif [ "$DISTRO_DARWIN" != "" ]; then
     roll "This is Mac. Checking installed packages using brew..."
-     if [ "`which brew`" == "" ]; then
+     if ! command -v brew &>/dev/null; then
         err "Can only proceed if 'homebrew' is installed already."
         die
     fi
@@ -446,7 +446,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc
         golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
         llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn
-        grep jq moreutils thefuck ncdu protobuf proto-gen-go
+        grep jq moreutils thefuck ncdu protobuf protoc-gen-go goose
     )
 
     TO_INSTALL=""
