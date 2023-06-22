@@ -267,6 +267,8 @@ alias map='xargs -n1'
 alias reload='exec ${SHELL} -l'
 alias ts='date -d @1639018800 "+%F %T"'
 alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu | tail -10
+alias vi=nvim
+alias vim=nvim
 
 epoch() {
   if [ "$1" = "" ]; then

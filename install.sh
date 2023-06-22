@@ -195,7 +195,7 @@ function pull_or_clone_repo() {
     URL=$3
 
     roll "Installing $NAME using git..."
-    if [ -d "$DIR" ]; then
+    if [ -d "$DIR/.git" ]; then
         roll "$NAME is already installed. Pulling..."
         (
             cd "$DIR"
@@ -267,7 +267,7 @@ info "| This installer will perform the following changes:                   |"
 info "|     *   Installs dependencies (Arch/Debian/Darwin),                  |"
 info "|     *   Configures zsh, oh-my-zsh and plugins,                       |"
 info "|     *   Configures git and its settings,                             |"
-info "|     *   Configures vim, Vundle and plugins.                          |"
+info "|     *   Configures nvim, and its plugins.                            |"
 info ":----------------------------------------------------------------------:"
 info "| ${RED}WARNING: This installer comes with absolutely no guarantees!${NORMAL}         |"
 info "| ${RED}Please backup your home directory for safety reasons.${NORMAL}                |"
@@ -343,7 +343,7 @@ if [ "$DISTRO_ARCH" != "" ]; then
     roll "This is an Arch-based distribution '$DISTRO_ARCH'. Checking installed packages..."
 
     PACKS=(
-        yay zsh vim git fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go automake binutils bc
+        yay zsh git nvim fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv python ruby wget
         zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck ncdu
     )
@@ -364,7 +364,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     roll "This is a Debian-based distribution '$DISTRO_DEBIAN'. Checking installed packages..."
 
     PACKS=(
-        zsh vim git fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
+        zsh git nvim fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
         bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl python3 ruby wget
         zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
     )
@@ -443,7 +443,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     # Brew packages
     roll "Installing brew packages ..."
     PACKS=(
-        vim git fd mc make diffutils less ripgrep gnu-sed bat tree gcc
+        git nvim fd mc make diffutils less ripgrep gnu-sed bat tree gcc
         golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
         llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn
         grep jq moreutils thefuck ncdu protobuf protoc-gen-go goose
@@ -496,7 +496,7 @@ fi
 
 # ...
 
-CORE_DEPS=( git vim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink )
+CORE_DEPS=( git nvim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink )
 ARCH_DEPS=( fd "$HOME/.nvm/nvm.sh" rg bat pyenv )
 DEBIAN_DEPS=( fdfind "$HOME/.nvm/nvm.sh" rg batcat "$HOME/.pyenv/bin/pyenv" )
 DARWIN_DEPS=( fd "/opt/homebrew/opt/nvm/nvm.sh" rg bat pyenv )
@@ -553,7 +553,6 @@ link .gitconfig
 link .gitignore.global
 link .gitattributes.global
 link .editorconfig
-link .vimrc
 link Pipfile
 link .zshrc
 link .zshenv
@@ -575,33 +574,26 @@ fi
 
 link .aws/cli/alias
 
-# Setup vim
-roll "Setting up vim..."
-VUNDLE_DIR=$HOME/.vim/bundle/Vundle.vim
-pull_or_clone_repo "Vundle" "$VUNDLE_DIR" "https://github.com/VundleVim/Vundle.vim.git"
+# Setup nvim
+roll "Setting up NvChad..."
+NVIM_HOME=$HOME/.config/nvim
+pull_or_clone_repo "NvChad" "$NVIM_HOME" "https://github.com/NvChad/NvChad"
 
-roll "Vundle is installed and at the latest version. Installing plugins..."
-vim +PluginInstall +qall 1>> $LOG_FILE 2>> $LOG_FILE
+roll "NvChad is installed and at the latest version."
+
+link .config/nvim/lua/custom
+
+nvim +NvChadUpdate +qall 1>> $LOG_FILE 2>> $LOG_FILE
 if [ $? -ne 0 ]; then
-    err "Failed to install Vundle plugins."
+    err "Failed to update NvChad plugins."
 fi
 
-vim +PluginUpdate +qall 1>> $LOG_FILE 2>> $LOG_FILE
+nvim +MasonInstallAll +qall 1>> $LOG_FILE 2>> $LOG_FILE
 if [ $? -ne 0 ]; then
-    err "Failed to update Vundle plugins."
+    err "Failed to update Mason plugins."
 fi
 
-roll "All Vundle plugins have been installed & updated."
-roll "Building YouCompleteMe plugin..."
-(
-    cd ~/.vim/bundle/youcompleteme
-    ./install.sh 1>> $LOG_FILE 2>> $LOG_FILE
-    if [ $? -ne 0 ]; then
-        err "Failed to build the YouCompleteMe plugin."
-    fi
-)
-
-roll "YouCompleteMe plugin was re-built."
+roll "nvim ready to use!"
 
 check_installed "code"
 if [ $? -eq 0 ]; then
