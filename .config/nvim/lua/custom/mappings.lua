@@ -4,16 +4,34 @@ M.dap = {
     plugin = true,
     n = {
         ['<leader>db'] = {
-            '<cmd> DapToggleBreakpoint <CR>',
+            function ()
+                require('dap').toggle_breakpoint();
+            end,
             'Toggle breakpoint at line',
         },
-        ['<leader>dus'] = {
+        ['<F5>'] = {
             function ()
-                local widgets = require('dap.ui.widgets');
-                local sidebar = widgets.sidebar(widgets.scopes);
-                sidebar.open();
+                require('dap').continue();
             end,
-            'Open debugging sidebar',
+            'Continue debugging',
+        },
+        ['<F8>'] = {
+            function ()
+                require('dap').step_over();
+            end,
+            'Step over',
+        },
+        ['<F7>'] = {
+            function ()
+                require('dap').step_into();
+            end,
+            'Step into',
+        },
+        ['<F9>'] = {
+            function ()
+                require('dap').step_out();
+            end,
+            'Step out',
         },
     },
 }
@@ -21,17 +39,11 @@ M.dap = {
 M.dap_go = {
     plugin = true,
     n = {
-        ['<leader>dgt'] = {
+        ['<leader>td'] = {
             function ()
                 require('dap-go').debug_test();
             end,
             'Debug go test',
-        },
-        ['<leader>dgl'] = {
-            function ()
-                require('dap-go').debug_last();
-            end,
-            'Debug last go test',
         },
     },
 }

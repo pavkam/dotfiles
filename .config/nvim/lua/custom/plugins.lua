@@ -68,8 +68,40 @@ local plugins = {
     },
     {
         'mfussenegger/nvim-dap',
+        config = function()
+            require('dapui')
+            require("nvim-dap-virtual-text")
+        end,
         init = function()
             require('core.utils').load_mappings('dap')
+
+            vim.fn.sign_define('DapBreakpoint',{ text ='🟥', texthl ='', linehl ='', numhl =''})
+            vim.fn.sign_define('DapStopped',{ text ='▶️', texthl ='', linehl ='', numhl =''})
+        end,
+    },
+    {
+        'rcarriga/nvim-dap-ui',
+        dependancies = 'mfussenegger/nvim-dap',
+        config = function(_ , opts)
+            local dap, dapui = require("dap"), require("dapui")
+            dapui.setup(opts)
+
+            dap.listeners.after.event_initialized["dapui_config"]=function()
+                dapui.open()
+            end
+            dap.listeners.before.event_terminated["dapui_config"]=function()
+                dapui.close()
+            end
+            dap.listeners.before.event_exited["dapui_config"]=function()
+                dapui.close()
+            end
+        end,
+    },
+    {
+        'theHamsta/nvim-dap-virtual-text',
+        dependancies = 'mfussenegger/nvim-dap',
+        config = function(_, opts)
+            require("nvim-dap-virtual-text").setup(opts)
         end,
     },
     {
