@@ -446,7 +446,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         git nvim fd mc make diffutils less ripgrep gnu-sed bat tree gcc
         golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
         llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn
-        grep jq moreutils thefuck ncdu protobuf protoc-gen-go goose
+        grep jq moreutils thefuck ncdu
     )
 
     TO_INSTALL=""
@@ -608,6 +608,31 @@ else
     warn "VS Code not installed. Skipping extension installation."
 fi
 
+# Prepare go stuff, if installed
+if command -v go &>/dev/null; then
+    roll "Installing go packages..."
+    export GOPATH="$HOME/.go"
+
+    GO_PACKS=(
+      "github.com/pressly/goose/v3/cmd/goose@latest"
+      "github.com/incu6us/goimports-reviser/v3@latest"
+      "github.com/golang/protobuf/protoc-gen-go@latest"
+      "gotest.tools/gotestsum@latest"
+      "github.com/segmentio/golines@latest"
+      "github.com/go-delve/delve/cmd/dlv@latest"
+     )
+
+    for i in "${GO_PACKS[@]}"
+    do
+        roll "Installing go package: $i ..."
+        go install -v "$i" 1>> $LOG_FILE 2>> $LOG_FILE
+        if [ $? -ne 0 ]; then
+            err "Failed to install go package: $i"
+        fi
+    done
+
+    roll "Finished installing go packages..."
+fi
 
 LOCALF="$HOME/.zshrc.local"
 if [ ! -f "$LOCALF" ]; then
