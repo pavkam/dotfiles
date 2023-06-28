@@ -1,7 +1,7 @@
 [core]
 	excludesfile = ~/.gitignore.global
 	attributesfile = ~/.gitattributes.global
-	editor = vim
+	editor = nvim
 	whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
     pager = less --tabs 4
 	untrackedcache = true

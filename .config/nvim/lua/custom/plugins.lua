@@ -150,6 +150,10 @@ local plugins = {
         },
     },
     {
+        'nvim-tree/nvim-tree.lua',
+        opts = require 'custom.configs.nvim-tree'
+    },
+    {
         'hrsh7th/nvim-cmp',
         dependencies = {
             {

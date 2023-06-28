@@ -84,15 +84,15 @@ M.general = {
         ['<C-z>'] = { '<C-O>u', 'Undo previous change' },
         ['<C-y>'] = { '<C-O>r', 'Redo previous change' },
         ['<C-A>'] = { '<C-O>gg<C-O>gH<C-O>G', 'Select all' },
-        ['<leader><Tab>'] = { '<C-O><C-W>w', 'Switch window' },
+        ['<A-Tab>'] = { '<C-O><C-W>w', 'Switch window' },
     },
     n = {
         ['<C-A>'] = { 'gggH<C-O>G', 'Select all' },
-        ['<C-Tab>'] = { '<C-W>w', 'Switch window' },
+        ['<A-Tab>'] = { '<C-W>w', 'Switch window' },
     },
     v = {
         ['<C-A>'] = { '<C-C>gggH<C-O>G', 'Select all' },
-        ['<C-Tab>'] = { '<C-O><C-W>w', 'Switch window' },
+        ['<A-Tab>'] = { '<C-O><C-W>w', 'Switch window' },
     },
 }
 
