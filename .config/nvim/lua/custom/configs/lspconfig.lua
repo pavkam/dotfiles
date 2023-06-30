@@ -7,9 +7,6 @@ local util = require 'lspconfig/util'
 lspconfig.gopls.setup {
     on_attach = on_attach,
     capabilities = capabilities,
-    cmd = {'gopls'},
-    filetypes = {'go', 'gomod', 'gowork', 'gotmpl'},
-    root_dir = util.root_pattern('go.work', 'go.mod', '.git'),
     settings = {
         gopls = {
             completeUnimported = true,
@@ -25,12 +22,14 @@ lspconfig.gopls.setup {
 lspconfig.bashls.setup {
     on_attach = on_attach,
     capabilities = capabilities,
-    cmd = { 'bash-language-server', 'start' },
-    filetypes = {'sh'},
-    root_dir = util.find_git_ancestor(),
     setting = {
         bashIde = {
             globPattern = "*@(.sh|.inc|.bash|.command)"
         }
     }
+}
+
+lspconfig.tsserver.setup {
+    on_attach = on_attach,
+    capabilities = capabilities,
 }

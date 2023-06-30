@@ -1,7 +1,7 @@
 local set = vim.opt
 
 -- general
-vim.cmd('behave mswin')
+vim.cmd('runtime mswin.vim')
 
 set.title = true
 set.visualbell = true
@@ -72,3 +72,4 @@ set.smartcase = true
 -- special
 set.listchars='tab:▸ ,trail:·,extends:#,nbsp:·'
 set.list = false
+

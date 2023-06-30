@@ -84,7 +84,13 @@ M.dap = {
         ['<leader>dc'] = {
             function ()
                 if vim.fn.filereadable('.vscode/launch.json') then
-                    require('dap.ext.vscode').load_launchjs()
+                    local jsl = { "typescript", "javascript", "typescriptreact" }
+                    require('dap.ext.vscode').load_launchjs(nil, {
+                        ['pwa-node'] = jsl,
+                        ['node'] = jsl,
+                        ['chrome'] = jsl,
+                        ['pwa-chrome'] = jsl
+                    })
                 end
 
                 require('dap').continue();
@@ -357,13 +363,13 @@ M.blankline = {
         ['<leader>sc'] = {
             function()
                 local ok, start = require('indent_blankline.utils').get_current_context(
-                vim.g.indent_blankline_context_patterns,
-                vim.g.indent_blankline_use_treesitter_scope
+                    vim.g.indent_blankline_context_patterns,
+                    vim.g.indent_blankline_use_treesitter_scope
                 )
 
                 if ok then
-                vim.api.nvim_win_set_cursor(vim.api.nvim_get_current_win(), { start, 0 })
-                vim.cmd [[normal! _]]
+                    vim.api.nvim_win_set_cursor(vim.api.nvim_get_current_win(), { start, 0 })
+                    vim.cmd [[normal! _]]
                 end
             end,
 
@@ -516,9 +522,7 @@ M.nvterm = {
 M.general = {
     i = {
         ['<S-Tab>'] = { '<C-d>', 'Left tab' },
-        ['<C-x>'] = { '<C-O>dd', 'Delete current line' },
-        ['<C-z>'] = { '<C-O>u', 'Undo previous change' },
-        ['<C-y>'] = { '<C-O>r', 'Redo previous change' },
+        ['<C-X>'] = { '<C-O>dd', 'Delete current line' },
         ['<C-A>'] = { '<C-O>gg<C-O>gH<C-O>G', 'Select all' },
         ['<A-Tab>'] = { '<C-O><C-W>w', 'Switch window' },
 
@@ -527,8 +531,8 @@ M.general = {
         ['<A-Right>'] = { '<C-O><C-w>l', 'Window right' },
         ['<A-Down>'] = { '<C-O><C-w>j', 'Window down' },
         ['<A-Up>'] = { '<C-O><C-w>k', 'Window up' },
+        ['<A-X>'] = { '<C-O><C-w>c', 'Close window' },
     },
-
     n = {
         ['<C-A>'] = { 'gggH<C-O>G', 'Select all' },
 
@@ -537,6 +541,7 @@ M.general = {
         ['<A-Right>'] = { '<C-w>l', 'Window right' },
         ['<A-Down>'] = { '<C-w>j', 'Window down' },
         ['<A-Up>'] = { '<C-w>k', 'Window up' },
+        ['<A-X>'] = { '<C-w>c', 'Close window' },
 
         ['<leader>?c'] = { '<cmd> NvCheatsheet <CR>', 'Mapping cheatsheet' },
 
@@ -547,6 +552,11 @@ M.general = {
     v = {
         ['<C-A>'] = { '<C-C>gggH<C-O>G', 'Select all' },
         ['<A-Tab>'] = { '<C-O><C-W>w', 'Switch window' },
+        ['<A-Left>'] = { '<C-O><C-w>h', 'Window left' },
+        ['<A-Right>'] = { '<C-O><C-w>l', 'Window right' },
+        ['<A-Down>'] = { '<C-O><C-w>j', 'Window down' },
+        ['<A-Up>'] = { '<C-O><C-w>k', 'Window up' },
+        ['<A-X>'] = { '<C-O><C-w>c', 'Close window' },
     },
 }
 
