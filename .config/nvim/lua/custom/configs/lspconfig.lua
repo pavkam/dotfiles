@@ -1,15 +1,15 @@
-local on_attach = require("plugins.configs.lspconfig").on_attach
-local capabilities = require("plugins.configs.lspconfig").capabilities
+local on_attach = require('plugins.configs.lspconfig').on_attach
+local capabilities = require('plugins.configs.lspconfig').capabilities
 
-local lspconfig = require("lspconfig")
-local util = require "lspconfig/util"
+local lspconfig = require('lspconfig')
+local util = require 'lspconfig/util'
 
 lspconfig.gopls.setup {
     on_attach = on_attach,
     capabilities = capabilities,
-    cmd = {"gopls"},
-    filetypes = {"go", "gomod", "gowork", "gotmpl"},
-    root_dir = util.root_pattern("go.work", "go.mod", ".git"),
+    cmd = {'gopls'},
+    filetypes = {'go', 'gomod', 'gowork', 'gotmpl'},
+    root_dir = util.root_pattern('go.work', 'go.mod', '.git'),
     settings = {
         gopls = {
             completeUnimported = true,
@@ -20,5 +20,17 @@ lspconfig.gopls.setup {
             staticcheck = true,
         },
     },
-    root_dir = util.root_pattern("go.mod", ".git"),
+}
+
+lspconfig.bashls.setup {
+    on_attach = on_attach,
+    capabilities = capabilities,
+    cmd = { 'bash-language-server', 'start' },
+    filetypes = {'sh'},
+    root_dir = util.find_git_ancestor(),
+    setting = {
+        bashIde = {
+            globPattern = "*@(.sh|.inc|.bash|.command)"
+        }
+    }
 }

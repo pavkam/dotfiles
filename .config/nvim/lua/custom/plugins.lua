@@ -3,7 +3,7 @@ local plugins = {
         'williamboman/mason.nvim',
         opts = {
             ensure_installed = {
-                'gopls',
+                'gopls', 'bash-language-server'
             },
         },
     },
@@ -70,7 +70,7 @@ local plugins = {
         'mfussenegger/nvim-dap',
         config = function()
             require('dapui')
-            require("nvim-dap-virtual-text")
+            require('nvim-dap-virtual-text')
         end,
         init = function()
             require('core.utils').load_mappings('dap')
@@ -83,16 +83,16 @@ local plugins = {
         'rcarriga/nvim-dap-ui',
         dependancies = 'mfussenegger/nvim-dap',
         config = function(_ , opts)
-            local dap, dapui = require("dap"), require("dapui")
+            local dap, dapui = require('dap'), require('dapui')
             dapui.setup(opts)
 
-            dap.listeners.after.event_initialized["dapui_config"]=function()
+            dap.listeners.after.event_initialized['dapui_config'] = function()
                 dapui.open()
             end
-            dap.listeners.before.event_terminated["dapui_config"]=function()
+            dap.listeners.before.event_terminated['dapui_config'] = function()
                 dapui.close()
             end
-            dap.listeners.before.event_exited["dapui_config"]=function()
+            dap.listeners.before.event_exited['dapui_config'] = function()
                 dapui.close()
             end
         end,
@@ -101,7 +101,7 @@ local plugins = {
         'theHamsta/nvim-dap-virtual-text',
         dependancies = 'mfussenegger/nvim-dap',
         config = function(_, opts)
-            require("nvim-dap-virtual-text").setup(opts)
+            require('nvim-dap-virtual-text').setup(opts)
         end,
     },
     {
@@ -122,7 +122,7 @@ local plugins = {
     },
     {
         'jose-elias-alvarez/null-ls.nvim',
-        ft = 'go',
+        ft = { 'go', 'sh', 'md', 'js', 'jsx', 'ts', 'tsx', 'json', 'yaml' },
         opts = function ()
           return require 'custom.configs.null-ls'
         end
@@ -180,25 +180,25 @@ local plugins = {
             'nvim-lua/plenary.nvim',
             'nvim-treesitter/nvim-treesitter',
             'antoinemadec/FixCursorHold.nvim',
-            "nvim-neotest/neotest-go",
+            'nvim-neotest/neotest-go',
         },
         init = function()
             require('core.utils').load_mappings('neotest')
         end,
         config = function()
-            local neotest_ns = vim.api.nvim_create_namespace("neotest")
+            local neotest_ns = vim.api.nvim_create_namespace('neotest')
             vim.diagnostic.config({
                 virtual_text = {
                     format = function(diagnostic)
                         local message =
-                            diagnostic.message:gsub("\n", " "):gsub("\t", " "):gsub("%s+", " "):gsub("^%s+", "")
+                            diagnostic.message:gsub('\n', ' '):gsub('\t', ' '):gsub('%s+', ' '):gsub('^%s+', '')
                         return message
                     end,
                 },
             }, neotest_ns)
-            require("neotest").setup({
+            require('neotest').setup({
                 adapters = {
-                    require("neotest-go"),
+                    require('neotest-go'),
                 },
             })
         end,
