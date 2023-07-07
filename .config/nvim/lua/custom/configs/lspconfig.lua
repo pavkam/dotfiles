@@ -33,3 +33,8 @@ lspconfig.tsserver.setup {
     on_attach = on_attach,
     capabilities = capabilities,
 }
+
+lspconfig.prismals.setup{
+    on_attach = on_attach,
+    capabilities = capabilities,
+}

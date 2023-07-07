@@ -56,6 +56,7 @@
 	prunea = !git branch -r | awk '{print $1}' | egrep -v -f /dev/fd/0 <(git branch -vv | grep origin) | awk '{print $1}' | xargs git branch -D
 	taga = !git tag -l | xargs git tag -d && git fetch -t || git fetch -t || git fetch -t
 	sync = !git prunea && git taga && git pull
+    update = !git pull origin $(git rev-parse --abbrev-ref HEAD) && git merge origin $(git rev-parse --abbrev-ref HEAD)
 	lc = log --decorate=short --graph --pretty=format:\"%C(red)%h%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset) %C(blue)%C(bold)<%an>%C(auto)%d\" --color=always
 	ls = stash list --pretty=format:\"%C(red)%gd%C(reset) %C(green)%s%C(reset) - %C(yellow)(%ar)%C(reset)\"
 	lb = branch --all --list --verbose

@@ -343,9 +343,10 @@ if [ "$DISTRO_ARCH" != "" ]; then
     roll "This is an Arch-based distribution '$DISTRO_ARCH'. Checking installed packages..."
 
     PACKS=(
-        yay zsh git nvim fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go automake binutils bc
-        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv python ruby wget
-        zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck ncdu
+        yay zsh git nvim fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go protobuf
+        automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv
+        python ruby wget zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck ncdu
+        shellcheck
     )
 
     TO_INSTALL=""
@@ -364,9 +365,10 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     roll "This is a Debian-based distribution '$DISTRO_DEBIAN'. Checking installed packages..."
 
     PACKS=(
-        zsh git nvim fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go automake binutils bc
-        bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl python3 ruby wget
-        zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
+        zsh git nvim fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go protobuf
+        automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl
+        python3 ruby wget zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
+        shellcheck
     )
 
     TO_INSTALL=""
@@ -444,9 +446,9 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     roll "Installing brew packages ..."
     PACKS=(
         git nvim fd mc make diffutils less ripgrep gnu-sed bat tree gcc
-        golang automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
+        golang protobuf automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
         llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn
-        grep jq moreutils thefuck ncdu
+        grep jq moreutils thefuck ncdu shellcheck
     )
 
     TO_INSTALL=""
@@ -617,6 +619,7 @@ if command -v go &>/dev/null; then
       "github.com/pressly/goose/v3/cmd/goose@latest"
       "github.com/incu6us/goimports-reviser/v3@latest"
       "github.com/golang/protobuf/protoc-gen-go@latest"
+      "google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest"
       "gotest.tools/gotestsum@latest"
       "github.com/segmentio/golines@latest"
       "github.com/go-delve/delve/cmd/dlv@latest"

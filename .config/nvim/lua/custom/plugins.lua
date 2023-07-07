@@ -3,7 +3,7 @@ local plugins = {
         'williamboman/mason.nvim',
         opts = {
             ensure_installed = {
-                'gopls', 'bash-language-server', 'typescript-language-server'
+                'gopls', 'bash-language-server', 'typescript-language-server', 'prisma-language-server'
             },
         },
     },
@@ -19,6 +19,7 @@ local plugins = {
                 'tsx',
 
                 -- docs
+                'markdown',
                 'markdown_inline',
                 'jsdoc',
 
@@ -118,21 +119,32 @@ local plugins = {
         ft = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' },
         dependancies = {
             'mfussenegger/nvim-dap',
-            'microsoft/vscode-js-debug'
+             'microsoft/vscode-js-debug'
         },
         config = function()
-            require("dap-vscode-js").setup({
-                debugger_path = vim.fn.stdpath("data") .. "/lazy/vscode-js-debug",
-                adapters = { 'chrome', 'pwa-node', 'pwa-chrome', 'pwa-msedge', 'node-terminal', 'pwa-extensionHost', 'node', 'chrome' },
-            })
+            require 'custom.configs.dap-vscode-js'
 	    end
     },
     {
-        "microsoft/vscode-js-debug",
-        build = "npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out"
+        'microsoft/vscode-js-debug',
+        lazy = false,
+        build = 'npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out'
+    },
+    {
+        'glepnir/lspsaga.nvim',
+        event = 'LspAttach',
+        config = function()
+            require 'custom.configs.lspsaga'
+            require('core.utils').load_mappings('lspsaga')
+        end,
+        dependencies = {
+            'nvim-tree/nvim-web-devicons',
+            'nvim-treesitter/nvim-treesitter',
+        }
     },
     {
         'neovim/nvim-lspconfig',
+        dependencies = 'glepnir/lspsaga.nvim',
         config = function()
             require 'plugins.configs.lspconfig'
             require 'custom.configs.lspconfig'
@@ -140,7 +152,7 @@ local plugins = {
     },
     {
         'jose-elias-alvarez/null-ls.nvim',
-        ft = { 'go', 'sh', 'md', 'js', 'jsx', 'ts', 'tsx', 'json', 'yaml' },
+        ft = { 'go', 'sh', 'markdown', 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'json', 'yaml' },
         opts = function ()
           return require 'custom.configs.null-ls'
         end
@@ -199,26 +211,30 @@ local plugins = {
             'nvim-treesitter/nvim-treesitter',
             'antoinemadec/FixCursorHold.nvim',
             'nvim-neotest/neotest-go',
+            'nvim-neotest/neotest-jest',
         },
         init = function()
             require('core.utils').load_mappings('neotest')
         end,
         config = function()
-            local neotest_ns = vim.api.nvim_create_namespace('neotest')
-            vim.diagnostic.config({
-                virtual_text = {
-                    format = function(diagnostic)
-                        local message =
-                            diagnostic.message:gsub('\n', ' '):gsub('\t', ' '):gsub('%s+', ' '):gsub('^%s+', '')
-                        return message
-                    end,
-                },
-            }, neotest_ns)
-            require('neotest').setup({
-                adapters = {
-                    require('neotest-go'),
-                },
-            })
+            require 'custom.configs.neotest'
+        end,
+    },
+    {
+        'nvim-telescope/telescope-ui-select.nvim',
+        lazy = false,
+        dependencies = {
+            'nvim-telescope/telescope.nvim',
+        },
+        config = function()
+            local telescope = require 'telescope'
+             telescope.setup {
+                extensions = {
+                    ["ui-select"] = { require("telescope.themes").get_dropdown {} }
+                }
+            }
+            telescope.load_extension('ui-select')
+
         end,
     },
 }

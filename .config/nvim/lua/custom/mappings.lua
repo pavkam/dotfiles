@@ -218,111 +218,30 @@ M.telescope = {
 
 M.lspconfig = {
     n = {
-        ['<leader>sD'] = {
-            function()
-                vim.lsp.buf.declaration()
-            end,
-            'Go to declaration',
-        },
-
-        ['<leader>sd'] = {
-            function()
-                vim.lsp.buf.definition()
-            end,
-            'Go to definition',
-        },
-
-        ['<leader>si'] = {
-            function()
-                vim.lsp.buf.implementation()
-            end,
-            'Go to implementation',
-        },
-
-        ['<leader>st'] = {
-            function()
-                vim.lsp.buf.type_definition()
-            end,
-            'Go to type definition',
-        },
-
-        ['<leader>sr'] = {
-            function()
-                vim.lsp.buf.references()
-            end,
-            'Show all references',
-        },
-
-        ['<leader>s!'] = {
-            function()
-                vim.lsp.buf.hover()
-            end,
-            'Show source information',
-        },
-
         ['<leader>s?'] = {
             function()
                 vim.lsp.buf.signature_help()
             end,
             'Show signature help',
         },
-
-        ['<leader>sR'] = {
-            function()
-                require('nvchad_ui.renamer').open()
-            end,
-            'Refactor: rename',
-        },
-
         ['<leader>sF'] = {
             function()
                 vim.lsp.buf.format { async = true }
             end,
             'Refactor: format file',
         },
-
-        ['<leader>s['] = {
-            function()
-                vim.diagnostic.goto_prev { float = { border = 'rounded' } }
-            end,
-            'Goto prev code issue',
-        },
-
-        ['<leader>s]'] = {
-            function()
-                vim.diagnostic.goto_next { float = { border = 'rounded' } }
-            end,
-            'Goto next code issue',
-        },
-
-        ['<leader>s\\'] = {
-            function()
-                vim.lsp.buf.code_action()
-            end,
-            'Show current code action',
-        },
-
-        ['<leader>s+'] = {
-            function()
-                vim.diagnostic.setloclist()
-            end,
-            'Add code issues to locations list',
-        },
-
         ['<leader>wa'] = {
             function()
                 vim.lsp.buf.add_workspace_folder()
             end,
             'Add workspace folder',
         },
-
         ['<leader>wr'] = {
             function()
                 vim.lsp.buf.remove_workspace_folder()
             end,
             'Remove workspace folder',
         },
-
         ['<leader>wl'] = {
             function()
                 print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
@@ -332,6 +251,43 @@ M.lspconfig = {
     }
 }
 
+M.lspsaga = {
+    plugin = true,
+    n = {
+        ['<leader>so'] = { '<cmd> Lspsaga outline <CR>', 'Toggle code outline' },
+        ['<leader>ss'] = { '<cmd> Lspsaga lsp_finder <CR>', 'See identifier information' },
+        ['<leader>s!'] = { '<cmd> Lspsaga hover_doc <CR>', 'Show identifier information' },
+        ['<leader>sR'] = { '<cmd> Lspsaga rename <CR>', 'Refactor: rename' },
+        ['<leader>sF'] = {
+            function()
+                vim.lsp.buf.format { async = true }
+            end,
+            'Refactor: format file',
+        },
+        ['<leader>s['] = { '<cmd> Lspsaga diagnostic_jump_prev <CR>', 'Goto prev code issue' },
+        ['<leader>s]'] = { '<cmd> Lspsaga diagnostic_jump_next <CR>', 'Goto next code issue' },
+        ['<leader>s.'] = { '<cmd> Lspsaga code_action <CR>', 'Show current code actions' },
+        ['<leader>s\\'] = { '<cmd> Lspsaga show_buf_diagnostics <CR>', 'Add code issues to locations list'},
+        ['<leader>wa'] = {
+            function()
+                vim.lsp.buf.add_workspace_folder()
+            end,
+            'Add workspace folder',
+        },
+        ['<leader>wr'] = {
+            function()
+                vim.lsp.buf.remove_workspace_folder()
+            end,
+            'Remove workspace folder',
+        },
+        ['<leader>wl'] = {
+            function()
+                print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+            end,
+            'List workspace folders',
+        },
+    }
+}
 
 M.comment = {
     n = {
@@ -357,7 +313,6 @@ M.nvimtree = {
     },
 }
 
-
 M.blankline = {
     n = {
         ['<leader>sc'] = {
@@ -377,7 +332,6 @@ M.blankline = {
         },
     },
 }
-
 
 M.gitsigns = {
   n = {
@@ -446,48 +400,24 @@ M.gitsigns = {
   },
 }
 
-
 M.nvterm = {
-  t = {
-    ['<A-i>'] = {
-      function()
-        require('nvterm.terminal').toggle 'float'
-      end,
-      'Toggle floating term',
-    },
-
-    ['<A-h>'] = {
-      function()
-        require('nvterm.terminal').toggle 'horizontal'
-      end,
-      'Toggle horizontal term',
-    },
-
-    ['<A-v>'] = {
-      function()
-        require('nvterm.terminal').toggle 'vertical'
-      end,
-      'Toggle vertical term',
-    },
-  },
-
   n = {
     -- toggle in normal mode
-    ['<leader>zti'] = {
+    ['<leader>zz'] = {
       function()
         require('nvterm.terminal').toggle 'float'
       end,
       'Toggle floating term',
     },
 
-    ['<leader>zth'] = {
+    ['<leader>zh'] = {
       function()
         require('nvterm.terminal').toggle 'horizontal'
       end,
       'Toggle horizontal term',
     },
 
-    ['<leader>ztv'] = {
+    ['<leader>zv'] = {
       function()
         require('nvterm.terminal').toggle 'vertical'
       end,
@@ -495,21 +425,14 @@ M.nvterm = {
     },
 
     -- new
-    ['<leader>zh'] = {
+    ['<leader>znh'] = {
       function()
         require('nvterm.terminal').new 'horizontal'
       end,
       'New horizontal term',
     },
 
-    ['<leader>zi'] = {
-      function()
-        require('nvterm.terminal').new 'float'
-      end,
-      'New floating term',
-    },
-
-    ['<leader>zv'] = {
+    ['<leader>znv'] = {
       function()
         require('nvterm.terminal').new 'vertical'
       end,
