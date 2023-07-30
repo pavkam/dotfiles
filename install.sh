@@ -577,22 +577,17 @@ fi
 link .aws/cli/alias
 
 # Setup nvim
-roll "Setting up NvChad..."
+roll "Setting up AstroNvim..."
 NVIM_HOME=$HOME/.config/nvim
-pull_or_clone_repo "NvChad" "$NVIM_HOME" "https://github.com/NvChad/NvChad"
+pull_or_clone_repo "AstroNvim" "$NVIM_HOME" "https://github.com/AstroNvim/AstroNvim"
 
-roll "NvChad is installed and at the latest version."
+roll "AstroNvim is installed and at the latest version."
 
-link .config/nvim/lua/custom
+link .config/nvim/lua/user
 
-nvim +NvChadUpdate +qall 1>> $LOG_FILE 2>> $LOG_FILE
+nvim  --headless -c 'quitall' 1>> $LOG_FILE 2>> $LOG_FILE
 if [ $? -ne 0 ]; then
-    err "Failed to update NvChad plugins."
-fi
-
-nvim +MasonInstallAll +qall 1>> $LOG_FILE 2>> $LOG_FILE
-if [ $? -ne 0 ]; then
-    err "Failed to update Mason plugins."
+    err "Failed to update AstroNvim."
 fi
 
 roll "nvim ready to use!"
