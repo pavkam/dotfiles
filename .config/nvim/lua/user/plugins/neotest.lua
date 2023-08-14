@@ -6,6 +6,7 @@ return {
             'nvim-lua/plenary.nvim',
             'nvim-neotest/neotest-go',
             'nvim-neotest/neotest-jest',
+            'marilari88/neotest-vitest',
             'nvim-neotest/neotest-python',
             {
                 'folke/neodev.nvim',
@@ -23,7 +24,6 @@ return {
             local jest = require('neotest-jest')
             jest = jest({
                 jestCommand = 'yarn test --',
-                jestConfigFile = 'jest.config.ts',
                 env = {
                     CI = true
                 },
@@ -36,6 +36,7 @@ return {
                 adapters = {
                     require 'neotest-go',
                     require 'neotest-python',
+                    require 'neotest-vitest',
                     jest,
                 },
             }

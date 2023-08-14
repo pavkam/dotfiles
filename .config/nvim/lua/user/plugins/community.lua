@@ -8,6 +8,9 @@ return {
     { import = 'astrocommunity.completion.copilot-lua-cmp' },
     { import = 'astrocommunity.scrolling.nvim-scrollbar' },
     { import = 'astrocommunity.debugging.nvim-dap-virtual-text' },
+
+    { import = 'astrocommunity.lsp.lsp-inlayhints-nvim' },
+
     { import = 'astrocommunity.pack.prisma' },
     { import = 'astrocommunity.pack.docker' },
     { import = 'astrocommunity.pack.go' },

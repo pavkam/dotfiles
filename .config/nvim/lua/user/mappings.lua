@@ -101,4 +101,13 @@ return {
         ['<A-S-Right>'] = { '<cmd> bnext <cr>', desc = 'Buffer next' },
         ['<A-S-Left>'] = { '<cmd> bprev <cr>', desc = 'Buffer previous' },
     },
+    t = {
+        ['<esc><esc>'] = { '<C-\\><C-n>', desc = 'die' },
+
+        ['<A-Tab>'] = { '<C-W>w', desc = 'Switch window' },
+        ['<A-Left>'] = { '<C-w>h', desc = 'Window left' },
+        ['<A-Right>'] = { '<C-w>l', desc = 'Window right' },
+        ['<A-Down>'] = { '<C-w>j', desc = 'Window down' },
+        ['<A-Up>'] = { '<C-w>k', desc = 'Window up' },
+    }
 }
