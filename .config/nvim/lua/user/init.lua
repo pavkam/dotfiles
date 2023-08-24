@@ -17,6 +17,9 @@ return {
             },
         },
     },
+    mappings = function(maps)
+        print(maps)
+    end,
     lsp = {
         config = {
             gopls = {

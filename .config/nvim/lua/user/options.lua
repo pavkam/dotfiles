@@ -1,5 +1,5 @@
 vim.cmd('set backspace=indent,eol,start whichwrap+=<,>,[,]')
-vim.cmd('runtime mswin.vim')
+--vim.cmd('runtime mswin.vim')
 
 vim.opt.shortmess:append('I')
 vim.opt.formatoptions:append('1')
