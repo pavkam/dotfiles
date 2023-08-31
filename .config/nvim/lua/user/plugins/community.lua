@@ -6,7 +6,6 @@ return {
     { import = 'astrocommunity.utility.noice-nvim' },
     { import = 'astrocommunity.colorscheme.catppuccin' },
     { import = 'astrocommunity.completion.copilot-lua-cmp' },
-    { import = 'astrocommunity.scrolling.nvim-scrollbar' },
     { import = 'astrocommunity.debugging.nvim-dap-virtual-text' },
 
     { import = 'astrocommunity.lsp.lsp-inlayhints-nvim' },

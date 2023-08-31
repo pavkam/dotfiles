@@ -1,12 +1,9 @@
 local utils = require 'astronvim.utils'
 local is_available = utils.is_available
-local get_icon = utils.get_icon
 
 return function(mappings)
     mappings.n['<leader>li'] = nil
     mappings.n['<leader>lI'] = nil
-
-    mappings.n['<leader>s'] = { desc = get_icon('ActiveLSP', 1, true) .. 'Source/Symbol' }
 
     mappings.n['<leader>s.'] = mappings.n['<leader>la']
     mappings.n['<leader>la'] = nil
@@ -28,14 +25,15 @@ return function(mappings)
     mappings.n['<leader>sd'] = mappings.n['<leader>ld']
     mappings.n['<leader>ld'] = nil
 
-    mappings.n['<leader>ss'] = mappings.n['<leader>ls']
-    mappings.n['<leader>ls'] = nil
-
     mappings.n['<leader>sS'] = mappings.n['<leader>lG']
     mappings.n['<leader>lG'] = nil
 
-    mappings.n['<leader>s|'] = mappings.n['<leader>lS']
-    mappings.n['<leader>lS'] = nil
+    mappings.n['<leader>sl'] = mappings.n['<leader>ll']
+    mappings.n['<leader>ll'] = nil
+
+    mappings.n['<leader>sL'] = mappings.n['<leader>lL']
+    mappings.n['<leader>lL'] = nil
+
 
     if is_available "telescope.nvim" then
         local tbi = require 'telescope.builtin'
