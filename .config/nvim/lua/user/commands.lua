@@ -17,7 +17,8 @@ if is_available 'toggleterm.nvim' then
 end
 
 if is_available 'package-info.nvim' then
-    vim.api.nvim_create_autocmd('BufRead package.json', {
+    vim.api.nvim_create_autocmd('BufRead', {
+        pattern = 'package\\.json',
         desc = 'Configure package.json key mappings',
         group = vim.api.nvim_create_augroup('project_json', { clear = true }),
         callback = function(args)
@@ -30,33 +31,25 @@ if is_available 'package-info.nvim' then
                     },
                     ['<leader>Pu'] = {
                         pi.update,
-                        buffer = args.buf,
-                        silent = true,
-                        noremap = true,
                         desc = 'Update package version',
                     },
                     ['<leader>Pr'] = {
                         pi.delete,
-                        buffer = args.buf,
-                        silent = true,
-                        noremap = true,
                         desc = 'Remove package',
                     },
                     ['<leader>Pa'] = {
                         pi.install,
-                        buffer = args.buf,
-                        silent = true,
-                        noremap = true,
                         desc = 'Add package',
                     },
                     ['<leader>Pv'] = {
                         pi.change_version,
-                        buffer = args.buf,
-                        silent = true,
-                        noremap = true,
                         desc = 'Change package version',
                     }
                 }
+            }, {
+                buffer = args.buf,
+                silent = true,
+                noremap = true,
             })
         end,
     })
