@@ -6,6 +6,7 @@ vim.opt.formatoptions:append('1')
 
 return {
     opt = {
+        shell = '/bin/bash -i',
         title = true,
         visualbell = true,
         showmode = false,

@@ -346,7 +346,7 @@ if [ "$DISTRO_ARCH" != "" ]; then
         yay zsh git nvim fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go protobuf
         automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv
         python ruby wget zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck ncdu
-        shellcheck luarocks
+        shellcheck luarocks tmux
     )
 
     TO_INSTALL=""
@@ -368,7 +368,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
         zsh git nvim fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go protobuf
         automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl
         python3 ruby wget zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
-        shellcheck luarocks
+        shellcheck luarocks tmux
     )
 
     TO_INSTALL=""
@@ -448,7 +448,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         git nvim fd mc make diffutils less ripgrep gnu-sed bat tree gcc
         golang protobuf automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
         llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn
-        grep jq moreutils thefuck ncdu shellcheck luarocks
+        grep jq moreutils thefuck ncdu shellcheck luarocks tmux
     )
 
     TO_INSTALL=""
@@ -582,15 +582,17 @@ NVIM_HOME=$HOME/.config/nvim
 pull_or_clone_repo "AstroNvim" "$NVIM_HOME" "https://github.com/AstroNvim/AstroNvim"
 
 roll "AstroNvim is installed and at the latest version."
-
 link .config/nvim/lua/user
-
-nvim  --headless -c 'quitall' 1>> $LOG_FILE 2>> $LOG_FILE
-if [ $? -ne 0 ]; then
-    err "Failed to update AstroNvim."
-fi
-
 roll "nvim ready to use!"
+
+# Setup tmux
+roll "Setting up Tmux..."
+pull_or_clone_repo "Tmux" "$HOME/.tmux/plugins/tpm" "https://github.com/tmux-plugins/tpm"
+
+roll "Tmux is installed and at the latest version."
+link .config/tmux
+
+roll "Tmux ready to use!"
 
 check_installed "code"
 if [ $? -eq 0 ]; then

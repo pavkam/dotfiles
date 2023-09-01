@@ -1,44 +1,63 @@
 local utils = require 'astronvim.utils'
 local is_available = utils.is_available
+local get_icon = utils.get_icon
 
 return function(mappings)
-    mappings.n['<leader>li'] = nil
-    mappings.n['<leader>lI'] = nil
+    local n = mappings.n
+    local v = mappings.v
 
-    mappings.n['<leader>s.'] = mappings.n['<leader>la']
-    mappings.n['<leader>la'] = nil
+    local remap = function(t, from, to, desc)
+        t[to] = t[from]
+        t[from] = nil
 
-    mappings.n['<leader>sF'] = mappings.n['<leader>lf']
-    mappings.n['<leader>lf'] = nil
-
-    mappings.n['<leader>lh'] = nil
-
-    mappings.n['<leader>sr'] = mappings.n['<leader>lR']
-    mappings.n['<leader>lR'] = nil
-
-    mappings.n['<leader>sR'] = mappings.n['<leader>lr']
-    mappings.n['<leader>lr'] = nil
-
-    mappings.n['<leader>sD'] = mappings.n['<leader>lD']
-    mappings.n['<leader>lD'] = nil
-
-    mappings.n['<leader>sd'] = mappings.n['<leader>ld']
-    mappings.n['<leader>ld'] = nil
-
-    mappings.n['<leader>sS'] = mappings.n['<leader>lG']
-    mappings.n['<leader>lG'] = nil
-
-    mappings.n['<leader>sl'] = mappings.n['<leader>ll']
-    mappings.n['<leader>ll'] = nil
-
-    mappings.n['<leader>sL'] = mappings.n['<leader>lL']
-    mappings.n['<leader>lL'] = nil
-
-
-    if is_available "telescope.nvim" then
-        local tbi = require 'telescope.builtin'
-        mappings.n['<leader>si'] = { tbi.lsp_implementations, desc = "Search implementations" }
+        if desc ~= nil and t[to] ~= nil then
+            t[to].desc = desc
+        end
     end
+
+    local unmap = function(t, what)
+        for _, k in ipairs(what) do
+            t[k] = nil
+        end
+    end
+
+    unmap(n, {
+        '<leader>li',
+        '<leader>lI',
+        '<leader>lh',
+        'gr',
+        'gl',
+    })
+
+    unmap(v, {
+        '<leader>la',
+        '<leader>lf',
+    })
+
+    remap(n, '<leader>la', '<leader>s.')
+    remap(n, '<leader>lf', '<leader>sF')
+    remap(n, '<leader>lR', '<leader>sr')
+    remap(n, '<leader>lr', '<leader>sR')
+    remap(n, '<leader>lD', '<leader>sM')
+    remap(n, '<leader>ld', '<leader>sm')
+    remap(n, 'gI', '<leader>si')
+    remap(n, 'gd', '<leader>sd')
+    remap(n, 'gD', '<leader>sD')
+    remap(n, 'gy', '<leader>st')
+    remap(n, '<leader>lG', '<leader>fS', 'Find symbols in workspace')
+
+    if is_available 'inc-rename.nvim' then
+        require 'inc_rename'  -- force the plugin to load
+        n['<leader>sR'] = {
+            function()
+                return ":IncRename " .. vim.fn.expand("<cword>")
+            end,
+            expr = true,
+            desc = 'Rename symbol'
+        }
+    end
+
+    n['<leader>s'] = { desc = get_icon('ActiveLSP', 1, true) .. 'Source/Symbol' }
 
     return mappings
 end

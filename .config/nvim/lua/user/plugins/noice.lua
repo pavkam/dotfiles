@@ -1,3 +1,5 @@
+local utils = require "astronvim.utils"
+
 return {
     'folke/noice.nvim',
     opts = function(_, opts)
