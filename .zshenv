@@ -23,10 +23,10 @@ if [ -d "$HOME/.local/bin" ]; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
-if [ "`uname`" = "Darwin" ]; then
+if [ "$(uname)" = "Darwin" ]; then
     IS_DARWIN=1
 
-    if command -v arch &> /dev/null && [ "`arch`" = "arm64" ]; then
+    if command -v arch &> /dev/null && [ "$(arch)" = "arm64" ]; then
         IS_ARM64_DARWIN=1
 
         if [ -d "/opt/homebrew/bin" ]; then
@@ -57,6 +57,7 @@ if [ $DARWIN_HAS_BREW -eq 1 ]; then
     _gnu_version "grep"
     _gnu_version "coreutils"
 fi
+
 
 # Import the local configuration, if any.
 local P=$HOME/.zshenv.local
@@ -94,6 +95,8 @@ elif [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ]; then
     source "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
     source "$HOMEBREW_PREFIX/etc/bash_completion.d/nvm"
 fi
+
+# Ruby package manager.
 
 if [ -s "$HOMEBREW_PREFIX/opt/chruby/share/chruby/chruby.sh" ]; then
     source $HOMEBREW_PREFIX/opt/chruby/share/chruby/chruby.sh

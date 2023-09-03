@@ -179,10 +179,32 @@ function mzc_termsupport_preexec {
   title '$CMD' '%100>...>$LINE%<<'
 }
 
+load-nvmrc() {
+  local nvmrc_path
+  nvmrc_path="$(nvm_find_nvmrc)"
+
+  if [ -n "$nvmrc_path" ]; then
+    local nvmrc_node_version
+    nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+
+    if [ "$nvmrc_node_version" = "N/A" ]; then
+      nvm install
+    elif [ "$nvmrc_node_version" != "$(nvm version)" ]; then
+      nvm use
+    fi
+  elif [ -n "$(PWD=$OLDPWD nvm_find_nvmrc)" ] && [ "$(nvm version)" != "$(nvm version default)" ]; then
+    echo "Reverting to nvm default version"
+    nvm use default
+  fi
+}
+
 autoload -U add-zsh-hook
 
 add-zsh-hook precmd mzc_termsupport_precmd
 add-zsh-hook preexec mzc_termsupport_preexec
+add-zsh-hook chpwd load-nvmrc
+
+load-nvmrc
 
 # FZF-ness
 
@@ -269,6 +291,7 @@ alias ts='date -d @1639018800 "+%F %T"'
 alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu | tail -10
 alias vi=nvim
 alias vim=nvim
+alias tmux='tmux new -A -s main'
 
 epoch() {
   if [ "$1" = "" ]; then
@@ -327,6 +350,7 @@ if type complete &>/dev/null; then
       __ltrim_colon_completions "${words[cword]}"
     fi
   }
+
   complete -o default -F _npm_completion npm
 elif type compdef &>/dev/null; then
   _npm_completion() {
@@ -338,6 +362,7 @@ elif type compdef &>/dev/null; then
                  2>/dev/null)
     IFS=$si
   }
+
   compdef _npm_completion npm
 elif type compctl &>/dev/null; then
   _npm_completion () {
