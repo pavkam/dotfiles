@@ -19,7 +19,6 @@ return {
         clipboard = 'unnamedplus',
         number = true,
         ttyfast = true,
-        switchbuf = 'useopen',
         termencoding = 'utf-8',
         encoding='utf-8',
         lazyredraw = false,
@@ -39,7 +38,6 @@ return {
         smartindent = true,
         tabstop = 4,
         softtabstop = 4,
-        shiftwidth = 4,
         expandtab = true,
         shiftwidth = 4,
         shiftround = true,
@@ -52,14 +50,7 @@ return {
         virtualedit = 'onemore',
         mouse = 'a',
         showmatch = true,
-        history = 1000,
-        undolevels = 1000,
-        undofile = true,
-        undodir = vim.fn.expand('~/.cache/nvim/undodir'),
-        backup = false,
-        writebackup = false,
-        swapfile = false,
-        cursorline = false,
+        cursorline = true,
         keymodel = 'startsel,stopsel',
 
         -- search & replace
@@ -81,6 +72,6 @@ return {
         diagnostics_mode = 3,
         icons_enabled = true,
         ui_notifications_enabled = true,
-        resession_enabled = false,
+        resession_enabled = true,
     }
 }

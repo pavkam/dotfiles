@@ -1,52 +1,38 @@
-local utils = require 'astronvim.utils'
-local is_available = utils.is_available
-local get_icon = utils.get_icon
+local utils = require 'user.utils'
 
 return function(mappings)
     local n = mappings.n
     local v = mappings.v
 
-    local remap = function(t, from, to, desc)
-        t[to] = t[from]
-        t[from] = nil
-
-        if desc ~= nil and t[to] ~= nil then
-            t[to].desc = desc
-        end
-    end
-
-    local unmap = function(t, what)
-        for _, k in ipairs(what) do
-            t[k] = nil
-        end
-    end
-
-    unmap(n, {
+    utils.unmap(n, {
         '<leader>li',
         '<leader>lI',
         '<leader>lh',
         'gr',
         'gl',
+        'gx',
     })
 
-    unmap(v, {
+    utils.unmap(v, {
         '<leader>la',
         '<leader>lf',
     })
 
-    remap(n, '<leader>la', '<leader>s.')
-    remap(n, '<leader>lf', '<leader>sF')
-    remap(n, '<leader>lR', '<leader>sr')
-    remap(n, '<leader>lr', '<leader>sR')
-    remap(n, '<leader>lD', '<leader>sM')
-    remap(n, '<leader>ld', '<leader>sm')
-    remap(n, 'gI', '<leader>si')
-    remap(n, 'gd', '<leader>sd')
-    remap(n, 'gD', '<leader>sD')
-    remap(n, 'gy', '<leader>st')
-    remap(n, '<leader>lG', '<leader>fS', 'Find symbols in workspace')
+    utils.remap(n, '<leader>la', '<leader>s.')
+    utils.remap(n, '<leader>lf', '<leader>sF')
+    utils.remap(n, '<leader>lR', '<leader>sr')
+    utils.remap(n, '<leader>lr', '<leader>sR')
+    utils.remap(n, '<leader>lD', '<leader>sM')
+    utils.remap(n, '<leader>ld', '<leader>sm')
+    utils.remap(n, '<leader>ll', '<leader>sL')
+    utils.remap(n, '<leader>lL', '<leader>sl')
+    utils.remap(n, 'gI', '<leader>si')
+    utils.remap(n, 'gd', '<leader>sd')
+    utils.remap(n, 'gD', '<leader>sD')
+    utils.remap(n, 'gy', '<leader>st')
+    utils.remap(n, '<leader>lG', '<leader>fS', 'Find symbols in workspace')
 
-    if is_available 'inc-rename.nvim' then
+    if utils.is_plugin_available 'inc-rename.nvim' then
         require 'inc_rename'  -- force the plugin to load
         n['<leader>sR'] = {
             function()
@@ -57,7 +43,7 @@ return function(mappings)
         }
     end
 
-    n['<leader>s'] = { desc = get_icon('ActiveLSP', 1, true) .. 'Source/Symbol' }
+    n['<leader>s'] = { desc = utils.get_icon('ActiveLSP', 1, true) .. 'Source/Symbol' }
 
     return mappings
 end

@@ -4,10 +4,6 @@ return {
         enabled = false,
     },
     {
-        "stevearc/resession.nvim",
-        enabled = false,
-    },
-    {
         "s1n7ax/nvim-window-picker",
         enabled = false,
     },
@@ -17,10 +13,6 @@ return {
     },
     {
         "linux-cultist/venv-selector.nvim",
-        enabled = false,
-    },
-    {
-        "goolord/alpha-nvim",
         enabled = false,
     },
     {

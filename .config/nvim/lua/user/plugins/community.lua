@@ -9,6 +9,7 @@ return {
     { import = 'astrocommunity.debugging.nvim-dap-virtual-text' },
 
     { import = 'astrocommunity.lsp.lsp-inlayhints-nvim' },
+    { import = 'astrocommunity.motion.flash-nvim' },
 
     { import = 'astrocommunity.pack.prisma' },
     { import = 'astrocommunity.pack.docker' },

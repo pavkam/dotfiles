@@ -1,31 +1,15 @@
-local utils = require 'astronvim.utils'
-local get_icon = utils.get_icon
-local is_available = utils.is_available
+local utils = require 'user.utils'
 
 require 'user.commands'
+require 'user.auto-commands'
 
 return function(mappings)
     local n = mappings.n
     local v = mappings.v
     local t = mappings.t
 
-    local remap = function(t, from, to, desc)
-        t[to] = t[from]
-        t[from] = nil
-
-        if desc ~= nil and t[to] ~= nil then
-            t[to].desc = desc
-        end
-    end
-
-    local unmap = function(t, what)
-        for _, k in ipairs(what) do
-            t[k] = nil
-        end
-    end
-
     -- clear mappings I do not care about
-    unmap(n, {
+    utils.unmap(n, {
         '<leader>n',
         '<leader>c',
         '<leader>C',
@@ -82,14 +66,23 @@ return function(mappings)
         '<C-q>',
     })
 
-    unmap(v, {
+    utils.unmap(v, {
         '<leader>dE',
         '<leader>/',
     })
 
+    -- disable some uneeded keys
+    n['<space>'] = { '<Nop>', silent = true }
+    v['<space>'] = n['<space>']
+
+    n['s'] = { '<Nop>', silent = true }
+    v['s'] = n['s']
+    n['='] = { '<Nop>', silent = true }
+    v['='] = n['=']
+
     -- Normal mode
     n['<esc>'] = { '<cmd> noh <cr>', desc = 'Clear highlight', silent = true }
-    n['<leader>u'] = { desc = get_icon('Package', 1, true) .. 'UI/UX' }
+    n['<leader>u'] = { desc = utils.get_icon('Package', 1, true) .. 'UI/UX' }
     n['n'] = {'nzzzv', desc='Find previous match' }
     n['N'] = {'Nzzzv', desc='Fine next match' }
 
@@ -100,16 +93,17 @@ return function(mappings)
     n['<A-Down>'] = { '<C-w>j', desc = 'Window down' }
     n['<A-Up>'] = { '<C-w>k', desc = 'Window up' }
 
-    n['<leader>bd'] = { '<cmd> bd <cr>', desc = 'Close current buffer' }
+    n["<leader>bd"] =
+        { function() require("astronvim.utils.buffer").close() end, desc = "Close current buffer" }
 
     -- Normal mode: remaps
-    remap(n, '<leader>fb', '<leader>bb', 'Show buffers')
-    remap(n, '<leader>w', '<leader>bw', 'Save buffer')
-    remap(n, '<leader>lS', '<leader>sz')
-    remap(n, '<leader>ls', '<leader>fs', 'Find symbols')
+    utils.remap(n, '<leader>fb', '<leader>bb', 'Show buffers')
+    utils.remap(n, '<leader>w', '<leader>bw', 'Save buffer')
+    utils.remap(n, '<leader>lS', '<leader>sz')
+    utils.remap(n, '<leader>ls', '<leader>fs', 'Find symbols')
 
     -- Normal mode: plugin-based
-    if is_available 'nvim-dap' then
+    if utils.is_plugin_available 'nvim-dap' then
         local function continue_debug()
             if vim.fn.filereadable('.vscode/launch.json') then
                 local jsl = { 'typescript', 'javascript', 'typescriptreact', 'javascriptreact' }
@@ -126,9 +120,11 @@ return function(mappings)
 
         n['<F5>'] = { continue_debug, desc = 'Debugger: Start' }
         n['<leader>dc'] = { continue_debug, desc = 'Start/Continue (F5)'}
+
+        utils.remap(n, '<leader>du', '<leader>dU')
     end
 
-    if is_available 'gitsigns.nvim' then
+    if utils.is_plugin_available 'gitsigns.nvim' then
         n['<leader>gr'] = {
             function() require('gitsigns').reset_hunk() end,
             desc = 'Reset Git hunk'
@@ -140,14 +136,14 @@ return function(mappings)
         }
     end
 
-    if is_available 'telescope.nvim' then
+    if utils.is_plugin_available 'telescope.nvim' then
         n['<C-`>'] = {
             function() require('telescope.builtin').keymaps() end,
             desc = 'Keymaps',
         }
     end
 
-    if is_available 'neogit' then
+    if utils.is_plugin_available 'neogit' then
         n['<leader>gg'] = {
             function ()
                 if vim.bo.filetype == 'NeogitStatus' then
@@ -160,9 +156,9 @@ return function(mappings)
         }
     end
 
-    if is_available 'neotest' then
+    if utils.is_plugin_available 'neotest' then
         n['<leader>t'] = { desc = utils.get_icon('DiagnosticWarn', 1, true) .. 'Testing' }
-        n['<leader>t|'] = {
+        n['<leader>tU'] = {
             function ()
                 require('neotest').summary.toggle()
             end,
@@ -204,8 +200,8 @@ return function(mappings)
         }
     end
 
-    if is_available 'toggleterm.nvim' then
-        n['<leader>z'] = { desc = get_icon('Terminal', 1, true) .. 'Terminal' }
+    if utils.is_plugin_available 'toggleterm.nvim' then
+        n['<leader>z'] = { desc = utils.get_icon('Terminal', 1, true) .. 'Terminal' }
         n['<leader>zf'] = {
             '<cmd>ToggleTerm direction=float cmd="git bs"<cr>',
             desc = 'Floating terminal'
@@ -220,7 +216,7 @@ return function(mappings)
         }
     end
 
-    if is_available 'nvim-tmux-navigation' then
+    if utils.is_plugin_available 'nvim-tmux-navigation' then
         local nvim_tmux_nav = require('nvim-tmux-navigation')
 
         n['<A-Tab>'][1] = nvim_tmux_nav.NvimTmuxNavigateLastActive

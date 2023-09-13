@@ -3,11 +3,9 @@ local utils = require "astronvim.utils"
 return {
     'folke/noice.nvim',
     opts = function(_, opts)
-        if not opts.lsp.progress then
-            opts.lsp.progress = {}
-        end
+        opts.presets = opts.presets or {}
+        opts.presets.lsp_doc_border = true
 
-        opts.lsp.progress.enabled = false
         return opts
     end
 }

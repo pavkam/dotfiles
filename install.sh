@@ -590,7 +590,7 @@ roll "Setting up Tmux..."
 pull_or_clone_repo "Tmux" "$HOME/.tmux/plugins/tpm" "https://github.com/tmux-plugins/tpm"
 
 roll "Tmux is installed and at the latest version."
-link .config/tmux
+link .config/tmux/tmux.conf
 
 roll "Tmux ready to use!"
 
