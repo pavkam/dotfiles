@@ -8,9 +8,9 @@ return function(mappings)
         '<leader>li',
         '<leader>lI',
         '<leader>lh',
-        'gr',
+        '<leader>lR',
+        '<leader>lG',
         'gl',
-        'gx',
     })
 
     utils.unmap(v, {
@@ -18,19 +18,20 @@ return function(mappings)
         '<leader>lf',
     })
 
-    utils.remap(n, '<leader>la', '<leader>s.')
-    utils.remap(n, '<leader>lf', '<leader>sF')
-    utils.remap(n, '<leader>lR', '<leader>sr')
-    utils.remap(n, '<leader>lr', '<leader>sR')
-    utils.remap(n, '<leader>lD', '<leader>sM')
-    utils.remap(n, '<leader>ld', '<leader>sm')
-    utils.remap(n, '<leader>ll', '<leader>sL')
-    utils.remap(n, '<leader>lL', '<leader>sl')
-    utils.remap(n, 'gI', '<leader>si')
-    utils.remap(n, 'gd', '<leader>sd')
-    utils.remap(n, 'gD', '<leader>sD')
-    utils.remap(n, 'gy', '<leader>st')
-    utils.remap(n, '<leader>lG', '<leader>fS', 'Find symbols in workspace')
+    utils.remap(n, '<leader>la', '<leader>ss', 'Code actions')
+    utils.remap(n, '<leader>lf', '<leader>sF', 'Format buffer')
+    utils.remap(n, '<leader>lr', '<leader>sR', 'Rename symbol')
+    utils.remap(n, '<leader>lD', '<leader>sM', 'Buffer diagnostics')
+    utils.remap(n, '<leader>ll', '<leader>sL', 'Refresh CodeLens')
+    utils.remap(n, '<leader>lL', '<leader>sl', 'Run CodeLens')
+    utils.remap(n, '<leader>ld', 'M', 'Line diagnostics')
+
+    utils.supmap(n, 'gI', '<leader>si', 'Find implementations')
+    utils.supmap(n, 'gd', '<leader>sd', 'Find definition')
+    utils.supmap(n, 'gD', '<leader>sD', 'Find declaration')
+    utils.supmap(n, 'gy', '<leader>sT', 'Find type definition')
+    utils.supmap(n, 'gr', '<leader>sr', 'Find references')
+    utils.supmap(n, 'M', '<leader>sm', 'Line diagnostics')
 
     if utils.is_plugin_available 'inc-rename.nvim' then
         require 'inc_rename'  -- force the plugin to load

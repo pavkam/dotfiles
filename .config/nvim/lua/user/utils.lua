@@ -10,6 +10,14 @@ return {
         end
     end,
 
+    supmap = function(t, initial, secondary, desc)
+        t[secondary] = t[initial]
+        if desc ~= nil and t[secondary] ~= nil then
+            t[secondary] = vim.tbl_extend('force', t[initial], { desc = desc .. ' (' .. initial .. ')' })
+            t[initial].desc = desc
+        end
+    end,
+
     unmap = function(t, what)
         for _, k in ipairs(what) do
             t[k] = nil

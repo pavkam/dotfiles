@@ -63,6 +63,10 @@ return {
         -- special
         listchars='tab:▸ ,trail:·,extends:#,nbsp:·',
         list = false,
+
+        -- spell
+        spell = true,
+        spelllang = { 'en_us' },
     },
     g = {
         mapleader = ' ',

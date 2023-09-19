@@ -52,6 +52,7 @@ return function(mappings)
         '<leader>bsp',
         '<leader>bsr',
         '<leader>bs',
+        '<leader>ls',
 
         '<C-h>',
         '<C-j>',
@@ -79,6 +80,7 @@ return function(mappings)
     v['s'] = n['s']
     n['='] = { '<Nop>', silent = true }
     v['='] = n['=']
+    n['M'] = { '<Nop>', silent = true }
 
     -- Normal mode
     n['<esc>'] = { '<cmd> noh <cr>', desc = 'Clear highlight', silent = true }
@@ -100,7 +102,6 @@ return function(mappings)
     utils.remap(n, '<leader>fb', '<leader>bb', 'Show buffers')
     utils.remap(n, '<leader>w', '<leader>bw', 'Save buffer')
     utils.remap(n, '<leader>lS', '<leader>sz')
-    utils.remap(n, '<leader>ls', '<leader>fs', 'Find symbols')
 
     -- Normal mode: plugin-based
     if utils.is_plugin_available 'nvim-dap' then
