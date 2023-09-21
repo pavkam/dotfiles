@@ -2,7 +2,6 @@ return {
     'AstroNvim/astrocommunity',
 
     { import = 'astrocommunity.utility.noice-nvim' },
-    { import = 'astrocommunity.colorscheme.catppuccin' },
     { import = 'astrocommunity.completion.copilot-lua-cmp' },
     { import = 'astrocommunity.debugging.nvim-dap-virtual-text' },
 

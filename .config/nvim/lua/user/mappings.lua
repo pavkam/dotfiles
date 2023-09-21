@@ -107,16 +107,7 @@ return function(mappings)
     -- Normal mode: plugin-based
     if utils.is_plugin_available 'nvim-dap' then
         local function continue_debug()
-            if vim.fn.filereadable('.vscode/launch.json') then
-                local jsl = { 'typescript', 'javascript', 'typescriptreact', 'javascriptreact' }
-                require('dap.ext.vscode').load_launchjs(nil, {
-                    ['pwa-node'] = jsl,
-                    ['node'] = jsl,
-                    ['chrome'] = jsl,
-                    ['pwa-chrome'] = jsl
-                })
-            end
-
+            require('user.dap').setup(vim.bo.filetype)
             require('dap').continue();
         end
 

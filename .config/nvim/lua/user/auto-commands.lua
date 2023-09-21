@@ -37,7 +37,7 @@ if utils.is_plugin_available 'package-info.nvim' then
                 n = {
                     ['<leader>P'] = {
                         buffer = args.buf,
-                        desc = get_icon('GitChange', 1, true) .. 'Package.json',
+                        desc = utils.get_icon('GitChange', 1, true) .. 'Package.json',
                     },
                     ['<leader>Pu'] = {
                         pi.update,

@@ -1,5 +1,5 @@
 return {
-    colorscheme = 'catppuccin',
+    colorscheme = 'astrodark',
     diagnostics = {
         virtual_text = true,
         underline = true,
