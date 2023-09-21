@@ -1,8 +1,6 @@
 return {
     'AstroNvim/astrocommunity',
 
-    { import = 'astrocommunity.git.neogit' },
-    { import = 'astrocommunity.git.diffview-nvim' },
     { import = 'astrocommunity.utility.noice-nvim' },
     { import = 'astrocommunity.colorscheme.catppuccin' },
     { import = 'astrocommunity.completion.copilot-lua-cmp' },

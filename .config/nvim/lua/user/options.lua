@@ -23,7 +23,7 @@ return {
         encoding='utf-8',
         lazyredraw = false,
         laststatus = 2,
-        cmdheight = 1,
+        cmdheight = 0,
         wildmenu = true,
         wildignore = "*.swp,*.bak,*.pyc,*.class,*.o,*.out,*.a",
 

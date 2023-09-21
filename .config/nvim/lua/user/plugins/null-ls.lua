@@ -3,11 +3,14 @@ return {
     'jay-babu/mason-null-ls.nvim',
     opts = function(_, opts)
         opts.ensure_installed =
-            utils.list_insert_unique(opts.ensure_installed, { 'golines', 'golangci_lint', 'staticcheck', 'goimports_reviser', 'prettier' })
+            utils.list_insert_unique(opts.ensure_installed, { 'golines', 'golangci_lint', 'staticcheck', 'goimports_reviser', 'prettier', 'eslint' })
 
         null_ls = require("null-ls")
-        null_ls.register(null_ls.builtins.diagnostics.eslint)
 
+        null_ls.register(null_ls.builtins.diagnostics.eslint)
+        null_ls.register(null_ls.builtins.code_actions.eslint)
+
+        --
         goloangci_lint_config_present = function(utils)
             return utils.root_has_file ".golangci.yml"
                 or utils.root_has_file ".golangci.yaml"
@@ -40,6 +43,10 @@ return {
                 null_ls.register(null_ls.builtins.formatting.goimports_reviser)
             end,
             eslint_d = function() end,
+            -- eslint = function()
+            --     null_ls.register(null_ls.builtins.diagnostics.eslint)
+            --     null_ls.register(null_ls.builtins.code_actions.eslint)
+            -- end,
             prettierd = function() end,
             prettier = function()
                 null_ls.register(null_ls.builtins.formatting.prettier)

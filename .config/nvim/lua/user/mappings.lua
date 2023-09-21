@@ -83,10 +83,11 @@ return function(mappings)
     n['M'] = { '<Nop>', silent = true }
 
     -- Normal mode
-    n['<esc>'] = { '<cmd> noh <cr>', desc = 'Clear highlight', silent = true }
+    n['<esc>'] = { '<cmd> noh <cr> <esc>', desc = 'Clear highlight', silent = true }
     n['<leader>u'] = { desc = utils.get_icon('Package', 1, true) .. 'UI/UX' }
-    n['n'] = {'nzzzv', desc='Find previous match' }
-    n['N'] = {'Nzzzv', desc='Fine next match' }
+    n['n'] = { 'nzzzv', desc='Find previous match' }
+    n['N'] = { 'Nzzzv', desc='Fine next match' }
+    n['U'] = { '<C-r>', desc='Redo' }
 
     -- Normal mode: navigation
     n['<A-Tab>'] = { '<C-W>w', desc = 'Switch window' }
@@ -119,11 +120,48 @@ return function(mappings)
             require('dap').continue();
         end
 
-        n['<F5>'] = { continue_debug, desc = 'Debugger: Start' }
-        n['<leader>dc'] = { continue_debug, desc = 'Start/Continue (F5)'}
+        n['<leader>dj'] = {
+            function()
+                require('dap').down()
+            end,
+            desc = 'Down in current stacktrace',
+        }
 
+        n['<leader>dk'] = {
+            function()
+                require('dap').up()
+            end,
+            desc = 'Up in current stacktrace',
+        }
+
+        n['<F5>'] = { continue_debug }
+        utils.supmap(n, '<F5>', '<leader>dc', 'Debug: Start/Continue', 'Start/Continue (F5)')
+        utils.supmap(n, '<F17>', '<leader>dq', 'Debug: Terminate', 'Terminate Session (Shift-F5)')
+
+        utils.resupmap(n, '<F10>', '<F8>', '<leader>do', 'Debug: Step Over', 'Step Over (F8)')
+        utils.resupmap(n, '<F11>', '<F7>', '<leader>di', 'Debug: Step Into', 'Step Into (F7)')
+        utils.resupmap(n, '<F23>', '<F20>', '<leader>dO', 'Debug: Step Out', 'Step Out (Shift-F8)')
+
+        utils.remap(n, '<leader>dC', '<leader>dB', 'Conditional Breakpoint')
         utils.remap(n, '<leader>du', '<leader>dU')
+
+        n['<leader>db'].desc = 'Toggle Breakpoint'
+        n['<leader>dp'].desc = 'Pause'
+        n['<leader>dr'].desc = 'Restart'
+
+        utils.unmap(n, {
+            '<F29>',
+            '<F21>',
+            '<F6>',
+            '<F9>',
+            '<leader>dQ'
+        })
+
+        if utils.is_plugin_available 'nvim-dap-ui' then
+            utils.remap(n, '<leader>dh', '<leader>de', 'Inspect Symbol')
+        end
     end
+
 
     if utils.is_plugin_available 'gitsigns.nvim' then
         n['<leader>gr'] = {
@@ -154,6 +192,13 @@ return function(mappings)
                 end
             end,
             desc = 'Neogit'
+        }
+    elseif vim.fn.exists(':Lazygit') > 0 then
+        n['<leader>gg'] = {
+            function ()
+                vim.cmd('Lazygit')
+            end,
+            desc = 'Lazygit'
         }
     end
 
