@@ -1,4 +1,6 @@
-local utils = require 'astronvim.utils'
+local project = require 'user.utils.project'
+local utils = require 'user.utils'
+
 return {
     'jay-babu/mason-null-ls.nvim',
     opts = function(_, opts)
@@ -7,16 +9,19 @@ return {
 
         null_ls = require("null-ls")
 
-        null_ls.register(null_ls.builtins.diagnostics.eslint)
-        null_ls.register(null_ls.builtins.code_actions.eslint)
-
-        --
-        goloangci_lint_config_present = function(utils)
-            return utils.root_has_file ".golangci.yml"
-                or utils.root_has_file ".golangci.yaml"
-                or utils.root_has_file ".golangci.toml"
-                or utils.root_has_file ".golangci.json"
+        local project_has_eslint_installed = function()
+            return (
+                project.node_package_json_has_dependency(nil, 'eslint')
+                and project.node_project_has_eslint_config()
+            )
         end
+
+        null_ls.register(null_ls.builtins.diagnostics.eslint.with {
+            condition = project_has_eslint_installed
+        })
+        null_ls.register(null_ls.builtins.code_actions.eslint.with {
+            condition = project_has_eslint_installed
+        })
 
         opts.handlers = {
             golines = function ()
@@ -26,15 +31,15 @@ return {
             end,
             staticcheck = function()
                 null_ls.register(null_ls.builtins.diagnostics.staticcheck.with {
-                    condition = function(utils)
-                        return not goloangci_lint_config_present(utils)
+                    condition = function()
+                        return not project.go_project_has_golangci_config()
                     end
                 })
             end,
             golangci_lint = function()
                 null_ls.register(null_ls.builtins.diagnostics.golangci_lint.with {
-                    condition = function(utils)
-                        return goloangci_lint_config_present(utils)
+                    condition = function()
+                        return project.go_project_has_golangci_config()
                     end
                 })
             end,
@@ -42,14 +47,34 @@ return {
             goimports_reviser = function()
                 null_ls.register(null_ls.builtins.formatting.goimports_reviser)
             end,
-            eslint_d = function() end,
-            -- eslint = function()
-            --     null_ls.register(null_ls.builtins.diagnostics.eslint)
-            --     null_ls.register(null_ls.builtins.code_actions.eslint)
-            -- end,
-            prettierd = function() end,
+            eslint_d = function()
+                local condition = function()
+                    return (
+                        project.node_project_has_eslint_config()
+                        and not project.node_package_json_has_dependency(nil, 'eslint')
+                    )
+                end
+
+                null_ls.register(null_ls.builtins.diagnostics.eslint_d.with {
+                    condition = condition
+                })
+                null_ls.register(null_ls.builtins.code_actions.eslint_d.with {
+                    condition = condition
+                })
+            end,
+            prettierd = function()
+                null_ls.register(null_ls.builtins.formatting.prettierd.with {
+                    condition = function()
+                        return not project.node_package_json_has_dependency(nil, 'prettier')
+                    end
+                })
+            end,
             prettier = function()
-                null_ls.register(null_ls.builtins.formatting.prettier)
+                null_ls.register(null_ls.builtins.formatting.prettier.with {
+                    condition = function()
+                        return project.node_package_json_has_dependency(nil, 'prettier')
+                    end
+                })
             end,
         }
     end

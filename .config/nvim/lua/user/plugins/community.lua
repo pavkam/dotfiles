@@ -7,6 +7,7 @@ return {
 
     { import = 'astrocommunity.lsp.lsp-inlayhints-nvim' },
     { import = 'astrocommunity.motion.flash-nvim' },
+    { import = 'astrocommunity.debugging.nvim-bqf' },
 
     { import = 'astrocommunity.pack.prisma' },
     { import = 'astrocommunity.pack.docker' },

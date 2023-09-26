@@ -107,8 +107,8 @@ return function(mappings)
     -- Normal mode: plugin-based
     if utils.is_plugin_available 'nvim-dap' then
         local function continue_debug()
-            require('user.dap').setup(vim.bo.filetype)
-            require('dap').continue();
+            local dap_setup = require 'user.utils.dap'
+            dap_setup.continue();
         end
 
         n['<leader>dj'] = {
@@ -227,7 +227,7 @@ return function(mappings)
         }
         n['<leader>td'] = {
             function ()
-                if vim.bo.filetype == 'go' and utils.is_available 'nvim-dap-go' then
+                if vim.bo.filetype == 'go' and utils.is_plugin_available 'nvim-dap-go' then
                     require('dap-go').debug_test()
                 else
                     require('neotest').run.run({strategy = 'dap'})
@@ -263,6 +263,89 @@ return function(mappings)
         n['<A-Up>'][1] = nvim_tmux_nav.NvimTmuxNavigateUp
     end
 
+    -- quick fix and location lists
+    n['<leader>q'] = { desc = utils.get_icon('Bookmarks', 1, true) .. 'Lists' }
+    n['<leader>qa'] = {
+        function ()
+            local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+            local line = vim.api.nvim_get_current_line()
+            if not line or line == '' then
+                line = '<empty>'
+            end
+
+            vim.fn.setqflist({
+                {
+                    bufnr = vim.api.nvim_get_current_buf(),
+                    lnum = r,
+                    col = c,
+                    text = line
+                },
+            }, "a")
+        end,
+        desc = 'Add quick-fix item'
+    }
+
+    n['<leader>qc'] = {
+        function ()
+            vim.fn.setqflist({}, "r")
+        end,
+        desc = 'Clear quick-fix list'
+    }
+
+    n['<leader>qA'] = {
+        function ()
+            local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+            local line = vim.api.nvim_get_current_line()
+            if not line or line == '' then
+                line = '<empty>'
+            end
+
+            vim.fn.setloclist(0, {
+                {
+                    bufnr = vim.api.nvim_get_current_buf(),
+                    lnum = r,
+                    col = c,
+                    text = line
+                },
+            }, "a")
+        end,
+        desc = 'Add location item'
+    }
+
+    n['<leader>qC'] = {
+        function ()
+            vim.fn.setloclist(0, {})
+        end,
+        desc = 'Clear locations list'
+    }
+
+    n['<leader>qQ'] = {
+        "<cmd> copen <cr>",
+        desc = 'Show quick-fix list'
+    }
+
+    n['<leader>qL'] = {
+        "<cmd> lopen <cr>",
+        desc = 'Show locations list'
+    }
+
+    n[']q'] = {
+        "<cmd> cnext <cr>",
+        desc = 'Next quick-fix item'
+    }
+    n['[q'] = {
+        "<cmd> cprev <cr>",
+        desc = 'Prev quick-fix item'
+    }
+    n[']l'] = {
+        "<cmd> lNext <cr>",
+        desc = 'Next location item'
+    }
+    n['[l'] = {
+        "<cmd> lprev <cr>",
+        desc = 'Prev location item'
+    }
+
     -- Visual mode
     v['J'] = { ":m '>+1<CR>gv=gv", desc='Move selection downward' }
     v['K'] = { ":m '<-2<CR>gv=gv", desc='Move selection upward' }
@@ -272,20 +355,3 @@ return function(mappings)
 
     return mappings
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

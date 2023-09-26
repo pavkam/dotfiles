@@ -1,8 +1,8 @@
-local neotest_lib = require("neotest.lib")
-local nio = require("nio")
-local dap = require('dap')
-local dap_utils = require('dap.utils')
-local dap_vscode = require('dap.ext.vscode')
+local project = require 'user.utils.project'
+local dap = require 'dap'
+local dap_ui = require 'dap.ui'
+local dap_utils = require 'dap.utils'
+local dap_vscode = require 'dap.ext.vscode'
 
 local pwa_node_launch_config = {
     type = 'pwa-node',
@@ -58,99 +58,13 @@ local jsx_tsx_filetypes = {'typescriptreact', 'javascriptreact'}
 local all_js_ts_filetypes = vim.tbl_flatten {js_ts_filetypes, jsx_tsx_filetypes}
 local all_go_filetypes = { 'go' }
 
-local package_json_name = "project.json"
-local git_root = ".git"
-
-local function read_file(path)
-    local file = io.open(path, "rb")
-    if not file then return nil end
-    local content = file:read "*a"
-    file:close()
-    return content
-end
-
-local function find_root(path, ...)
-    return neotest_lib.files.match_root_pattern(..., git_root)(path)
-end
-
-local function get_launch_json_path(path, ...)
-    local root = find_root(path, ...)
-
-    if not root then
-        return false
-    end
-
-    local full_path = root .. "/.vscode/launch.json"
-    if neotest_lib.files.exists(full_path) then
-        return full_path
-    end
-
-    return false
-end
-
-local function package_json_has_dependency(path, dependency)
-    local root = find_root(path, package_json_name)
-
-    if not root then
-        return false
-    end
-
-    local success, json_content = pcall(read_file, root .. "/package.json")
-    if not success then
-        return false
-    end
-
-    local parsed_json = vim.json.decode(json_content)
-
-    if parsed_json["dependencies"] then
-        for key, _ in pairs(parsed_json["dependencies"]) do
-            if key == dependency then
-                return true
-            end
-        end
-    end
-
-    if parsed_json["devDependencies"] then
-        for key, _ in pairs(parsed_json["devDependencies"]) do
-            if key == dependency then
-                return true
-            end
-        end
-    end
-
-    return false
-end
-
-local function get_node_modules_relative_path(path, sub_path)
-    local root = find_root(path, package_json_name)
-
-    if not root then
-        return false
-    end
-
-    local full_path = root .. "/node_modules/" .. sub_path
-    if neotest_lib.files.exists(full_path) then
-        return full_path
-    end
-
-    return false
-end
-
-local function get_project_jest_binary(path)
-    if not package_json_has_dependency(path, 'jest') then
-        return false
-    end
-
-    return get_node_modules_relative_path(path, 'jest/bin/jest.js')
-end
-
 local original_all_js_ts_config = {}
 for _, language in ipairs(all_js_ts_filetypes) do
     original_all_js_ts_config[language] = dap.configurations[language] or {}
 end
 
 local configure_javascript_debugging = function()
-    local launch_json_path = get_launch_json_path(vim.fn.getcwd(), package_json_name)
+    local launch_json_path = project.get_project_launch_json_path()
     if launch_json_path then
         dap_vscode.load_launchjs(launch_json_path, {
             ['pwa-node'] = all_js_ts_filetypes,
@@ -168,7 +82,7 @@ local configure_javascript_debugging = function()
             pwa_chrome_launch_config,
         })
 
-        jest_binary = get_project_jest_binary(vim.fn.getcwd())
+        jest_binary = project.get_node_package_jest_binary_path()
         if jest_binary then
             table.insert(configurations, vim.tbl_extend('force', pwa_node_jest_config, {
                 runtimeArgs = {jest_binary, '--runInBand'},
@@ -189,20 +103,52 @@ end
 local original_go_config = dap.configurations.go
 local configure_go_debugging = function()
     dap.configurations.go = original_go_config
-    local launch_json_path = get_launch_json_path(vim.fn.getcwd(), 'go.mod', 'go.sum')
+    local launch_json_path = project.get_project_launch_json_path()
     if launch_json_path then
         dap_vscode.load_launchjs(launch_json_path)
     end
 end
 
+local configure_general_debugging = function()
+    local launch_json_path = project.get_project_launch_json_path()
+    if launch_json_path then
+        dap_vscode.load_launchjs(launch_json_path)
+    end
+end
 
-return {
+M = {
     setup = function(filetype)
         if vim.tbl_contains(all_js_ts_filetypes, filetype) then
             configure_javascript_debugging()
-        end
-        if vim.tbl_contains(all_go_filetypes, filetype) then
+        elseif vim.tbl_contains(all_go_filetypes, filetype) then
             configure_go_debugging()
+        else
+            configure_general_debugging()
+        end
+    end,
+    continue = function()
+        filetype = project.get_project_language()
+
+        local current_session = dap.session()
+        if not current_session then
+            M.setup(filetype)
+        end
+
+        if not current_session and filetype and #dap.configurations[filetype] > 0 then
+            dap_ui.pick_if_many(
+                dap.configurations[filetype],
+                "Configuration: ",
+                function(i) return i.name end,
+                function(configuration)
+                    if configuration then
+                        M.run(configuration, { filetype = filetype })
+                    end
+                end
+            )
+        else
+            dap.continue()
         end
     end
 }
+
+return M

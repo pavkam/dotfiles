@@ -1,5 +1,4 @@
 vim.cmd('set backspace=indent,eol,start whichwrap+=<,>,[,]')
---vim.cmd('runtime mswin.vim')
 
 vim.opt.shortmess:append('I')
 vim.opt.formatoptions:append('1')
@@ -25,7 +24,6 @@ return {
         laststatus = 2,
         cmdheight = 0,
         wildmenu = true,
-        wildignore = "*.swp,*.bak,*.pyc,*.class,*.o,*.out,*.a",
 
         -- file management
         filetype = 'on',
@@ -54,7 +52,7 @@ return {
         keymodel = 'startsel,stopsel',
 
         -- search & replace
-        hlsearch = true,
+        hlsearch = false,
         incsearch = true,
         gdefault = true,
         ignorecase = true,
