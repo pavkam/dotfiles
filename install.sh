@@ -576,14 +576,9 @@ fi
 
 link .aws/cli/alias
 
-# Setup nvim
-roll "Setting up AstroNvim..."
-NVIM_HOME=$HOME/.config/nvim
-pull_or_clone_repo "AstroNvim" "$NVIM_HOME" "https://github.com/AstroNvim/AstroNvim"
-
-roll "AstroNvim is installed and at the latest version."
-link .config/nvim/lua/user
-roll "nvim ready to use!"
+roll "Setting up NeoVim..."
+link .config/nvim
+roll "NeoVim ready to use..."
 
 # Setup tmux
 roll "Setting up Tmux..."
