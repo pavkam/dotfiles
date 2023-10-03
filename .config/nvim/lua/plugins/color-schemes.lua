@@ -3,6 +3,9 @@ return {
         "folke/tokyonight.nvim",
         lazy = true,
         opts = { style = "moon" },
+        config = function(opts)
+            require("tokyonight").load()
+        end
     },
     {
         "catppuccin/nvim",

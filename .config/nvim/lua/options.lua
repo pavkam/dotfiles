@@ -50,7 +50,7 @@ o.splitkeep = "screen"
 o.splitright = true
 
 -- lines
-o.signcolumn = "auto:1-4"
+o.signcolumn = "yes"
 o.relativenumber = true
 o.number = true
 o.foldlevel = 99
@@ -129,3 +129,5 @@ o.list = false
 o.shortmess:append({ W = true, I = true, c = true, C = true })
 o.formatoptions = "jcroqlnt"
 o.sessionoptions = { "buffers", "curdir", "tabpages", "winsize" }
+
+
