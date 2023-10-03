@@ -6,6 +6,9 @@ vim.opt.formatoptions:append('1')
 return {
     opt = {
         shell = '/bin/bash -i',
+        grepprg=[[rg\ --vimgrep\ --no-heading\ --smart-case]],
+        grepformat='%f:%l:%c:%m,%f:%l:%m',
+
         title = true,
         visualbell = true,
         showmode = false,
@@ -14,8 +17,10 @@ return {
         ruler = false,
         showcmd = true,
         wrap = false,
+        showbreak = '↳ ',
         nrformats = '',
         clipboard = 'unnamedplus',
+        signcolumn = "auto:1-4",
         number = true,
         ttyfast = true,
         termencoding = 'utf-8',

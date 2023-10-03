@@ -448,7 +448,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         git nvim fd mc make diffutils less ripgrep gnu-sed bat tree gcc
         golang protobuf automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
         llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn
-        grep jq moreutils thefuck ncdu shellcheck luarocks tmux
+        grep jq moreutils thefuck ncdu shellcheck luarocks tmux buf
     )
 
     TO_INSTALL=""
