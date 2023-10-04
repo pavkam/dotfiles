@@ -1,4 +1,5 @@
 require 'options'
+require 'keymaps'
 
 -- Setup the Lazy plugin manager
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -15,13 +16,35 @@ end
 
 vim.opt.rtp:prepend(lazypath)
 
-require('lazy').setup({
+require("lazy").setup({
+  spec = {
     { import = 'plugins' },
-    { import = 'plugins/languages' }
+  },
+  defaults = {
+    lazy = true,
+    version = false,
+  },
+  ui = {
+    border = "rounded",
+  },
+  install = { colorscheme = { "catppuccin", "tokyonight", "habamax" } },
+  checker = { enabled = true },
+  performance = {
+    rtp = {
+      disabled_plugins = {
+        "gzip",
+        "matchit",
+        -- "matchparen",
+        "netrwPlugin",
+        "tarPlugin",
+        "tohtml",
+        "tutor",
+        "zipPlugin",
+      },
+    },
+  },
 })
 
-require 'keymaps'
 require 'auto-commands'
 
-require 'catppuccin'
 vim.cmd.colorscheme("catppuccin")

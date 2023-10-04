@@ -483,10 +483,10 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         install_packages "brew install --cask" "$TO_INSTALL"
     fi
 else
-    warn "This GNU/Linux distribution is not supported. Install the dependancies by hand."
+    warn "This GNU/Linux distribution is not supported. Install the dependencies by hand."
 fi
 
-# Optional dependancies
+# Optional dependencies
 if command -v npm 1>$LOG_FILE 2>&1; then
     roll "Installing npm packages ..."
 

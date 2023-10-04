@@ -50,7 +50,7 @@ o.splitkeep = "screen"
 o.splitright = true
 
 -- lines
-o.signcolumn = "yes"
+o.signcolumn = "yes:2"
 o.relativenumber = true
 o.number = true
 o.foldlevel = 99
