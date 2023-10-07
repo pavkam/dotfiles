@@ -6,6 +6,26 @@ return {
         "folke/neoconf.nvim",
         "williamboman/mason-lspconfig.nvim",
         "williamboman/mason.nvim",
+        {
+            "lvimuser/lsp-inlayhints.nvim",
+            opts = {},
+            config = function(_, opts)
+                local lsp_inlay_hints = require("lsp-inlayhints")
+                lsp_inlay_hints.setup(opts)
+
+                local lsp = require "utils.lsp"
+
+                lsp.on_attach(
+                    function(client, buffer)
+                        if client.server_capabilities.inlayHintProvider then
+                            lsp_inlay_hints.on_attach(client, buffer)
+
+                            vim.keymap.set("n", "<leader>uH", lsp_inlay_hints.toggle, { desc = "Toggle Inlay Hints", buffer = buffer })
+                        end
+                    end
+                )
+            end,
+        }
     },
     opts = {
         diagnostics = {
@@ -198,7 +218,7 @@ return {
         local lsp = require "utils.lsp"
         local icons = require "utils.icons"
         local format = require "utils.format"
-        local lspm = require "utils.lsp-m"
+        local lsp_keymaps = require "utils.lsp.keymaps"
 
         format.setup(opts)
 
@@ -206,23 +226,8 @@ return {
         local plugin = require("lazy.core.config").spec.plugins["neoconf.nvim"]
         require("neoconf").setup(require("lazy.core.plugin").values(plugin, "opts", false))
 
-        -- kaymaps
-        lsp.on_attach(function(client, buffer)
-            lspm.on_attach(client, buffer)
-        end)
-
-        local register_capability = vim.lsp.handlers["client/registerCapability"]
-
-        vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
-            local ret = register_capability(err, res, ctx)
-
-            lspm.on_attach(
-                vim.lsp.get_client_by_id(ctx.client_id),
-                vim.api.nvim_get_current_buf()
-            )
-
-            return ret
-        end
+        -- keymaps
+        lsp_keymaps.on_attach(client, buffer)
 
         -- diagnostics
         for name, icon in pairs(icons.diagnostics) do

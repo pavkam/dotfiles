@@ -1,7 +1,6 @@
 return {
     "jay-babu/mason-null-ls.nvim",
-    enabled = false,
-    event = "VeryLazy",
+    event = "LspAttach",
     dependencies = {
         "williamboman/mason.nvim",
         "nvimtools/none-ls.nvim",

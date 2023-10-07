@@ -73,4 +73,21 @@ function M.float_term(cmd, opts)
   return terminals[termkey]
 end
 
+function M.tbl_join(items, separator)
+    if not vim.tbl_islist(items) then
+        return tostring(items)
+    end
+
+    local result = ""
+
+    for _, item in ipairs(items) do
+        result = result .. tostring(item)
+        if #result > 0 and separator ~= nil then
+            result = result .. separator
+        end
+    end
+
+    return result
+end
+
 return M
