@@ -29,10 +29,10 @@ return {
                     {
                         "diagnostics",
                         symbols = {
-                            error = icons.diagnostics.Error,
-                            warn = icons.diagnostics.Warn,
-                            info = icons.diagnostics.Info,
-                            hint = icons.diagnostics.Hint,
+                            error = icons.Diagnostics.LSP.Error,
+                            warn = icons.Diagnostics.LSP.Warn,
+                            info = icons.Diagnostics.LSP.Info,
+                            hint = icons.Diagnostics.LSP.Hint,
                         },
                     },
                     { "filetype", icon_only = true, separator = "", padding = { left = 1, right = 0 } },
@@ -46,9 +46,8 @@ return {
                     },
                     {
                         function()
-                            local icon = icons.cmp_categories.Copilot
                             local status = require("copilot.api").status.data
-                            return icon .. (status.message or "")
+                            return icons.cmp_categories.Copilot .. (status.message or "")
                         end,
                         cond = function()
                             local ok, clients = pcall(vim.lsp.get_active_clients, { name = "copilot", bufnr = 0 })

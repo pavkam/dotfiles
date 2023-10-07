@@ -1,3 +1,5 @@
+local icons = require "utils.icons"
+
 return {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
@@ -9,37 +11,26 @@ return {
         {
             "lvimuser/lsp-inlayhints.nvim",
             opts = {},
-            config = function(_, opts)
-                local lsp_inlay_hints = require("lsp-inlayhints")
-                lsp_inlay_hints.setup(opts)
-
-                local lsp = require "utils.lsp"
-
-                lsp.on_attach(
-                    function(client, buffer)
-                        if client.server_capabilities.inlayHintProvider then
-                            lsp_inlay_hints.on_attach(client, buffer)
-
-                            vim.keymap.set("n", "<leader>uH", lsp_inlay_hints.toggle, { desc = "Toggle Inlay Hints", buffer = buffer })
-                        end
-                    end
-                )
-            end,
         }
     },
     opts = {
         diagnostics = {
             underline = true,
-            update_in_insert = false,
+            update_in_insert = true,
             virtual_text = {
                 spacing = 4,
                 source = "if_many",
-                prefix = "●",
+                prefix = icons.Diagnostics.Prefix,
             },
             severity_sort = true,
-        },
-        inlay_hints = {
-            enabled = false,
+            float = {
+                focused = false,
+                style = "minimal",
+                border = "rounded",
+                source = "always",
+                header = "",
+                prefix = "",
+            },
         },
         capabilities = {
             textDocument = {
@@ -216,27 +207,25 @@ return {
         require('lspconfig.ui.windows').default_options.border = 'single'
 
         local lsp = require "utils.lsp"
-        local icons = require "utils.icons"
-        local format = require "utils.format"
         local lsp_keymaps = require "utils.lsp.keymaps"
-
-        format.setup(opts)
-
-        -- neoconf
-        local plugin = require("lazy.core.config").spec.plugins["neoconf.nvim"]
-        require("neoconf").setup(require("lazy.core.plugin").values(plugin, "opts", false))
 
         -- keymaps
         lsp_keymaps.on_attach(client, buffer)
 
         -- diagnostics
-        for name, icon in pairs(icons.diagnostics) do
-            name = "DiagnosticSign" .. name
-            vim.fn.sign_define(name, { text = icon, texthl = name, numhl = "" })
+        local signs = {
+            { name = "DiagnosticSignError", text = icons.Diagnostics.LSP.Error, texthl = "DiagnosticSignError" },
+            { name = "DiagnosticSignWarn", text = icons.Diagnostics.LSP.Warn, texthl = "DiagnosticSignWarn" },
+            { name = "DiagnosticSignHint", text = icons.Diagnostics.LSP.Hint, texthl = "DiagnosticSignHint" },
+            { name = "DiagnosticSignInfo", text = icons.Diagnostics.LSP.Info, texthl = "DiagnosticSignInfo" },
+        }
+
+        for _, sign in ipairs(signs) do
+            vim.fn.sign_define(sign.name, sign)
         end
 
         if type(opts.diagnostics.virtual_text) == "table" and opts.diagnostics.virtual_text.prefix == "icons" then
-            opts.diagnostics.virtual_text.prefix = vim.fn.has("nvim-0.10.0") == 0 and "●"
+            opts.diagnostics.virtual_text.prefix = vim.fn.has("nvim-0.10.0") == 0 and icons.Diagnostics.Prefix
             or function(diagnostic)
                 local icons = icons.diagnostics
                 for d, icon in pairs(icons) do
@@ -248,17 +237,6 @@ return {
         end
 
         vim.diagnostic.config(vim.deepcopy(opts.diagnostics))
-
-        -- inlay hints
-        local inlay_hint = vim.lsp.buf.inlay_hint or vim.lsp.inlay_hint
-
-        if opts.inlay_hints.enabled and inlay_hint then
-            lsp.on_attach(function(client, buffer)
-                if client.supports_method("textDocument/inlayHint") then
-                    inlay_hint(buffer, true)
-                end
-            end)
-        end
 
         -- register cmp capabilities
         local servers = opts.servers

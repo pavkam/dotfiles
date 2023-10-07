@@ -116,7 +116,7 @@ local configure_general_debugging = function()
     end
 end
 
-M = {
+local M = {
     setup = function(filetype)
         if vim.tbl_contains(all_js_ts_filetypes, filetype) then
             configure_javascript_debugging()

@@ -73,8 +73,8 @@ return {
             return {
                 defaults = {
                     git_worktrees = vim.g.git_worktrees,
-                    prompt_prefix = icons.prompt_prefix .. " ",
-                    selection_caret = icons.selection_prefix .. " ",
+                    prompt_prefix = icons.TUI.PromptPrefix .. " ",
+                    selection_caret = icons.TUI.SelectionPrefix .. " ",
                     path_display = { "truncate" },
                     sorting_strategy = "ascending",
                     layout_config = {

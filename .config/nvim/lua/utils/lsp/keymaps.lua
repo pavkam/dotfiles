@@ -4,23 +4,35 @@ local diagnostics = require "utils.diagnostics"
 local M = {}
 
 local keymaps = {
+    {
+        "<leader>uH",
+        function()
+            if vim.lsp.buf.inlay_hint or vim.lsp.inlay_hint then
+                inlay_hint(0, nil)
+            else
+                require("lsp-inlayhints").toggle();
+            end
+        end,
+        desc = "Toggle Inlay Hints"
+    },
+
     { "M", vim.diagnostic.open_float, desc = "Line Diagnostics" },
     { "<leader>sm", "M", desc = "Line Diagnostics (M)" },
 
     { "gd", function() require("telescope.builtin").lsp_definitions({ reuse_win = true }) end, desc = "Goto Definition", capability = "definition" },
     { "<leader>sd", "gd", desc = "Goto Definition (gd)", capability = "definition" },
 
-    { "gr", "<cmd>Telescope lsp_references<cr>", desc = "References" },
-    { "<leader>sr", "<cmd>Telescope lsp_references<cr>", desc = "References (gr)" },
+    { "gr", "<cmd>Telescope lsp_references<cr>", desc = "References", capability = "references" },
+    { "<leader>sr", "<cmd>Telescope lsp_references<cr>", desc = "References (gr)", capability = "references" },
 
     { "gD", vim.lsp.buf.declaration, desc = "Goto Declaration", capability = "declaration" },
     { "<leader>sD", "gD", desc = "Goto Declaration (gD)", capability = "declaration" },
 
-    { "gI", function() require("telescope.builtin").lsp_implementations({ reuse_win = true }) end, desc = "Goto Implementation" },
-    { "<leader>si", "gI", desc = "Goto Implementation (gI)" },
+    { "gI", function() require("telescope.builtin").lsp_implementations({ reuse_win = true }) end, desc = "Goto Implementation", capability = "implementation" },
+    { "<leader>si", "gI", desc = "Goto Implementation (gI)", capability = "implementation"},
 
-    { "gy", function() require("telescope.builtin").lsp_type_definitions({ reuse_win = true }) end, desc = "Goto Type Definition" },
-    { "<leader>st", "gy", desc = "Goto Type Definition (gy)" },
+    { "gy", function() require("telescope.builtin").lsp_type_definitions({ reuse_win = true }) end, desc = "Goto Type Definition", capability = "typeDefinition" },
+    { "<leader>st", "gy", desc = "Goto Type Definition (gy)", capability = "typeDefinition" },
 
     { "K", vim.lsp.buf.hover, desc = "Hover" },
     { "<leader>sk", "K", desc = "Hover (K)" },
@@ -146,6 +158,14 @@ function attach(client, buffer)
             vim.lsp.buf.clear_references()
         end
     )
+
+    if lsp.client_has_capability(client, "inlayHint") then
+        if vim.lsp.buf.inlay_hint or vim.lsp.inlay_hint then
+            inlay_hint(buffer, true)
+        else
+            require("lsp-inlayhints").on_attach(client, buffer)
+        end
+    end
 end
 
 function M.on_attach(client, buffer)

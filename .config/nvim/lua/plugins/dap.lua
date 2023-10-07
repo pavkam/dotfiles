@@ -142,13 +142,13 @@ return {
 
             vim.api.nvim_set_hl(0, "DapStoppedLine", { default = true, link = "Visual" })
 
-            for name, sign in pairs(icons.dap) do
-                sign = type(sign) == "table" and sign or { sign }
-                vim.fn.sign_define(
-                    "Dap" .. name,
-                    { text = sign[1], texthl = sign[2] or "DiagnosticInfo", linehl = sign[3], numhl = sign[3] }
-                )
-            end
+            local signs = {
+                { name = "DapStopped", text = icons.Diagnostics.DAP.Stopped, texthl = "DiagnosticWarn", linehl = "DapStoppedLine", numhl = "DapStoppedLine" },
+                { name = "DapBreakpoint", text = icons.Diagnostics.DAP.Breakpoint, texthl = "DiagnosticInfo" },
+                { name = "DapBreakpointRejected", text = icons.Diagnostics.DAP.BreakpointRejected, texthl = "DiagnosticError" },
+                { name = "DapBreakpointCondition", text = icons.Diagnostics.DAP.BreakpointCondition, texthl = "DiagnosticInfo" },
+                { name = "DapLogPoint", text = icons.Diagnostics.DAP.LogPoint, texthl = "DiagnosticInfo" },
+            }
         end,
     }
 }

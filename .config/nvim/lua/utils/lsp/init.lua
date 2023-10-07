@@ -122,7 +122,7 @@ function M.client_names(buffer)
 
     local width = vim.o.laststatus == 3 and vim.o.columns or vim.api.nvim_win_get_width(0)
     local max_width = math.floor(width * 0.25)
-    if #str > max_width then str = string.sub(str, 0, max_width) .. icons.ellipsis end
+    if #str > max_width then str = string.sub(str, 0, max_width) .. icons.TUI.Ellipsis end
 
     return str
 end
