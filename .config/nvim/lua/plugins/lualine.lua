@@ -2,7 +2,6 @@ return {
     "nvim-lualine/lualine.nvim",
     dependencies = {
         "nvim-tree/nvim-web-devicons",
-        "nvim-neo-tree/neo-tree.nvim",
     },
     event = "VeryLazy",
     opts = function()
@@ -93,7 +92,7 @@ return {
                 },
                 lualine_z = {
                     function()
-                        return icons.ui.Clock .. os.date("%R")
+                        return icons.ui.Clock .. " " .. os.date("%R")
                     end,
                 },
             },

@@ -1,9 +1,24 @@
 return {
     "nvim-treesitter/nvim-treesitter",
     dependencies = {
-        "JoosepAlviste/nvim-ts-context-commentstring",
-        "nvim-treesitter/nvim-treesitter-textobjects",
-        "windwp/nvim-ts-autotag"
+        {
+            "JoosepAlviste/nvim-ts-context-commentstring",
+            opts = {
+                enable_autocmd = false,
+            }
+        },
+        {
+            "nvim-treesitter/nvim-treesitter-textobjects"
+        },
+        {
+            -- HACK: remove when https://github.com/windwp/nvim-ts-autotag/issues/125 closed.
+            "windwp/nvim-ts-autotag",
+            opts = {
+                autotag = {
+                    enable_close_on_slash = false
+                }
+            }
+        }
     },
     version = false,
     build = ":TSUpdate",

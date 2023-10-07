@@ -35,7 +35,7 @@ return {
 
         return opts
     end,
-    config = function(_, opts)
+    config = function(spec, opts)
         local utils = require "utils"
 
         -- register neotest virtual text
@@ -61,6 +61,73 @@ return {
                 end
             end
         )
+
+        -- register neotest mappings
+        utils.auto_command(
+            "FileType",
+            function(args)
+                local neotest = require "neotest"
+                vim.keymap.set(
+                    "n",
+                    "<leader>tU",
+                    function ()
+                        neotest.summary.toggle()
+                    end,
+                    { buffer = args.buf, desc = "Toggle Summary View"}
+                )
+
+                vim.keymap.set(
+                    "n",
+                    "<leader>to",
+                    function ()
+                        neotest.output.open()
+                    end,
+                    { buffer = args.buf, desc = "Show Test Output"}
+                )
+
+                vim.keymap.set(
+                    "n",
+                    "<leader>tw",
+                    function ()
+                        neotest.watch.toggle()
+                    end,
+                    { buffer = args.buf, desc = "Togglee Test Watching"}
+                )
+
+                vim.keymap.set(
+                    "n",
+                    "<leader>tf",
+                    function ()
+                        neotest.run.run(vim.fn.expand('%'))
+                    end,
+                    { buffer = args.buf, desc = "Run All Tests"}
+                )
+
+                vim.keymap.set(
+                    "n",
+                    "<leader>tr",
+                    function ()
+                        neotest.run.run()
+                    end,
+                    { buffer = args.buf, desc = "Run Nearest Test"}
+                )
+
+                vim.keymap.set(
+                    "n",
+                    "<leader>td",
+                    function ()
+                        if args.match == 'go' then
+                            require('dap-go').debug_test()
+                        else
+                            require('neotest').run.run({strategy = 'dap'})
+                        end
+                    end,
+                    { buffer = args.buf, desc = "Debug Nearest Test"}
+                )
+            end,
+            spec.ft
+        )
+
 
         require("neotest").setup(opts)
     end,

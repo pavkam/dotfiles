@@ -1,4 +1,15 @@
 NerdIcons = {
+    TUI = {
+        Ellipsis = "…",
+        CollapsedGroup = "",
+        ExpandedGroup = "",
+        LineContinuation = "↳",
+        LineEnd = "⏎",
+        VisibleSpace = "·",
+        VisibleTab = "▶",
+        MissingLine = "╱",
+        IndentLevel = "│",
+    },
     ellipsis = '…',
     prompt_prefix = '',
     selection_prefix = '',
@@ -85,10 +96,6 @@ NerdIcons = {
         String = "󰀬",
         TypeParameter = "󰊄",
         Unit = "",
-    },
-    Editor = {
-        IndentChar = "│",
-        IndentTabChar = "│",
     },
     Dependencies = {
         Installed = "✓",

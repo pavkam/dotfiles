@@ -1,9 +1,84 @@
 return {
     "mfussenegger/nvim-dap",
     dependencies = {
-        "rcarriga/nvim-dap-ui",
-        "theHamsta/nvim-dap-virtual-text",
-        "rcarriga/cmp-dap",
+        {
+            "rcarriga/nvim-dap-ui",
+            keys = {
+                {
+                    "<leader>dU",
+                    function()
+                        require("dapui").toggle({})
+                    end,
+                    desc = "Toggle UI"
+                },
+                {
+                    "<leader>de",
+                    function()
+                        require("dapui").eval()
+                    end,
+                    desc = "Evaluate",
+                    mode = {"n", "v"}
+                },
+            },
+            opts = {},
+            config = function(_, opts)
+                local dap = require("dap")
+                local dapui = require("dapui")
+
+                dapui.setup(opts)
+                dap.listeners.after.event_initialized["dapui_config"] = function()
+                    dapui.open({})
+                end
+                dap.listeners.before.event_terminated["dapui_config"] = function()
+                    dapui.close({})
+                end
+                dap.listeners.before.event_exited["dapui_config"] = function()
+                    dapui.close({})
+                end
+            end,
+        },
+        {
+            "theHamsta/nvim-dap-virtual-text",
+            opts = {},
+        },
+        {
+            "rcarriga/cmp-dap"
+        },
+        {
+            "leoluz/nvim-dap-go",
+            config = true,
+        },
+        {
+            "mfussenegger/nvim-dap-python",
+            dependencies = {
+                "williamboman/mason.nvim",
+            },
+            ft = "python",
+            config = function(_, opts)
+                local path = require("mason-registry").get_package("debugpy"):get_install_path() .. "/venv/bin/python"
+                require("dap-python").setup(path, opts)
+            end,
+        },
+        {
+            "mxsdev/nvim-dap-vscode-js",
+            event = "LspAttach",
+            dependencies = {
+                "mfussenegger/nvim-dap",
+                "microsoft/vscode-js-debug"
+            },
+            config = function()
+                local function get_js_debug()
+                    local path = vim.fn.stdpath "data"
+                    return path .. "/lazy/vscode-js-debug"
+                end
+
+                require("dap-vscode-js").setup {
+                    node_path = "node",
+                    debugger_path = get_js_debug(),
+                    adapters = {"pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost"}
+                }
+            end
+        }
     },
     keys = {
         { "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "Breakpoint Condition" },

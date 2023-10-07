@@ -6,9 +6,6 @@ return {
         "nvim-treesitter/nvim-treesitter",
     },
     opts = {},
-    event = {
-        "CmdlineEnter"
-    },
     ft = {
         "go",
         "gomod"

@@ -1,10 +1,11 @@
+local icons = require "utils.icons"
 return {
     "lukas-reineke/indent-blankline.nvim",
     event = { "BufReadPost", "BufNewFile" },
     opts = {
         indent = {
-            char = require("utils.icons").Editor.IndentChar,
-            tab_char = require("utils.icons").Editor.IndentTabChar,
+            char = icons.TUI.IndentLevel,
+            tab_char = icons.TUI.IndentLevel,
         },
         scope = {
             enabled = false

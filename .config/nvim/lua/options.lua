@@ -31,7 +31,7 @@ o.modeline = false
 o.ruler = false
 o.showcmd = true
 o.wrap = false
-o.showbreak = icons.break_prefix .. ' '
+o.showbreak = icons.TUI.LineContinuation .. ' '
 o.nrformats = ''
 o.winminwidth = 5
 o.ttyfast = true
@@ -53,7 +53,10 @@ o.splitright = true
 o.signcolumn = "yes:2"
 o.relativenumber = true
 o.number = true
+o.foldlevelstart = 99
 o.foldlevel = 99
+o.foldcolumn = "1"
+o.foldenable = true
 
 if vim.treesitter.foldexpr then
     o.foldmethod = "expr"
@@ -64,10 +67,6 @@ end
 
 if vim.treesitter.foldtext then
     o.foldtext = [[v:lua.require'utils.ui'.fold_text()]]
-end
-
-if vim.fn.has("nvim-0.9.0") == 1 then
-    o.statuscolumn = [[%!v:lua.require'utils.ui'.status_column()]]
 end
 
 -- file management
@@ -115,13 +114,20 @@ o.smartcase = true
 o.inccommand = "nosplit"
 
 -- special
-o.listchars='tab:▸ ,trail:·,extends:#,nbsp:·'
+o.listchars = {
+    tab = icons.TUI.VisibleSpace .. " ",
+    trail = icons.TUI.VisibleSpace,
+    extends = icons.TUI.Ellipsis,
+    eol = icons.TUI.LineEnd,
+    nbsp = icons.TUI.VisibleSpace,
+}
+
 o.fillchars = {
-  foldopen = "",
-  foldclose = "",
+  foldopen = icons.TUI.ExpandedGroup,
+  foldclose = icons.TUI.CollapsedGroup,
   fold = " ",
   foldsep = " ",
-  diff = "╱",
+  diff = icons.TUI.MissingLine,
   eob = " ",
 }
 

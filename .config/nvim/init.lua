@@ -47,4 +47,4 @@ require("lazy").setup({
 
 require 'auto-commands'
 
-vim.cmd.colorscheme("catppuccin")
+vim.cmd.colorscheme("tokyonight")

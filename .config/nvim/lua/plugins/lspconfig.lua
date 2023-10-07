@@ -6,7 +6,6 @@ return {
         "folke/neoconf.nvim",
         "williamboman/mason-lspconfig.nvim",
         "williamboman/mason.nvim",
-        "hrsh7th/cmp-nvim-lsp",
     },
     opts = {
         diagnostics = {
@@ -21,6 +20,35 @@ return {
         },
         inlay_hints = {
             enabled = false,
+        },
+        capabilities = {
+            textDocument = {
+                completion = {
+                    completionItem = {
+                        documentationFormat = { "markdown", "plaintext" },
+                        snippetSupport = true,
+                        preselectSupport = true,
+                        insertReplaceSupport = true,
+                        labelDetailsSupport = true,
+                        deprecatedSupport = true,
+                        commitCharactersSupport = true,
+                        tagSupport = {
+                            valueSet = { 1 }
+                        },
+                        resolveSupport = {
+                            properties = {
+                                "documentation",
+                                "detail",
+                                "additionalTextEdits",
+                            },
+                        },
+                    },
+                },
+            },
+            foldingRange = {
+                dynamicRegistration = false,
+                lineFoldingOnly = true,
+            },
         },
         servers = {
             bashls = {
@@ -150,12 +178,12 @@ return {
                         if not client.server_capabilities.semanticTokensProvider then
                             local semantic = client.config.capabilities.textDocument.semanticTokens
                             client.server_capabilities.semanticTokensProvider = {
-                            full = true,
-                            legend = {
-                                tokenTypes = semantic.tokenTypes,
-                                tokenModifiers = semantic.tokenModifiers,
-                            },
-                            range = true,
+                                full = true,
+                                legend = {
+                                    tokenTypes = semantic.tokenTypes,
+                                    tokenModifiers = semantic.tokenModifiers,
+                                },
+                                range = true,
                             }
                         end
                     end
@@ -164,6 +192,9 @@ return {
         },
     },
     config = function(_, opts)
+        -- set the border for the ui
+        require('lspconfig.ui.windows').default_options.border = 'single'
+
         local lsp = require "utils.lsp"
         local icons = require "utils.icons"
         local format = require "utils.format"
