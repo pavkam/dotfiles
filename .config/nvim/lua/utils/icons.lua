@@ -97,12 +97,12 @@ NerdIcons = {
         Unstaged = "✗",
         Untracked = "★",
         Signs = {
-            Add = "▎",
-            Change = "▎",
+            Add = "▌",
+            Change = "▌",
             Delete = "",
             TopDelete = "",
-            ChangeDelete = "▎",
-            Untracked = "▎" ,
+            ChangeDelete = "▌",
+            Untracked = "▌" ,
         },
     },
 
@@ -121,7 +121,7 @@ NerdIcons = {
         UI = "󰏖",
         Help = "󰋖",
         Buffers = "󱂬",
-        Search = " ",
+        Search = "",
         Fix = "󰁨",
         Next = "󰼧",
         Prev = "󰒮",
@@ -138,6 +138,7 @@ NerdIcons = {
         FolderEmpty = "",
         FolderOpen = "",
         FileModified = "",
+        Test = "󰙨"
     },
 }
 

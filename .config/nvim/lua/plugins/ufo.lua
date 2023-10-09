@@ -2,6 +2,13 @@ return {
     "kevinhwang91/nvim-ufo",
     lazy = false,
     dependencies = { "kevinhwang91/promise-async" },
+    keys = {
+        { "zR", function() require("ufo").openAllFolds() end, mode = "n", desc = "Open All Folds" },
+        { "zM", function() require("ufo").closeAllFolds() end, mode = "n", desc = "Close All Folds" },
+        { "zr", function() require("ufo").openFoldsExceptKinds() end, mode = "n", desc = "Fold Less" },
+        { "zm", function() require("ufo").closeFoldsWith() end, mode = "n", desc = "Fold More" },
+        { "zp", function() require("ufo").peekFoldedLinesUnderCursor() end, mode = "n", desc = "Peek Fold" },
+    },
     opts = {
       preview = {
         mappings = {

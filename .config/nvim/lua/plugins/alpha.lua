@@ -28,7 +28,7 @@ return {
         dashboard.section.header.val = vim.split(logo, "\n")
         dashboard.section.buttons.val = {
             dashboard.button("e", icons.ui.Explorer .. " File Explorer", ":Neotree toggle <CR>"),
-            dashboard.button("f", icons.ui.Search .. " Find Files", ":Telescope find_files <CR>"),
+            dashboard.button("f", icons.ui.Search .. "  Find Files", ":Telescope find_files <CR>"),
             dashboard.button("o", icons.ui.Files .. " Recent Files", ":Telescope oldfiles <CR>"),
             dashboard.button("l", icons.ui.Sleep .. " Lazy", ":Lazy<CR>"),
             dashboard.button("q", icons.ui.Quit .. " Quit", ":qa<CR>"),

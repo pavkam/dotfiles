@@ -291,7 +291,30 @@ alias ts='date -d @1639018800 "+%F %T"'
 alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu | tail -10
 alias vi=nvim
 alias vim=nvim
-alias tmux='tmux new -A -s main'
+#alias tmux='tmux new -A -s main'
+
+sesh() {
+    local PROJECTS_ROOT=$HOME/Development
+    OPTIONS=$(
+        tmux ls -F "#{session_name}" && \
+        fd -c never --hidden --relative-path --base-directory $PROJECTS_ROOT .git$ -t directory -E .github | xargs dirname && \
+        echo "+new"
+    )
+    OPTIONS=$(echo "$OPTIONS" | sort | uniq)
+
+    local SESSION=$(echo $OPTIONS | fzf --reverse --preview-window 'right:80%:nohidden' --preview="[ '{}' != '+new' ] && tmux capture-pane -e -pt {} 2> /dev/null || echo 'Session not running'")
+
+    if [ "$SESSION" = "+new" ]; then
+        echo -ne "Enter session name (empty to cancel): "
+        read SESSION
+
+        if [ "$SESSION" != "" ]; then
+            tmux new -A -s "$SESSION"
+        fi
+    elif [ "$SESSION" != "" ]; then
+        tmux new -A -s "$SESSION" -c "$PROJECTS_ROOT/$SESSION"
+    fi
+}
 
 epoch() {
   if [ "$1" = "" ]; then

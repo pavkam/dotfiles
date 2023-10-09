@@ -45,14 +45,15 @@ function M.notify_file_renamed(from, to)
   end
 end
 
-function M.on_attach(on_attach)
-  vim.api.nvim_create_autocmd("LspAttach", {
-    callback = function(args)
-      local buffer = args.buf
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      on_attach(client, buffer)
-    end,
-  })
+function M.on_attach(callback)
+    vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(args)
+            local buffer = args.buf
+            local client = vim.lsp.get_client_by_id(args.data.client_id)
+
+            callback(client, buffer)
+        end,
+    })
 end
 
 function M.auto_command_on_capability(event, capability, buffer, callback)

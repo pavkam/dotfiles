@@ -149,6 +149,10 @@ return {
                 { name = "DapBreakpointCondition", text = icons.Diagnostics.DAP.BreakpointCondition, texthl = "DiagnosticInfo" },
                 { name = "DapLogPoint", text = icons.Diagnostics.DAP.LogPoint, texthl = "DiagnosticInfo" },
             }
+
+             for _, sign in ipairs(signs) do
+                vim.fn.sign_define(sign.name, sign)
+            end
         end,
     }
 }
