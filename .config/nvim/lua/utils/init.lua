@@ -1,4 +1,4 @@
-M = {}
+local M = {}
 
 local group_index = 0
 
@@ -85,6 +85,33 @@ function M.tbl_join(items, separator)
     end
 
     return result
+end
+
+function M.join_paths(part1, part2)
+    part1 = part1:gsub("([^/])$", "%1/"):gsub("//", "/")
+    part2 = part2:gsub("^/", "")
+
+    return part1 .. part2
+end
+
+function M.file_exists(path)
+    local file = io.open(path, "r")
+    if file then
+        file:close()
+        return true
+    else
+        return false
+    end
+end
+
+function M.any_file_exists(base_path, files)
+    for _, file in ipairs(files) do
+        if M.file_exists(M.join_paths(base_path, file)) then
+            return file
+        end
+    end
+
+    return nil
 end
 
 return M

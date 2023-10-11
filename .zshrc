@@ -30,7 +30,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # Other settings and general options
-export EDITOR='vim'
+export EDITOR='nvim'
 export MANPAGER='less -X'
 export LESS_TERMCAP_md="${yellow}"
 export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
@@ -119,7 +119,7 @@ function title {
   : ${2=$1}
 
   case "$TERM" in
-    xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st*)
+    xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st|kitty*)
       print -Pn "\e]2;${2:q}\a"
       print -Pn "\e]1;${1:q}\a"
       ;;
@@ -310,6 +310,8 @@ sesh() {
             tmux new -A -s "$SESSION"
         fi
     elif [ "$SESSION" != "" ]; then
+        #echo -en "\033]0;Kitty\a"
+        title "tmux" "$SESSION"
         tmux new -A -s "$SESSION" -c "$PROJECTS_ROOT/$SESSION"
     fi
 }

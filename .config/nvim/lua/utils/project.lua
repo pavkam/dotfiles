@@ -74,23 +74,6 @@ function M.get_node_package_jest_binary_path(path)
     return get_nearest_node_modules_relative_path(path, 'jest/bin/jest.js')
 end
 
-function M.go_project_has_golangci_config(path)
-    if not M.get_project_language(path) == 'go' then
-        return false
-    end
-
-    local root = files.find_root(cwd(path), vim.tbl_flatten { go_project_roots })
-    if root then
-        for _, ext in ipairs { 'yml', 'yaml', 'toml', 'json' } do
-            if files.file_exists(root .. "/" .. ".golangci." .. ext) then
-                return true
-            end
-        end
-    end
-
-    return false
-end
-
 function M.node_project_has_eslint_config(path)
     local root = files.find_root(cwd(path), package_json_name)
 

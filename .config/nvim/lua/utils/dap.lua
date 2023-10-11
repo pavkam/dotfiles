@@ -116,39 +116,41 @@ local configure_general_debugging = function()
     end
 end
 
-local M = {
-    setup = function(filetype)
-        if vim.tbl_contains(all_js_ts_filetypes, filetype) then
-            configure_javascript_debugging()
-        elseif vim.tbl_contains(all_go_filetypes, filetype) then
-            configure_go_debugging()
-        else
-            configure_general_debugging()
-        end
-    end,
-    continue = function()
-        filetype = project.get_project_language()
+local M = {}
 
-        local current_session = dap.session()
-        if not current_session then
-            M.setup(filetype)
-        end
-
-        if not current_session and filetype and #dap.configurations[filetype] > 0 then
-            dap_ui.pick_if_many(
-                dap.configurations[filetype],
-                "Configuration: ",
-                function(i) return i.name end,
-                function(configuration)
-                    if configuration then
-                        M.run(configuration, { filetype = filetype })
-                    end
-                end
-            )
-        else
-            dap.continue()
-        end
+function M.setup(filetype)
+    if vim.tbl_contains(all_js_ts_filetypes, filetype) then
+        configure_javascript_debugging()
+    elseif vim.tbl_contains(all_go_filetypes, filetype) then
+        configure_go_debugging()
+    else
+        configure_general_debugging()
     end
-}
+end
+
+function M.continue()
+    filetype = project.get_project_language()
+
+    local current_session = dap.session()
+    if not current_session then
+        M.setup(filetype)
+    end
+
+    if not current_session and filetype and #dap.configurations[filetype] > 0 then
+        dap_ui.pick_if_many(
+            dap.configurations[filetype],
+            "Configuration: ",
+            function(i) return i.name end,
+            function(configuration)
+                if configuration then
+                    M.run(configuration, { filetype = filetype })
+                end
+            end
+        )
+    else
+        dap.continue()
+    end
+end
+
 
 return M

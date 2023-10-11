@@ -8,6 +8,22 @@ local function normalize_capability(method)
     return method
 end
 
+local function get_null_ls_sources(filetype)
+    -- get the registered methods
+    local ok, sources = pcall(require, "null-ls.sources")
+
+    if not ok then
+        return {}
+    end
+
+    local registered = {}
+    for _, source in ipairs(sources.get_available(filetype)) do
+        utils.list_insert_unique(registered, source.name)
+    end
+
+    return registered
+end
+
 function M.client_has_capability(client, method)
     return client.supports_method(normalize_capability(method))
 end
@@ -79,53 +95,53 @@ function M.auto_command_on_capability(event, capability, buffer, callback)
     })
 end
 
-local function null_ls_providers(filetype)
-    local registered = {}
+function M.active_client_names(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local sources_avail, sources = pcall(require, "null-ls.sources")
-    if sources_avail then
-        for _, source in ipairs(sources.get_available(filetype)) do
-            for method in pairs(source.methods) do
-                registered[method] = registered[method] or {}
-                table.insert(registered[method], source.name)
-            end
-        end
-    end
-
-    return registered
-end
-
-local function null_ls_sources(filetype, method)
-    local methods_avail, methods = pcall(require, "null-ls.methods")
-    return methods_avail and null_ls_providers(filetype)[methods.internal[method]] or {}
-end
-
-function M.client_names(buffer)
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = buffer })
     local buf_client_names = {}
 
     for _, client in pairs(vim.lsp.get_active_clients { bufnr = buffer }) do
         if client.name == "null-ls" then
-            local nl_sources = {}
-
-            for _, type in ipairs { "FORMATTING", "DIAGNOSTICS" } do
-                for _, source in ipairs(null_ls_sources(vim.bo.filetype, type)) do
-                    nl_sources[source] = true
-                end
-            end
-
-            vim.list_extend(buf_client_names, vim.tbl_keys(nl_sources))
-        else
-            table.insert(buf_client_names, client.name)
+            utils.list_insert_unique(buf_client_names, get_null_ls_sources(filetype))
+        elseif client.name ~= "copilot" then
+            utils.list_insert_unique(buf_client_names, client.name)
         end
     end
 
-    local str = table.concat(buf_client_names, ", ")
+    return buf_client_names
+end
 
-    local width = vim.o.laststatus == 3 and vim.o.columns or vim.api.nvim_win_get_width(0)
-    local max_width = math.floor(width * 0.25)
-    if #str > max_width then str = string.sub(str, 0, max_width) .. icons.TUI.Ellipsis end
+function M.get_all_clients(...)
+    local fn = vim.lsp.get_clients or vim.lsp.get_active_clients
+    return fn(...)
+end
 
-    return str
+function M.get_lsp_root_dir(path)
+  path = path or vim.api.nvim_buf_get_name(0)
+  path = path ~= "" and vim.loop.fs_realpath(path) or nil
+
+  local roots = {}
+
+  if path then
+    for _, client in pairs(M.get_all_clients({ bufnr = 0 })) do
+        local workspace = client.config.workspace_folders
+        local paths = workspace and vim.tbl_map(function(ws)
+            return vim.uri_to_fname(ws.uri)
+        end, workspace) or client.config.root_dir and { client.config.root_dir } or {}
+
+        for _, p in ipairs(paths) do
+            local r = vim.loop.fs_realpath(p)
+            if path:find(r, 1, true) then
+            roots[#roots + 1] = r
+            end
+        end
+    end
+  end
+
+  table.sort(roots, function(a, b) return #a > #b end)
+
+  return roots[1]
 end
 
 return M

@@ -8,6 +8,7 @@ return {
         local ui = require "utils.ui"
         local icons = require "utils.icons"
         local lsp = require "utils.lsp"
+        local project = require "utils.project"
 
         local copilot_colors = {
             [""] = ui.hl_fg_color("Special"),
@@ -24,7 +25,14 @@ return {
             },
             sections = {
                 lualine_a = { "mode" },
-                lualine_b = { "branch" },
+                lualine_b = {
+                    {
+                        "branch",
+                        on_click = function()
+                            vim.cmd("Telescope git_branches")
+                        end
+                    },
+                },
                 lualine_c = {
                     {
                         "diagnostics",
@@ -34,20 +42,35 @@ return {
                             info = icons.Diagnostics.LSP.Info,
                             hint = icons.Diagnostics.LSP.Hint,
                         },
+                        on_click = function()
+                            vim.cmd("Telescope diagnostics")
+                        end
                     },
                     { "filetype", icon_only = true, separator = "", padding = { left = 1, right = 0 } },
                     { "filename", path = 1, symbols = { modified = " " .. icons.ui.Dirty .. " ", readonly = "", unnamed = "" } },
                 },
                 lualine_x = {
                     {
-                        function() return icons.ui.LSP .. "  " .. lsp.client_names() end,
+                        function()
+                            local clients = lsp.active_client_names()
+                            local str = table.concat(clients, ", ")
+
+                            local width = vim.o.laststatus == 3 and vim.o.columns or vim.api.nvim_win_get_width(0)
+                            local max_width = math.floor(width * 0.25)
+                            if #str > max_width then str = string.sub(str, 0, max_width) .. icons.TUI.Ellipsis end
+
+                            return icons.ui.LSP .. "  " .. str
+                        end,
                         cond = function() return #vim.lsp.get_active_clients() > 0 end,
-                        color = ui.hl_fg_color("Comment"),
+                        color = ui.hl_fg_color("LspInfoTitle"),
+                        on_click = function()
+                            vim.cmd("LspInfo")
+                        end
                     },
                     {
                         function()
                             local status = require("copilot.api").status.data
-                            return icons.cmp_categories.Copilot .. (status.message or "")
+                            return icons.Symbols.Copilot .. (status.message or "")
                         end,
                         cond = function()
                             local ok, clients = pcall(vim.lsp.get_active_clients, { name = "copilot", bufnr = 0 })

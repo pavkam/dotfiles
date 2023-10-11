@@ -7,6 +7,7 @@ return {
     },
     opts = function(_, opts)
         local project = require "utils.project"
+        local go_project = require "utils.p.go"
 
         opts.ensure_installed = {
             "shellcheck", "shfmt",
@@ -44,14 +45,14 @@ return {
             staticcheck = function()
                 null_ls.register(null_ls.builtins.diagnostics.staticcheck.with {
                     condition = function()
-                        return not project.go_project_has_golangci_config()
+                        return not go_project.has_golangci_config()
                     end
                 })
             end,
             golangci_lint = function()
                 null_ls.register(null_ls.builtins.diagnostics.golangci_lint.with {
                     condition = function()
-                        return project.go_project_has_golangci_config()
+                        return go_project.has_golangci_config()
                     end
                 })
             end,

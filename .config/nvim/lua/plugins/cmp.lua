@@ -1,3 +1,4 @@
+
 return {
     {
         "hrsh7th/nvim-cmp",
@@ -14,12 +15,15 @@ return {
                     "L3MON4D3/LuaSnip"
                 }
             },
+            {
+                "onsails/lspkind.nvim",
+            }
         },
         opts = function()
             vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
 
-            local icons = require "utils.icons"
             local cmp = require "cmp"
+            local icons = require "utils.icons"
             local defaults = require("cmp.config.default")()
             local luasnip = require "luasnip"
             local copilot = require "copilot.suggestion"
@@ -57,7 +61,6 @@ return {
                 duplicates = {
                     nvim_lsp = 1,
                     luasnip = 1,
-                    cmp_tabnine = 1,
                     buffer = 1,
                     path = 1,
                 },
@@ -120,12 +123,14 @@ return {
                     { name = "path" },
                 }),
                 formatting = {
-                    format = function(_, item)
-                        if icons.cmp_categories[item.kind] then
-                            item.kind = icons.cmp_categories[item.kind] .. item.kind
-                        end
-                        return item
-                    end,
+                    fields = { "kind", "abbr", "menu" },
+                    format = require("lspkind").cmp_format({
+                        mode = "symbol",
+                        symbol_map = icons.Symbols,
+                        menu = {},
+                        maxwidth = 50,
+                        ellipsis_char = icons.TUI.Ellipsis,
+                    }),
                 },
                 experimental = {
                     ghost_text = {

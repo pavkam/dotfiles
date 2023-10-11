@@ -82,7 +82,7 @@ editor_backup_extension=~
 editor_filesize_threshold=64M
 editor_stop_format_chars=-+*\\,.;:&>
 mcview_eof=
-skin=default
+skin=modarin256
 
 filepos_max_saved_entries=1024
 
@@ -90,7 +90,7 @@ shadows=true
 
 [Layout]
 output_lines=0
-left_panel_size=135
+left_panel_size=137
 top_panel_size=0
 message_visible=true
 keybar_visible=true
@@ -119,6 +119,8 @@ xterm-256color=
 color_terminals=
 
 screen-256color=
+
+xterm-kitty=
 
 [Panels]
 show_mini_info=true

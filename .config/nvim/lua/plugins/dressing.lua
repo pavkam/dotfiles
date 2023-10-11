@@ -1,16 +1,21 @@
+local icons = require "utils.icons"
+
 return {
     "stevearc/dressing.nvim",
     opts = {
-        input = { default_prompt = require("utils.icons").ui.PromptPrefix .. " " },
+        input = { default_prompt = icons.TUI.PromptPrefix },
         select = { backend = { "telescope", "builtin" } },
     },
     init = function()
+        local lazy = require "lazy"
+
         vim.ui.select = function(...)
-            require("lazy").load({ plugins = { "dressing.nvim" } })
+            lazy.load({ plugins = { "dressing.nvim" } })
             return vim.ui.select(...)
         end
+
         vim.ui.input = function(...)
-            require("lazy").load({ plugins = { "dressing.nvim" } })
+            lazy.load({ plugins = { "dressing.nvim" } })
             return vim.ui.input(...)
         end
     end,

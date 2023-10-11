@@ -8,9 +8,13 @@ return {
             tab_char = icons.TUI.IndentLevel,
         },
         scope = {
-            enabled = false
+            enabled = true
         },
         exclude = {
+            buftypes = {
+                "nofile",
+                "terminal",
+            },
             filetypes = {
                 "help",
                 "alpha",
@@ -22,6 +26,7 @@ return {
                 "notify",
                 "toggleterm",
                 "lazyterm",
+                "qf",
             },
         },
     },

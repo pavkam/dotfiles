@@ -38,7 +38,7 @@ return {
                 { source = "filesystem", display_name = icons.ui.FolderClosed .. " " .. "File" },
                 { source = "buffers", display_name = icons.ui.Buffers .. " " .. "Bufs" },
                 { source = "git_status", display_name = icons.git.Logo .. " " .. "Git" },
-                { source = "document_symbols", display_name = icons.SourceSymbols.Package .. " " .. "Symbols" },
+                { source = "document_symbols", display_name = icons.Symbols.Package .. " " .. "Symbols" },
             }
         },
         open_files_do_not_replace_types = { "terminal", "Trouble", "qf", "Outline", "neotest-output" },

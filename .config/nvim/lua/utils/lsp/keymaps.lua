@@ -1,21 +1,18 @@
 local lsp = require "utils.lsp"
-local diagnostics = require "utils.diagnostics"
 
 local M = {}
 
-local keymaps = {
-    {
-        "<leader>uH",
-        function()
-            if vim.lsp.buf.inlay_hint or vim.lsp.inlay_hint then
-                inlay_hint(0, nil)
-            else
-                require("lsp-inlayhints").toggle();
-            end
-        end,
-        desc = "Toggle Inlay Hints"
-    },
+local function jump_to_diagnostic(next_or_prev, severity)
+    local go = next_or_prev and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
 
+    severity = severity and vim.diagnostic.severity[severity] or nil
+
+    return function()
+        go({ severity = severity })
+    end
+end
+
+local keymaps = {
     { "M", vim.diagnostic.open_float, desc = "Line Diagnostics" },
     { "<leader>sm", "M", desc = "Line Diagnostics (M)" },
 
@@ -45,12 +42,12 @@ local keymaps = {
     { "<leader>sL", function() vim.lsp.codelens.refresh() end, desc = "Refresh CodeLens", capability = "codeLens" },
     { "<leader>sl", function() vim.lsp.codelens.run() end, desc = "Run CodeLens", capability = "codeLens" },
 
-    { "]m", diagnostics.jump_to_diagnostic(true), desc = "Next Diagnostic" },
-    { "[m", diagnostics.jump_to_diagnostic(false), desc = "Prev Diagnostic" },
-    { "]e", diagnostics.jump_to_diagnostic(true, "ERROR"), desc = "Next Error" },
-    { "[e", diagnostics.jump_to_diagnostic(false, "ERROR"), desc = "Prev Error" },
-    { "]w", diagnostics.jump_to_diagnostic(true, "WARN"), desc = "Next Warning" },
-    { "[w", diagnostics.jump_to_diagnostic(false, "WARN"), desc = "Prev Warning" },
+    { "]m", jump_to_diagnostic(true), desc = "Next Diagnostic" },
+    { "[m", jump_to_diagnostic(false), desc = "Prev Diagnostic" },
+    { "]e", jump_to_diagnostic(true, "ERROR"), desc = "Next Error" },
+    { "[e", jump_to_diagnostic(false, "ERROR"), desc = "Prev Error" },
+    { "]w", jump_to_diagnostic(true, "WARN"), desc = "Next Warning" },
+    { "[w", jump_to_diagnostic(false, "WARN"), desc = "Prev Warning" },
 
     { "<leader>ss", vim.lsp.buf.code_action, desc = "Code Action", mode = { "n", "v" }, capability = "codeAction" },
     {
@@ -89,15 +86,9 @@ function attach_keymaps(client, buffer)
         resolved_keymaps[parsed.id] = parsed
     end
 
-    for _, keys in pairs(resolved_keymaps) do
-        if not keys.capability or lsp.client_has_capability(client, keys.capability) then
-            local opts = Keys.opts(keys)
-
-            opts.capability = nil
-            opts.silent = opts.silent ~= false
-            opts.buffer = buffer
-
-            vim.keymap.set(keys.mode or "n", keys[1], keys[2], opts)
+    for _, mapping in pairs(resolved_keymaps) do
+        if not mapping.capability or lsp.client_has_capability(client, mapping.capability) then
+            vim.keymap.set(mapping.mode or "n", mapping.lhs, mapping.rhs, { desc = mapping.desc, buffer = buffer, silent = mapping.silent })
         end
     end
 end
@@ -115,7 +106,7 @@ function attach_commands(client, buffer)
     end
 end
 
-function attach(client, buffer)
+function M.attach(client, buffer)
     attach_keymaps(client, buffer)
     attach_commands(client, buffer)
 
@@ -163,27 +154,13 @@ function attach(client, buffer)
         if vim.lsp.buf.inlay_hint or vim.lsp.inlay_hint then
             inlay_hint(buffer, true)
         else
-            require("lsp-inlayhints").on_attach(client, buffer)
+            file_type = vim.api.nvim_buf_get_option(buffer, "filetype")
+
+            -- go has support for inlay hints through `ray-x/go.nvim` plugin
+            if file_type ~= "go" then
+                require("lsp-inlayhints").on_attach(client, buffer)
+            end
         end
-    end
-end
-
-function M.on_attach(client, buffer)
-    lsp.on_attach(function(client, buffer)
-        attach(client, buffer)
-    end)
-
-    local register_capability = vim.lsp.handlers["client/registerCapability"]
-
-    vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
-        local ret = register_capability(err, res, ctx)
-        local client = vim.lsp.get_client_by_id(ctx.client_id)
-
-        if client.supports_method ~= nil then
-            attach(client, vim.api.nvim_get_current_buf())
-        end
-
-        return ret
     end
 end
 

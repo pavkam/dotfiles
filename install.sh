@@ -345,8 +345,8 @@ if [ "$DISTRO_ARCH" != "" ]; then
     PACKS=(
         yay zsh git nvim fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go protobuf
         automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv
-        python ruby wget zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono bluez-tools fzf thefuck ncdu
-        shellcheck luarocks tmux
+        python ruby wget zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono ttf-nerd-fonts-symbols-mono
+        bluez-tools fzf thefuck ncdu shellcheck luarocks tmux kitty
     )
 
     TO_INSTALL=""
@@ -368,7 +368,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
         zsh git nvim fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go protobuf
         automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl
         python3 ruby wget zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
-        shellcheck luarocks tmux
+        shellcheck luarocks tmux kitty
     )
 
     TO_INSTALL=""
@@ -432,7 +432,6 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
         brew tap homebrew/cask-versions 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew update 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew upgrade 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
-        brew tap homebrew/cask 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew tap adoptopenjdk/openjdk 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
         brew tap homebrew/cask-fonts 1>> $LOG_FILE 2>> $LOG_FILE || exit 1
     )
@@ -467,7 +466,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     # Brew cask packages
     roll "Installing brew cask packages ..."
     PACKS=(
-        adoptopenjdk13 font-hack-nerd-font
+        adoptopenjdk13 font-hack-nerd-font font-symbols-only-nerd-font font-jetbrains-mono kitty
     )
 
     TO_INSTALL=""
@@ -565,6 +564,11 @@ link .wgetrc
 link .nuget/NuGet/NuGet.Config
 link .config/mc
 link .config/htop
+link .config/kitty
+
+if [ "$DISTRO_DARWIN" != "" ]; then
+  link .terminfo
+end
 
 if [ "$DISTRO_DARWIN" = "" ]; then
     link .config/Code/User/settings.json
