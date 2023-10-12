@@ -51,7 +51,7 @@ end
 
 function M.get_launch_json(path)
     local root = M.get_project_root_dir(path)
-    local option = root and utils.any_file_exists(root, { '.vscode/launch.json' })
+    local option = root and utils.any_file_exists(root, { '.dap.json', '.vscode/launch.json' })
 
     return option and utils.join_paths(root, option)
 end

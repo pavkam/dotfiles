@@ -132,6 +132,7 @@ return {
     },
     config = function(_, opts)
         local utils = require("utils")
+        local lsp = require("utils.lsp")
 
         local function on_move(data)
             lsp.notify_file_renamed(data.source, data.destination)
