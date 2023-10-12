@@ -118,8 +118,8 @@ return {
             { "<leader>db", function() require("dap").toggle_breakpoint() end, desc = "Toggle Breakpoint" },
             { "<leader>dc",
                 function()
-                    local dap_setup = require 'utils.dap'
-                    dap_setup.continue();
+                    local project = require 'utils.p'
+                    project.continue_debugging();
                 end,
                 desc = "Continue"
             },

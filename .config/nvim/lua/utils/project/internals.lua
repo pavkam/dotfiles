@@ -1,4 +1,5 @@
-local lsp = require("utils.lsp")
+local lsp = require "utils.lsp"
+local utils = require "utils"
 
 local M = {}
 
@@ -31,7 +32,7 @@ M.root_patterns = {
 function M.get_project_root_dir(path)
     path = path or vim.api.nvim_buf_get_name(0)
 
-    local root = nil --lsp.get_lsp_root_dir(path)
+    local root = lsp.get_lsp_root_dir(path)
 
     if not root then
         path = path and vim.fs.dirname(path) or vim.loop.cwd()
@@ -46,6 +47,13 @@ function M.get_project_root_dir(path)
     end
 
     return root
+end
+
+function M.get_launch_json(path)
+    local root = M.get_project_root_dir(path)
+    local option = root and utils.any_file_exists(root, { '.vscode/launch.json' })
+
+    return option and utils.join_paths(root, option)
 end
 
 return M

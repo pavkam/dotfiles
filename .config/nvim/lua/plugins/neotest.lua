@@ -8,28 +8,31 @@ return {
         "go"
     },
     dependencies = {
-        "folke/neodev.nvim",
         "nvim-neotest/neotest-jest",
         "marilari88/neotest-vitest",
         "nvim-neotest/neotest-go",
     },
     opts = function(_, opts)
         local utils = require "utils"
+        local project = require "utils.project"
         local jest = require('neotest-jest')
+        local vitest = require('neotest-vitest')
 
         jest = jest({
-            jestCommand = 'yarn test --',
-            env = {
-                CI = true
-            },
             cwd = function(path)
-                return require('neotest-jest.util').find_package_json_ancestor(path)
+                return project.get_project_root_dir(path)
+            end
+        })
+
+        vitest = vitest({
+            cwd = function(path)
+                return project.get_project_root_dir(path)
             end
         })
 
         opts.adapters = utils.list_insert_unique(opts.adapters, {
             require 'neotest-go',
-            require 'neotest-vitest',
+            vitest,
             jest,
         })
 

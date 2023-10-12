@@ -7,7 +7,8 @@ return {
     },
     opts = function(_, opts)
         local project = require "utils.project"
-        local go_project = require "utils.p.go"
+        local go_project = require "utils.project.go"
+        local js_project = require "utils.project.js"
 
         opts.ensure_installed = {
             "shellcheck", "shfmt",
@@ -20,75 +21,58 @@ return {
             "golines", "golangci_lint", "staticcheck", "goimports_reviser",
         }
 
+        opts.handlers = opts.handlers or {}
+
         null_ls = require("null-ls")
 
-        local project_has_eslint_installed = function()
-            return (
-                project.node_package_json_has_dependency(nil, 'eslint')
-                and project.node_project_has_eslint_config()
-            )
+        -- utils
+        local get_project_dir = function()
+            return project.get_project_root_dir()
         end
 
+        -- Javascript
         null_ls.register(null_ls.builtins.diagnostics.eslint.with {
-            condition = project_has_eslint_installed
+            condition = function()
+                return js_project.has_dependency(nil, 'eslint') and js_project.get_eslint_config_path() ~= nil
+            end,
+            cwd = get_project_dir
         })
         null_ls.register(null_ls.builtins.code_actions.eslint.with {
-            condition = project_has_eslint_installed
+            condition = function()
+                return js_project.has_dependency(nil, 'eslint') and js_project.get_eslint_config_path() ~= nil
+            end,
+            cwd = get_project_dir
+        })
+        null_ls.register(null_ls.builtins.formatting.prettier.with {
+            condition = function()
+                return js_project.has_dependency(nil, 'prettier')
+            end,
+            cwd = get_project_dir
         })
 
-        opts.handlers = {
-            golines = function ()
-                null_ls.register(null_ls.builtins.formatting.golines.with {
-                    args = { '-m', '180', '--no-reformat-tags', '--base-formatter', 'gofumpt' }
-                })
-            end,
-            staticcheck = function()
-                null_ls.register(null_ls.builtins.diagnostics.staticcheck.with {
-                    condition = function()
-                        return not go_project.has_golangci_config()
-                    end
-                })
-            end,
-            golangci_lint = function()
-                null_ls.register(null_ls.builtins.diagnostics.golangci_lint.with {
-                    condition = function()
-                        return go_project.has_golangci_config()
-                    end
-                })
-            end,
-            goimports = function() end,
-            goimports_reviser = function()
-                null_ls.register(null_ls.builtins.formatting.goimports_reviser)
-            end,
-            eslint_d = function()
-                local condition = function()
-                    return (
-                        project.node_project_has_eslint_config()
-                        and not project.node_package_json_has_dependency(nil, 'eslint')
-                    )
-                end
+        -- GO
+        opts.handlers.golines = function ()
+            null_ls.register(null_ls.builtins.formatting.golines.with {
+                args = { '-m', '180', '--no-reformat-tags', '--base-formatter', 'gofumpt' }
+            })
+        end
+        opts.handlers.staticcheck = function()
+            null_ls.register(null_ls.builtins.diagnostics.staticcheck.with {
+                condition = function()
+                    return not go_project.get_golangci_config()
+                end,
+                cwd = get_project_dir
+            })
+        end
+        opts.handlers.golangci_lint = function()
+            null_ls.register(null_ls.builtins.diagnostics.golangci_lint.with {
+                condition = function()
+                    return go_project.get_golangci_config()
+                end,
+                cwd = get_project_dir
+            })
+        end
 
-                null_ls.register(null_ls.builtins.diagnostics.eslint_d.with {
-                    condition = condition
-                })
-                null_ls.register(null_ls.builtins.code_actions.eslint_d.with {
-                    condition = condition
-                })
-            end,
-            prettierd = function()
-                null_ls.register(null_ls.builtins.formatting.prettierd.with {
-                    condition = function()
-                        return not project.node_package_json_has_dependency(nil, 'prettier')
-                    end
-                })
-            end,
-            prettier = function()
-                null_ls.register(null_ls.builtins.formatting.prettier.with {
-                    condition = function()
-                        return project.node_package_json_has_dependency(nil, 'prettier')
-                    end
-                })
-            end,
-        }
+        opts.handlers.goimports = function() end
     end
 }

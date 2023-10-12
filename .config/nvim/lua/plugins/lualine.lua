@@ -8,7 +8,6 @@ return {
         local ui = require "utils.ui"
         local icons = require "utils.icons"
         local lsp = require "utils.lsp"
-        local project = require "utils.project"
 
         local copilot_colors = {
             [""] = ui.hl_fg_color("Special"),
