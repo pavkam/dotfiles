@@ -2,7 +2,7 @@ return {
     "luukvbaal/statuscol.nvim",
     lazy = false,
     config = function()
-        builtin = require("statuscol.builtin")
+        local builtin = require "statuscol.builtin"
         require("statuscol").setup({
             relculright = true,
             segments = {

@@ -20,14 +20,31 @@ function M.type(path)
     return nil
 end
 
-local original_go_configurations = nil
+local dap_configurations = {
+	{
+		type = 'delve',
+		name = 'Debug',
+		request = 'launch',
+		program = '${file}',
+	},
+	{
+		type = 'delve',
+		name = 'Debug Test',
+		request = 'launch',
+		mode = 'test',
+		program = '${file}',
+	},
+	{
+		type = 'delve',
+		name = 'Debug Test (go.mod)',
+		request = 'launch',
+		mode = 'test',
+		program = './${relativeFileDirname}',
+	},
+}
 
 function M.configure_debugging(path)
-    if original_go_configurations == nil then
-        original_go_configurations = dap.configurations.go
-    end
-
-    dap.configurations.go = original_go_configurations
+    dap.configurations.go = utils.tbl_copy(dap_configurations)
 
     local launch_json = project_internals.get_launch_json(path)
     if launch_json then

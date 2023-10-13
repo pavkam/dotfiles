@@ -21,7 +21,6 @@ return {
             ["<leader>?"] = { name = icons.ui.Help .." Help" },
             ["<leader>d"] = { name = icons.ui.Debugger .. " Debugger" },
             ["<leader>s"] = { name = icons.ui.LSP .." Source" },
-            ["<leader>t"] = { name = icons.ui.Test .." Testing" },
         },
     },
     config = function(_, opts)

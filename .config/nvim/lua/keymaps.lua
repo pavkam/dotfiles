@@ -54,3 +54,6 @@ vim.keymap.set("v", ">", ">gv")
 -- tabs
 vim.keymap.set("n", "]t", "<cmd>tabnext<cr>", { desc = "Next Tab" })
 vim.keymap.set("n", "[t", "<cmd>tabprevious<cr>", { desc = "Previous Tab" })
+
+-- Some useful keymaps for me
+vim.keymap.set("v", "<BS>", "d", { desc = "Delete Selection" })

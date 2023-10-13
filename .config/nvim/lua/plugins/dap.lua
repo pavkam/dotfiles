@@ -90,28 +90,16 @@ return {
                 end,
             },
             {
-                "jay-babu/mason-nvim-dap.nvim",
-                dependencies = {
-                    "williamboman/mason.nvim",
-                    "mfussenegger/nvim-dap",
-                },
-                cmd = {
-                    "DapInstall",
-                    "DapUninstall"
-                },
-                opts = {
-                    automatic_installation = true,
-                },
+                "williamboman/mason.nvim",
                 opts = {
                     ensure_installed = {
-                        "bash",
-                        "coreclr",
-                        "python",
-                        "js",
+                        "netcoredbg",
+                        "debugpy",
+                        "js-debug-adapter",
                         "delve"
                     }
                 }
-            },
+            }
         },
         keys = {
             { "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "Breakpoint Condition" },

@@ -36,4 +36,17 @@ return {
             },
         },
     },
+     config = function(_, opts)
+        local utils = require "utils"
+        local buffer_line = require "bufferline"
+        buffer_line.setup(opts)
+
+        -- Fix bufferline when restoring a session
+        utils.auto_command(
+            "BufAdd",
+            function()
+                vim.schedule(function() pcall(nvim_bufferline) end)
+            end
+        )
+    end,
 }

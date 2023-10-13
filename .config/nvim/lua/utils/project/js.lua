@@ -110,7 +110,12 @@ local dap_configurations = {
         request = 'launch',
         name = 'Debug Jest Tests',
         runtimeExecutable = 'node',
-        runtimeArgs = { './node_modules/jest/bin/jest.js', '--runInBand' },
+        runtimeArgs = function()
+            return {
+                M.get_bin_path(path, "jest"),
+                '--runInBand'
+            }
+        end,
         rootPath = '${workspaceFolder}',
         cwd = '${workspaceFolder}',
         console = 'integratedTerminal',
@@ -137,14 +142,21 @@ local dap_configurations = {
     }
 }
 
-local original_dap_configurations = nil
-
 function M.configure_debugging(path)
-    -- store the default configurations
-    if original_dap_configurations == nil then
-        for _, language in ipairs(filetypes) do
-            original_dap_configurations[language] = dap.configurations[language] or {}
-        end
+    for _, language in ipairs(bin_filetypes) do
+        dap.configurations[language] = {
+            dap_configurations.pwa_node_launch,
+            dap_configurations.pwa_node_attach,
+            dap_configurations.pwa_node_jest,
+            dap_configurations.pwa_chrome_launch,
+        }
+    end
+
+    for _, language in ipairs(jsx_filetypes) do
+        dap.configurations[language] = {
+            dap_configurations.pwa_chrome_attach,
+            dap_configurations.pwa_chrome_launch,
+        }
     end
 
     -- potentially load the launch.json
@@ -155,27 +167,6 @@ function M.configure_debugging(path)
             ['node'] = filetypes,
             ['chrome'] = filetypes,
             ['pwa-chrome'] = filetypes
-        })
-    end
-
-    -- add additional configurations
-    for _, language in ipairs(bin_filetypes) do
-        local configurations = vim.tbl_extend('force', original_dap_configurations[language], dap_configurations)
-
-        local jest_binary = M.get_bin_path(path, "jest")
-        if jest_binary then
-            table.insert(configurations, vim.tbl_extend('force', dap_configurations.pwa_node_jest, {
-                runtimeArgs = { jest_binary, '--runInBand' },
-            }))
-        end
-
-        dap.configurations[language] = configurations
-    end
-
-    for _, language in ipairs(jsx_filetypes) do
-        dap.configurations[language] = vim.tbl_extend('force', original_dap_configurations[language], {
-            dap_configurations.pwa_chrome_attach,
-            dap_configurations.pwa_chrome_launch,
         })
     end
 end

@@ -12,7 +12,11 @@ return {
                     enable_close_on_slash = false
                 }
             }
-        }
+        },
+        {
+            "nvim-treesitter/nvim-treesitter-context",
+            opts = { mode = "cursor" },
+        },
     },
     version = false,
     build = ":TSUpdate",

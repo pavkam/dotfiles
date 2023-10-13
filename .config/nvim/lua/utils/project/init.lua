@@ -4,6 +4,8 @@ local lsp = require "utils.lsp"
 local utils = require "utils"
 local js_project = require "utils.project.js"
 local go_project = require "utils.project.go"
+local python_project = require "utils.project.python"
+local dotnet_project = require "utils.project.dotnet"
 local project_internals = require "utils.project.internals"
 
 local M = {}
@@ -11,7 +13,7 @@ local M = {}
 M.get_project_root_dir = project_internals.get_project_root_dir
 
 function M.type(path)
-    return js_project.type(path) or go_project.type(path)
+    return js_project.type(path) or go_project.type(path) or python_project.type(path) or dotnet_project.type(path)
 end
 
 local function setup_debugging(path)
@@ -19,18 +21,24 @@ local function setup_debugging(path)
         js_project.configure_debugging()
     elseif go_project.type(path) then
         go_project.configure_debugging()
+    elseif python_project.type(path) then
+        python_project.configure_debugging()
+    elseif dotnet_project.type(path) then
+        dotnet_project.configure_debugging()
     else
-        local launch_json = project_internals.get_launch_json()
-        if launch_json then
-            dap_vscode.load_launchjs(launch_json)
-        end
+        return false
     end
+
+    return true
 end
 
 function M.continue_debugging(path)
     local current_session = dap.session()
     if not current_session then
-        setup_debugging(path)
+        if not setup_debugging(path) then
+            utils.error("No debugging configuration found for this project type.")
+            return
+        end
     end
 
     local project_type = M.type(path);

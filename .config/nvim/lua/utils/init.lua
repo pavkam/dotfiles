@@ -87,6 +87,15 @@ function M.tbl_join(items, separator)
     return result
 end
 
+function M.tbl_copy(table)
+    return vim.tbl_extend("force", {}, table)
+end
+
+function M.tbl_merge(first, second)
+    second = second or {}
+    return first and vim.tbl_deep_extend("force", first, second) or second
+end
+
 function M.join_paths(part1, part2)
     part1 = part1:gsub("([^/])$", "%1/"):gsub("//", "/")
     part2 = part2:gsub("^/", "")
@@ -125,5 +134,26 @@ function M.read_text_file(path)
 
     return content
 end
+
+function M.notify(msg, type, opts)
+    vim.schedule(
+        function()
+            vim.notify(msg, type, M.tbl_merge({ title = "NeoVim" }, opts))
+        end
+    )
+end
+
+function M.info(msg)
+    M.notify(msg, vim.log.levels.INFO)
+end
+
+function M.warn(msg)
+    M.notify(msg, vim.log.levels.WARN)
+end
+
+function M.error(msg)
+    M.notify(msg, vim.log.levels.ERROR)
+end
+
 
 return M

@@ -69,7 +69,9 @@ return {
         utils.auto_command(
             "FileType",
             function(args)
+                local icons = require "utils.icons"
                 local neotest = require "neotest"
+
                 vim.keymap.set(
                     "n",
                     "<leader>tU",
@@ -127,10 +129,15 @@ return {
                     end,
                     { buffer = args.buf, desc = "Debug Nearest Test"}
                 )
+
+                -- add which key group
+                require("which-key").register({
+                    ["<leader>t"] = { name = icons.ui.Test .." Testing" }
+                }, { buffer = args.buf })
+
             end,
             spec.ft
         )
-
 
         require("neotest").setup(opts)
     end,

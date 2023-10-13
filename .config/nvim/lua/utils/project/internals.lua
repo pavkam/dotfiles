@@ -27,7 +27,14 @@ M.root_patterns = {
     "setup.cfg",
     "requirements.txt",
     "poetry.lock",
+
+    -- .NET
+    "*.sln"
 }
+
+lua print(#vim.fn.globpath(vim.fs.normalize("~/Development/Tickets.ie/AccessControl.Promoter.Api"), '*.sln', 0, 1))
+
+
 
 function M.get_project_root_dir(path)
     path = path or vim.api.nvim_buf_get_name(0)
