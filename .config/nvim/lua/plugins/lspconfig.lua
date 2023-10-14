@@ -10,7 +10,10 @@ return {
             {
                 "lvimuser/lsp-inlayhints.nvim",
                 opts = {},
-            }
+            },
+            {
+                "Hoffs/omnisharp-extended-lsp.nvim"
+            },
         },
         opts = {
             diagnostics = {
@@ -66,7 +69,25 @@ return {
                         globPattern = "*@(.sh|.inc|.bash|.command)"
                     },
                 },
-                csharp_ls = {},
+                omnisharp = {
+                    handlers = {
+                        ["textDocument/definition"] = function(...)
+                            return require("omnisharp_extended").handler(...)
+                        end,
+                    },
+                    keys = {
+                        {
+                            "gd",
+                            function()
+                                require("omnisharp_extended").telescope_lsp_definitions()
+                            end,
+                            desc = "Goto Definition",
+                        },
+                    },
+                    enable_roslyn_analyzers = true,
+                    organize_imports_on_format = true,
+                    enable_import_completion = true,
+                },
                 dockerls = {},
                 taplo = {},
                 yamlls = {
@@ -307,16 +328,6 @@ return {
             end
 
             mlsp.setup({ ensure_installed = ensure_installed, handlers = { setup } })
-        end
-    },
-    {
-        "nvimtools/none-ls.nvim",
-        event = { "BufReadPre", "BufNewFile" },
-        opts = function()
-            local keymaps = require("utils.lsp.keymaps")
-            return {
-                on_attach = keymaps.attach
-            }
         end
     },
     {

@@ -8,6 +8,8 @@ return {
         local ui = require "utils.ui"
         local icons = require "utils.icons"
         local lsp = require "utils.lsp"
+        local format = require "utils.format"
+        local lint = require "utils.lint"
 
         local copilot_colors = {
             [""] = ui.hl_fg_color("Special"),
@@ -49,18 +51,37 @@ return {
                     { "filename", path = 1, symbols = { modified = " " .. icons.ui.Dirty .. " ", readonly = "", unnamed = "" } },
                 },
                 lualine_x = {
+                     {
+                        function()
+                            return icons.ui.Lint .. " " .. table.concat(lint.active_names_for_buffer(), ", ")
+                        end,
+                        cond = function()
+                            return lint.active_for_buffer()
+                        end,
+                        color = ui.hl_fg_color("LspInfoTitle"),
+                        on_click = function()
+                            vim.cmd("ConformInfo")
+                        end
+                    },
                     {
                         function()
-                            local clients = lsp.active_client_names()
-                            local str = table.concat(clients, ", ")
-
-                            local width = vim.o.laststatus == 3 and vim.o.columns or vim.api.nvim_win_get_width(0)
-                            local max_width = math.floor(width * 0.25)
-                            if #str > max_width then str = string.sub(str, 0, max_width) .. icons.TUI.Ellipsis end
-
-                            return icons.ui.LSP .. "  " .. str
+                            return icons.ui.Format .. " " .. table.concat(format.active_names_for_buffer(), ", ")
                         end,
-                        cond = function() return #vim.lsp.get_active_clients() > 0 end,
+                        cond = function()
+                            return format.active_for_buffer()
+                        end,
+                        color = ui.hl_fg_color("LspInfoTitle"),
+                        on_click = function()
+                            vim.cmd("ConformInfo")
+                        end
+                    },
+                    {
+                        function()
+                            return icons.ui.LSP .. " " .. table.concat(lsp.active_names_for_buffer(), ", ")
+                        end,
+                        cond = function()
+                            return lsp.active_for_buffer()
+                        end,
                         color = ui.hl_fg_color("LspInfoTitle"),
                         on_click = function()
                             vim.cmd("LspInfo")

@@ -37,8 +37,6 @@ local keymaps = {
     { "gK", vim.lsp.buf.signature_help, desc = "Signature Help", capability = "signatureHelp" },
     { "<leader>sh", "gK", desc = "Signature Help (gK)", capability = "signatureHelp" },
 
-    { "<leader>sF", function() vim.lsp.buf.format() end, desc = "Format Buffer", capability = "formatting" },
-
     { "<leader>sL", function() vim.lsp.codelens.refresh() end, desc = "Refresh CodeLens", capability = "codeLens" },
     { "<leader>sl", function() vim.lsp.codelens.run() end, desc = "Run CodeLens", capability = "codeLens" },
 

@@ -95,6 +95,8 @@ NerdIcons = {
     },
     ui = {
         LSP = "",
+        Format = "󰉿",
+        Lint = "󱫁",
         Debugger = "",
         File = "󰈙",
         Files = " ",

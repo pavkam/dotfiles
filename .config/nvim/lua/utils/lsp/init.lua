@@ -95,7 +95,7 @@ function M.auto_command_on_capability(event, capability, buffer, callback)
     })
 end
 
-function M.active_client_names(buffer)
+function M.active_names_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = buffer })
@@ -112,19 +112,24 @@ function M.active_client_names(buffer)
     return buf_client_names
 end
 
+function M.active_for_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    return #vim.lsp.get_active_clients({ bufnr = buffer }) > 0
+end
+
 function M.get_all_clients(...)
     local fn = vim.lsp.get_clients or vim.lsp.get_active_clients
     return fn(...)
 end
 
-function M.get_lsp_root_dir(path)
+function M.get_lsp_root_dir(path, buffer)
   path = path or vim.api.nvim_buf_get_name(0)
   path = path ~= "" and vim.loop.fs_realpath(path) or nil
 
   local roots = {}
 
   if path then
-    for _, client in pairs(M.get_all_clients({ bufnr = 0 })) do
+    for _, client in pairs(M.get_all_clients({ bufnr = buffer })) do
         local workspace = client.config.workspace_folders
         local paths = workspace and vim.tbl_map(function(ws)
             return vim.uri_to_fname(ws.uri)
