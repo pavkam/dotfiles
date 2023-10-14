@@ -22,21 +22,21 @@ end
 
 local dap_configurations = {
 	{
-		type = 'delve',
+		type = 'go',
 		name = 'Debug',
 		request = 'launch',
-		program = '${file}',
+		program = './${relativeFileDirname}',
 	},
 	{
-		type = 'delve',
+		type = 'go',
 		name = 'Debug Test',
 		request = 'launch',
 		mode = 'test',
 		program = '${file}',
 	},
 	{
-		type = 'delve',
-		name = 'Debug Test (go.mod)',
+		type = 'go',
+		name = 'Debug Tests (go.mod)',
 		request = 'launch',
 		mode = 'test',
 		program = './${relativeFileDirname}',

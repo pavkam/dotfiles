@@ -14,7 +14,9 @@ return {
                 dependencies = {
                     "mfussenegger/nvim-dap"
                 },
-                config = true,
+                config = function()
+                    require("dap-go").setup()
+                end
             },
             {
                 "mfussenegger/nvim-dap-python",
@@ -125,7 +127,7 @@ return {
             { "<leader>dQ", function() require("dap").terminate() end, desc = "Terminate" },
             { "<leader>dw", function() require("dap.ui.widgets").hover() end, desc = "Inspect Symbol" },
         },
-        config = function()
+        config = function(_, opts)
             local icons = require "utils.icons"
 
             vim.api.nvim_set_hl(0, "DapStoppedLine", { default = true, link = "Visual" })

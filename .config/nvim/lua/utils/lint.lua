@@ -26,7 +26,6 @@ local function try_lint(buffer)
     end, names)
 
     if #names > 0 then
-        print(vim.inspect(names))
         lint.try_lint(names)
     end
 end

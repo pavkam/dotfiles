@@ -49,11 +49,14 @@ function M.continue_debugging(path)
             function(i) return i.name end,
             function(configuration)
                 if configuration then
+                    utils.info("Starting debugging session '" .. configuration.name .. "' ...")
+
                     dap.run(configuration, { filetype = project_type })
                 end
             end
         )
     else
+        utils.info("Resuming debugging session '" .. current_session.config.name .. "' ...")
         dap.continue()
     end
 end
