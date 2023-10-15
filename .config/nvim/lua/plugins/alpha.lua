@@ -27,11 +27,11 @@ return {
 
         dashboard.section.header.val = vim.split(logo, "\n")
         dashboard.section.buttons.val = {
-            dashboard.button("e", icons.ui.Explorer .. " File Explorer", ":Neotree toggle <CR>"),
-            dashboard.button("f", icons.ui.Search .. "  Find Files", ":Telescope find_files <CR>"),
-            dashboard.button("o", icons.ui.Files .. " Recent Files", ":Telescope oldfiles <CR>"),
-            dashboard.button("l", icons.ui.Sleep .. " Lazy", ":Lazy<CR>"),
-            dashboard.button("q", icons.ui.Quit .. " Quit", ":qa<CR>"),
+            dashboard.button("e", icons.UI.Explorer .. " File Explorer", ":Neotree toggle <CR>"),
+            dashboard.button("f", icons.UI.Search .. "  Find Files", ":Telescope find_files <CR>"),
+            dashboard.button("o", icons.Files.Normal .. " Recent Files", ":Telescope oldfiles <CR>"),
+            dashboard.button("l", icons.UI.Sleep .. " Lazy", ":Lazy<CR>"),
+            dashboard.button("q", icons.UI.Quit .. " Quit", ":qa<CR>"),
         }
 
         for _, button in ipairs(dashboard.section.buttons.val) do
@@ -69,7 +69,7 @@ return {
                 local stats = require("lazy").stats()
                 local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
 
-                dashboard.section.footer.val = icons.ui.Speed .. " Neovim loaded " .. stats.count .. " plugins in " .. ms .. "ms"
+                dashboard.section.footer.val = icons.UI.Speed .. " Neovim loaded " .. stats.count .. " plugins in " .. ms .. "ms"
 
                 pcall(vim.cmd.AlphaRedraw)
             end,

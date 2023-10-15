@@ -1,4 +1,4 @@
-NerdIcons = {
+local M = {
     TUI = {
         Ellipsis = "…",
         CollapsedGroup = "",
@@ -11,22 +11,21 @@ NerdIcons = {
         IndentLevel = "│",
         PromptPrefix = "",
         SelectionPrefix = "",
-        ListSeparator = "◦"
+        ListSeparator = "◦",
     },
     Diagnostics = {
-        Logo = "󰒡",
         Prefix = "●",
         LSP = {
-            Error = " ",
-            Warn = " ",
-            Hint = " ",
-            Info = " ",
+            Error = "",
+            Warn = "",
+            Hint = "",
+            Info = "",
         },
         DAP = {
-            Stopped = "󰁕 ",
-            Breakpoint = " ",
-            BreakpointCondition = " ",
-            BreakpointRejected = " ",
+            Stopped = "󰁕",
+            Breakpoint = "",
+            BreakpointCondition = "",
+            BreakpointRejected = "",
             LogPoint = ".>",
         },
     },
@@ -67,11 +66,10 @@ NerdIcons = {
         Value = "",
         Variable = "",
     },
-    git = {
-        Logo = "󰊢",
-        Added = " ",
-        Modified = " ",
-        Removed = " ",
+    Git = {
+        Added = "",
+        Modified = "",
+        Removed = "",
         Branch = "",
         Conflict = "",
         Ignored = "◌",
@@ -88,21 +86,26 @@ NerdIcons = {
             Untracked = "▌" ,
         },
     },
-
     Dependencies = {
         Installed = "✓",
         Uninstalled = "✗",
         Pending = "⟳",
     },
-    ui = {
+    Files = {
+        Normal = "󰈙",
+        Multiple = " ",
+        Modified = "",
+        ClosedFolder = "",
+        EmptyFolder = "",
+        OpenFolder = "",
+    },
+    UI = {
         LSP = "",
         Format = "󰉿",
         Lint = "󱫁",
-        Debugger = "",
-        File = "󰈙",
-        Files = " ",
-        Diagnostic = "󰒡",
         Git = "󰊢",
+        Debugger = "",
+        Test = "󰙨"
         UI = "󰏖",
         Help = "󰋖",
         Buffers = "󱂬",
@@ -111,21 +114,12 @@ NerdIcons = {
         Next = "󰼧",
         Prev = "󰒮",
         Jump = "󱔕",
-        Files = " ",
         Sleep = "󰒲 ",
         Quit = " ",
         Explorer = " ",
-        Dirty = "󰋮",
         Speed = "⚡",
-        PromptPrefix = "",
         Clock = "",
-        FolderClosed = "",
-        FolderEmpty = "",
-        FolderOpen = "",
-        FileModified = "",
-        Test = "󰙨"
     },
 }
 
-
-return NerdIcons
+return M

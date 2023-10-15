@@ -36,9 +36,9 @@ return {
             winbar = true,
             content_layout = "center",
             sources = {
-                { source = "filesystem", display_name = icons.ui.FolderClosed .. " " .. "File" },
-                { source = "buffers", display_name = icons.ui.Buffers .. " " .. "Bufs" },
-                { source = "git_status", display_name = icons.git.Logo .. " " .. "Git" },
+                { source = "filesystem", display_name = icons.File.ClosedFolder .. " " .. "File" },
+                { source = "buffers", display_name = icons.UI.Buffers .. " " .. "Bufs" },
+                { source = "git_status", display_name = icons.UI.Git .. " " .. "Git" },
                 { source = "document_symbols", display_name = icons.Symbols.Package .. " " .. "Symbols" },
             }
         },
@@ -58,26 +58,26 @@ return {
                 expander_highlight = "NeoTreeExpander",
             },
             icon = {
-                folder_closed = icons.ui.FolderClosed,
-                folder_open = icons.ui.FolderOpen,
-                folder_empty = icons.ui.FolderEmpty,
-                folder_empty_open = icons.ui.FolderEmpty,
-                default = icons.ui.File,
+                folder_closed = icons.File.ClosedFolder,
+                folder_open = icons.File.OpenFolder,
+                folder_empty = icons.Files.EmptyFolder,
+                folder_empty_open = icons.Files.EmptyFolder,
+                default = icons.Files.Normal,
             },
             modified = {
-                symbol = icons.ui.FileModified
+                symbol = icons.Files.Modified
             },
             git_status = {
                 symbols = {
-                    added = icons.git.Added,
-                    deleted = icons.git.Removed,
-                    modified = icons.git.Modified,
-                    renamed = icons.git.Renamed,
-                    untracked = icons.git.Untracked,
-                    ignored = icons.git.Ignored,
-                    unstaged = icons.git.Unstaged,
-                    staged = icons.git.Staged,
-                    conflict = icons.git.Conflict,
+                    added = icons.Git.Added,
+                    deleted = icons.Git.Removed,
+                    modified = icons.Git.Modified,
+                    renamed = icons.Git.Renamed,
+                    untracked = icons.Git.Untracked,
+                    ignored = icons.Git.Ignored,
+                    unstaged = icons.Git.Unstaged,
+                    staged = icons.Git.Staged,
+                    conflict = icons.Git.Conflict,
                 },
             },
             commands = {

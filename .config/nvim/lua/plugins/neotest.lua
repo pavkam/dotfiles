@@ -132,7 +132,7 @@ return {
 
                 -- add which key group
                 require("which-key").register({
-                    ["<leader>t"] = { name = icons.ui.Test .." Testing" }
+                    ["<leader>t"] = { name = icons.UI.Test .." Testing" }
                 }, { buffer = args.buf })
 
             end,

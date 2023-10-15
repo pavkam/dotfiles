@@ -6,12 +6,12 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     opts = {
         signs = {
-            add = { text = icons.git.Signs.Add },
-            change = { text = icons.git.Signs.Change },
-            delete = { text = icons.git.Signs.Delete },
-            topdelete = { text = icons.git.Signs.TopDelete },
-            changedelete = { text = icons.git.Signs.ChangeDelete },
-            untracked = { text = icons.git.Signs.Untracked },
+            add = { text = icons.Git.Signs.Add },
+            change = { text = icons.Git.Signs.Change },
+            delete = { text = icons.Git.Signs.Delete },
+            topdelete = { text = icons.Git.Signs.TopDelete },
+            changedelete = { text = icons.Git.Signs.ChangeDelete },
+            untracked = { text = icons.Git.Signs.Untracked },
         },
         on_attach = function(buffer)
             local gs = require 'gitsigns'

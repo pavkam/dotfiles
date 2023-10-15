@@ -232,10 +232,10 @@ return {
 
             -- diagnostics
             local signs = {
-                { name = "DiagnosticSignError", text = icons.Diagnostics.LSP.Error, texthl = "DiagnosticSignError" },
-                { name = "DiagnosticSignWarn", text = icons.Diagnostics.LSP.Warn, texthl = "DiagnosticSignWarn" },
-                { name = "DiagnosticSignHint", text = icons.Diagnostics.LSP.Hint, texthl = "DiagnosticSignHint" },
-                { name = "DiagnosticSignInfo", text = icons.Diagnostics.LSP.Info, texthl = "DiagnosticSignInfo" },
+                { name = "DiagnosticSignError", text = icons.Diagnostics.LSP.Error .. " ", texthl = "DiagnosticSignError" },
+                { name = "DiagnosticSignWarn", text = icons.Diagnostics.LSP.Warn .. " ", texthl = "DiagnosticSignWarn" },
+                { name = "DiagnosticSignHint", text = icons.Diagnostics.LSP.Hint .. " ", texthl = "DiagnosticSignHint" },
+                { name = "DiagnosticSignInfo", text = icons.Diagnostics.LSP.Info .. " ", texthl = "DiagnosticSignInfo" },
             }
 
             for _, sign in ipairs(signs) do

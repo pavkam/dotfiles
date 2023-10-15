@@ -38,22 +38,22 @@ return {
                     {
                         "diagnostics",
                         symbols = {
-                            error = icons.Diagnostics.LSP.Error,
-                            warn = icons.Diagnostics.LSP.Warn,
-                            info = icons.Diagnostics.LSP.Info,
-                            hint = icons.Diagnostics.LSP.Hint,
+                            error = icons.Diagnostics.LSP.Error .. " ",
+                            warn = icons.Diagnostics.LSP.Warn .. " ",
+                            info = icons.Diagnostics.LSP.Info .. " ",
+                            hint = icons.Diagnostics.LSP.Hint .. " ",
                         },
                         on_click = function()
                             vim.cmd("Telescope diagnostics")
                         end
                     },
                     { "filetype", icon_only = true, separator = "", padding = { left = 1, right = 0 } },
-                    { "filename", path = 1, symbols = { modified = " " .. icons.ui.Dirty .. " ", readonly = "", unnamed = "" } },
+                    { "filename", path = 1, symbols = { modified = " " .. icons.Files.Modified .. " ", readonly = "", unnamed = "" } },
                 },
                 lualine_x = {
                      {
                         function()
-                            return ui.sexy_list(lint.active_names_for_buffer(), icons.ui.Lint)
+                            return ui.sexy_list(lint.active_names_for_buffer(), icons.UI.Lint)
                         end,
                         cond = function()
                             return lint.active_for_buffer()
@@ -62,7 +62,7 @@ return {
                     },
                     {
                         function()
-                            return ui.sexy_list(format.active_names_for_buffer(), icons.ui.Format)
+                            return ui.sexy_list(format.active_names_for_buffer(), icons.UI.Format)
                         end,
                         cond = function()
                             return format.active_for_buffer()
@@ -74,7 +74,7 @@ return {
                     },
                     {
                         function()
-                            return ui.sexy_list(lsp.active_names_for_buffer(), icons.ui.LSP)
+                            return ui.sexy_list(lsp.active_names_for_buffer(), icons.UI.LSP)
                         end,
                         cond = function()
                             return lsp.active_for_buffer()
@@ -119,7 +119,7 @@ return {
                         color = ui.hl_fg_color("Constant"),
                     },
                     {
-                        function() return icons.ui.Debugger .. "  " .. require("dap").status() end,
+                        function() return icons.UI.Debugger .. "  " .. require("dap").status() end,
                         cond = function ()
                             return package.loaded["dap"] and require("dap").status() ~= ""
                         end,
@@ -128,9 +128,9 @@ return {
                     {
                         "diff",
                         symbols = {
-                            added = icons.git.Added,
-                            modified = icons.git.Modified,
-                            removed = icons.git.Removed,
+                            added = icons.Git.Added .. " ",
+                            modified = icons.Git.Modified .. " ",
+                            removed = icons.Git.Removed .. " ",
                         },
                     },
                 },
@@ -140,7 +140,7 @@ return {
                 },
                 lualine_z = {
                     function()
-                        return icons.ui.Clock .. " " .. os.date("%R")
+                        return icons.UI.Clock .. " " .. os.date("%R")
                     end,
                 },
             },
