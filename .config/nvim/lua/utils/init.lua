@@ -58,10 +58,11 @@ function M.tbl_join(items, separator)
     local result = ""
 
     for _, item in ipairs(items) do
-        result = result .. stringify(item)
         if #result > 0 and separator ~= nil then
             result = result .. separator
         end
+
+        result = result .. stringify(item)
     end
 
     return result

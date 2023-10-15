@@ -9,8 +9,9 @@ NerdIcons = {
         VisibleTab = "▶",
         MissingLine = "╱",
         IndentLevel = "│",
-        PromptPrefix = '',
-        SelectionPrefix = '',
+        PromptPrefix = "",
+        SelectionPrefix = "",
+        ListSeparator = "◦"
     },
     Diagnostics = {
         Logo = "󰒡",

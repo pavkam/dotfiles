@@ -53,36 +53,33 @@ return {
                 lualine_x = {
                      {
                         function()
-                            return icons.ui.Lint .. " " .. table.concat(lint.active_names_for_buffer(), ", ")
+                            return ui.sexy_list(lint.active_names_for_buffer(), icons.ui.Lint)
                         end,
                         cond = function()
                             return lint.active_for_buffer()
                         end,
-                        color = ui.hl_fg_color("LspInfoTitle"),
-                        on_click = function()
-                            vim.cmd("ConformInfo")
-                        end
+                        color = ui.hl_fg_color("DiagnosticWarn"),
                     },
                     {
                         function()
-                            return icons.ui.Format .. " " .. table.concat(format.active_names_for_buffer(), ", ")
+                            return ui.sexy_list(format.active_names_for_buffer(), icons.ui.Format)
                         end,
                         cond = function()
                             return format.active_for_buffer()
                         end,
-                        color = ui.hl_fg_color("LspInfoTitle"),
+                        color = ui.hl_fg_color("DiagnosticOk"),
                         on_click = function()
                             vim.cmd("ConformInfo")
                         end
                     },
                     {
                         function()
-                            return icons.ui.LSP .. " " .. table.concat(lsp.active_names_for_buffer(), ", ")
+                            return ui.sexy_list(lsp.active_names_for_buffer(), icons.ui.LSP)
                         end,
                         cond = function()
                             return lsp.active_for_buffer()
                         end,
-                        color = ui.hl_fg_color("LspInfoTitle"),
+                        color = ui.hl_fg_color("Title"),
                         on_click = function()
                             vim.cmd("LspInfo")
                         end

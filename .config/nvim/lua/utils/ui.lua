@@ -1,5 +1,6 @@
 -- general UI functionality
 local icons = require 'utils.icons'
+local utils = require 'utils'
 
 M = {}
 
@@ -62,10 +63,15 @@ function M.fold_text()
 end
 
 function M.hl_fg_color(name)
-    local hl = vim.api.nvim_get_hl and vim.api.nvim_get_hl(0, { name = name }) or vim.api.nvim_get_hl_by_name(name, true)
+    local hl = vim.api.nvim_get_hl and vim.api.nvim_get_hl(0, { name = name, link = false }) or vim.api.nvim_get_hl_by_name(name, true)
     local fg = hl and hl.fg or hl.foreground
 
     return fg and { fg = string.format("#%06x", fg) }
+end
+
+function M.sexy_list(list, prefix, separator)
+    separator = separator or icons.TUI.ListSeparator
+    return prefix .. " " .. utils.tbl_join(list, " " .. separator .. " ")
 end
 
 return M
