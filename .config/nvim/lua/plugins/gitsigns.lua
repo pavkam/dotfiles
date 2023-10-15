@@ -26,7 +26,7 @@ return {
             vim.keymap.set({ "n", "v" }, "<leader>gr", ":Gitsigns reset_hunk<CR>", { buffer = buffer, desc = "Reset Hunk"})
             vim.keymap.set("n", "<leader>gS", gs.stage_buffer, { buffer = buffer, desc = "Stage Buffer"})
             vim.keymap.set("n", "<leader>gu", gs.undo_stage_hunk, { buffer = buffer, desc = "Undo Stage Hunk"})
-            vim.keymap.set("n", "<leader>gU", gs.reset_buffer, { buffer = buffer, desc = "Reset Buffer"})
+            vim.keymap.set("n", "<leader>gR", gs.reset_buffer, { buffer = buffer, desc = "Reset Buffer"})
             vim.keymap.set("n", "<leader>gp", gs.preview_hunk, { buffer = buffer, desc = "Preview Hunk"})
             vim.keymap.set("n", "<leader>gb", function() gs.blame_line({ full = true }) end, { buffer = buffer, desc = "Blame Line"})
             vim.keymap.set("n", "<leader>gd", gs.diffthis, { buffer = buffer, desc = "Diff This"})

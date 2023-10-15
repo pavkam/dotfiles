@@ -18,7 +18,7 @@ local function get_null_ls_sources(filetype)
 
     local registered = {}
     for _, source in ipairs(sources.get_available(filetype)) do
-        utils.list_insert_unique(registered, source.name)
+        registered = utils.list_insert_unique(registered, source.name)
     end
 
     return registered
@@ -103,9 +103,9 @@ function M.active_names_for_buffer(buffer)
 
     for _, client in pairs(vim.lsp.get_active_clients { bufnr = buffer }) do
         if client.name == "null-ls" then
-            utils.list_insert_unique(buf_client_names, get_null_ls_sources(filetype))
+            buf_client_names = utils.list_insert_unique(buf_client_names, get_null_ls_sources(filetype))
         elseif client.name ~= "copilot" then
-            utils.list_insert_unique(buf_client_names, client.name)
+            buf_client_names = utils.list_insert_unique(buf_client_names, client.name)
         end
     end
 
@@ -117,9 +117,12 @@ function M.active_for_buffer(buffer)
     return #vim.lsp.get_active_clients({ bufnr = buffer }) > 0
 end
 
-function M.get_all_clients(...)
-    local fn = vim.lsp.get_clients or vim.lsp.get_active_clients
-    return fn(...)
+function M.is_active_for_buffer(name, buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local ok, clients = pcall(vim.lsp.get_active_clients, { name = name, bufnr = buffer })
+
+    return ok and #clients > 0
 end
 
 function M.get_lsp_root_dir(path, buffer)
@@ -129,7 +132,8 @@ function M.get_lsp_root_dir(path, buffer)
   local roots = {}
 
   if path then
-    for _, client in pairs(M.get_all_clients({ bufnr = buffer })) do
+    local get = vim.lsp.get_clients or vim.lsp.get_active_clients
+    for _, client in pairs(get({ bufnr = buffer })) do
         local workspace = client.config.workspace_folders
         local paths = workspace and vim.tbl_map(function(ws)
             return vim.uri_to_fname(ws.uri)

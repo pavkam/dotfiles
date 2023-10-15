@@ -1,4 +1,5 @@
-local icons = require("utils.icons")
+local icons = require "utils.icons"
+local ui = require "utils.ui"
 
 return {
     "nvim-neo-tree/neo-tree.nvim",
@@ -41,7 +42,7 @@ return {
                 { source = "document_symbols", display_name = icons.Symbols.Package .. " " .. "Symbols" },
             }
         },
-        open_files_do_not_replace_types = { "terminal", "Trouble", "qf", "Outline", "neotest-output" },
+        open_files_do_not_replace_types = ui.special_buffer_file_types,
         filesystem = {
             bind_to_cwd = false,
             follow_current_file = { enabled = true },
@@ -151,11 +152,17 @@ return {
         utils.auto_command(
             "TermClose",
             function()
-                if package.loaded["neo-tree.sources.git_status"] then
-                    require("neo-tree.sources.git_status").refresh()
+                local ok, manager = pcall(require, "neo-tree.sources.manager")
+                if ok then
+                    for _, source in ipairs { "filesystem", "git_status", "document_symbols" } do
+                        local module = "neo-tree.sources." .. source
+                        if package.loaded[module] then
+                            manager.refresh(require(module).name)
+                        end
+                    end
                 end
             end,
-            "*lazygit"
+            "*lazygit*"
         )
     end
 }

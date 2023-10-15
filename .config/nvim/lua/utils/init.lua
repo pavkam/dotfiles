@@ -1,5 +1,105 @@
 local M = {}
 
+-- general utils
+
+local function stringify(value)
+    if value == nil then
+        return "nil"
+    elseif type(value) == "string" then
+        return value
+    elseif type(value) == "table" then
+        return vim.inspect(value)
+    elseif type(value) == "function" then
+        return stringify(value())
+    else
+        return tostring(value)
+    end
+end
+
+function M.to_list(value)
+    if value == nil then
+        return {}
+    elseif vim.tbl_islist(value) then
+        return value
+    elseif type(value) == "table" then
+        local list = {}
+        for _, item in ipairs(value) do
+            table.insert(list, item)
+        end
+
+        return list
+    else
+        return { value }
+    end
+end
+
+function M.list_insert_unique(list, values)
+    list = M.to_list(list)
+    values = M.to_list(values)
+
+    local added = {}
+    vim.tbl_map(function(v) added[v] = true end, list)
+
+    for _, val in ipairs(values) do
+        if not added[val] then
+            table.insert(list, val)
+            added[val] = true
+        end
+    end
+
+    return list
+end
+
+function M.tbl_join(items, separator)
+    if not vim.tbl_islist(items) then
+        return stringify(items)
+    end
+
+    local result = ""
+
+    for _, item in ipairs(items) do
+        result = result .. stringify(item)
+        if #result > 0 and separator ~= nil then
+            result = result .. separator
+        end
+    end
+
+    return result
+end
+
+function M.tbl_copy(table)
+    return vim.tbl_extend("force", {}, table)
+end
+
+function M.tbl_merge(...)
+    local all = {}
+
+    for _, a in ipairs({...}) do
+        if a then
+            table.insert(all, a)
+        end
+    end
+
+    if #all == 0 then
+        return {}
+    elseif #all == 1 then
+        return all[1]
+    else
+       return vim.tbl_deep_extend("force", unpack(all))
+    end
+end
+
+function M.stringify(...)
+    local args = { ... }
+    if #args == 1 then
+        return stringify(...)
+    else
+        return M.tbl_join(args, " ")
+    end
+end
+
+-- vim utils
+
 local group_index = 0
 
 function M.auto_command(event, callback, pattern)
@@ -15,23 +115,42 @@ function M.auto_command(event, callback, pattern)
     })
 end
 
-function M.list_insert_unique(lst, vals)
-    if not lst then lst = {} end
+function M.debounce(ms, fn)
+    local timer = vim.loop.new_timer()
 
-    if not vim.tbl_islist(vals) then vals = { vals } end
+    return function(...)
+        local argv = { ... }
 
-    local added = {}
-
-    vim.tbl_map(function(v) added[v] = true end, lst)
-    for _, val in ipairs(vals) do
-        if not added[val] then
-        table.insert(lst, val)
-        added[val] = true
-        end
+        timer:start(ms, 0, function()
+            timer:stop()
+            vim.schedule_wrap(fn)(unpack(argv))
+        end)
     end
-
-    return lst
 end
+
+-- notification utils
+
+function M.notify(msg, type, opts)
+    vim.schedule(
+        function()
+            vim.notify(M.stringify(msg), type, M.tbl_merge({ title = "NeoVim" }, opts))
+        end
+    )
+end
+
+function M.info(msg)
+    M.notify(msg, vim.log.levels.INFO)
+end
+
+function M.warn(msg)
+    M.notify(msg, vim.log.levels.WARN)
+end
+
+function M.error(msg)
+    M.notify(msg, vim.log.levels.ERROR)
+end
+
+-- terminal utils
 
 local terminals = {}
 
@@ -70,37 +189,28 @@ function M.float_term(cmd, opts)
     return terminals[termkey]
 end
 
-function M.tbl_join(items, separator)
-    if not vim.tbl_islist(items) then
-        return tostring(items)
-    end
-
-    local result = ""
-
-    for _, item in ipairs(items) do
-        result = result .. tostring(item)
-        if #result > 0 and separator ~= nil then
-            result = result .. separator
-        end
-    end
-
-    return result
-end
-
-function M.tbl_copy(table)
-    return vim.tbl_extend("force", {}, table)
-end
-
-function M.tbl_merge(first, second)
-    second = second or {}
-    return first and vim.tbl_deep_extend("force", first, second) or second
-end
-
-function M.join_paths(part1, part2)
+-- file utils
+local function join_paths(part1, part2)
     part1 = part1:gsub("([^/])$", "%1/"):gsub("//", "/")
     part2 = part2:gsub("^/", "")
 
     return part1 .. part2
+end
+
+function M.join_paths(...)
+    local parts = {...}
+    if #parts == 0 then
+        return nil
+    elseif #parts == 1 then
+        return parts[1]
+    end
+
+    local acc = M.stringify(table.remove(parts, 1))
+    for _, part in ipairs(parts) do
+        acc = join_paths(acc, M.stringify(part))
+    end
+
+    return acc
 end
 
 function M.file_exists(path)
@@ -135,37 +245,9 @@ function M.read_text_file(path)
     return content
 end
 
-function M.notify(msg, type, opts)
-    vim.schedule(
-        function()
-            vim.notify(msg, type, M.tbl_merge({ title = "NeoVim" }, opts))
-        end
-    )
-end
 
-function M.info(msg)
-    M.notify(msg, vim.log.levels.INFO)
-end
+function M.test()
 
-function M.warn(msg)
-    M.notify(msg, vim.log.levels.WARN)
-end
-
-function M.error(msg)
-    M.notify(msg, vim.log.levels.ERROR)
-end
-
-function M.debounce(ms, fn)
-    local timer = vim.loop.new_timer()
-
-    return function(...)
-        local argv = { ... }
-
-        timer:start(ms, 0, function()
-            timer:stop()
-            vim.schedule_wrap(fn)(unpack(argv))
-        end)
-    end
 end
 
 return M

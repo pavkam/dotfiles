@@ -75,15 +75,6 @@ return {
                             return require("omnisharp_extended").handler(...)
                         end,
                     },
-                    keys = {
-                        {
-                            "gd",
-                            function()
-                                require("omnisharp_extended").telescope_lsp_definitions()
-                            end,
-                            desc = "Goto Definition",
-                        },
-                    },
                     enable_roslyn_analyzers = true,
                     organize_imports_on_format = true,
                     enable_import_completion = true,
@@ -167,9 +158,6 @@ return {
                     },
                 },
                 gopls = {
-                    keys = {
-                        { "<leader>td", "<cmd>lua require('dap-go').debug_test()<CR>", desc = "Debug Test (Go)" },
-                    },
                     settings = {
                         gopls = {
                             gofumpt = true,
@@ -275,7 +263,7 @@ return {
                 local client = vim.lsp.get_client_by_id(ctx.client_id)
 
                 if client.supports_method ~= nil then
-                    attach(client, vim.api.nvim_get_current_buf())
+                    keymaps.attach(client, vim.api.nvim_get_current_buf())
                 end
 
                 return ret

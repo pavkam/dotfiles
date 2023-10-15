@@ -4,8 +4,32 @@ return {
         "ray-x/guihua.lua",
         "neovim/nvim-lspconfig",
         "nvim-treesitter/nvim-treesitter",
+        {
+            "williamboman/mason.nvim",
+            opts = {
+                ensure_installed = {
+                    "gomodifytags",
+                    "impl",
+                    "iferr",
+                    "gorename",
+                    "gomodifytags",
+                    "gotests",
+                    "gotestsum",
+                    "fillstruct",
+                    "fillswitch",
+                    "ginkgo",
+                    "richgo",
+                    "govulncheck",
+                    "goenum"
+                }
+            }
+        }
     },
-    opts = {},
+    opts = {
+        icons = false,
+        dap_debug = false,
+        test_runner = nil,
+    },
     ft = {
         "go",
         "gomod"

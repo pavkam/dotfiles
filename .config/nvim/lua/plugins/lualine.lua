@@ -93,8 +93,7 @@ return {
                             return icons.Symbols.Copilot .. (status.message or "")
                         end,
                         cond = function()
-                            local ok, clients = pcall(vim.lsp.get_active_clients, { name = "copilot", bufnr = 0 })
-                            return ok and #clients > 0
+                            return lsp.is_active_for_buffer("copilot")
                         end,
                         color = function()
                             if not package.loaded["copilot"] then
@@ -105,18 +104,28 @@ return {
                         end,
                     },
                     {
-                        function() return require("noice").api.status.command.get() end,
-                        cond = function() return package.loaded["noice"] and require("noice").api.status.command.has() end,
+                        function()
+                            return require("noice").api.status.command.get()
+                        end,
+                        cond = function()
+                            return package.loaded["noice"] and require("noice").api.status.command.has()
+                        end,
                         color = ui.hl_fg_color("Statement"),
                     },
                     {
-                        function() return require("noice").api.status.mode.get() end,
-                        cond = function() return package.loaded["noice"] and require("noice").api.status.mode.has() end,
+                        function()
+                            return require("noice").api.status.mode.get()
+                        end,
+                        cond = function()
+                            return package.loaded["noice"] and require("noice").api.status.mode.has()
+                        end,
                         color = ui.hl_fg_color("Constant"),
                     },
                     {
                         function() return icons.ui.Debugger .. "  " .. require("dap").status() end,
-                        cond = function () return package.loaded["dap"] and require("dap").status() ~= "" end,
+                        cond = function ()
+                            return package.loaded["dap"] and require("dap").status() ~= ""
+                        end,
                         color = ui.hl_fg_color("Debug"),
                     },
                     {

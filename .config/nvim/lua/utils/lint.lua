@@ -87,11 +87,4 @@ function M.toggle()
     end
 end
 
-function M.test()
-    local lint = require "lint"
-    local def = utils.tbl_merge(lint.linters.golangcilint, { name = "golangcilint" })
-
-    lint.lint(def)
-end
-
 return M

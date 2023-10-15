@@ -3,6 +3,49 @@ local icons = require 'utils.icons'
 
 M = {}
 
+M.special_buffer_file_types = {
+    "neo-tree",
+    "PlenaryTestPopup",
+    "help",
+    "lspinfo",
+    "man",
+    "notify",
+    "noice",
+    "Outline",
+    "qf",
+    "query",
+    "spectre_panel",
+    "startuptime",
+    "tsplayground",
+    "checkhealth",
+    "Trouble",
+    "terminal",
+    "neotest-summary",
+    "neotest-output",
+    "neotest-output-panel",
+    "WhichKey",
+    "TelescopePrompt",
+    "TelescopeResults",
+}
+
+local special_buffer_types = {
+    "prompt",
+    "nofile",
+}
+
+function M.is_special_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = buffer })
+    local buftype = vim.api.nvim_get_option_value("buftype", { buf = buffer })
+
+    return (
+        filetype == "" or
+        vim.tbl_contains(special_buffer_types, buftype) or
+        vim.tbl_contains(M.special_buffer_file_types, filetype)
+    )
+end
+
 function M.fold_text()
     local ok = pcall(vim.treesitter.get_parser, vim.api.nvim_get_current_buf())
     local ret = ok and vim.treesitter.foldtext and vim.treesitter.foldtext()

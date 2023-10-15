@@ -1,5 +1,5 @@
--- Auto-commands for a better life
 local utils = require 'utils'
+local ui = require 'utils.ui'
 
 -- highlight on yank
 utils.auto_command(
@@ -41,26 +41,15 @@ utils.auto_command(
 -- close some filetypes with <q>
 utils.auto_command(
     "FileType",
-    function(event)
-        vim.bo[event.buf].buflisted = false
-        vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = event.buf, silent = true })
+    function(evt)
+        vim.bo[evt.buf].buflisted = false
+
+        local has_mapping = vim.tbl_isempty(vim.fn.maparg("q", "n", 0, 1))
+        if not has_mapping then
+            vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = evt.buf, silent = true })
+        end
     end,
-    {
-        "PlenaryTestPopup",
-        "help",
-        "lspinfo",
-        "man",
-        "notify",
-        "qf",
-        "query",
-        "spectre_panel",
-        "startuptime",
-        "tsplayground",
-        "neotest-output",
-        "checkhealth",
-        "neotest-summary",
-        "neotest-output-panel",
-    }
+    ui.special_buffer_file_types
 )
 
 -- wrap and check for spell in text filetypes
@@ -79,12 +68,12 @@ utils.auto_command(
 -- Auto create dir when saving a file, in case some intermediate directory does not exist
 utils.auto_command(
     "BufWritePre",
-    function(event)
-        if event.match:match("^%w%w+://") then
+    function(evt)
+        if evt.match:match("^%w%w+://") then
             return
         end
 
-        local file = vim.loop.fs_realpath(event.match) or event.match
+        local file = vim.loop.fs_realpath(evt.match) or evt.match
         vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
     end
 )
@@ -101,12 +90,17 @@ utils.auto_command(
 )
 
 -- better search
-vim.on_key(function(char)
-  if vim.fn.mode() == "n" then
-    local new_hlsearch = vim.tbl_contains({ "<CR>", "n", "N", "*", "#", "?", "/" }, vim.fn.keytrans(char))
-    if vim.opt.hlsearch:get() ~= new_hlsearch then vim.opt.hlsearch = new_hlsearch end
-  end
-end, vim.api.nvim_create_namespace("auto_hlsearch"))
+vim.on_key(
+    function(char)
+        if vim.fn.mode() == "n" then
+            local new_hlsearch = vim.tbl_contains({ "<CR>", "n", "N", "*", "#", "?", "/" }, vim.fn.keytrans(char))
+            if vim.opt.hlsearch:get() ~= new_hlsearch then
+                vim.opt.hlsearch = new_hlsearch
+            end
+        end
+    end,
+    vim.api.nvim_create_namespace("auto_hlsearch")
+)
 
 -- HACK: Disable custom statuscolumn for terminals because truncation/wrapping bug
 -- https://github.com/neovim/neovim/issues/25472
@@ -127,16 +121,49 @@ utils.auto_command(
     end
 )
 
-utils.auto_command("BufWinEnter",
-    function(args)
-        if not vim.b[args.buf].view_activated then
-            local filetype = vim.api.nvim_get_option_value("filetype", { buf = args.buf })
-            local buftype = vim.api.nvim_get_option_value("buftype", { buf = args.buf })
+utils.auto_command(
+    "BufWinEnter",
+    function(evt)
+        if not vim.b[evt.buf].view_activated then
+            local filetype = vim.api.nvim_get_option_value("filetype", { buf = evt.buf })
+            local buftype = vim.api.nvim_get_option_value("buftype", { buf = evt.buf })
             local ignore_filetypes = { "gitcommit", "gitrebase", "svg", "hgcommit" }
 
             if buftype == "" and filetype and filetype ~= "" and not vim.tbl_contains(ignore_filetypes, filetype) then
-                vim.b[args.buf].view_activated = true
+                vim.b[evt.buf].view_activated = true
                 vim.cmd.loadview { mods = { emsg_silent = true } }
+            end
+        end
+    end
+)
+
+-- leave vim if last window is closed
+utils.auto_command(
+    "WinClosed",
+    function(evt)
+        local listed_buffers = vim.fn.getbufinfo({ buflisted = 1 })
+        local open_buffers = vim.tbl_filter(
+            function(buffer)
+                return #buffer.windows > 1 or (#buffer.windows == 1 and buffer.windows[1] ~= tonumber(evt.match))
+            end,
+            listed_buffers
+        )
+        local modified_buffers = vim.tbl_filter(
+            function(buffer)
+                return buffer.changed
+            end,
+            listed_buffers
+        )
+
+        local filetype = vim.api.nvim_get_option_value("filetype", { buf = evt.buf })
+        local buftype = vim.api.nvim_get_option_value("buftype", { buf = evt.buf })
+
+        if #open_buffers == 0 and not ui.is_special_buffer(evt.buf) then
+            if #modified_buffers > 0 then
+                utils.warn("There are unsaved changes in some buffers. Will not exit!")
+                vim.schedule(function() vim.cmd("b" .. modified_buffers[1].bufnr) end)
+            else
+                vim.cmd('qa')
             end
         end
     end

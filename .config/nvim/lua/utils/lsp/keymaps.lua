@@ -15,8 +15,18 @@ end
 local keymaps = {
     { "M", vim.diagnostic.open_float, desc = "Line Diagnostics" },
     { "<leader>sm", "M", desc = "Line Diagnostics (M)" },
-
-    { "gd", function() require("telescope.builtin").lsp_definitions({ reuse_win = true }) end, desc = "Goto Definition", capability = "definition" },
+    {
+        "gd",
+        function()
+            if lsp.is_active_for_buffer("omnisharp") then
+                require("omnisharp_extended").telescope_lsp_definitions()
+            else
+                require("telescope.builtin").lsp_definitions({ reuse_win = true })
+            end
+        end,
+        desc = "Goto Definition",
+        capability = "definition"
+    },
     { "<leader>sd", "gd", desc = "Goto Definition (gd)", capability = "definition" },
 
     { "gr", "<cmd>Telescope lsp_references<cr>", desc = "References", capability = "references" },

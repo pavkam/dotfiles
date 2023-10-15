@@ -52,7 +52,7 @@ function M.get_bin_path(path, bin)
         return nil
     end
 
-    local full_path = utils.join_paths(root, utils.join_paths(utils.join_paths(node_modules_name, ".bin"), bin))
+    local full_path = utils.join_paths(root, node_modules_name, ".bin", bin)
     if utils.file_exists(full_path) then
         return full_path
     end
