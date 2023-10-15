@@ -36,7 +36,7 @@ return {
             winbar = true,
             content_layout = "center",
             sources = {
-                { source = "filesystem", display_name = icons.File.ClosedFolder .. " " .. "File" },
+                { source = "filesystem", display_name = icons.Files.ClosedFolder .. " " .. "File" },
                 { source = "buffers", display_name = icons.UI.Buffers .. " " .. "Bufs" },
                 { source = "git_status", display_name = icons.UI.Git .. " " .. "Git" },
                 { source = "document_symbols", display_name = icons.Symbols.Package .. " " .. "Symbols" },
@@ -58,8 +58,8 @@ return {
                 expander_highlight = "NeoTreeExpander",
             },
             icon = {
-                folder_closed = icons.File.ClosedFolder,
-                folder_open = icons.File.OpenFolder,
+                folder_closed = icons.Files.ClosedFolder,
+                folder_open = icons.Files.OpenFolder,
                 folder_empty = icons.Files.EmptyFolder,
                 folder_empty_open = icons.Files.EmptyFolder,
                 default = icons.Files.Normal,

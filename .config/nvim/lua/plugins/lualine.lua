@@ -100,6 +100,8 @@ return {
                             return copilot_colors[status.status] or copilot_colors[""]
                         end,
                     },
+                },
+                lualine_y = {
                     {
                         function()
                             return require("noice").api.status.command.get()
@@ -134,14 +136,17 @@ return {
                         },
                     },
                 },
-                lualine_y = {
+                lualine_z = {
+                     {
+                        require("lazy.status").updates,
+                        cond = require("lazy.status").has_updates,
+                        color = ui.hl_fg_color("Comment"),
+                        on_click = function()
+                            vim.cmd("Lazy")
+                        end
+                    },
                     { "progress", separator = " ", padding = { left = 1, right = 0 } },
                     { "location", padding = { left = 0, right = 1 } },
-                },
-                lualine_z = {
-                    function()
-                        return icons.UI.Clock .. " " .. os.date("%R")
-                    end,
                 },
             },
             extensions = { "neo-tree", "lazy" },

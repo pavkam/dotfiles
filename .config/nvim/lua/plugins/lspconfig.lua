@@ -195,6 +195,7 @@ return {
                         },
                     },
                 },
+                --golangci_lint_ls = {}
             },
             setup = {
                 gopls = function(_, opts)
