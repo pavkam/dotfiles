@@ -128,10 +128,10 @@ function M.is_active_for_buffer(name, buffer)
     return ok and #clients > 0
 end
 
-function M.root(buffer)
+function M.get_lsp_root_dir(path, buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local path = vim.api.nvim_buf_get_name(buffer)
+    path = path or vim.api.nvim_buf_get_name(buffer)
     path = path ~= "" and vim.loop.fs_realpath(path) or nil
 
     local roots = {}
