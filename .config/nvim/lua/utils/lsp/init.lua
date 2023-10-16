@@ -8,6 +8,7 @@ local function normalize_capability(method)
     return method
 end
 
+-- TODO: remove when none-ls is kaput!
 local function get_null_ls_sources(filetype)
     -- get the registered methods
     local ok, sources = pcall(require, "null-ls.sources")
@@ -112,9 +113,11 @@ function M.active_names_for_buffer(buffer)
     return buf_client_names
 end
 
-function M.active_for_buffer(buffer)
+function M.any_active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
-    return #vim.lsp.get_active_clients({ bufnr = buffer }) > 0
+    local clients = vim.lsp.get_active_clients({ bufnr = buffer })
+
+    return #clients > 0 or (#clients == 1 and clients[1].name ~= "copilot")
 end
 
 function M.is_active_for_buffer(name, buffer)
@@ -125,32 +128,35 @@ function M.is_active_for_buffer(name, buffer)
     return ok and #clients > 0
 end
 
-function M.get_lsp_root_dir(path, buffer)
-  path = path or vim.api.nvim_buf_get_name(0)
-  path = path ~= "" and vim.loop.fs_realpath(path) or nil
+function M.root(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
 
-  local roots = {}
+    local path = vim.api.nvim_buf_get_name(buffer)
+    path = path ~= "" and vim.loop.fs_realpath(path) or nil
 
-  if path then
-    local get = vim.lsp.get_clients or vim.lsp.get_active_clients
-    for _, client in pairs(get({ bufnr = buffer })) do
-        local workspace = client.config.workspace_folders
-        local paths = workspace and vim.tbl_map(function(ws)
-            return vim.uri_to_fname(ws.uri)
-        end, workspace) or client.config.root_dir and { client.config.root_dir } or {}
+    local roots = {}
 
-        for _, p in ipairs(paths) do
-            local r = vim.loop.fs_realpath(p)
-            if path:find(r, 1, true) then
-            roots[#roots + 1] = r
+    if path then
+        local get = vim.lsp.get_clients or vim.lsp.get_active_clients
+
+        for _, client in pairs(get({ bufnr = buffer })) do
+            local workspace = client.config.workspace_folders
+            local paths = workspace and vim.tbl_map(function(ws)
+                return vim.uri_to_fname(ws.uri)
+            end, workspace) or client.config.root_dir and { client.config.root_dir } or {}
+
+            for _, p in ipairs(paths) do
+                local r = vim.loop.fs_realpath(p)
+                if path:find(r, 1, true) then
+                    roots[#roots + 1] = r
+                end
             end
         end
     end
-  end
 
-  table.sort(roots, function(a, b) return #a > #b end)
+    table.sort(roots, function(a, b) return #a > #b end)
 
-  return roots[1]
+    return roots[1]
 end
 
 return M

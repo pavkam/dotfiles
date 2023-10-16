@@ -77,7 +77,7 @@ return {
                             return ui.sexy_list(lsp.active_names_for_buffer(), icons.UI.LSP)
                         end,
                         cond = function()
-                            return lsp.active_for_buffer()
+                            return lsp.any_active_for_buffer()
                         end,
                         color = ui.hl_fg_color("Title"),
                         on_click = function()

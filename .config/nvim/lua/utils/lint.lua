@@ -3,6 +3,10 @@ local utils = require "utils"
 local M = {}
 
 local function linters(buffer)
+    if not package.loaded["lint"] then
+        return {}
+    end
+
     local lint = require "lint"
     return lint.linters_by_ft[vim.bo[buffer].filetype] or {}
 end

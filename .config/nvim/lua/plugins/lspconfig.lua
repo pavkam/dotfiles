@@ -6,7 +6,6 @@ return {
         event = { "BufReadPre", "BufNewFile" },
         dependencies = {
             "williamboman/mason-lspconfig.nvim",
-            "williamboman/mason.nvim",
             {
                 "lvimuser/lsp-inlayhints.nvim",
                 opts = {},
@@ -129,34 +128,35 @@ return {
                         },
                     },
                 },
-                tsserver = {
-                    settings = {
-                        typescript = {
-                            inlayHints = {
-                                includeInlayParameterNameHints = 'all',
-                                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-                                includeInlayFunctionParameterTypeHints = true,
-                                includeInlayVariableTypeHints = true,
-                                includeInlayVariableTypeHintsWhenTypeMatchesName = false,
-                                includeInlayPropertyDeclarationTypeHints = true,
-                                includeInlayFunctionLikeReturnTypeHints = true,
-                                includeInlayEnumMemberValueHints = true,
-                            }
-                        },
-                        javascript = {
-                            inlayHints = {
-                                includeInlayParameterNameHints = 'all',
-                                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-                                includeInlayFunctionParameterTypeHints = true,
-                                includeInlayVariableTypeHints = true,
-                                includeInlayVariableTypeHintsWhenTypeMatchesName = false,
-                                includeInlayPropertyDeclarationTypeHints = true,
-                                includeInlayFunctionLikeReturnTypeHints = true,
-                                includeInlayEnumMemberValueHints = true,
-                            },
-                        },
-                    },
-                },
+                -- TODO: disabled while testing typescript-tools
+                -- tsserver = {
+                --     settings = {
+                --         typescript = {
+                --             inlayHints = {
+                --                 includeInlayParameterNameHints = 'all',
+                --                 includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                --                 includeInlayFunctionParameterTypeHints = true,
+                --                 includeInlayVariableTypeHints = true,
+                --                 includeInlayVariableTypeHintsWhenTypeMatchesName = false,
+                --                 includeInlayPropertyDeclarationTypeHints = true,
+                --                 includeInlayFunctionLikeReturnTypeHints = true,
+                --                 includeInlayEnumMemberValueHints = true,
+                --             }
+                --         },
+                --         javascript = {
+                --             inlayHints = {
+                --                 includeInlayParameterNameHints = 'all',
+                --                 includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                --                 includeInlayFunctionParameterTypeHints = true,
+                --                 includeInlayVariableTypeHints = true,
+                --                 includeInlayVariableTypeHintsWhenTypeMatchesName = false,
+                --                 includeInlayPropertyDeclarationTypeHints = true,
+                --                 includeInlayFunctionLikeReturnTypeHints = true,
+                --                 includeInlayEnumMemberValueHints = true,
+                --             },
+                --         },
+                --     },
+                -- },
                 gopls = {
                     settings = {
                         gopls = {
@@ -323,4 +323,34 @@ return {
         "b0o/SchemaStore.nvim",
         version = false, -- last release is way too old
     },
+    {
+        "pmizio/typescript-tools.nvim",
+        ft = { "typescript", "typescript.jsx", "typescriptreact", "javascript", "javascript.jsx", "javascriptreact" },
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+            "neovim/nvim-lspconfig",
+        },
+        opts = function()
+            local lsp = require "utils.lsp"
+            local keymaps = require "utils.lsp.keymaps"
+
+            return {
+                --on_attach = keymaps.attach,
+                settings = {
+                    tsserver_file_preferences = {
+                        includeInlayParameterNameHints = 'all',
+                        includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                        includeInlayFunctionParameterTypeHints = true,
+                        includeInlayVariableTypeHints = true,
+                        includeInlayVariableTypeHintsWhenTypeMatchesName = false,
+                        includeInlayPropertyDeclarationTypeHints = true,
+                        includeInlayFunctionLikeReturnTypeHints = true,
+                        includeInlayEnumMemberValueHints = true,
+                    },
+                    expose_as_code_action = { "organize_imports", "add_missing_imports" },
+                    code_lens = "all"
+                }
+            }
+        end,
+    }
 }

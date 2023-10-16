@@ -22,7 +22,6 @@ return {
                 "mfussenegger/nvim-dap-python",
                 dependencies = {
                     "mfussenegger/nvim-dap",
-                    "williamboman/mason.nvim",
                 },
                 ft = "python",
                 config = function(_, opts)
@@ -91,17 +90,6 @@ return {
                     end
                 end,
             },
-            {
-                "williamboman/mason.nvim",
-                opts = {
-                    ensure_installed = {
-                        "netcoredbg",
-                        "debugpy",
-                        "js-debug-adapter",
-                        "delve"
-                    }
-                }
-            }
         },
         keys = {
             { "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "Breakpoint Condition" },

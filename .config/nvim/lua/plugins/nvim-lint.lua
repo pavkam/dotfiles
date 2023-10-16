@@ -1,23 +1,6 @@
 return {
     "mfussenegger/nvim-lint",
-    event = { "BufReadPre", "BufNewFile" },
-    dependencies = {
-        {
-            "williamboman/mason.nvim",
-            opts = {
-                ensure_installed = {
-                    "shellcheck",
-                    "hadolint",
-                    "luacheck",
-                    "buf",
-                    "golangci-lint", "staticcheck",
-                    "eslint_d",
-                    "hadolint",
-                    "markdownlint",
-                }
-            }
-        }
-    },
+    event = "LspAttach",
     keys = {
         {
             "<leader>uf",

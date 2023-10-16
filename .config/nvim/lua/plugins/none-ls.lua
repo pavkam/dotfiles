@@ -1,26 +1,8 @@
 return {
     "nvimtools/none-ls.nvim",
+    -- TODO: disabling while testing conform and nvim-lint
     enabled = false,
     event = { "BufReadPre", "BufNewFile" },
-    dependencies = {
-        {
-            "williamboman/mason.nvim",
-            opts = {
-                ensure_installed = {
-                    "shellcheck", "shfmt",
-                    "csharpier",
-                    "hadolint",
-                    "stylua", "luacheck",
-                    "buf",
-                    "black", "isort",
-                    "golines", "gofumpt", "goimports", "goimports-reviser",
-                    "gomodifytags", "impl", "iferr",
-                    "golangci-lint", "staticcheck",
-                    "eslint_d", "prettier", "prettierd"
-                }
-            }
-        }
-    },
     opts = function()
         local go_project = require "utils.project.go"
         local js_project = require "utils.project.js"

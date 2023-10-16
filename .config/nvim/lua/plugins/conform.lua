@@ -1,22 +1,6 @@
 
 return {
     "stevearc/conform.nvim",
-    dependencies = {
-        {
-            "williamboman/mason.nvim",
-            opts = {
-                ensure_installed = {
-                    "shfmt",
-                    "csharpier",
-                    "stylua",
-                    "buf",
-                    "black", "isort",
-                    "golines", "gofumpt", "goimports", "goimports-reviser",
-                    "prettier", "prettierd"
-                }
-            }
-        }
-    },
     cmd = "ConformInfo",
     keys = {
         {
@@ -66,25 +50,25 @@ return {
             formatters_by_ft = {
                 lua = { "stylua" },
                 sh = { "shfmt" },
-                javascript = { { "prettierd", "prettier" } },
-                javascriptreact = { { "prettierd", "prettier" } },
-                typescript = { { "prettierd", "prettier" } },
-                typescriptreact = { { "prettierd", "prettier" } },
+                javascript = { { "prettier", "prettierd" } },
+                javascriptreact = { { "prettier", "prettierd" } },
+                typescript = { { "prettied", "prettierd" } },
+                typescriptreact = { { "prettier", "prettierd" } },
                 go = { { "goimports-reviser", "goimports" }, { "golines", "gofumpt" } },
                 csharp = { "csharpier" },
                 python = { "black", "isort" },
                 proto = { "buf" },
-                markdown = { { "prettierd", "prettier" } },
-                html = { { "prettierd", "prettier" } },
-                css = { { "prettierd", "prettier" } },
-                scss = { { "prettierd", "prettier" } },
-                less = { { "prettierd", "prettier" } },
-                vue = { { "prettierd", "prettier" } },
-                json = { { "prettierd", "prettier" } },
-                jsonc = { { "prettierd", "prettier" } },
-                yaml = { { "prettierd", "prettier" } },
-                graphql = { { "prettierd", "prettier" } },
-                handlebars = { { "prettierd", "prettier" } },
+                markdown = { { "prettier", "prettierd" } },
+                html = { { "prettier", "prettierd" } },
+                css = { { "prettier", "prettierd" } },
+                scss = { { "prettier", "prettierd" } },
+                less = { { "prettier", "prettierd" } },
+                vue = { { "prettier", "prettierd" } },
+                json = { { "prettier", "prettierd" } },
+                jsonc = { { "prettier", "prettierd" } },
+                yaml = { { "prettier", "prettierd" } },
+                graphql = { { "prettier", "prettierd" } },
+                handlebars = { { "prettier", "prettierd" } },
             },
             formatters = {
                 ["goimports-reviser"] = {
