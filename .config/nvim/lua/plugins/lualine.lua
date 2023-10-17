@@ -5,6 +5,7 @@ return {
     },
     event = "VeryLazy",
     opts = function()
+        local utils = require "utils"
         local ui = require "utils.ui"
         local icons = require "utils.icons"
         local lsp = require "utils.lsp"
@@ -17,6 +18,12 @@ return {
             ["Warning"] = ui.hl_fg_color("DiagnosticError"),
             ["InProgress"] = ui.hl_fg_color("DiagnosticWarn"),
         }
+
+
+        local linters_text, linters_cond = utils.event_memoized("BufEnter", "*",
+            function() return ui.sexy_list(lint.active_names_for_buffer(), icons.UI.Lint) end,
+            function() return lint.active_for_buffer() end
+        )
 
         return {
             options = {
@@ -52,12 +59,8 @@ return {
                 },
                 lualine_x = {
                      {
-                        function()
-                            return ui.sexy_list(lint.active_names_for_buffer(), icons.UI.Lint)
-                        end,
-                        cond = function()
-                            return lint.active_for_buffer()
-                        end,
+                        linters_text,
+                        cond = linters_cond,
                         color = ui.hl_fg_color("DiagnosticWarn"),
                     },
                     {
@@ -102,24 +105,6 @@ return {
                     },
                 },
                 lualine_y = {
-                    {
-                        function()
-                            return require("noice").api.status.command.get()
-                        end,
-                        cond = function()
-                            return package.loaded["noice"] and require("noice").api.status.command.has()
-                        end,
-                        color = ui.hl_fg_color("Statement"),
-                    },
-                    {
-                        function()
-                            return require("noice").api.status.mode.get()
-                        end,
-                        cond = function()
-                            return package.loaded["noice"] and require("noice").api.status.mode.has()
-                        end,
-                        color = ui.hl_fg_color("Constant"),
-                    },
                     {
                         function() return icons.UI.Debugger .. "  " .. require("dap").status() end,
                         cond = function ()

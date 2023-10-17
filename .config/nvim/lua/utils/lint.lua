@@ -47,6 +47,10 @@ end
 
 function M.active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local l = linters(buffer)
+    print("active linters = ", #l)
+
     return #linters(buffer) > 0
 end
 
