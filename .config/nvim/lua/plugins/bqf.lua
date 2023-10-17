@@ -78,38 +78,38 @@ return {
             desc = 'Clear locations list'
         },
         {
-            "<leader>qQ",
-            "<cmd> copen <cr>",
+            "<leader>qq",
+            "<cmd>copen<cr>",
             mode = { "n" },
             desc = 'Show quick-fix list'
         },
         {
-            "<leader>qL",
-            "<cmd> lopen <cr>",
+            "<leader>ql",
+            "<cmd>lopen<cr>",
             mode = { "n" },
             desc = 'Show locations list'
         },
         {
             "]q",
-            "<cmd> cnext <cr>",
+            "<cmd>cnext<cr>",
             mode = { "n" },
             desc = 'Next quick-fix item'
         },
         {
             "[q",
-            "<cmd> cprev <cr>",
+            "<cmd>cprev<cr>",
             mode = { "n" },
             desc = 'Prev quick-fix item'
         },
         {
             "]l",
-            "<cmd> lnext <cr>",
+            "<cmd>lnext<cr>",
             mode = { "n" },
             desc = 'Next location item'
         },
         {
             "[l",
-            "<cmd> lprev <cr>",
+            "<cmd>lprev<cr>",
             mode = { "n" },
             desc = 'Prev location item'
         },

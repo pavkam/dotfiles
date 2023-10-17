@@ -50,8 +50,12 @@ return {
         local
             copilot_text,
             copilot_color = utils.event_memoized("User", "CopilotLuaLineUpdate",
-                function() return icons.Symbols.Copilot .. " " .. (require("copilot.api").status.data.message or "") end,
-                function() return package.loaded["copilot"] and copilot_colors[require("copilot.api").status.data.status] or copilot_colors["Normal"] end
+                function()
+                    return icons.Symbols.Copilot .. " " .. (require("copilot.api").status.data.message or "")
+                end,
+                function()
+                    return copilot_colors[require("copilot.api").status.data.status] or copilot_colors["Normal"]
+                end
             )
 
         return {
