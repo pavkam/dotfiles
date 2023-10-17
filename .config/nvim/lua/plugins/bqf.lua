@@ -1,7 +1,23 @@
 return {
     "kevinhwang91/nvim-bqf",
     ft = "qf",
-    opts = {},
+    opts = {
+        func_map = {
+            split = '\\',
+            vsplit = '|',
+            tab = '',
+            tabb = '',
+            tabc = '',
+            lastleave = '',
+            fzffilter = '',
+            filterr = '',
+            filter = '',
+            ptoggleauto = '',
+            ptoggleitem = '',
+            ptogglemode = '',
+            pscrollorig = '',
+        }
+    },
     keys = {
             {
             "<leader>qa",
@@ -102,6 +118,7 @@ return {
         local utils = require "utils"
 
         utils.auto_command("FileType", function(args)
+            vim.keymap.set('n', 'q', '<cmd>close<cr>', { remap = true, desc = 'Close Window', buffer = args.buf })
             vim.keymap.set('n', 'x', function ()
                 local info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
                 local qftype

@@ -29,7 +29,7 @@ return {
         dashboard.section.buttons.val = {
             dashboard.button("e", icons.UI.Explorer .. " File Explorer", ":Neotree toggle <CR>"),
             dashboard.button("f", icons.UI.Search .. "  Find Files", ":Telescope find_files <CR>"),
-            dashboard.button("o", icons.Files.Normal .. " Recent Files", ":Telescope oldfiles <CR>"),
+            dashboard.button("o", icons.Files.Normal .. "  Recent Files", ":Telescope oldfiles <CR>"),
             dashboard.button("l", icons.UI.Sleep .. " Lazy", ":Lazy<CR>"),
             dashboard.button("q", icons.UI.Quit .. " Quit", ":qa<CR>"),
         }

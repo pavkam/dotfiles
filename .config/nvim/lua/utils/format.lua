@@ -33,7 +33,7 @@ function M.apply(buffer, injected)
 
     local additional = injected and { formatters = { "injected" } } or {}
 
-    conform.format(utils.tbl_merge({ bufnr = buffer, async =  true }, additional))
+    conform.format(utils.tbl_merge({ bufnr = buffer }, additional))
 end
 
 function M.enabled_for_buffer(buffer)

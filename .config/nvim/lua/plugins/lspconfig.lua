@@ -35,6 +35,10 @@ return {
             },
             capabilities = {
                 textDocument = {
+                    foldingRange = {
+                        dynamicRegistration = false,
+                        lineFoldingOnly = true,
+                    },
                     completion = {
                         completionItem = {
                             documentationFormat = { "markdown", "plaintext" },
@@ -56,10 +60,6 @@ return {
                             },
                         },
                     },
-                },
-                foldingRange = {
-                    dynamicRegistration = false,
-                    lineFoldingOnly = true,
                 },
             },
             servers = {
@@ -181,7 +181,7 @@ return {
                                 rangeVariableTypes = true,
                             },
                             analyses = {
-                                fieldalignment = true,
+                                fieldalignment = false, -- too may complaints
                                 nilness = true,
                                 unusedparams = true,
                                 unusedwrite = true,
@@ -195,7 +195,6 @@ return {
                         },
                     },
                 },
-                --golangci_lint_ls = {}
             },
             setup = {
                 gopls = function(_, opts)
@@ -225,6 +224,7 @@ return {
             -- set the border for the ui
             require('lspconfig.ui.windows').default_options.border = 'single'
 
+            local utils = require "utils"
             local lsp = require "utils.lsp"
             local keymaps = require "utils.lsp.keymaps"
 
@@ -272,20 +272,16 @@ return {
 
             -- register cmp capabilities
             local cmp_nvim_lsp = require "cmp_nvim_lsp"
-            local capabilities = vim.tbl_deep_extend(
-                "force",
-                {},
+            local capabilities = utils.tbl_merge(
                 vim.lsp.protocol.make_client_capabilities(),
                 cmp_nvim_lsp.default_capabilities(),
-                opts.capabilities or {}
+                opts.capabilities
             )
 
             -- configure the servers
             local servers = opts.servers
             local function setup(server)
-                local server_opts = vim.tbl_deep_extend("force", {
-                    capabilities = vim.deepcopy(capabilities),
-                }, servers[server] or {})
+                local server_opts = utils.tbl_merge({ capabilities = vim.deepcopy(capabilities) }, servers[server] or {})
 
                 if opts.setup[server] then
                     if opts.setup[server](server, server_opts) then
@@ -296,6 +292,7 @@ return {
                         return
                     end
                 end
+
                 require("lspconfig")[server].setup(server_opts)
             end
 

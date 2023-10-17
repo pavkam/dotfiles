@@ -111,6 +111,7 @@ return {
             "bash",
             "c_sharp",
             "dockerfile",
+            "sql",
             "prisma",
             "proto",
             "html", "css",

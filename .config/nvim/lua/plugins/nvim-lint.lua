@@ -36,7 +36,7 @@ return {
                 javascriptreact = { "eslint" },
                 typescript = { "eslint" },
                 typescriptreact = { "eslint" },
-               -- go = { "golangcilint" },
+                go = { "golangcilint" },
                 proto = { "buf_lint" },
                 dockerfile = { "hadolint" },
                 markdown = { "markdownlint" },

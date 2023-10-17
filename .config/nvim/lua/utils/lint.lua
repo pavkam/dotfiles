@@ -8,15 +8,21 @@ local function linters(buffer)
     end
 
     local lint = require "lint"
-    return lint.linters_by_ft[vim.bo[buffer].filetype] or {}
+    return vim.api.nvim_buf_is_valid(buffer) and lint.linters_by_ft[vim.bo[buffer].filetype] or {}
 end
 
 local function try_lint(buffer)
     local lint = require "lint"
 
     buffer = buffer or vim.api.nvim_get_current_buf()
-    local names = linters(buffer)
 
+    -- check if we have any linters for this fie type
+    local names = linters(buffer)
+    if #names == 0 then
+        return
+    end
+
+    -- run the linters
     local file_name = vim.api.nvim_buf_get_name(buffer)
     local ctx = {
         filename = file_name,
@@ -63,6 +69,8 @@ function M.toggle_for_buffer(buffer)
     local enabled = M.enabled_for_buffer(buffer)
     if enabled then
         utils.info("Turning off linting for buffer.")
+        -- TODO: figure out how to clear them diagnostics
+        vim.diagnostic.reset()
         vim.b[buffer].linting_enabled = false
     else
         utils.info("Turning on linting for buffer.")
@@ -84,6 +92,8 @@ function M.toggle()
 
     if enabled then
         utils.info("Turning off auto-formatting globally.")
+
+        vim.diagnostic.reset()
         vim.g.linting_enabled = false
     else
         utils.info("Turning on auto-formatting globally.")

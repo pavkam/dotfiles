@@ -2,6 +2,7 @@
 return {
     "stevearc/conform.nvim",
     cmd = "ConformInfo",
+    -- TODO: formattig is totally fucked
     keys = {
         {
             "<leader>sj",
@@ -50,9 +51,10 @@ return {
             formatters_by_ft = {
                 lua = { "stylua" },
                 sh = { "shfmt" },
+                -- prettier seems to not work well when .editorconfig is at the root of the project
                 javascript = { { "prettier", "prettierd" } },
                 javascriptreact = { { "prettier", "prettierd" } },
-                typescript = { { "prettied", "prettierd" } },
+                typescript = { { "prettier", "prettierd" } },
                 typescriptreact = { { "prettier", "prettierd" } },
                 go = { { "goimports-reviser", "goimports" }, { "golines", "gofumpt" } },
                 csharp = { "csharpier" },
@@ -72,15 +74,13 @@ return {
             },
             formatters = {
                 ["goimports-reviser"] = {
-                    meta = {
-                        url = "https://github.com/incu6us/goimports-reviser",
-                        description = "Tool for Golang to sort goimports by 3-4 groups.",
-                    },
-                    command = "goimports-reviser",
-                    args = { "-rm-unused", "-set-alias", "$FILENAME" },
-                    stdin = false,
                     cwd = function()
                         return project.get_project_root_dir()
+                    end
+                },
+                prettier = {
+                    cwd = function()
+                        return vim.fn.getcwd()
                     end
                 },
                 golines = utils.tbl_merge(require "conform.formatters.golines", {
