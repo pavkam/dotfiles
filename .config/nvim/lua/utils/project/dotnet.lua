@@ -6,8 +6,8 @@ local project_internals = require "utils.project.internals"
 
 local M = {}
 
-function M.type(path)
-    local root = project_internals.get_project_root_dir(path)
+function M.type(target)
+    local root = project_internals.root(target)
 
     if root and #vim.fn.globpath(root, '*.sln', 0, 1) > 0 then
         return 'dotnet'
@@ -16,14 +16,15 @@ function M.type(path)
     return nil
 end
 
-local function get_dll()
+local function get_dll(target)
 	return coroutine.create(function(dap_run_co)
-		local items = vim.fn.globpath(vim.fn.getcwd(), '**/bin/Debug/**/*.dll', 0, 1)
+		local items = vim.fn.globpath(project_internals.root(target), '**/bin/Debug/**/*.dll', 0, 1)
 		local opts = {
 			format_item = function(path)
 				return vim.fn.fnamemodify(path, ':t')
 			end,
 		}
+
 		local function cont(choice)
 			if choice == nil then
 				return nil
@@ -46,10 +47,10 @@ local dap_configurations = {
 	}
 }
 
-function M.configure_debugging(path)
+function M.configure_debugging(target)
     dap.configurations.coreclr = utils.tbl_copy(dap_configurations)
 
-    local launch_json = project_internals.get_launch_json(path)
+    local launch_json = project_internals.get_launch_json(target)
     if launch_json then
         dap_vscode.load_launchjs(launch_json)
     end

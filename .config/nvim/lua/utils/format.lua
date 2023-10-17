@@ -2,11 +2,8 @@ local utils = require "utils"
 
 local M = {}
 
-function M.active_names_for_buffer(buffer)
+local function formatters(buffer)
     local conform = require "conform"
-
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
     local ok, formatters = pcall(conform.list_formatters, buffer)
 
     if not ok then
@@ -16,20 +13,24 @@ function M.active_names_for_buffer(buffer)
     return vim.tbl_map(function(v) return v.name end, formatters)
 end
 
-function M.active_for_buffer(buffer)
-    local conform = require "conform"
-
+function M.active_names_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
+    return formatters(buffer)
+end
 
-    local ok, formatters = pcall(conform.list_formatters, buffer)
-
-    return ok and #formatters > 0
+function M.active_for_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    return #formatters(buffer) > 0
 end
 
 function M.apply(buffer, injected)
     local conform = require "conform"
 
     buffer = buffer or vim.api.nvim_get_current_buf()
+
+    if not vim.api.nvim_buf_is_valid(buffer) then
+        return
+    end
 
     local additional = injected and { formatters = { "injected" } } or {}
 
@@ -39,7 +40,7 @@ end
 function M.enabled_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local enabled = vim.b[buffer].conform_auto_format_enabled
+    local enabled = vim.api.nvim_buf_is_valid(buffer) and vim.b[buffer].conform_auto_format_enabled
     if enabled == nil or enabled == true then
         return true
     end
@@ -49,6 +50,9 @@ end
 
 function M.toggle_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
+    if not vim.api.nvim_buf_is_valid(buffer) then
+        return
+    end
 
     local enabled = M.enabled_for_buffer(buffer)
     if enabled then

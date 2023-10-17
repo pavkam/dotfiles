@@ -1,6 +1,6 @@
 return {
     "mfussenegger/nvim-lint",
-    event = "LspAttach",
+    event = { "BufRead", "BufNew" },
     keys = {
         {
             "<leader>uf",
@@ -60,8 +60,15 @@ return {
                     condition = function(ctx)
                         return js_project.has_dependency(ctx.dirname, "eslint") and js_project.get_eslint_config_path(ctx.dirname)
                     end,
+                    args = {
+                        '--format',
+                        'json',
+                        '--stdin',
+                        '--stdin-filename',
+                        function() return vim.api.nvim_buf_get_name(0) end,
+                    },
                     parser = function(output, buffer)
-                        local success, data = pcall(vim.json.decode, output)
+                        local success, data = pcall(vim.json.decode, output, { luanil = { object = true, array = true } })
                         local diagnostics = {}
 
                         for _, item in ipairs(data) do
@@ -74,8 +81,8 @@ return {
                                         source = "eslint",
                                         lnum = diagnostic.line - 1,
                                         col = diagnostic.column - 1,
-                                        end_lnum = diagnostic.endLine - 1,
-                                        end_col = diagnostic.endColumn - 1,
+                                        end_lnum = (diagnostic.endLine or diagnostic.line) - 1,
+                                        end_col = (diagnostic.endColumn or diagnostic.column) - 1,
                                         severity = eslint_severities[diagnostic.severity],
                                         message = diagnostic.message,
                                         code = diagnostic.ruleId

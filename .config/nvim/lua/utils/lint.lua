@@ -1,4 +1,5 @@
 local utils = require "utils"
+local project = require "utils.project"
 
 local M = {}
 
@@ -8,7 +9,19 @@ local function linters(buffer)
     end
 
     local lint = require "lint"
-    return vim.api.nvim_buf_is_valid(buffer) and lint.linters_by_ft[vim.bo[buffer].filetype] or {}
+    local linters = vim.api.nvim_buf_is_valid(buffer) and lint.linters_by_ft[vim.bo[buffer].filetype] or {}
+
+    local file_name = vim.api.nvim_buf_get_name(buffer)
+    local ctx = {
+        filename = file_name,
+        dirname = vim.fn.fnamemodify(file_name, ":h"),
+        buf = buffer,
+    }
+
+    return vim.tbl_filter(function(name)
+        local linter = lint.linters[name]
+        return linter and not (type(linter) == "table" and linter.condition and not linter.condition(ctx))
+    end, linters)
 end
 
 local function try_lint(buffer)
@@ -22,21 +35,8 @@ local function try_lint(buffer)
         return
     end
 
-    -- run the linters
-    local file_name = vim.api.nvim_buf_get_name(buffer)
-    local ctx = {
-        filename = file_name,
-        dirname = vim.fn.fnamemodify(file_name, ":h"),
-        buffer = buffer,
-    }
-
-    names = vim.tbl_filter(function(name)
-        local linter = lint.linters[name]
-        return linter and not (type(linter) == "table" and linter.condition and not linter.condition(ctx))
-    end, names)
-
     if #names > 0 then
-        lint.try_lint(names)
+        lint.try_lint(names, { cwd = project.root(buffer) })
     end
 end
 
@@ -55,7 +55,7 @@ M.apply = utils.debounce(100, try_lint)
 function M.enabled_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local enabled = vim.b[buffer].linting_enabled
+    local enabled = vim.api.nvim_buf_is_valid(buffer) and vim.b[buffer].linting_enabled
     if enabled == nil or enabled == true then
         return true
     end
@@ -65,6 +65,10 @@ end
 
 function M.toggle_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
+
+    if not vim.api.nvim_buf_is_valid(buffer) then
+        return
+    end
 
     local enabled = M.enabled_for_buffer(buffer)
     if enabled then

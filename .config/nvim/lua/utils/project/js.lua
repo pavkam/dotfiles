@@ -32,8 +32,8 @@ local function read_package_json(path)
     return json_content and vim.json.decode(json_content)
 end
 
-function M.has_dependency(path, dependency)
-    local root = project_internals.get_project_root_dir(path)
+function M.has_dependency(target, dependency)
+    local root = project_internals.root(target)
 
     local parsed_json = root and read_package_json(root)
     if not parsed_json then
@@ -46,8 +46,8 @@ function M.has_dependency(path, dependency)
     )
 end
 
-function M.get_bin_path(path, bin)
-    local root = project_internals.get_project_root_dir(path)
+function M.get_bin_path(target, bin)
+    local root = project_internals.root(target)
     if not root then
         return nil
     end
@@ -60,15 +60,15 @@ function M.get_bin_path(path, bin)
     return nil
 end
 
-function M.get_eslint_config_path(path)
-    local root = project_internals.get_project_root_dir(path)
+function M.get_eslint_config_path(target)
+    local root = project_internals.root(target)
     local option = root and utils.any_file_exists(root, { '.eslintrc.json', '.eslintrc.js', 'eslint.config.js', 'eslint.config.json' })
 
     return option and utils.join_paths(root, option)
 end
 
-function M.type(path)
-    local root = project_internals.get_project_root_dir(path)
+function M.type(target)
+    local root = project_internals.root(target)
     local package = root and read_package_json(root)
 
     if package then
@@ -142,7 +142,7 @@ local dap_configurations = {
     }
 }
 
-function M.configure_debugging(path)
+function M.configure_debugging(target)
     for _, language in ipairs(bin_filetypes) do
         dap.configurations[language] = {
             dap_configurations.pwa_node_launch,
@@ -160,7 +160,7 @@ function M.configure_debugging(path)
     end
 
     -- potentially load the launch.json
-    local launch_json = project_internals.get_launch_json(path)
+    local launch_json = project_internals.get_launch_json(target)
     if launch_json then
         dap_vscode.load_launchjs(launch_json, {
             ['pwa-node'] = filetypes,

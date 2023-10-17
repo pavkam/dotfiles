@@ -20,13 +20,13 @@ return {
 
         jest = jest({
             cwd = function(path)
-                return project.get_project_root_dir(path)
+                return project.root(path)
             end
         })
 
         vitest = vitest({
             cwd = function(path)
-                return project.get_project_root_dir(path)
+                return project.root(path)
             end
         })
 

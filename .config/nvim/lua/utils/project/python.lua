@@ -6,8 +6,8 @@ local project_internals = require "utils.project.internals"
 
 local M = {}
 
-function M.type(path)
-    local root = project_internals.get_project_root_dir(path)
+function M.type(target)
+    local root = project_internals.root(target)
     if root and utils.any_file_exists(root, { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "poetry.lock" }) then
         return 'python'
     end
@@ -25,10 +25,10 @@ local dap_configurations = {
 	},
 }
 
-function M.configure_debugging(path)
+function M.configure_debugging(target)
     dap.configurations.python = utils.tbl_copy(dap_configurations)
 
-    local launch_json = project_internals.get_launch_json(path)
+    local launch_json = project_internals.get_launch_json(target)
     if launch_json then
         dap_vscode.load_launchjs(launch_json)
     end

@@ -151,7 +151,7 @@ function M.error(msg)
     M.notify(msg, vim.log.levels.ERROR)
 end
 
--- terminal utils
+-- terminal and buffer utils
 
 local terminals = {}
 
@@ -190,7 +190,21 @@ function M.float_term(cmd, opts)
     return terminals[termkey]
 end
 
+function M.expand_target(target)
+    if type(target) == "function" then
+        target = target()
+    end
+
+    if type(target) == "number" then
+        return target, vim.api.nvim_buf_get_name(target)
+    else
+        local path = M.stringify(target)
+        return vim.api.nvim_get_current_buf(), path ~= "" and vim.loop.fs_realpath(path) or nil
+    end
+end
+
 -- file utils
+
 local function join_paths(part1, part2)
     part1 = part1:gsub("([^/])$", "%1/"):gsub("//", "/")
     part2 = part2:gsub("^/", "")
@@ -244,11 +258,6 @@ function M.read_text_file(path)
     file:close()
 
     return content
-end
-
-
-function M.test()
-
 end
 
 return M

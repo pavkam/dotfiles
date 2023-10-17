@@ -10,20 +10,25 @@ local project_internals = require "utils.project.internals"
 
 local M = {}
 
-M.get_project_root_dir = project_internals.get_project_root_dir
+M.root = project_internals.root
 
-function M.type(path)
-    return js_project.type(path) or go_project.type(path) or python_project.type(path) or dotnet_project.type(path)
+function M.type(target)
+    return (
+        js_project.type(target) or
+        go_project.type(target) or
+        python_project.type(target) or
+        dotnet_project.type(target)
+    )
 end
 
-local function setup_debugging(path)
-    if js_project.type(path) then
+local function setup_debugging(target)
+    if js_project.type(target) then
         js_project.configure_debugging()
-    elseif go_project.type(path) then
+    elseif go_project.type(target) then
         go_project.configure_debugging()
-    elseif python_project.type(path) then
+    elseif python_project.type(target) then
         python_project.configure_debugging()
-    elseif dotnet_project.type(path) then
+    elseif dotnet_project.type(target) then
         dotnet_project.configure_debugging()
     else
         return false
@@ -32,16 +37,16 @@ local function setup_debugging(path)
     return true
 end
 
-function M.continue_debugging(path)
+function M.continue_debugging(target)
     local current_session = dap.session()
     if not current_session then
-        if not setup_debugging(path) then
+        if not setup_debugging(target) then
             utils.error("No debugging configuration found for this project type.")
             return
         end
     end
 
-    local project_type = M.type(path);
+    local project_type = M.type(target);
     if not current_session and project_type and #dap.configurations[project_type] > 0 then
         dap_ui.pick_if_many(
             dap.configurations[project_type],

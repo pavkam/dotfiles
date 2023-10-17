@@ -8,7 +8,6 @@ local function normalize_capability(method)
     return method
 end
 
--- TODO: remove when none-ls is kaput!
 local function get_null_ls_sources(filetype)
     -- get the registered methods
     local ok, sources = pcall(require, "null-ls.sources")
@@ -128,14 +127,10 @@ function M.is_active_for_buffer(name, buffer)
     return ok and #clients > 0
 end
 
-function M.get_lsp_root_dir(path, buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    path = path or vim.api.nvim_buf_get_name(buffer)
-    path = path ~= "" and vim.loop.fs_realpath(path) or nil
+function M.root(target)
+    buffer, path = utils.expand_target(target)
 
     local roots = {}
-
     if path then
         local get = vim.lsp.get_clients or vim.lsp.get_active_clients
 
