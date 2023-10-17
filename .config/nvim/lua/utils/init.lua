@@ -131,31 +131,21 @@ end
 
 function M.event_memoized(event, pattern, ...)
     local funcs = {...}
-    assert(#funcs > 0, "event_momoized: at least one function must be provided")
+    assert(#funcs > 0)
 
     -- create memoized functions using a local cache
     local cache = {}
     local out_functions = {}
     for i, func in ipairs(funcs) do
-        assert(type(func) == "function", "event_momoized: all arguments must be functions")
-        table.insert(out_functions, function(...)
-            if cache[i] == nil then
-                print("evaluating")
-                cache[i] = func(...)
-            end
-
-            return cache[i]
-        end)
+        assert(type(func) == "function")
+        table.insert(out_functions, function() return cache[i] end)
     end
 
     M.auto_command(
         event,
-        function()
-            print("clearing!")
-            -- clear the cached value so that they will be reevaluated again when
-            -- asked for.
-            for i, _ in ipairs(cache) do
-                cache[i] = nil
+        function(evt)
+            for i, func in ipairs(funcs) do
+                cache[i] = func(evt.buf)
             end
         end,
         pattern

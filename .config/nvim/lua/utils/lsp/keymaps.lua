@@ -76,7 +76,7 @@ local keymaps = {
     {
         "gd",
         function()
-            if lsp.is_active_for_buffer("omnisharp") then
+            if lsp.is_active_for_buffer(nil, "omnisharp") then
                 require("omnisharp_extended").telescope_lsp_definitions()
             else
                 require("telescope.builtin").lsp_definitions({ reuse_win = true })

@@ -119,7 +119,7 @@ function M.any_active_for_buffer(buffer)
     return #clients > 0 or (#clients == 1 and clients[1].name ~= "copilot")
 end
 
-function M.is_active_for_buffer(name, buffer)
+function M.is_active_for_buffer(buffer, name)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local ok, clients = pcall(vim.lsp.get_active_clients, { name = name, bufnr = buffer })
