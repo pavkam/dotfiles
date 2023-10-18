@@ -52,21 +52,8 @@ return {
             },
         }, neotest_ns)
 
-        -- HACK: prevent neotest summary from being replaced
-        -- utils.auto_command(
-        --     "BufEnter",
-        --     function(args)
-        --         local new_file_name = vim.fn.resolve(vim.fn.expand "%")
-        --         local current_file_name = vim.fn.resolve(vim.fn.expand "#")
-
-        --         if current_file_name == "Neotest Summary" and new_file_name ~= "" and new_file_name ~= current_file_name then
-        --             vim.cmd('b#')
-        --         end
-        --     end
-        -- )
-
         -- register neotest mappings
-        utils.auto_command(
+        utils.on_event(
             "FileType",
             function(args)
                 local icons = require "utils.icons"
@@ -134,7 +121,6 @@ return {
                 require("which-key").register({
                     ["<leader>t"] = { name = icons.UI.Test .." Testing" }
                 }, { buffer = args.buf })
-
             end,
             spec.ft
         )

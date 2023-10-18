@@ -72,7 +72,7 @@ function M.on_attach(callback)
     })
 end
 
-function M.auto_command_on_capability(event, capability, buffer, callback)
+function M.on_capability_event(event, capability, buffer, callback)
     capability = normalize_capability(capability)
 
     if not M.buffer_has_capability(buffer, capability) then
@@ -152,6 +152,23 @@ function M.root(target)
     table.sort(roots, function(a, b) return #a > #b end)
 
     return roots[1]
+end
+
+function M.clear_diagnostics(sources, buffer)
+    if not sources then
+        vim.diagnostic.reset(nil, buffer)
+        return
+    end
+
+    local ns = vim.diagnostic.get_namespaces()
+
+    for _, source in ipairs(utils.to_list(sources)) do
+        for id, n in pairs(ns) do
+            if n.name == source or n.name:find("vim.lsp." .. source, 1, true) then
+                vim.diagnostic.reset(id, buffer)
+            end
+        end
+    end
 end
 
 return M

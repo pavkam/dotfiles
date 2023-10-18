@@ -70,6 +70,22 @@ return {
             desc = 'Add location item'
         },
         {
+            "<leader>qm",
+            function ()
+                vim.diagnostic.setqflist({ open = true })
+            end,
+            mode = { "n" },
+            desc = 'Diagnostics to quck-fix list'
+        },
+        {
+            "<leader>qM",
+            function ()
+                vim.diagnostic.setloclist({ open = true })
+            end,
+            mode = { "n" },
+            desc = 'Diagnostics to locations list'
+        },
+        {
             "<leader>qC",
             function ()
                 vim.fn.setloclist(0, {})
@@ -117,7 +133,7 @@ return {
     config = function()
         local utils = require "utils"
 
-        utils.auto_command("FileType", function(args)
+        utils.on_event("FileType", function(args)
             vim.keymap.set('n', 'q', '<cmd>close<cr>', { remap = true, desc = 'Close Window', buffer = args.buf })
             vim.keymap.set('n', 'x', function ()
                 local info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]

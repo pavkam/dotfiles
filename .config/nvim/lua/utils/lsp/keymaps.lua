@@ -168,7 +168,7 @@ function M.attach(client, buffer)
         vim.lsp.codelens.refresh()
     end
 
-    lsp.auto_command_on_capability(
+    lsp.on_capability_event(
         { "InsertLeave", "BufEnter" },
         "codeLens",
         buffer,
@@ -183,7 +183,7 @@ function M.attach(client, buffer)
         end
     )
 
-    lsp.auto_command_on_capability(
+    lsp.on_capability_event(
          { "CursorHold", "CursorHoldI" },
         "documentHighlight",
         buffer,
@@ -192,7 +192,7 @@ function M.attach(client, buffer)
         end
     )
 
-    lsp.auto_command_on_capability(
+    lsp.on_capability_event(
         { "CursorMoved", "CursorMovedI", "BufLeave" },
         "documentHighlight",
         buffer,

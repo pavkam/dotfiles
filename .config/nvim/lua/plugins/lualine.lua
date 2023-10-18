@@ -19,7 +19,7 @@ return {
         }
 
         local function schedule_update_copilot()
-            vim.api.nvim_exec_autocmds("User", { pattern = "CopilotLuaLineUpdate", modeline = false })
+            utils.trigger_user_event("CopilotLuaLineUpdate")
         end
 
         local
@@ -49,7 +49,7 @@ return {
 
         local
             copilot_text,
-            copilot_color = utils.event_memoized("User", "CopilotLuaLineUpdate",
+            copilot_color = utils.user_event_memoized("CopilotLuaLineUpdate",
                 function()
                     return icons.Symbols.Copilot .. " " .. (require("copilot.api").status.data.message or "")
                 end,

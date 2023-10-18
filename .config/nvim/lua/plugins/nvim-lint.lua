@@ -3,7 +3,7 @@ return {
     event = { "BufRead", "BufNew" },
     keys = {
         {
-            "<leader>uf",
+            "<leader>ul",
             function()
                 require("utils.lint").toggle_for_buffer()
             end,
@@ -11,7 +11,7 @@ return {
             desc = "Toggle Linting (Buffer)",
         },
         {
-            "<leader>uF",
+            "<leader>uL",
             function()
                 require("utils.lint").toggle()
             end,
@@ -120,16 +120,10 @@ return {
         -- setup my linters
         lint.linters_by_ft = opts.linters_by_ft
 
-        -- setup auto-command
-        utils.auto_command(
+        -- setup auto-commands
+        utils.on_event(
             { "BufWritePost", "BufReadPost", "InsertLeave" },
-            function(evt)
-                local lint = require "utils.lint"
-
-                if lint.enabled() and lint.enabled_for_buffer(evt.buf) then
-                    lint.apply(evt.buf)
-                end
-            end,
+            function(evt) require("utils.lint").apply(evt.buf) end,
             "*"
         )
     end,

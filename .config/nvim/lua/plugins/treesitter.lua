@@ -38,7 +38,7 @@ return {
     },
     keys = {
         { "<C-s>", desc = "Increment Selection" },
-        { "<bs>", desc = "Decrement Selection", mode = "x" },
+        { "<C-a>", desc = "Decrement Selection", mode = "x" },
     },
     opts = {
         autotag = { enable = true },
@@ -129,7 +129,7 @@ return {
                 init_selection = "<C-s>",
                 node_incremental = "<C-s>",
                 scope_incremental = false,
-                node_decremental = "<bs>",
+                node_decremental = "<C-a>",
             },
         },
     },

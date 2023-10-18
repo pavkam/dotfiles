@@ -20,6 +20,11 @@ return {
                 vim.keymap.set(mode, l, r, { buffer = buffer, desc = desc })
             end
 
+            -- add which key group
+            require("which-key").register({
+                ["<leader>g"] = { name = icons.UI.Git .." Git" }
+            }, { buffer = buffer,  mode = { "n", "v" } })
+
             vim.keymap.set("n", "]h", gs.next_hunk, { buffer = buffer, desc = "Next Hunk"})
             vim.keymap.set("n", "[h", gs.prev_hunk, { buffer = buffer, desc = "Prev Hunk"})
             vim.keymap.set({ "n", "v" }, "<leader>gs", ":Gitsigns stage_hunk<CR>", { buffer = buffer, desc = "Stage Hunk"})

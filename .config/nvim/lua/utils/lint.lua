@@ -1,4 +1,5 @@
 local utils = require "utils"
+local lsp = require "utils.lsp"
 local project = require "utils.project"
 
 local M = {}
@@ -36,7 +37,8 @@ local function try_lint(buffer)
     end
 
     if #names > 0 then
-        lint.try_lint(names, { cwd = project.root(buffer) })
+        -- TODO: a fix is needed for nvim-lint to support buffer
+        lint.try_lint(names, { bufnr = buffer, cwd = project.root(buffer) })
     end
 end
 
@@ -51,7 +53,11 @@ function M.active_for_buffer(buffer)
     return #linters(buffer) > 0
 end
 
-M.apply = utils.debounce(100, try_lint)
+function M.apply(buffer)
+    if M.enabled() and M.enabled_for_buffer(buffer) then
+        utils.debounce(100, function() try_lint(buffer) end)
+    end
+end
 
 function M.enabled_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
@@ -74,12 +80,16 @@ function M.toggle_for_buffer(buffer)
     local enabled = M.enabled_for_buffer(buffer)
     if enabled then
         utils.info("Turning off linting for buffer.")
-        -- TODO: figure out how to clear them diagnostics
-        vim.diagnostic.reset()
         vim.b[buffer].linting_enabled = false
+
+        -- clear diagnostics from buffer linters
+        lsp.clear_diagnostics(linters(buffer), buffer)
     else
         utils.info("Turning on linting for buffer.")
         vim.b[buffer].linting_enabled = true
+
+        -- re-lint
+        M.apply(buffer)
     end
 end
 
@@ -97,12 +107,21 @@ function M.toggle()
 
     if enabled then
         utils.info("Turning off auto-formatting globally.")
-
-        vim.diagnostic.reset()
         vim.g.linting_enabled = false
+
+        -- clear diagnostics from all buffers
+        for _, buffer in ipairs(utils.get_listed_buffers()) do
+            lsp.clear_diagnostics(linters(buffer), buffer)
+        end
     else
         utils.info("Turning on auto-formatting globally.")
         vim.g.linting_enabled = true
+
+        -- re-lint
+        print("enabling")
+        for _, buffer in ipairs(utils.get_listed_buffers()) do
+            M.apply(buffer)
+        end
     end
 end
 

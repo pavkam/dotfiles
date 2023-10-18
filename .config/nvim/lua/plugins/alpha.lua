@@ -52,7 +52,7 @@ return {
 
         if vim.o.filetype == "lazy" then
             vim.cmd.close()
-            utils.auto_command(
+            utils.on_event(
                 "User",
                 function()
                     require("lazy").show()
@@ -63,7 +63,7 @@ return {
 
         require("alpha").setup(dashboard.opts)
 
-        utils.auto_command(
+        utils.on_event(
             "User",
             function()
                 local stats = require("lazy").stats()

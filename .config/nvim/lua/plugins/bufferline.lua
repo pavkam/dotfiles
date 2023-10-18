@@ -42,7 +42,7 @@ return {
         buffer_line.setup(opts)
 
         -- Fix bufferline when restoring a session
-        utils.auto_command(
+        utils.on_event(
             "BufAdd",
             function()
                 vim.schedule(function() pcall(nvim_bufferline) end)

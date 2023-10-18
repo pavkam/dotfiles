@@ -14,7 +14,6 @@ return {
             ["]"] = { name = icons.UI.Next .." Next" },
             ["["] = { name = icons.UI.Prev .." Previous" },
             ["<leader>b"] = { name = icons.UI.Buffers .." Buffers" },
-            ["<leader>g"] = { name = icons.UI.Git .." Git" },
             ["<leader>u"] = { name = icons.UI.UI .." Settings" },
             ["<leader>q"] = { name = icons.UI.Fix .." Quick-Fix" },
             ["<leader>f"] = { name = icons.UI.Search .." Search" },

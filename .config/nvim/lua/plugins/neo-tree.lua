@@ -149,7 +149,7 @@ return {
 
         require("neo-tree").setup(opts)
 
-        utils.auto_command(
+        utils.on_event(
             "TermClose",
             function()
                 local ok, manager = pcall(require, "neo-tree.sources.manager")

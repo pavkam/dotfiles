@@ -10,7 +10,7 @@ return {
         pi.setup(opts)
 
         local utils = require "utils"
-        utils.auto_command(
+        utils.on_event(
             "BufReadPre",
             function(args)
                 vim.keymap.set(

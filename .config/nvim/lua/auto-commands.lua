@@ -2,14 +2,14 @@ local utils = require 'utils'
 local ui = require 'utils.ui'
 
 -- highlight on yank
-utils.auto_command(
+utils.on_event(
     "TextYankPost",
     function() vim.highlight.on_yank() end,
     "*"
 )
 
 -- resize splits if window got resized
-utils.auto_command(
+utils.on_event(
     "VimResized",
     function()
         local current_tab = vim.fn.tabpagenr()
@@ -19,7 +19,7 @@ utils.auto_command(
 )
 
 -- go to last loc when opening a buffer
-utils.auto_command(
+utils.on_event(
     "BufReadPost",
     function()
         local exclude = { "gitcommit" }
@@ -39,7 +39,7 @@ utils.auto_command(
 )
 
 -- close some filetypes with <q>
-utils.auto_command(
+utils.on_event(
     "FileType",
     function(evt)
         vim.bo[evt.buf].buflisted = false
@@ -53,7 +53,7 @@ utils.auto_command(
 )
 
 -- wrap and check for spell in text filetypes
-utils.auto_command(
+utils.on_event(
     "FileType",
     function()
         vim.opt_local.wrap = true
@@ -66,7 +66,7 @@ utils.auto_command(
 )
 
 -- Auto create dir when saving a file, in case some intermediate directory does not exist
-utils.auto_command(
+utils.on_event(
     "BufWritePre",
     function(evt)
         if evt.match:match("^%w%w+://") then
@@ -80,7 +80,7 @@ utils.auto_command(
 
 -- HACK: re-caclulate folds when entering a buffer through Telescope
 -- @see https://github.com/nvim-telescope/telescope.nvim/issues/699
-utils.auto_command(
+utils.on_event(
     "BufEnter",
     function()
         if vim.opt.foldmethod:get() == "expr" then
@@ -104,7 +104,7 @@ vim.on_key(
 
 -- HACK: Disable custom statuscolumn for terminals because truncation/wrapping bug
 -- https://github.com/neovim/neovim/issues/25472
-utils.auto_command(
+utils.on_event(
     "TermOpen",
     function()
         vim.opt_local.foldcolumn = "0"
@@ -114,14 +114,14 @@ utils.auto_command(
 )
 
 -- mkview and loadview for real files
-utils.auto_command(
+utils.on_event(
     { "BufWinLeave", "BufWritePost", "WinLeave" },
     function(args)
         if vim.b[args.buf].view_activated then vim.cmd.mkview { mods = { emsg_silent = true } } end
     end
 )
 
-utils.auto_command(
+utils.on_event(
     "BufWinEnter",
     function(evt)
         if not vim.b[evt.buf].view_activated then
@@ -138,7 +138,7 @@ utils.auto_command(
 )
 
 -- leave vim if last window is closed
-utils.auto_command(
+utils.on_event(
     "WinClosed",
     function(evt)
         local listed_buffers = vim.fn.getbufinfo({ buflisted = 1 })

@@ -93,7 +93,7 @@ return {
 
         local utils = require "utils"
 
-        utils.auto_command(
+        utils.on_event(
             "BufWritePre",
              function(evt)
                 local format = require "utils.format"

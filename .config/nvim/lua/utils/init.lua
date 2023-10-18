@@ -103,7 +103,7 @@ end
 
 local group_index = 0
 
-function M.auto_command(event, callback, pattern)
+function M.on_event(event, callback, pattern)
     group_name = "pavkam_" .. group_index
     group_index = group_index + 1
 
@@ -116,17 +116,21 @@ function M.auto_command(event, callback, pattern)
     })
 end
 
-function M.debounce(ms, fn)
+function M.on_user_event(event, callback)
+    M.on_event("User", function(evt) callback(evt.match, evt) end, event)
+end
+
+function M.debounce(ms, callback)
+    assert(type(ms) == "number" and ms > 0)
+    assert(type(callback) == "function")
+
     local timer = vim.loop.new_timer()
+    local wrapped = vim.schedule_wrap(callback)
 
-    return function(...)
-        local argv = { ... }
-
-        timer:start(ms, 0, function()
-            timer:stop()
-            vim.schedule_wrap(fn)(unpack(argv))
-        end)
-    end
+    timer:start(ms, 0, function()
+        timer:stop()
+        wrapped()
+    end)
 end
 
 function M.event_memoized(event, pattern, ...)
@@ -141,7 +145,7 @@ function M.event_memoized(event, pattern, ...)
         table.insert(out_functions, function() return cache[i] end)
     end
 
-    M.auto_command(
+    M.on_event(
         event,
         function(evt)
             for i, func in ipairs(funcs) do
@@ -152,6 +156,14 @@ function M.event_memoized(event, pattern, ...)
     )
 
     return unpack(out_functions)
+end
+
+function M.user_event_memoized(event, ...)
+    return M.event_memoized("User", event, ...)
+end
+
+function M.trigger_user_event(event, data)
+    vim.api.nvim_exec_autocmds("User", { pattern = event, modeline = false, data = data })
 end
 
 -- notification utils
@@ -226,6 +238,16 @@ function M.expand_target(target)
         local path = M.stringify(target)
         return vim.api.nvim_get_current_buf(), path ~= "" and vim.loop.fs_realpath(path) or nil
     end
+end
+
+function M.get_listed_buffers()
+    return vim.tbl_filter(function(b)
+        return (
+            vim.api.nvim_buf_is_valid(b) and
+            vim.api.nvim_buf_is_loaded(b) and
+            true --vim.b[b].buflisted
+        )
+    end, vim.api.nvim_list_bufs())
 end
 
 -- file utils
