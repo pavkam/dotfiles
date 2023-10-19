@@ -16,7 +16,7 @@ return {
             function()
                 require("neo-tree.command").execute({ toggle = true })
             end,
-            desc = "File Explorer",
+            desc = "File explorer",
         },
     },
     deactivate = function()

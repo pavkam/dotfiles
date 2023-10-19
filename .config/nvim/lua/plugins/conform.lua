@@ -10,7 +10,7 @@ return {
                 format.apply(nil, true)
             end,
             mode = { "n", "v" },
-            desc = "Format Buffer Injected",
+            desc = "Format buffer injected",
         },
         {
             "<leader>sf",
@@ -19,7 +19,7 @@ return {
                 format.apply(nil)
             end,
             mode = { "n", "v" },
-            desc = "Format Buffer",
+            desc = "Format buffer",
         },
         {
             "<leader>uf",
@@ -27,7 +27,7 @@ return {
                 require("utils.format").toggle_for_buffer()
             end,
             mode = { "n" },
-            desc = "Toggle Auto-Formatting (Buffer)",
+            desc = "Toggle buffer auto-formatting",
         },
         {
             "<leader>uF",
@@ -35,7 +35,7 @@ return {
                 require("utils.format").toggle()
             end,
             mode = { "n" },
-            desc = "Toggle Auto-Formatting (Global)",
+            desc = "Toggle global auto-formatting",
         },
     },
     init = function()

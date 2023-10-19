@@ -25,18 +25,18 @@ return {
                 ["<leader>g"] = { name = icons.UI.Git .." Git" }
             }, { buffer = buffer,  mode = { "n", "v" } })
 
-            vim.keymap.set("n", "]h", gs.next_hunk, { buffer = buffer, desc = "Next Hunk"})
-            vim.keymap.set("n", "[h", gs.prev_hunk, { buffer = buffer, desc = "Prev Hunk"})
-            vim.keymap.set({ "n", "v" }, "<leader>gs", ":Gitsigns stage_hunk<CR>", { buffer = buffer, desc = "Stage Hunk"})
-            vim.keymap.set({ "n", "v" }, "<leader>gr", ":Gitsigns reset_hunk<CR>", { buffer = buffer, desc = "Reset Hunk"})
-            vim.keymap.set("n", "<leader>gS", gs.stage_buffer, { buffer = buffer, desc = "Stage Buffer"})
-            vim.keymap.set("n", "<leader>gu", gs.undo_stage_hunk, { buffer = buffer, desc = "Undo Stage Hunk"})
-            vim.keymap.set("n", "<leader>gR", gs.reset_buffer, { buffer = buffer, desc = "Reset Buffer"})
-            vim.keymap.set("n", "<leader>gp", gs.preview_hunk, { buffer = buffer, desc = "Preview Hunk"})
-            vim.keymap.set("n", "<leader>gb", function() gs.blame_line({ full = true }) end, { buffer = buffer, desc = "Blame Line"})
-            vim.keymap.set("n", "<leader>gd", gs.diffthis, { buffer = buffer, desc = "Diff This"})
+            vim.keymap.set("n", "]h", gs.next_hunk, { buffer = buffer, desc = "Next hunk"})
+            vim.keymap.set("n", "[h", gs.prev_hunk, { buffer = buffer, desc = "Prev hunk"})
+            vim.keymap.set({ "n", "v" }, "<leader>gs", ":Gitsigns stage_hunk<CR>", { buffer = buffer, desc = "Stage hunk"})
+            vim.keymap.set({ "n", "v" }, "<leader>gr", ":Gitsigns reset_hunk<CR>", { buffer = buffer, desc = "Reset hunk"})
+            vim.keymap.set("n", "<leader>gS", gs.stage_buffer, { buffer = buffer, desc = "Stage buffer"})
+            vim.keymap.set("n", "<leader>gu", gs.undo_stage_hunk, { buffer = buffer, desc = "Undo stage hunk"})
+            vim.keymap.set("n", "<leader>gR", gs.reset_buffer, { buffer = buffer, desc = "Reset buffer"})
+            vim.keymap.set("n", "<leader>gp", gs.preview_hunk, { buffer = buffer, desc = "Preview hunk"})
+            vim.keymap.set("n", "<leader>gb", function() gs.blame_line({ full = true }) end, { buffer = buffer, desc = "Blame line"})
+            vim.keymap.set("n", "<leader>gd", gs.diffthis, { buffer = buffer, desc = "Diff this"})
             vim.keymap.set("n", "<leader>gD", function() gs.diffthis("~") end, { buffer = buffer, desc = "Diff This ~"})
-            vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { buffer = buffer, desc = "Select Hunk"})
+            vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { buffer = buffer, desc = "Select hunk"})
 
             if vim.fn.executable 'lazygit' == 1 then
                 vim.api.nvim_buf_create_user_command(

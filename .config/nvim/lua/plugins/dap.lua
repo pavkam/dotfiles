@@ -92,8 +92,8 @@ return {
             },
         },
         keys = {
-            { "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "Breakpoint Condition" },
-            { "<leader>db", function() require("dap").toggle_breakpoint() end, desc = "Toggle Breakpoint" },
+            { "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "Breakpoint condition" },
+            { "<leader>db", function() require("dap").toggle_breakpoint() end, desc = "Toggle breakpoint" },
             { "<leader>dc",
                 function()
                     local project = require "utils.project"
@@ -101,19 +101,19 @@ return {
                 end,
                 desc = "Continue"
             },
-            { "<leader>dC", function() require("dap").run_to_cursor() end, desc = "Run to Cursor" },
+            { "<leader>dC", function() require("dap").run_to_cursor() end, desc = "Run to cursor" },
             { "<leader>dg", function() require("dap").goto_() end, desc = "Go to line (no execute)" },
-            { "<leader>di", function() require("dap").step_into() end, desc = "Step Into" },
+            { "<leader>di", function() require("dap").step_into() end, desc = "Step into" },
             { "<leader>dj", function() require("dap").down() end, desc = "Down" },
             { "<leader>dk", function() require("dap").up() end, desc = "Up" },
-            { "<leader>dl", function() require("dap").run_last() end, desc = "Run Last" },
-            { "<leader>dO", function() require("dap").step_out() end, desc = "Step Out" },
-            { "<leader>do", function() require("dap").step_over() end, desc = "Step Over" },
+            { "<leader>dl", function() require("dap").run_last() end, desc = "Run last" },
+            { "<leader>dO", function() require("dap").step_out() end, desc = "Step out" },
+            { "<leader>do", function() require("dap").step_over() end, desc = "Step over" },
             { "<leader>dP", function() require("dap").pause() end, desc = "Pause" },
             { "<leader>dR", function() require("dap").repl.toggle() end, desc = "Toggle REPL" },
             { "<leader>ds", function() require("dap").session() end, desc = "Session" },
             { "<leader>dQ", function() require("dap").terminate() end, desc = "Terminate" },
-            { "<leader>dw", function() require("dap.ui.widgets").hover() end, desc = "Inspect Symbol" },
+            { "<leader>dw", function() require("dap.ui.widgets").hover() end, desc = "Inspect symbol" },
         },
         config = function(_, opts)
             local icons = require "utils.icons"

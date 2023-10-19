@@ -40,7 +40,7 @@ return {
                 require("noice").redirect(vim.fn.getcmdline())
             end,
             mode = "c",
-            desc = "Redirect Cmdline"
+            desc = "Redirect cmdline"
         },
         {
             "<c-f>",
@@ -51,7 +51,7 @@ return {
             end,
             silent = true,
             expr = true,
-            desc = "Scroll Forward",
+            desc = "Scroll forward",
             mode = {"i", "n", "s"}
         },
         {
@@ -63,7 +63,7 @@ return {
             end,
             silent = true,
             expr = true,
-            desc = "Scroll Backward",
+            desc = "Scroll backward",
             mode = {"i", "n", "s"}
         },
     }

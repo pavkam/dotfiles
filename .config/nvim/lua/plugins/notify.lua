@@ -7,7 +7,7 @@ return {
             function()
                 require("notify").dismiss({ silent = true, pending = true })
             end,
-            desc = "Dismiss Notifications",
+            desc = "Dismiss notifications",
         },
     },
     opts = {

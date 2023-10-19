@@ -15,7 +15,7 @@ return {
                 require("nvim-tmux-navigation").NvimTmuxNavigateLeft()
             end,
             mode = "n",
-            desc = "Go to Left Window"
+            desc = "Go to left window"
         },
         {
             "<A-Right>",
@@ -23,7 +23,7 @@ return {
                 require("nvim-tmux-navigation").NvimTmuxNavigateRight()
             end,
             mode = "n",
-            desc = "Go to Right Window"
+            desc = "Go to right window"
         },
         {
             "<A-Down>",
@@ -31,7 +31,7 @@ return {
                 require("nvim-tmux-navigation").NvimTmuxNavigateDown()
             end,
             mode = "n",
-            desc = "Go to Down Window"
+            desc = "Go to window below"
         },
         {
             "<A-Up>",
@@ -39,7 +39,7 @@ return {
                 require("nvim-tmux-navigation").NvimTmuxNavigateUp()
             end,
             mode = "n",
-            desc = "Go to Up Window"
+            desc = "Go to window above"
         },
     }
 }

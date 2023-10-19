@@ -17,28 +17,28 @@ return {
                     "n",
                     "<leader>Pu",
                     pi.update,
-                    { buffer = args.buf, desc = "Update Package Version" }
+                    { buffer = args.buf, desc = "Update package version" }
                 )
 
                 vim.keymap.set(
                     "n",
                     "<leader>Pr",
                     pi.delete,
-                    { buffer = args.buf, desc = "Remove Package" }
+                    { buffer = args.buf, desc = "Remove package" }
                 )
 
                 vim.keymap.set(
                     "n",
                     "<leader>Pa",
                     pi.install,
-                    { buffer = args.buf, desc = "Add Package" }
+                    { buffer = args.buf, desc = "Add package" }
                 )
 
                 vim.keymap.set(
                     "n",
                     "<leader>Pv",
                     pi.change_version,
-                    { buffer = args.buf, desc = "Change Package Version" }
+                    { buffer = args.buf, desc = "Change package version" }
                 )
             end,
             'package\\.json'

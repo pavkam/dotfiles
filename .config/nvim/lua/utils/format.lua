@@ -50,16 +50,15 @@ end
 
 function M.toggle_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
-    if not vim.api.nvim_buf_is_valid(buffer) then
-        return
-    end
 
     local enabled = M.enabled_for_buffer(buffer)
+
+    utils.info(string.format("Turning **%s** auto-formatting for *%s*.", enabled and "off" or "on", vim.fn.expand("%:t")))
+    vim.b[buffer].format_enabled = not enabled
+
     if enabled then
-        utils.info("Turning off auto-formatting for buffer.")
         vim.b[buffer].format_enabled = false
     else
-        utils.info("Turning on auto-formatting for buffer.")
         vim.b[buffer].format_enabled = true
     end
 end
@@ -76,11 +75,12 @@ end
 function M.toggle()
     local enabled = M.enabled()
 
+    utils.info(string.format("Turning **%s** auto-formatting *globally*.", enabled and "off" or "on"))
+    vim.g.format_enabled = not enabled
+
     if enabled then
-        utils.info("Turning off auto-formatting globally.")
         vim.g.format_enabled = false
     else
-        utils.info("Turning on auto-formatting globally.")
         vim.g.format_enabled = true
     end
 end

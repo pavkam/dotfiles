@@ -8,10 +8,10 @@ return {
     },
     event = "BufEnter",
     keys = {
-        { "<leader>bp", "<Cmd>BufferLineTogglePin<CR>", desc = "Toggle Pin" },
-        { "<leader>bP", "<Cmd>BufferLineGroupClose ungrouped<CR>", desc = "Delete Un-pinned buffers" },
-        { "[b", "<Cmd>BufferLineCyclePrev<CR>", desc = "Previous Buffer" },
-        { "]b", "<Cmd>BufferLineCycleNext<CR>", desc = "Previous Buffer" },
+        { "<leader>bp", "<Cmd>BufferLineTogglePin<CR>", desc = "Toggle pin" },
+        { "<leader>bP", "<Cmd>BufferLineGroupClose ungrouped<CR>", desc = "Delete un-pinned buffers" },
+        { "[b", "<Cmd>BufferLineCyclePrev<CR>", desc = "Previous buffer" },
+        { "]b", "<Cmd>BufferLineCycleNext<CR>", desc = "Next buffer" },
     },
     opts = {
         options = {

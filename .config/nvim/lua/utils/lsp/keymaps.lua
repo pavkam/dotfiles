@@ -71,8 +71,8 @@ local function better_rename()
 end
 
 local keymaps = {
-    { "M", vim.diagnostic.open_float, desc = "Line Diagnostics" },
-    { "<leader>sm", "M", remap = true, desc = "Line Diagnostics (M)" },
+    { "M", vim.diagnostic.open_float, desc = "Line diagnostics" },
+    { "<leader>sm", "M", remap = true, desc = "Line diagnostics (M)" },
     {
         "gd",
         function()
@@ -82,40 +82,40 @@ local keymaps = {
                 require("telescope.builtin").lsp_definitions({ reuse_win = true })
             end
         end,
-        desc = "Goto Definition",
+        desc = "Goto definition",
         capability = "definition"
     },
-    { "<leader>sd", "gd", desc = "Goto Definition (gd)", remap = true, capability = "definition" },
+    { "<leader>sd", "gd", desc = "Goto definition (gd)", remap = true, capability = "definition" },
 
-    { "gr", "<cmd>Telescope lsp_references<cr>", desc = "References", capability = "references" },
+    { "gr", "<cmd>Telescope lsp_references<cr>", desc = "Show references", capability = "references" },
     { "<leader>sr", "<cmd>Telescope lsp_references<cr>", remap = true, desc = "References (gr)", capability = "references" },
 
-    { "gD", vim.lsp.buf.declaration, desc = "Goto Declaration", capability = "declaration" },
-    { "<leader>sD", "gD", desc = "Goto Declaration (gD)", remap = true, capability = "declaration" },
+    { "gD", vim.lsp.buf.declaration, desc = "Goto declaration", capability = "declaration" },
+    { "<leader>sD", "gD", desc = "Goto declaration (gD)", remap = true, capability = "declaration" },
 
     { "gI", function() require("telescope.builtin").lsp_implementations({ reuse_win = true }) end, desc = "Goto Implementation", capability = "implementation" },
-    { "<leader>si", "gI", desc = "Goto Implementation (gI)", remap = true, capability = "implementation"},
+    { "<leader>si", "gI", desc = "Goto implementation (gI)", remap = true, capability = "implementation"},
 
     { "gy", function() require("telescope.builtin").lsp_type_definitions({ reuse_win = true }) end, desc = "Goto Type Definition", capability = "typeDefinition" },
-    { "<leader>st", "gy", desc = "Goto Type Definition (gy)", remap = true, capability = "typeDefinition" },
+    { "<leader>st", "gy", desc = "Goto type definition (gy)", remap = true, capability = "typeDefinition" },
 
     { "K", vim.lsp.buf.hover, desc = "Hover" },
     { "<leader>sk", "K", desc = "Hover (K)", remap = true },
 
-    { "gK", vim.lsp.buf.signature_help, desc = "Signature Help", capability = "signatureHelp" },
-    { "<leader>sh", "gK", desc = "Signature Help (gK)", remap = true, capability = "signatureHelp" },
+    { "gK", vim.lsp.buf.signature_help, desc = "Signature help", capability = "signatureHelp" },
+    { "<leader>sh", "gK", desc = "Signature help (gK)", remap = true, capability = "signatureHelp" },
 
     { "<leader>sL", function() vim.lsp.codelens.refresh() end, desc = "Refresh CodeLens", capability = "codeLens" },
     { "<leader>sl", function() vim.lsp.codelens.run() end, desc = "Run CodeLens", capability = "codeLens" },
 
-    { "]m", jump_to_diagnostic(true), desc = "Next Diagnostic" },
-    { "[m", jump_to_diagnostic(false), desc = "Prev Diagnostic" },
-    { "]e", jump_to_diagnostic(true, "ERROR"), desc = "Next Error" },
-    { "[e", jump_to_diagnostic(false, "ERROR"), desc = "Prev Error" },
-    { "]w", jump_to_diagnostic(true, "WARN"), desc = "Next Warning" },
-    { "[w", jump_to_diagnostic(false, "WARN"), desc = "Prev Warning" },
+    { "]m", jump_to_diagnostic(true), desc = "Next diagnostic" },
+    { "[m", jump_to_diagnostic(false), desc = "Prev diagnostic" },
+    { "]e", jump_to_diagnostic(true, "ERROR"), desc = "Next error" },
+    { "[e", jump_to_diagnostic(false, "ERROR"), desc = "Prev error" },
+    { "]w", jump_to_diagnostic(true, "WARN"), desc = "Next warning" },
+    { "[w", jump_to_diagnostic(false, "WARN"), desc = "Prev warning" },
 
-    { "<leader>ss", vim.lsp.buf.code_action, desc = "Code Action", mode = { "n", "v" }, capability = "codeAction" },
+    { "<leader>ss", vim.lsp.buf.code_action, desc = "Code actions", mode = { "n", "v" }, capability = "codeAction" },
     {
         "<leader>sS",
         function()
@@ -128,7 +128,7 @@ local keymaps = {
             },
           })
         end,
-        desc = "Source Action",
+        desc = "Source action",
         capability = "codeAction",
     },
     {

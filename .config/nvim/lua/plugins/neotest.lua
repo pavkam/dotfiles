@@ -65,7 +65,7 @@ return {
                     function ()
                         neotest.summary.toggle()
                     end,
-                    { buffer = args.buf, desc = "Toggle Summary View"}
+                    { buffer = args.buf, desc = "Toggle summary view"}
                 )
 
                 vim.keymap.set(
@@ -74,7 +74,7 @@ return {
                     function ()
                         neotest.output.open()
                     end,
-                    { buffer = args.buf, desc = "Show Test Output"}
+                    { buffer = args.buf, desc = "Show test output"}
                 )
 
                 vim.keymap.set(
@@ -83,7 +83,7 @@ return {
                     function ()
                         neotest.watch.toggle()
                     end,
-                    { buffer = args.buf, desc = "Togglee Test Watching"}
+                    { buffer = args.buf, desc = "Togglee test watching"}
                 )
 
                 vim.keymap.set(
@@ -92,7 +92,7 @@ return {
                     function ()
                         neotest.run.run(vim.fn.expand('%'))
                     end,
-                    { buffer = args.buf, desc = "Run All Tests"}
+                    { buffer = args.buf, desc = "Run all tests"}
                 )
 
                 vim.keymap.set(
@@ -101,7 +101,7 @@ return {
                     function ()
                         neotest.run.run()
                     end,
-                    { buffer = args.buf, desc = "Run Nearest Test"}
+                    { buffer = args.buf, desc = "Run nearest test"}
                 )
 
                 vim.keymap.set(
@@ -114,7 +114,7 @@ return {
                             require('neotest').run.run({strategy = 'dap'})
                         end
                     end,
-                    { buffer = args.buf, desc = "Debug Nearest Test"}
+                    { buffer = args.buf, desc = "Debug nearest test"}
                 )
 
                 -- add which key group

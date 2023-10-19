@@ -14,16 +14,16 @@ return {
         cmd = "Telescope",
         version = false, -- telescope did only one release, so use HEAD for now
         keys = {
-            { "<leader>bb", function() require("telescope.builtin").buffers() end, desc = "Show Buffers" },
-            { "<leader>gb", function() require("telescope.builtin").git_branches { use_file_path = true } end, desc = "Git Branches" },
-            { "<leader>gc", function() require("telescope.builtin").git_commits { use_file_path = true } end, desc = "Git Commits" },
-            { "<leader>gC", function() require("telescope.builtin").git_bcommits { use_file_path = true } end, desc = "Git Commits (file)" },
-            { "<leader>gt", function() require("telescope.builtin").git_status { use_file_path = true } end, desc = "Git Status" },
-            { "<leader>f<cr>", function() require("telescope.builtin").resume { use_file_path = true } end, desc = "Resume Search" },
+            { "<leader>bb", function() require("telescope.builtin").buffers() end, desc = "Show buffers" },
+            { "<leader>gb", function() require("telescope.builtin").git_branches { use_file_path = true } end, desc = "Git branches" },
+            { "<leader>gc", function() require("telescope.builtin").git_commits { use_file_path = true } end, desc = "Git commits" },
+            { "<leader>gC", function() require("telescope.builtin").git_bcommits { use_file_path = true } end, desc = "Git commits (file)" },
+            { "<leader>gt", function() require("telescope.builtin").git_status { use_file_path = true } end, desc = "Git status" },
+            { "<leader>f<cr>", function() require("telescope.builtin").resume { use_file_path = true } end, desc = "Resume search" },
 
-            { "<leader>f/", function() require("telescope.builtin").current_buffer_fuzzy_find() end, desc = "Fuzzy-find in File" },
-            { "<leader>fc", function() require("telescope.builtin").grep_string() end, desc = "Find Selected Word" },
-            { "<leader>fw", function() require("telescope.builtin").live_grep() end, desc = "Find Words" },
+            { "<leader>f/", function() require("telescope.builtin").current_buffer_fuzzy_find() end, desc = "Fuzzy-find in file" },
+            { "<leader>fc", function() require("telescope.builtin").grep_string() end, desc = "Find selected word" },
+            { "<leader>fw", function() require("telescope.builtin").live_grep() end, desc = "Find words" },
             { "<leader>fW", function()
                 require("telescope.builtin").live_grep {
                     additional_args = function(args) return vim.list_extend(args, { "--hidden", "--no-ignore" }) end,
@@ -32,21 +32,21 @@ return {
                 desc = "Find Words (all files)"
             },
 
-            { "<leader>ff", function() require("telescope.builtin").find_files() end, desc = "Find Files" },
-            { "<leader>fo", function() require("telescope.builtin").oldfiles() end, desc = "Find Used Files" },
-            { "<leader>fF", function() require("telescope.builtin").find_files { hidden = true, no_ignore = true } end, desc = "Find All Files" },
+            { "<leader>ff", function() require("telescope.builtin").find_files() end, desc = "Find files" },
+            { "<leader>fo", function() require("telescope.builtin").oldfiles() end, desc = "Find used files" },
+            { "<leader>fF", function() require("telescope.builtin").find_files { hidden = true, no_ignore = true } end, desc = "Find all files" },
 
-            { "<leader>?c", function() require("telescope.builtin").commands() end, desc = "Show Commands" },
-            { "<leader>?k", function() require("telescope.builtin").keymaps() end, desc = "Show Keymaps" },
-            { "<leader>?h", function() require("telescope.builtin").help_tags() end, desc = "Browse Help" },
-            { "<leader>?m", function() require("telescope.builtin").man_pages() end, desc = "Browse Manual" },
+            { "<leader>?c", function() require("telescope.builtin").commands() end, desc = "Show commands" },
+            { "<leader>?k", function() require("telescope.builtin").keymaps() end, desc = "Show keymaps" },
+            { "<leader>?h", function() require("telescope.builtin").help_tags() end, desc = "Browse help" },
+            { "<leader>?m", function() require("telescope.builtin").man_pages() end, desc = "Browse manual" },
 
-            { "<leader>uT", function() require("telescope.builtin").colorscheme { enable_preview = true } end, desc = "Browse Themes" },
+            { "<leader>uT", function() require("telescope.builtin").colorscheme { enable_preview = true } end, desc = "Browse themes" },
 
-            { "<leader>sd", function() require("telescope.builtin").diagnostics { bufnr = 0 } end, desc = "Browse Diagnostics (File)" },
-            { "<leader>sD", function() require("telescope.builtin").diagnostics() end, desc = "Browse Diagnostics (Workspace)" },
+            { "<leader>sd", function() require("telescope.builtin").diagnostics { bufnr = 0 } end, desc = "Browse buffer diagnostics" },
+            { "<leader>sD", function() require("telescope.builtin").diagnostics() end, desc = "Browse workspace diagnostics" },
 
-            { "<leader>uN", function() require("telescope").extensions.notify.notify() end, desc = "Browse Notifications" },
+            { "<leader>uN", function() require("telescope").extensions.notify.notify() end, desc = "Browse notifications" },
         },
         opts = function()
             local actions = require("telescope.actions")

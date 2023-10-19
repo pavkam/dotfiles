@@ -8,7 +8,7 @@ return {
                 require("utils.lint").toggle_for_buffer()
             end,
             mode = { "n" },
-            desc = "Toggle Linting (Buffer)",
+            desc = "Toggle buffer auto-linting",
         },
         {
             "<leader>uL",
@@ -16,7 +16,7 @@ return {
                 require("utils.lint").toggle()
             end,
             mode = { "n" },
-            desc = "Toggle Linting (Global)",
+            desc = "Toggle global auto-linting",
         },
     },
     opts = function()
