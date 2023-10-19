@@ -49,7 +49,7 @@ utils.on_event(
             vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = evt.buf, silent = true })
         end
     end,
-    ui.special_buffer_file_types
+    ui.special_file_types
 )
 
 -- wrap and check for spell in text filetypes
@@ -64,6 +64,99 @@ utils.on_event(
         "markdown",
     }
 )
+
+-- quick-fix functionality
+utils.on_event(
+    "FileType",
+    function(evt)
+        if ui.is_special_buffer(evt.buf) then
+            return
+        end
+
+        vim.keymap.set(
+            "n", "<leader>qa",
+            function ()
+                local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+                local line = vim.api.nvim_get_current_line()
+                if not line or line == '' then
+                    line = '<empty>'
+                end
+
+                utils.info(string.format("Added position **%d:%d** to quick-fix list.", r, c))
+
+                vim.fn.setqflist({
+                    {
+                        bufnr = vim.api.nvim_get_current_buf(),
+                        lnum = r,
+                        col = c,
+                        text = line
+                    },
+                }, "a")
+            end,
+            { desc = "Add quick-fix item" }
+        )
+
+        vim.keymap.set(
+            "n", "<leader>qA",
+            function ()
+                local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+                local line = vim.api.nvim_get_current_line()
+                if not line or line == '' then
+                    line = '<empty>'
+                end
+
+                utils.info(string.format("Added position **%d:%d** to locations list.", r, c))
+                vim.fn.setloclist(0, {
+                    {
+                        bufnr = vim.api.nvim_get_current_buf(),
+                        lnum = r,
+                        col = c,
+                        text = line
+                    },
+                }, "a")
+            end,
+            { desc = "Add location item" }
+        )
+    end
+)
+
+utils.on_event("FileType", function(args)
+    --vim.keymap.set('n', 'q', '<cmd>close<cr>', { remap = true, desc = 'Close Window', buffer = args.buf })
+    vim.keymap.set('n', 'x', function ()
+        if package.loaded["bqf"] then
+            require('bqf').hidePreviewWindow()
+        end
+
+        local info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
+        local qftype
+        if info.quickfix == 0 then
+            qftype = nil
+        elseif info.loclist == 0 then
+            qftype = "c"
+        else
+            qftype = "l"
+        end
+
+        local list = qftype == "l" and vim.fn.getloclist(0) or vim.fn.getqflist()
+        local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+
+        table.remove(list, r)
+
+        if qftype == "l" then
+            vim.fn.setloclist(0, list)
+        else
+            vim.fn.setqflist(list)
+        end
+
+        r = math.min(r, #list)
+        if (r > 0) then
+            vim.api.nvim_win_set_cursor(0, { r, c })
+        end
+    end, { desc = 'Remove item', buffer = args.buf })
+
+    vim.keymap.set('n', '<del>', 'x', { desc = 'Remove item', buffer = args.buf })
+    vim.keymap.set('n', '<bs>', 'x', { desc = 'Remove item', buffer = args.buf })
+end, "qf")
 
 -- Auto create dir when saving a file, in case some intermediate directory does not exist
 utils.on_event(

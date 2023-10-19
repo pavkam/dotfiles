@@ -4,7 +4,7 @@ local utils = require 'utils'
 
 M = {}
 
-M.special_buffer_file_types = {
+M.special_file_types = {
     "neo-tree",
     "PlenaryTestPopup",
     "help",
@@ -29,9 +29,10 @@ M.special_buffer_file_types = {
     "TelescopeResults",
 }
 
-local special_buffer_types = {
+M.special_buffer_types = {
     "prompt",
     "nofile",
+    "terminal",
 }
 
 function M.is_special_buffer(buffer)
@@ -42,8 +43,8 @@ function M.is_special_buffer(buffer)
 
     return (
         filetype == "" or
-        vim.tbl_contains(special_buffer_types, buftype) or
-        vim.tbl_contains(M.special_buffer_file_types, filetype)
+        vim.tbl_contains(M.special_buffer_types, buftype) or
+        vim.tbl_contains(M.special_file_types, filetype)
     )
 end
 

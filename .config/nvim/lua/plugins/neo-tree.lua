@@ -8,7 +8,6 @@ return {
         "nvim-tree/nvim-web-devicons",
         "MunifTanjim/nui.nvim",
     },
-    branch = "v3.x",
     cmd = "Neotree",
     keys = {
         {
@@ -42,7 +41,7 @@ return {
                 { source = "document_symbols", display_name = icons.Symbols.Package .. " " .. "Symbols" },
             }
         },
-        open_files_do_not_replace_types = ui.special_buffer_file_types,
+        open_files_do_not_replace_types = ui.special_file_types,
         filesystem = {
             bind_to_cwd = false,
             follow_current_file = { enabled = true },

@@ -3,8 +3,10 @@ vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set("n", "<BS>", "<Nop>", { silent = true })
 
 -- Remap for dealing with word wrap
-vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = "Move cursor up", expr = true, silent = true })
-vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = "Move cursor down", expr = true, silent = true })
+vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = "Move cursor up", expr = true })
+vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = "Move cursor down", expr = true })
+vim.keymap.set('n', '<Up>', "v:count == 0 ? 'gk' : 'k'", { desc = "Move cursor up", expr = true })
+vim.keymap.set('n', '<Down>', "v:count == 0 ? 'gj' : 'j'", { desc = "Move cursor down", expr = true })
 
 -- Better normal mode navigation
 vim.keymap.set({ "n", "x" }, "gg",
@@ -75,3 +77,16 @@ vim.keymap.set("n", "[t", "<cmd>tabprevious<cr>", { desc = "Previous tab" })
 
 -- Some useful keymaps for me
 vim.keymap.set("x", "<BS>", "d", { desc = "Delete selection", remap = true })
+
+
+-- quick-fix and locations list
+vim.keymap.set("n", "<leader>qm", function () vim.diagnostic.setqflist({ open = true }) end, { desc = "Diagnostics to quck-fix list" })
+vim.keymap.set("n", "<leader>qm", function () vim.diagnostic.setloclist({ open = true }) end, { desc = "Diagnostics to locations list" })
+vim.keymap.set("n", "<leader>qc", function () vim.fn.setqflist({}, "r") end, { desc = "Clear quick-fix list" })
+vim.keymap.set("n", "<leader>qC", function () vim.fn.setloclist(0, {}) end, { desc = "Clear locations list" })
+vim.keymap.set("n", "<leader>qq", "<cmd>copen<cr>", { desc = "Show quick-fix list" })
+vim.keymap.set("n", "<leader>ql", "<cmd>lopen<cr>", { desc = "Show locations list" })
+vim.keymap.set("n", "<leader]q", "<cmd>cnext<cr>", { desc = "Next quick-fix item" })
+vim.keymap.set("n", "<leader[q", "<cmd>cprev<cr>", { desc = "Previous quick-fix item" })
+vim.keymap.set("n", "<leader]l", "<cmd>lnext<cr>", { desc = "Next location item" })
+vim.keymap.set("n", "<leader[l", "<cmd>lprev<cr>", { desc = "Previous location item" })
