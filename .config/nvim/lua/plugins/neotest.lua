@@ -52,6 +52,26 @@ return {
             },
         }, neotest_ns)
 
+        -- TODO: save buffer if needed
+        -- local function confirm_saved(buffer)
+        --     if vim.bo[buffer].modified then
+        --         local name =
+        --         local choice = vim.fn.confirm(
+        --             string.format("Save changes to %q before running tests?", vim.api.nvim_buf_get_name(buffer)),
+        --             "&Yes\n&No\n&Cancel"
+        --         )
+
+        --         if choice == 1 then
+        --             vim.api.
+        --             --vim.cmd.write()
+        --         end
+        --         return true
+        --     end
+
+        --     return false
+        -- end,
+
+
         -- register neotest mappings
         utils.on_event(
             "FileType",

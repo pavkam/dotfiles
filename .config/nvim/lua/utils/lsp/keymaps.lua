@@ -3,65 +3,6 @@ local utils = require "utils"
 
 local M = {}
 
-
-
-local function better_rename()
-    local position_params = vim.lsp.util.make_position_params()
-    position_params.oldName = vim.fn.expand("<cword>")
-
-    vim.ui.input({prompt = "Rename To", default = position_params.oldName}, function(input)
-        if input == nil then
-            utils.warn('Rename aborted.')
-
-            return
-        end
-
-        position_params.newName = input
-        vim.lsp.buf_request(0, "textDocument/rename", position_params, function(err, result, ...)
-            if not result or not result.changes then
-                notify.error(string.format("Failed to rename *%s* to *%s*", position_params.oldName, position_params.newName))
-                return
-            end
-
-            vim.lsp.handlers["textDocument/rename"](err, result, ...)
-
-            local notification, entries = 'Following changes have been made:', {}
-            local num_files, num_updates = 0, 0
-            for uri, edits in pairs(result.changes) do
-                num_files = num_files + 1
-                local bufnr = vim.uri_to_bufnr(uri)
-
-                for _, edit in ipairs(edits) do
-                    local start_line = edit.range.start.line + 1
-                    local line = vim.api.nvim_buf_get_lines(bufnr, start_line - 1, start_line, false)[1]
-
-                    num_updates = num_updates + 1
-                    table.insert(entries, {
-                        bufnr = bufnr,
-                        lnum = start_line,
-                        col = edit.range.start.character + 1,
-                        text = line
-                    })
-                end
-
-                local short_uri = string.sub(vim.uri_to_fname(uri), #vim.fn.getcwd() + 2)
-
-                -- extend notification
-                if #notification > 0 then
-                    notification = notification .. '\n'
-                end
-                notification = notification .. string.format('- **%d** in *%s*', #edits, short_uri)
-            end
-
-            utils.info(notification)
-            if num_files > 1 then
-                vim.fn.setqflist(entries, "a")
-                vim.cmd("copen")
-            end
-        end)
-    end)
-end
-
 local keymaps = {
     { "M", vim.diagnostic.open_float, desc = "Line diagnostics" },
     { "<leader>sm", "M", remap = true, desc = "Line diagnostics (M)" },
@@ -91,8 +32,8 @@ local keymaps = {
     { "gy", function() require("telescope.builtin").lsp_type_definitions({ reuse_win = true }) end, desc = "Goto Type Definition", capability = "typeDefinition" },
     { "<leader>st", "gy", desc = "Goto type definition (gy)", remap = true, capability = "typeDefinition" },
 
-    { "K", vim.lsp.buf.hover, desc = "Hover" },
-    { "<leader>sk", "K", desc = "Hover (K)", remap = true },
+    { "K", vim.lsp.buf.hover, desc = "Hover", capability = "hover" },
+    { "<leader>sk", "K", desc = "Hover (K)", remap = true, capability = "hover" },
 
     { "gK", vim.lsp.buf.signature_help, desc = "Signature Help", capability = "signatureHelp" },
     { "<leader>sh", "gK", desc = "Signature Help (gK)", remap = true, capability = "signatureHelp" },
@@ -118,7 +59,7 @@ local keymaps = {
     },
     {
         "<leader>sR",
-        better_rename,
+        function() vim.lsp.buf.rename() end,
         desc = "Rename",
         capability = "rename",
     }

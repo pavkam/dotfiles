@@ -46,7 +46,7 @@ utils.on_event(
 
         local has_mapping = vim.tbl_isempty(vim.fn.maparg("q", "n", 0, 1))
         if not has_mapping then
-            vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = evt.buf, silent = true })
+            vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = evt.buf, silent = true, remap = true })
         end
     end,
     ui.special_file_types
@@ -122,7 +122,7 @@ utils.on_event(
 
 utils.on_event(
     "FileType",
-    function(args)
+    function(evt)
         vim.keymap.set('n', 'x', function ()
             if package.loaded["bqf"] then
                 require('bqf').hidePreviewWindow()
@@ -153,10 +153,11 @@ utils.on_event(
             if (r > 0) then
                 vim.api.nvim_win_set_cursor(0, { r, c })
             end
-        end, { desc = 'Remove item', buffer = args.buf })
+        end, { desc = 'Remove item', buffer = evt.buf })
 
-        vim.keymap.set('n', '<del>', 'x', { desc = 'Remove item', buffer = args.buf })
-        vim.keymap.set('n', '<bs>', 'x', { desc = 'Remove item', buffer = args.buf })
+        vim.keymap.set('n', '<del>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
+        vim.keymap.set('n', '<bs>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
+        vim.keymap.set("n", "q", "<cmd>close<cr>", { desc = "Close list", buffer = evt.buf, silent = true, remap = true })
     end,
     "qf"
 )

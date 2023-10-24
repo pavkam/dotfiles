@@ -252,7 +252,12 @@ return {
             -- configure the servers
             local servers = opts.servers
             local function setup(server)
-                local server_opts = utils.tbl_merge({ capabilities = vim.deepcopy(capabilities) }, servers[server] or {})
+                local server_opts = utils.tbl_merge({
+                    capabilities = vim.deepcopy(capabilities),
+                    handlers = {
+                        ["textDocument/rename"] = require "utils.lsp.rename"
+                    }
+                }, servers[server] or {})
 
                 if opts.setup[server] then
                     if opts.setup[server](server, server_opts) then

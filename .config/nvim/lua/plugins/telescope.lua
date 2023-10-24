@@ -60,8 +60,8 @@ return {
 
             { "<leader>uT", function() require("telescope.builtin").colorscheme { enable_preview = true } end, desc = "Browse themes" },
 
-            { "<leader>sd", function() require("telescope.builtin").diagnostics { bufnr = 0 } end, desc = "Browse buffer diagnostics" },
-            { "<leader>sD", function() require("telescope.builtin").diagnostics() end, desc = "Browse workspace diagnostics" },
+            { "<leader>sm", function() require("telescope.builtin").diagnostics { bufnr = 0 } end, desc = "Buffer diagnostics" },
+            { "<leader>sM", function() require("telescope.builtin").diagnostics() end, desc = "All diagnostics" },
 
             { "<leader>un", function() require("telescope").extensions.notify.notify() end, desc = "Browse notifications" },
         },
