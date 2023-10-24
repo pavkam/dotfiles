@@ -3,7 +3,7 @@ return {
     lazy = false,
     keys = {
         {
-            "<leader>un",
+            "<leader>uN",
             function()
                 require("notify").dismiss({ silent = true, pending = true })
             end,

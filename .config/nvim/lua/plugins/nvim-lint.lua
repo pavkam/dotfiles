@@ -1,6 +1,6 @@
 return {
     "mfussenegger/nvim-lint",
-    event = { "BufRead", "BufNew" },
+    event = "User NormalFile",
     keys = {
         {
             "<leader>ul",

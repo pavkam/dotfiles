@@ -3,7 +3,7 @@ local utils = require "utils"
 
 return {
     "lewis6991/gitsigns.nvim",
-    event = { "BufReadPre", "BufNewFile" },
+    event = "User GitFile",
     opts = {
         signs = {
             add = { text = icons.Git.Signs.Add },

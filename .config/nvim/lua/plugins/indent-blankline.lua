@@ -3,7 +3,7 @@ local ui = require "utils.ui"
 
 return {
     "lukas-reineke/indent-blankline.nvim",
-    event = { "BufReadPost", "BufNewFile" },
+    event = "User NormalFile",
     opts = {
         indent = {
             char = icons.TUI.IndentLevel,

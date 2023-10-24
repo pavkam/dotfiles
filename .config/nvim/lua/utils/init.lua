@@ -307,4 +307,25 @@ function M.read_text_file(path)
     return content
 end
 
+function M.cmd(cmd, show_error)
+    cmd = M.to_list(cmd)
+
+    if vim.fn.has "win32" == 1 then
+        cmd = vim.list_extend({ "cmd.exe", "/C" }, cmd)
+    end
+
+    local result = vim.fn.system(cmd)
+    local success = vim.api.nvim_get_vvar "shell_error" == 0
+
+    if not success and (show_error == nil or show_error) then
+        M.error(string.format("Error running command *%s*\nError message:\n**%s**", M.tbl_join(cmd, " "), result))
+    end
+
+    return success and result:gsub("[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]", "") or nil
+end
+
+function M.file_is_under_git(file_name)
+    return M.cmd({ "git", "-C", vim.fn.fnamemodify(file_name, ":p:h"), "rev-parse" }, false) ~= nil
+end
+
 return M

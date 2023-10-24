@@ -3,15 +3,7 @@ local utils = require "utils"
 
 local M = {}
 
-local function jump_to_diagnostic(next_or_prev, severity)
-    local go = next_or_prev and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
 
-    severity = severity and vim.diagnostic.severity[severity] or nil
-
-    return function()
-        go({ severity = severity })
-    end
-end
 
 local function better_rename()
     local position_params = vim.lsp.util.make_position_params()
@@ -102,20 +94,13 @@ local keymaps = {
     { "K", vim.lsp.buf.hover, desc = "Hover" },
     { "<leader>sk", "K", desc = "Hover (K)", remap = true },
 
-    { "gK", vim.lsp.buf.signature_help, desc = "Signature help", capability = "signatureHelp" },
-    { "<leader>sh", "gK", desc = "Signature help (gK)", remap = true, capability = "signatureHelp" },
+    { "gK", vim.lsp.buf.signature_help, desc = "Signature Help", capability = "signatureHelp" },
+    { "<leader>sh", "gK", desc = "Signature Help (gK)", remap = true, capability = "signatureHelp" },
 
     { "<leader>sL", function() vim.lsp.codelens.refresh() end, desc = "Refresh CodeLens", capability = "codeLens" },
     { "<leader>sl", function() vim.lsp.codelens.run() end, desc = "Run CodeLens", capability = "codeLens" },
 
-    { "]m", jump_to_diagnostic(true), desc = "Next diagnostic" },
-    { "[m", jump_to_diagnostic(false), desc = "Prev diagnostic" },
-    { "]e", jump_to_diagnostic(true, "ERROR"), desc = "Next error" },
-    { "[e", jump_to_diagnostic(false, "ERROR"), desc = "Prev error" },
-    { "]w", jump_to_diagnostic(true, "WARN"), desc = "Next warning" },
-    { "[w", jump_to_diagnostic(false, "WARN"), desc = "Prev warning" },
-
-    { "<leader>ss", vim.lsp.buf.code_action, desc = "Code actions", mode = { "n", "v" }, capability = "codeAction" },
+    { "<leader>ss", vim.lsp.buf.code_action, desc = "Code Actions", mode = { "n", "v" }, capability = "codeAction" },
     {
         "<leader>sS",
         function()
@@ -128,7 +113,7 @@ local keymaps = {
             },
           })
         end,
-        desc = "Source action",
+        desc = "Source Action",
         capability = "codeAction",
     },
     {
@@ -179,7 +164,7 @@ function M.attach(client, buffer)
 -- 	...neovim/0.9.1/share/nvim/runtime/lua/vim/lsp/codelens.lua:228: in function 'handler'
 -- 	...w/Cellar/neovim/0.9.1/share/nvim/runtime/lua/vim/lsp.lua:1394: in function ''
 -- 	vim/_editor.lua: in function <vim/_editor.lua:0>
-            vim.lsp.codelens.refresh()
+           -- vim.lsp.codelens.refresh()
         end
     )
 

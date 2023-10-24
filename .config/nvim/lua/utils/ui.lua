@@ -42,7 +42,6 @@ function M.is_special_buffer(buffer)
     local buftype = vim.api.nvim_get_option_value("buftype", { buf = buffer })
 
     return (
-        filetype == "" or
         vim.tbl_contains(M.special_buffer_types, buftype) or
         vim.tbl_contains(M.special_file_types, filetype)
     )

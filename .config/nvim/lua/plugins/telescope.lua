@@ -14,7 +14,7 @@ return {
         cmd = "Telescope",
         version = false, -- telescope did only one release, so use HEAD for now
         keys = {
-            { "<leader>bb", function() require("telescope.builtin").buffers() end, desc = "Show buffers" },
+            { "<leader>bb", function() require("telescope.builtin").buffers({ sort_mru = true }) end, desc = "Show buffers" },
             { "<leader>gb", function() require("telescope.builtin").git_branches { use_file_path = true } end, desc = "Git branches" },
             { "<leader>gc", function() require("telescope.builtin").git_commits { use_file_path = true } end, desc = "Git commits" },
             { "<leader>gC", function() require("telescope.builtin").git_bcommits { use_file_path = true } end, desc = "Git commits (file)" },
@@ -22,19 +22,36 @@ return {
             { "<leader>f<cr>", function() require("telescope.builtin").resume { use_file_path = true } end, desc = "Resume search" },
 
             { "<leader>f/", function() require("telescope.builtin").current_buffer_fuzzy_find() end, desc = "Fuzzy-find in file" },
-            { "<leader>fc", function() require("telescope.builtin").grep_string() end, desc = "Find selected word" },
-            { "<leader>fw", function() require("telescope.builtin").live_grep() end, desc = "Find words" },
+            { "<leader>fc", function()
+                require("telescope.builtin").grep_string { cwd = require("utils.project").root() }
+            end, desc = "Find selected word" },
+
+            { "<leader>fw", function()
+                require("telescope.builtin").live_grep { cwd = require("utils.project").root() }
+            end, desc = "Find words" },
+
             { "<leader>fW", function()
                 require("telescope.builtin").live_grep {
-                    additional_args = function(args) return vim.list_extend(args, { "--hidden", "--no-ignore" }) end,
+                    additional_args = function(args)
+                        return vim.list_extend(args, { "--hidden", "--no-ignore" })
+                    end,
+                    cwd = require("utils.project").root()
                 }
                 end,
                 desc = "Find Words (all files)"
             },
 
-            { "<leader>ff", function() require("telescope.builtin").find_files() end, desc = "Find files" },
-            { "<leader>fo", function() require("telescope.builtin").oldfiles() end, desc = "Find used files" },
-            { "<leader>fF", function() require("telescope.builtin").find_files { hidden = true, no_ignore = true } end, desc = "Find all files" },
+            { "<leader>ff", function()
+                require("telescope.builtin").find_files { cwd = require("utils.project").root() }
+            end, desc = "Find files" },
+
+            { "<leader>fo", function()
+                require("telescope.builtin").oldfiles { cwd = require("utils.project").root(), only_cwd = true }
+            end, desc = "Find used files" },
+
+            { "<leader>fF", function()
+                require("telescope.builtin").find_files { hidden = true, no_ignore = true, cwd = require("utils.project").root() }
+            end, desc = "Find all files" },
 
             { "<leader>?c", function() require("telescope.builtin").commands() end, desc = "Show commands" },
             { "<leader>?k", function() require("telescope.builtin").keymaps() end, desc = "Show keymaps" },
@@ -46,7 +63,7 @@ return {
             { "<leader>sd", function() require("telescope.builtin").diagnostics { bufnr = 0 } end, desc = "Browse buffer diagnostics" },
             { "<leader>sD", function() require("telescope.builtin").diagnostics() end, desc = "Browse workspace diagnostics" },
 
-            { "<leader>uN", function() require("telescope").extensions.notify.notify() end, desc = "Browse notifications" },
+            { "<leader>un", function() require("telescope").extensions.notify.notify() end, desc = "Browse notifications" },
         },
         opts = function()
             local actions = require("telescope.actions")

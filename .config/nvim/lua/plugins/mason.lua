@@ -63,6 +63,17 @@ return {
         require("mason").setup(opts)
 
         local mr = require("mason-registry")
+
+        -- trigger FileType event to possibly load this newly installed LSP server
+        mr:on("package:install:success", function()
+            vim.defer_fn(function()
+                vim.api.nvim_exec_autocmds("FileType", {
+                    buffer = vim.api.nvim_get_current_buf(),
+                    modeline = false,
+                })
+            end, 100)
+        end)
+
         local function ensure_installed()
             for _, tool in ipairs(opts.ensure_installed) do
             local p = mr.get_package(tool)

@@ -3,7 +3,7 @@ local icons = require "utils.icons"
 return {
     {
         "neovim/nvim-lspconfig",
-        event = { "BufReadPre", "BufNewFile" },
+        event = "User NormalFile",
         dependencies = {
             "williamboman/mason-lspconfig.nvim",
             {
@@ -316,9 +316,31 @@ return {
                         includeInlayEnumMemberValueHints = true,
                     },
                     expose_as_code_action = { "organize_imports", "add_missing_imports" },
-                    code_lens = "all"
                 }
             }
         end,
+    },
+    {
+        'Wansmer/symbol-usage.nvim',
+        event = 'BufReadPre', -- need run before LspAttach if you use nvim 0.9. On 0.10 use 'LspAttach'
+        opts = {
+            kinds = {
+                vim.lsp.protocol.SymbolKind.Function,
+                vim.lsp.protocol.SymbolKind.Method,
+                vim.lsp.protocol.SymbolKind.Property,
+                vim.lsp.protocol.SymbolKind.Interface,
+                vim.lsp.protocol.SymbolKind.Class,
+                vim.lsp.protocol.SymbolKind.Struct,
+                vim.lsp.protocol.SymbolKind.Event,
+                vim.lsp.protocol.SymbolKind.Constructor,
+                vim.lsp.protocol.SymbolKind.Constant,
+            },
+            request_pending_text = icons.TUI.Ellipsis,
+            vt_position = "end_of_line",
+            references = {
+                enabled = true,
+                include_declaration = false
+            },
+        }
     }
 }
