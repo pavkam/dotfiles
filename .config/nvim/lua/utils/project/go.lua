@@ -7,13 +7,11 @@ local project_internals = require "utils.project.internals"
 local M = {}
 
 function M.get_golangci_config(target)
-    local root = project_internals.root(target)
-    return root and utils.any_file_exists(root, { '.golangci.yml', '.golangci.yaml', '.golangci.toml', '.golangci.json' })
+    return utils.first_found_file(project_internals.roots(target), { '.golangci.yml', '.golangci.yaml', '.golangci.toml', '.golangci.json' })
 end
 
 function M.type(target)
-    local root = project_internals.root(target)
-    if root and utils.any_file_exists(root, { 'go.mod', 'go.sum' }) then
+    if utils.first_found_file(project_internals.roots(target), { 'go.mod', 'go.sum' }) then
         return 'go'
     end
 

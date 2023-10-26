@@ -1,5 +1,6 @@
 return {
     "nvim-neotest/neotest",
+    commit = "455155f65e3397022a7b23cc3e152b43a6fc5d23",
     ft = {
         "javascript",
         "typescript",
@@ -8,6 +9,7 @@ return {
         "go"
     },
     dependencies = {
+        "nvim-treesitter/nvim-treesitter",
         "nvim-neotest/neotest-jest",
         "marilari88/neotest-vitest",
         "nvim-neotest/neotest-go",

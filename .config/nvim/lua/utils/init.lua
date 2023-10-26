@@ -50,6 +50,17 @@ function M.list_insert_unique(list, values)
     return list
 end
 
+function M.list_contains(list, what)
+    assert(vim.tbl_islist(list))
+    for _, val in ipairs(list) do
+        if val == what then
+            return true
+        end
+    end
+
+    return false
+end
+
 function M.tbl_join(items, separator)
     if not vim.tbl_islist(items) then
         return stringify(items)
@@ -285,10 +296,15 @@ function M.file_exists(path)
     end
 end
 
-function M.any_file_exists(base_path, files)
-    for _, file in ipairs(files) do
-        if M.file_exists(M.join_paths(base_path, file)) then
-            return file
+function M.first_found_file(base_paths, files)
+    base_paths = M.to_list(base_paths)
+    files = M.to_list(files)
+
+    for _, path in ipairs(base_paths) do
+        for _, file in ipairs(files) do
+            if M.file_exists(M.join_paths(path, file)) then
+                return M.join_paths(path, file)
+            end
         end
     end
 

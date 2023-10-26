@@ -20,7 +20,7 @@ return {
         },
     },
     opts = function()
-        local js_project = require "utils.project.js"
+        local project = require "utils.project"
         local js_project = require "utils.project.js"
 
         local eslint_severities = {
@@ -54,7 +54,7 @@ return {
                     },
                 },
                 eslint = {
-                    cmd = function()
+                    cmd = function(ctx)
                         return js_project.get_bin_path(nil, "eslint")
                     end,
                     condition = function(ctx)
@@ -79,10 +79,10 @@ return {
                                 for _, diagnostic in ipairs(item.messages or {}) do
                                     table.insert(diagnostics, {
                                         source = "eslint",
-                                        lnum = diagnostic.line - 1,
-                                        col = diagnostic.column - 1,
-                                        end_lnum = (diagnostic.endLine or diagnostic.line) - 1,
-                                        end_col = (diagnostic.endColumn or diagnostic.column) - 1,
+                                        lnum = (diagnostic.line or 1) - 1,
+                                        col = (diagnostic.column or 1) - 1,
+                                        end_lnum = (diagnostic.endLine or diagnostic.line or 1) - 1,
+                                        end_col = (diagnostic.endColumn or diagnostic.column or 1) - 1,
                                         severity = eslint_severities[diagnostic.severity],
                                         message = diagnostic.message,
                                         code = diagnostic.ruleId

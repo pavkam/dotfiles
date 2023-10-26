@@ -135,25 +135,4 @@ return {
             }
         }
     },
-    {
-        "nvim-treesitter/nvim-treesitter-context",
-        event = "User NormalFile",
-        opts = {
-            mode = "cursor",
-            max_lines = 3,
-        },
-        keys = {
-            {
-                "<leader>ut",
-                function()
-                    local utils = require "utils"
-                    local tsc = require "treesitter-context"
-
-                    tsc.toggle()
-                    utils.info("Toggling treesitter context **on/off**.")
-                end,
-                desc = "Toggle Treesitter Context",
-            },
-        },
-    },
 }

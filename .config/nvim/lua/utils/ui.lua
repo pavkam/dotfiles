@@ -6,6 +6,13 @@ M = {}
 
 M.special_file_types = {
     "neo-tree",
+    "dap-float",
+    "dap-repl",
+    "dapui_console",
+    "dapui_watches",
+    "dapui_stacks",
+    "dapui_breakpoints",
+    "dapui_scopes",
     "PlenaryTestPopup",
     "help",
     "lspinfo",
@@ -33,6 +40,7 @@ M.special_buffer_types = {
     "prompt",
     "nofile",
     "terminal",
+    "help",
 }
 
 function M.is_special_buffer(buffer)

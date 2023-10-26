@@ -36,6 +36,8 @@ vim.keymap.set("n", "<C-r>", "Nzzzv", { desc = "Redo", remap = true })
 
 -- Some editor mappings
 vim.keymap.set("i", "<C-BS>", "<C-w>", { desc = "Delete word" })
+
+-- TODO: check if there's stuff before/after the cursor and do tab or ident
 vim.keymap.set("i", "<Tab>", "<C-T>", { desc = "Indent", })
 vim.keymap.set("i", "<S-Tab>", "<C-D>", { desc = "Unindent" })
 
@@ -78,6 +80,7 @@ vim.keymap.set("n", "]t", "<cmd>tabnext<cr>", { desc = "Next tab" })
 vim.keymap.set("n", "[t", "<cmd>tabprevious<cr>", { desc = "Previous tab" })
 
 -- Some useful keymaps for me
+-- TODO, remap x and DEL to not yank
 vim.keymap.set("x", "<BS>", "d", { desc = "Delete selection", remap = true })
 
 -- quick-fix and locations list

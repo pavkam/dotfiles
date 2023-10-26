@@ -28,9 +28,9 @@ return {
             end,
             offsets = {
                 {
-                    filetype = "neo-tree",
-                    text = "Neo-tree",
-                    highlight = "Directory",
+                    filetype = "dapui_scopes",
+                    text = icons.UI.Debugger .. " Debugger",
+                    highlight = "Debug",
                     text_align = "left",
                 },
             },

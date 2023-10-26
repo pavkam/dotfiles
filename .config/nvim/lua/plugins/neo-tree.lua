@@ -1,6 +1,6 @@
 local icons = require "utils.icons"
 local ui = require "utils.ui"
-
+-- TODO: when entering neo tree exit insert mode
 return {
     "nvim-neo-tree/neo-tree.nvim",
     dependencies = {
@@ -43,10 +43,28 @@ return {
         },
         open_files_do_not_replace_types = ui.special_file_types,
         filesystem = {
+            window = {
+                position = "float"
+            },
             bind_to_cwd = false,
             follow_current_file = { enabled = true },
             use_libuv_file_watcher = true,
             hijack_netrw_behavior = "open_current",
+        },
+        buffers = {
+            window = {
+                position = "float"
+            },
+        },
+        git_status = {
+            window = {
+                position = "float"
+            },
+        },
+        symbols = {
+            window = {
+                position = "float"
+            },
         },
         default_component_configs = {
             with_markers = true,
@@ -116,6 +134,11 @@ return {
                     h = "parent_or_close",
                     l = "child_or_open",
                     o = "open",
+                    ["<del>"] = "delete",
+                    ["S"] = false,
+                    ["s"] = false,
+                    ["\\"] = "open_split",
+                    ["|"] = "open_vsplit",
                 },
                 fuzzy_finder_mappings = { -- define keymaps for filter popup window in fuzzy_finder_mode
                     ["<C-j>"] = "move_cursor_down",

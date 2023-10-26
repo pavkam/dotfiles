@@ -20,8 +20,6 @@ local function handle_post_rename(result)
         local buffer = vim.uri_to_bufnr(uri)
         vim.fn.bufload(buffer)
 
-        print("buffer", buffer)
-
         for _, edit in ipairs(edits) do
             local start_line = edit.range.start.line + 1
             local line = vim.api.nvim_buf_get_lines(buffer, start_line - 1, start_line, false)[1]

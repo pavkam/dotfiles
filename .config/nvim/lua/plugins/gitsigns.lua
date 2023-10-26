@@ -48,7 +48,7 @@ return {
                     { desc = 'Run Lazygit', nargs = 0 }
                 )
 
-                vim.keymap.set("n", "<leader>gg", function () vim.cmd('Lazygit') end, { desc = "Lazygit"})
+                vim.keymap.set("n", "<leader>gg", function () vim.cmd('Lazygit') end, { buffer = buffer, desc = "Lazygit"})
             end
 
 

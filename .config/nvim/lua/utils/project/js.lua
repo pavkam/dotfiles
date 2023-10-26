@@ -4,9 +4,6 @@ local dap_vscode = require 'dap.ext.vscode'
 local utils = require "utils"
 local project_internals = require "utils.project.internals"
 
-local package_json_name = "package.json"
-local node_modules_name = "node_modules"
-
 local bin_filetypes = {'typescript', 'javascript'}
 local jsx_filetypes = {'typescriptreact', 'javascriptreact'}
 local filetypes = vim.tbl_flatten { bin_filetypes, jsx_filetypes }
@@ -25,17 +22,15 @@ local function parsed_package_json_has_dependency(parsed_json, type, dependency)
     return false
 end
 
-local function read_package_json(path)
-    local full_name = utils.join_paths(path, package_json_name)
+local function read_package_json(target)
+    local full_name = utils.first_found_file(project_internals.roots(target), "package.json")
 
-    local json_content = utils.read_text_file(full_name)
+    local json_content = full_name and utils.read_text_file(full_name)
     return json_content and vim.json.decode(json_content)
 end
 
 function M.has_dependency(target, dependency)
-    local root = project_internals.root(target)
-
-    local parsed_json = root and read_package_json(root)
+    local parsed_json = read_package_json(target)
     if not parsed_json then
         return false
     end
@@ -47,29 +42,15 @@ function M.has_dependency(target, dependency)
 end
 
 function M.get_bin_path(target, bin)
-    local root = project_internals.root(target)
-    if not root then
-        return nil
-    end
-
-    local full_path = utils.join_paths(root, node_modules_name, ".bin", bin)
-    if utils.file_exists(full_path) then
-        return full_path
-    end
-
-    return nil
+    return utils.first_found_file(project_internals.roots(target), utils.join_paths("node_modules", ".bin", bin))
 end
 
 function M.get_eslint_config_path(target)
-    local root = project_internals.root(target)
-    local option = root and utils.any_file_exists(root, { '.eslintrc.json', '.eslintrc.js', 'eslint.config.js', 'eslint.config.json' })
-
-    return option and utils.join_paths(root, option)
+    return utils.first_found_file(project_internals.roots(target), { '.eslintrc.json', '.eslintrc.js', 'eslint.config.js', 'eslint.config.json' })
 end
 
 function M.type(target)
-    local root = project_internals.root(target)
-    local package = root and read_package_json(root)
+    local package = read_package_json(target)
 
     if package then
         if parsed_package_json_has_dependency(package, 'dependencies', 'typescript') then

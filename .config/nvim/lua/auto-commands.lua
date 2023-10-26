@@ -234,50 +234,37 @@ utils.on_event(
     end
 )
 
--- leave vim if last window is closed
+-- clear root path cache when LSP changes
 utils.on_event(
-    "WinClosed",
+    { "LspDetach", "LspAttach", "BufWritePost" },
     function(evt)
-        local listed_buffers = vim.fn.getbufinfo({ buflisted = 1 })
-        local open_buffers = vim.tbl_filter(
-            function(buffer)
-                return #buffer.windows > 1 or (#buffer.windows == 1 and buffer.windows[1] ~= tonumber(evt.match))
-            end,
-            listed_buffers
-        )
-        local modified_buffers = vim.tbl_filter(
-            function(buffer)
-                return buffer.changed
-            end,
-            listed_buffers
-        )
-
-        local filetype = vim.api.nvim_get_option_value("filetype", { buf = evt.buf })
-        local buftype = vim.api.nvim_get_option_value("buftype", { buf = evt.buf })
-
-        if #open_buffers == 0 and not ui.is_special_buffer(evt.buf) then
-            if #modified_buffers > 0 then
-                utils.warn("There are unsaved changes in some buffers. Will not exit!")
-                vim.schedule(function() vim.cmd("b" .. modified_buffers[1].bufnr) end)
-            else
-                vim.cmd('qa')
-            end
+        if vim.api.nvim_buf_is_valid(evt.buf) then
+            vim.b[evt.buf].root_path_cache = nil
         end
+    end
+)
+
+-- emit a warning when an LSP is dettached!
+utils.on_event(
+    { "LspDetach" },
+    function(evt)
+        local client = vim.lsp.get_client_by_id(evt.data.client_id)
+        utils.warn("Language Server *" .. client.name .. "* has detached!")
     end
 )
 
 -- file detection commands
 utils.on_event(
     { "BufReadPost", "BufNewFile", "BufWritePost" },
-    function(args)
+    function(evt)
         local current_file = vim.fn.resolve(vim.fn.expand "%")
 
         -- if custom events have been triggered, bail
-        if vim.b[args.buf].custom_events_triggered then
+        if vim.b[evt.buf].custom_events_triggered then
             return
         end
 
-        if not ui.is_special_buffer(args.buf) then
+        if not ui.is_special_buffer(evt.buf) then
             utils.trigger_user_event("NormalFile")
 
             if utils.file_is_under_git(current_file) then
@@ -287,7 +274,7 @@ utils.on_event(
 
         -- do not retrigger these events if the file name is set
         if current_file ~= "" then
-            vim.b[args.buf].custom_events_triggered = true
+            vim.b[evt.buf].custom_events_triggered = true
         end
     end
 )

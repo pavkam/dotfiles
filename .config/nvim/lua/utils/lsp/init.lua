@@ -116,7 +116,7 @@ function M.any_active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_active_clients({ bufnr = buffer })
 
-    return #clients > 0 or (#clients == 1 and clients[1].name ~= "copilot")
+    return #clients > 1 or (#clients == 1 and clients[1].name ~= "copilot")
 end
 
 function M.is_active_for_buffer(buffer, name)
@@ -127,9 +127,10 @@ function M.is_active_for_buffer(buffer, name)
     return ok and #clients > 0
 end
 
-function M.root(target)
+function M.roots(target, sort)
     buffer, path = utils.expand_target(target)
 
+    -- TODO: skip copilot
     local roots = {}
     if path then
         local get = vim.lsp.get_clients or vim.lsp.get_active_clients
@@ -143,15 +144,19 @@ function M.root(target)
             for _, p in ipairs(paths) do
                 local r = vim.loop.fs_realpath(p)
                 if path:find(r, 1, true) then
-                    roots[#roots + 1] = r
+                    if not utils.list_contains(roots, r) then
+                        roots[#roots + 1] = r
+                    end
                 end
             end
         end
     end
 
-    table.sort(roots, function(a, b) return #a > #b end)
+    if sort then
+        table.sort(roots, function(a, b) return #a > #b end)
+    end
 
-    return roots[1]
+    return roots
 end
 
 function M.clear_diagnostics(sources, buffer)

@@ -7,8 +7,7 @@ local project_internals = require "utils.project.internals"
 local M = {}
 
 function M.type(target)
-    local root = project_internals.root(target)
-    if root and utils.any_file_exists(root, { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "poetry.lock" }) then
+    if utils.first_found_file(project_internals.roots(target), { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "poetry.lock" }) then
         return 'python'
     end
 
