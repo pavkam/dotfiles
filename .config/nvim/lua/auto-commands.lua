@@ -49,7 +49,7 @@ utils.on_event(
             vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = evt.buf, silent = true, remap = true })
         end
     end,
-    ui.special_file_types
+    ui.attach_q_key_file_types
 )
 
 -- wrap and check for spell in text filetypes

@@ -50,8 +50,6 @@ return {
 
                 vim.keymap.set("n", "<leader>gg", function () vim.cmd('Lazygit') end, { buffer = buffer, desc = "Lazygit"})
             end
-
-
         end,
     }
 }

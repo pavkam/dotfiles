@@ -4,17 +4,20 @@ return {
         {
             "<leader>bd",
              function()
+                local ui = require "utils.ui"
                 local bufremove = require "mini.bufremove"
+
+                local buffer = vim.api.nvim_get_current_buf()
                 if vim.bo.modified then
-                    local choice = vim.fn.confirm(("Save changes to %q?"):format(vim.fn.bufname()), "&Yes\n&No\n&Cancel")
+                    local choice = vim.fn.confirm(("Save changes to %q?"):format(vim.fn.bufname(buffer)), "&Yes\n&No\n&Cancel")
                     if choice == 1 then -- Yes
-                        vim.cmd.write()
-                        bufremove.delete(0)
+                        vim.api.nvim_buf_call(buffer, vim.cmd.write)
+                        bufremove.delete(buffer)
                     elseif choice == 2 then -- No
-                        bufremove.delete(0, true)
+                        bufremove.delete(buffer, true)
                     end
                 else
-                    bufremove.delete(0)
+                    bufremove.delete(buffer)
                 end
             end,
             desc = "Delete buffer"

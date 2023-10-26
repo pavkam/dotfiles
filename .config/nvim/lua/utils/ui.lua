@@ -4,7 +4,7 @@ local utils = require 'utils'
 
 M = {}
 
-M.special_file_types = {
+M.attach_q_key_file_types = {
     "neo-tree",
     "dap-float",
     "dap-repl",
@@ -31,10 +31,16 @@ M.special_file_types = {
     "neotest-summary",
     "neotest-output",
     "neotest-output-panel",
-    "WhichKey",
-    "TelescopePrompt",
-    "TelescopeResults",
 }
+
+M.special_file_types = vim.list_extend(
+    utils.tbl_copy(M.attach_q_key_file_types),
+    {
+        "WhichKey",
+        "TelescopePrompt",
+        "TelescopeResults",
+    }
+)
 
 M.special_buffer_types = {
     "prompt",
