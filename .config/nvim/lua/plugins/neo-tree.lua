@@ -1,6 +1,6 @@
 local icons = require "utils.icons"
 local ui = require "utils.ui"
--- TODO: when entering neo tree exit insert mode
+
 return {
     "nvim-neo-tree/neo-tree.nvim",
     dependencies = {

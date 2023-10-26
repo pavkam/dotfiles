@@ -158,7 +158,7 @@ return {
                                 unusedwrite = true,
                                 useany = true,
                             },
-                            usePlaceholders = false, -- TODO: maybe enable this later
+                            usePlaceholders = false,
                             completeUnimported = true,
                             staticcheck = false,
                             directoryFilters = { "-.git", "-.vscode", "-.idea", "-.vscode-test", "-node_modules" },

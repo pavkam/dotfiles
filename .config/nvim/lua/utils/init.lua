@@ -114,17 +114,33 @@ end
 
 local group_index = 0
 
-function M.on_event(event, callback, pattern)
+function M.on_event(events, callback, target)
+    assert(type(callback) == "function")
+
+    events = M.to_list(events)
+    patterns = M.to_list(patterns)
+
+    -- create group
     group_name = "pavkam_" .. group_index
     group_index = group_index + 1
+    group = vim.api.nvim_create_augroup(group_name, { clear = true })
 
-    local group = vim.api.nvim_create_augroup(group_name, { clear = true })
-
-    vim.api.nvim_create_autocmd(event, {
-        callback = callback,
+    local opts = {
+        callback = function(evt) callback(evt, group) end,
         group = group,
-        pattern = pattern,
-    })
+    }
+
+    -- decide on the target
+    if type(target) == "number" then
+        opts.buffer = target
+    elseif target then
+        opts.pattern = target
+    end
+
+    -- create auto command
+    vim.api.nvim_create_autocmd(events, opts)
+
+    return group
 end
 
 function M.on_user_event(event, callback)

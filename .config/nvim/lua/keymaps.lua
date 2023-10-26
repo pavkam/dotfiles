@@ -1,3 +1,5 @@
+local ui = require "utils.ui"
+
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set("n", "<BS>", "<Nop>", { silent = true })
@@ -37,9 +39,22 @@ vim.keymap.set("n", "<C-r>", "Nzzzv", { desc = "Redo", remap = true })
 -- Some editor mappings
 vim.keymap.set("i", "<C-BS>", "<C-w>", { desc = "Delete word" })
 
--- TODO: check if there's stuff before/after the cursor and do tab or ident
-vim.keymap.set("i", "<Tab>", "<C-T>", { desc = "Indent", })
-vim.keymap.set("i", "<S-Tab>", "<C-D>", { desc = "Unindent" })
+vim.keymap.set(
+    "i", "<Tab>",
+    function()
+        local has_before, has_after = ui.cursor_word_relation()
+        if not has_before and has_after then
+            return "<C-t>"
+        end
+
+        return "<Tab>"
+    end,
+    { desc = "Indent/Tab", expr = true }
+)
+
+vim.keymap.set("i", "<S-Tab>", "<C-d>", { desc = "Unindent" })
+vim.keymap.set("n", "<Tab>", ">>", { desc = "Indent" })
+vim.keymap.set("n", "<S-Tab>", "<<", { desc = "Indent" })
 
 -- Disable the annoying yank on chnage
 vim.keymap.set({ "n", "x" }, "c", [["_c]], { desc = "Change" })
@@ -80,7 +95,8 @@ vim.keymap.set("n", "]t", "<cmd>tabnext<cr>", { desc = "Next tab" })
 vim.keymap.set("n", "[t", "<cmd>tabprevious<cr>", { desc = "Previous tab" })
 
 -- Some useful keymaps for me
--- TODO, remap x and DEL to not yank
+vim.keymap.set("n", "x", [["_x]], { desc = "Delete character" })
+vim.keymap.set("n", "<Del>", [["_x]], { desc = "Delete character" })
 vim.keymap.set("x", "<BS>", "d", { desc = "Delete selection", remap = true })
 
 -- quick-fix and locations list

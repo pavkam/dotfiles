@@ -94,20 +94,17 @@ function M.attach(client, buffer)
         vim.lsp.codelens.refresh()
     end
 
-    lsp.on_capability_event(
-        { "InsertLeave", "BufEnter" },
-        "codeLens",
-        buffer,
-        function()
--- Error executing vim.schedule lua callback: ...neovim/0.9.1/share/nvim/runtime/lua/vim/lsp/codelens.lua:228: Invalid 'line': out of range
--- stack traceback:
--- 	[C]: in function 'nvim_buf_set_extmark'
--- 	...neovim/0.9.1/share/nvim/runtime/lua/vim/lsp/codelens.lua:228: in function 'handler'
--- 	...w/Cellar/neovim/0.9.1/share/nvim/runtime/lua/vim/lsp.lua:1394: in function ''
--- 	vim/_editor.lua: in function <vim/_editor.lua:0>
-           -- vim.lsp.codelens.refresh()
-        end
-    )
+    -- disable when using symbol-usage plugin
+    if not package.loaded["symbol-usage"] then
+        lsp.on_capability_event(
+            { "InsertLeave", "BufEnter" },
+            "codeLens",
+            buffer,
+            function()
+                vim.lsp.codelens.refresh()
+            end
+        )
+    end
 
     lsp.on_capability_event(
          { "CursorHold", "CursorHoldI" },

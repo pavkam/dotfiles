@@ -82,4 +82,21 @@ function M.sexy_list(list, prefix, separator)
     return prefix .. " " .. utils.tbl_join(list, " " .. separator .. " ")
 end
 
+function M.cursor_word_relation(window)
+    window = window or 0
+
+    -- get the cursor's position
+    local r, c = unpack(vim.api.nvim_win_get_cursor(window))
+    if not c or not r then
+        return false
+    end
+
+    local line = vim.api.nvim_buf_get_lines(vim.fn.winbufnr(window), r - 1, r, true)[1]
+
+    local before = string.sub(line, 1, c)
+    local after = string.sub(line, c + 1, -1)
+
+    return string.match(before, "^%s*$") == nil, string.match(after, "^%s*$") == nil
+end
+
 return M

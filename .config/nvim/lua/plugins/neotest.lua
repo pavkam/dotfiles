@@ -54,25 +54,26 @@ return {
             },
         }, neotest_ns)
 
-        -- TODO: save buffer if needed
-        -- local function confirm_saved(buffer)
-        --     if vim.bo[buffer].modified then
-        --         local name =
-        --         local choice = vim.fn.confirm(
-        --             string.format("Save changes to %q before running tests?", vim.api.nvim_buf_get_name(buffer)),
-        --             "&Yes\n&No\n&Cancel"
-        --         )
+        local function confirm_saved(buffer)
+            buffer = buffer or vim.api.nvim_get_current_buf()
 
-        --         if choice == 1 then
-        --             vim.api.
-        --             --vim.cmd.write()
-        --         end
-        --         return true
-        --     end
+            if vim.bo[buffer].modified then
+                local choice = vim.fn.confirm(
+                    string.format("Save changes to %q before running tests?", vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ":h")),
+                    "&Yes\n&No\n&Cancel"
+                )
 
-        --     return false
-        -- end,
+                if choice == 3 then
+                    return false
+                end
 
+                if choice == 1 then
+                    vim.api.nvim_buf_call(buffer, vim.cmd.write)
+                end
+            end
+
+            return true
+        end
 
         -- register neotest mappings
         utils.on_event(
@@ -121,6 +122,10 @@ return {
                     "n",
                     "<leader>tr",
                     function ()
+                        if not confirm_saved() then
+                            return
+                        end
+
                         neotest.run.run()
                     end,
                     { buffer = args.buf, desc = "Run nearest test"}
@@ -130,6 +135,10 @@ return {
                     "n",
                     "<leader>td",
                     function ()
+                        if not confirm_saved() then
+                            return
+                        end
+
                         if args.match == 'go' then
                             require('dap-go').debug_test()
                         else

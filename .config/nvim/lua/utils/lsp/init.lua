@@ -4,11 +4,15 @@ local utils = require 'utils'
 local M = {}
 
 local function normalize_capability(method)
+    method = utils.stringify(method)
     method = method:find("/") and method or "textDocument/" .. method
+
     return method
 end
 
 local function get_null_ls_sources(filetype)
+    filetype = utils.stringify(filetype)
+
     -- get the registered methods
     local ok, sources = pcall(require, "null-ls.sources")
 
@@ -25,6 +29,8 @@ local function get_null_ls_sources(filetype)
 end
 
 function M.client_has_capability(client, method)
+    assert(client ~= nil)
+
     return client.supports_method(normalize_capability(method))
 end
 
@@ -40,49 +46,52 @@ function M.buffer_has_capability(buffer, method)
 end
 
 function M.notify_file_renamed(from, to)
-  local clients = vim.lsp.get_active_clients()
+    from = utils.stringify(from)
+    from = utils.stringify(to)
 
-  for _, client in ipairs(clients) do
-    if client:supports_method("workspace/willRenameFiles") then
-      local resp = client.request_sync("workspace/willRenameFiles", {
-        files = {
-          {
-            oldUri = vim.uri_from_fname(from),
-            newUri = vim.uri_from_fname(to),
-          },
-        },
-      }, 1000)
+    local clients = vim.lsp.get_active_clients()
 
-      if resp and resp.result ~= nil then
-        vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
-      end
+    for _, client in ipairs(clients) do
+        if client:supports_method("workspace/willRenameFiles") then
+            local resp = client.request_sync("workspace/willRenameFiles", {
+                files = {
+                    {
+                        oldUri = vim.uri_from_fname(from),
+                        newUri = vim.uri_from_fname(to),
+                    },
+                },
+            }, 1000)
 
+            if resp and resp.result ~= nil then
+                vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
+            end
+        end
     end
-  end
 end
 
-function M.on_attach(callback)
-    vim.api.nvim_create_autocmd("LspAttach", {
-        callback = function(args)
-            local buffer = args.buf
-            local client = vim.lsp.get_client_by_id(args.data.client_id)
-
-            callback(client, buffer)
+function M.on_attach(callback, target)
+    return utils.on_event(
+        "LspAttach",
+        function(evt)
+            local client = vim.lsp.get_client_by_id(evt.data.client_id)
+            callback(client, evt.buf)
         end,
-    })
+        target
+    )
 end
 
-function M.on_capability_event(event, capability, buffer, callback)
+function M.on_capability_event(events, capability, buffer, callback)
     capability = normalize_capability(capability)
+    events = utils.to_list(events)
 
     if not M.buffer_has_capability(buffer, capability) then
         return
     end
 
-    local auto_group_name = "pavkam_cap_" .. utils.tbl_join(event, "_") .. "_" .. capability
+    local auto_group_name = "pavkam_cap_" .. utils.tbl_join(events, "_") .. "_" .. capability
 
     local group = vim.api.nvim_create_augroup(auto_group_name, { clear = true })
-    vim.api.nvim_create_autocmd(event, {
+    vim.api.nvim_create_autocmd(events, {
         callback = function()
             if not M.buffer_has_capability(buffer, capability) then
                 vim.api.nvim_del_augroup_by_name(auto_group_name)
@@ -130,7 +139,6 @@ end
 function M.roots(target, sort)
     buffer, path = utils.expand_target(target)
 
-    -- TODO: skip copilot
     local roots = {}
     if path then
         local get = vim.lsp.get_clients or vim.lsp.get_active_clients

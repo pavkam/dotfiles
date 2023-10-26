@@ -28,11 +28,6 @@ return {
             local luasnip = require "luasnip"
             local copilot = require "copilot.suggestion"
 
-            local function has_words_before()
-                local line, col = (unpack or table.unpack)(vim.api.nvim_win_get_cursor(0))
-                return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match "%s" == nil
-            end
-
             local border_opts = {
                 border = "rounded",
                 winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None",
@@ -49,7 +44,10 @@ return {
                         return false
                     end
 
-                    return true
+                    local context = require 'cmp.config.context'
+
+                    return not context.in_treesitter_capture("comment")
+                        and not context.in_syntax_group("Comment")
                 end,
                 completion = {
                     completeopt = "menu,menuone,noinsert",
@@ -73,6 +71,7 @@ return {
                         luasnip.lsp_expand(args.body)
                     end,
                 },
+                -- TODO, can I disable CMP for backspace?
                 mapping = cmp.mapping.preset.insert({
                     ["<Up>"] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Select },
                     ["<Down>"] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Select },
@@ -91,11 +90,14 @@ return {
                         if copilot.is_visible() then
                             copilot.accept()
                         elseif cmp.visible() then
-                            cmp.select_next_item()
+                            local entry = cmp.get_selected_entry()
+                            if not entry then
+                                cmp.select_next_item({ behavior = cmp.SelectBehavior.Select })
+                            else
+                                cmp.confirm()
+                            end
                         elseif luasnip.expand_or_jumpable() then
                             luasnip.expand_or_jump()
-                        elseif has_words_before() then
-                            cmp.complete()
                         else
                             fallback()
                         end
@@ -142,6 +144,7 @@ return {
         end,
         config = function(_, opts)
             local cmp = require "cmp"
+            local copilot = require "copilot.suggestion"
 
             cmp.setup(opts)
             cmp.setup.filetype({ "dap-repl", "dapui_watches", "dapui_hover" }, {
@@ -149,6 +152,11 @@ return {
                     { name = "dap" },
                 },
             })
+
+            -- dimiss copilot when cmp pops up
+            cmp.event:on("menu_opened", function()
+                copilot.dismiss()
+            end)
         end,
     },
     {

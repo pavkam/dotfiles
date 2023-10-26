@@ -69,7 +69,6 @@ function M.roots(target)
 
     -- cache the roots for buffer
     if valid_buffer then
-        print(vim.inspect(roots))
         vim.b[buffer].root_path_cache = roots
     end
 
