@@ -71,7 +71,6 @@ return {
                         luasnip.lsp_expand(args.body)
                     end,
                 },
-                -- TODO, can I disable CMP for backspace?
                 mapping = cmp.mapping.preset.insert({
                     ["<Up>"] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Select },
                     ["<Down>"] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Select },

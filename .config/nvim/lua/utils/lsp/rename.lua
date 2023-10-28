@@ -18,6 +18,7 @@ local function handle_post_rename(result)
 
         -- populate QF list
         local buffer = vim.uri_to_bufnr(uri)
+
         vim.fn.bufload(buffer)
 
         for _, edit in ipairs(edits) do

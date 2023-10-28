@@ -42,6 +42,14 @@ vim.keymap.set("i", "<C-BS>", "<C-w>", { desc = "Delete word" })
 vim.keymap.set(
     "i", "<Tab>",
     function()
+        if package.loaded["copilot"] then
+            local copilot = require "copilot.suggestion"
+            if copilot.is_visible() then
+                copilot.accept()
+                return
+            end
+        end
+
         local has_before, has_after = ui.cursor_word_relation()
         if not has_before and has_after then
             return "<C-t>"
@@ -55,6 +63,9 @@ vim.keymap.set(
 vim.keymap.set("i", "<S-Tab>", "<C-d>", { desc = "Unindent" })
 vim.keymap.set("n", "<Tab>", ">>", { desc = "Indent" })
 vim.keymap.set("n", "<S-Tab>", "<<", { desc = "Indent" })
+
+vim.keymap.set({ "i", "n" }, "<PageUp>", function() return vim.api.nvim_win_get_height(0) .. "kzz" end, { desc = "Page up", expr = true })
+vim.keymap.set({ "i", "n" }, "<PageDown>", function() return vim.api.nvim_win_get_height(0) .. "jzz" end, { desc = "Page down", expr = true })
 
 -- Disable the annoying yank on chnage
 vim.keymap.set({ "n", "x" }, "c", [["_c]], { desc = "Change" })
@@ -77,6 +88,7 @@ vim.keymap.set("t", "<esc><esc>", "<c-\\><c-n>", { desc = "Enter normal mode" })
 -- buffer management
 vim.keymap.set("n", "<leader><leader>", function() pcall(vim.cmd, "e #") end, { desc = "Switch buffer", silent = true })
 vim.keymap.set("n", "<leader>bw", "<cmd>w<cr>", { desc = "Save buffer" })
+
 vim.keymap.set("n", "[b", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
 vim.keymap.set("n", "]b", "<cmd>bnext<cr>", { desc = "Next buffer" })
 
@@ -179,3 +191,9 @@ vim.keymap.set(
     end,
     { desc = "Toggle treesitter highlighting" }
 )
+
+-- Specials using "Command/Super" key (when available!)
+vim.keymap.set("n", "<M-]>", "<C-i>")
+vim.keymap.set("n", "<M-[>", "<C-o>")
+vim.keymap.set("n", "<M-s>", "<cmd>w<cr>", { desc = "Save buffer" })
+vim.keymap.set({ "n", "x" }, "<M-x>", "d")

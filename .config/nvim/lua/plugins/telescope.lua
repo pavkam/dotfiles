@@ -62,6 +62,10 @@ return {
 
             { "<leader>sm", function() require("telescope.builtin").diagnostics { bufnr = 0 } end, desc = "Buffer diagnostics" },
             { "<leader>sM", function() require("telescope.builtin").diagnostics() end, desc = "All diagnostics" },
+            { "<leader>se", function() require("telescope.builtin").diagnostics { bufnr = 0, severity = "ERROR" } end, desc = "Buffer errors" },
+            { "<leader>sE", function() require("telescope.builtin").diagnostics { severity = "ERROR" } end, desc = "All errors" },
+            { "<leader>sw", function() require("telescope.builtin").diagnostics { bufnr = 0, severity = "WARN" } end, desc = "Buffer warnings" },
+            { "<leader>sW", function() require("telescope.builtin").diagnostics { severity = "WARN" } end, desc = "All warnings" },
 
             { "<leader>un", function() require("telescope").extensions.notify.notify() end, desc = "Browse notifications" },
         },

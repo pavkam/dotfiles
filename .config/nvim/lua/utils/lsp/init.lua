@@ -28,13 +28,21 @@ local function get_null_ls_sources(filetype)
     return registered
 end
 
+function M.is_special(client)
+    assert(client and client.name)
+
+    return client.name == "null-ls" or client.name == "copilot"
+end
+
 function M.client_has_capability(client, method)
-    assert(client ~= nil)
+    assert(client and client.supports_method)
 
     return client.supports_method(normalize_capability(method))
 end
 
 function M.buffer_has_capability(buffer, method)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
     local clients = vim.lsp.get_active_clients({ bufnr = buffer })
     for _, client in ipairs(clients) do
         if M.client_has_capability(client, method) then
@@ -48,6 +56,8 @@ end
 function M.notify_file_renamed(from, to)
     from = utils.stringify(from)
     from = utils.stringify(to)
+
+    assert(from and to)
 
     local clients = vim.lsp.get_active_clients()
 
@@ -81,6 +91,8 @@ function M.on_attach(callback, target)
 end
 
 function M.on_capability_event(events, capability, buffer, callback)
+    assert(type(callback) == "function")
+
     capability = normalize_capability(capability)
     events = utils.to_list(events)
 
@@ -111,10 +123,8 @@ function M.active_names_for_buffer(buffer)
     local buf_client_names = {}
 
     for _, client in pairs(vim.lsp.get_active_clients { bufnr = buffer }) do
-        if client.name == "null-ls" then
-            buf_client_names = utils.list_insert_unique(buf_client_names, get_null_ls_sources(filetype))
-        elseif client.name ~= "copilot" then
-            buf_client_names = utils.list_insert_unique(buf_client_names, client.name)
+        if not M.is_special(client) then
+            buf_client_names[#buf_client_names + 1] = client.name
         end
     end
 
@@ -125,11 +135,14 @@ function M.any_active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_active_clients({ bufnr = buffer })
 
-    return #clients > 1 or (#clients == 1 and clients[1].name ~= "copilot")
+    return #clients > 1 or (#clients == 1 and not M.is_special(clients[1]))
 end
 
 function M.is_active_for_buffer(buffer, name)
     buffer = buffer or vim.api.nvim_get_current_buf()
+    name = utils.stringify(name)
+
+    assert(name)
 
     local ok, clients = pcall(vim.lsp.get_active_clients, { name = name, bufnr = buffer })
 

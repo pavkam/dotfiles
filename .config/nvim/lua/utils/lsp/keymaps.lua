@@ -94,17 +94,14 @@ function M.attach(client, buffer)
         vim.lsp.codelens.refresh()
     end
 
-    -- disable when using symbol-usage plugin
-    if not package.loaded["symbol-usage"] then
-        lsp.on_capability_event(
-            { "InsertLeave", "BufEnter" },
-            "codeLens",
-            buffer,
-            function()
-                vim.lsp.codelens.refresh()
-            end
-        )
-    end
+    lsp.on_capability_event(
+        { "InsertLeave", "BufEnter" },
+        "codeLens",
+        buffer,
+        function(buffer)
+            vim.lsp.codelens.refresh()
+        end
+    )
 
     lsp.on_capability_event(
          { "CursorHold", "CursorHoldI" },

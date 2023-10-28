@@ -22,6 +22,7 @@ return {
             utils.trigger_user_event("CopilotLuaLineUpdate")
         end
 
+        -- TODO: this fucks up with the lua line if these events happen in a different buffer.
         local
             linters_text,
             linters_cond,

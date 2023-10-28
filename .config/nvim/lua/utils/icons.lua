@@ -119,6 +119,7 @@ local M = {
         Explorer = " ",
         Speed = "⚡",
         Clock = "",
+        Replace = "󰛔",
     },
 }
 

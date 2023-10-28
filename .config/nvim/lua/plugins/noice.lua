@@ -1,3 +1,5 @@
+local icons = require "utils.icons"
+
 return {
     "folke/noice.nvim",
     event = "VeryLazy",
@@ -26,6 +28,13 @@ return {
                 view = "mini",
             },
         },
+        cmdline = {
+            format = {
+                replace_selection = { kind = "search", pattern = [[^:s/]], icon = icons.UI.Replace, lang = "regex" },
+                replace_global = { kind = "search", pattern = [[^:g/]], icon = icons.UI.Replace, lang = "regex" },
+            },
+        },
+
         presets = {
             bottom_search = true,
             command_palette = true,

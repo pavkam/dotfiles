@@ -38,18 +38,19 @@ utils.on_event(
     end
 )
 
+-- TODO: not working in help buffers
 -- close some filetypes with <q>
 utils.on_event(
     "FileType",
     function(evt)
         vim.bo[evt.buf].buflisted = false
 
-        local has_mapping = vim.tbl_isempty(vim.fn.maparg("q", "n", 0, 1))
+        local has_mapping = not vim.tbl_isempty(vim.fn.maparg("q", "n", 0, 1))
         if not has_mapping then
             vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = evt.buf, silent = true, remap = true })
         end
     end,
-    ui.attach_q_key_file_types
+    ui.special_file_types
 )
 
 -- wrap and check for spell in text filetypes
@@ -92,6 +93,9 @@ utils.on_event(
                         text = line
                     },
                 }, "a")
+
+                vim.api.nvim_command("copen")
+                vim.api.nvim_command("wincmd p")
             end,
             { desc = "Add quick-fix item" }
         )
@@ -114,6 +118,9 @@ utils.on_event(
                         text = line
                     },
                 }, "a")
+
+                vim.api.nvim_command("lopen")
+                vim.api.nvim_command("wincmd p")
             end,
             { desc = "Add location item" }
         )
@@ -143,10 +150,13 @@ utils.on_event(
 
             table.remove(list, r)
 
+            local close = #list == 0
             if qftype == "l" then
                 vim.fn.setloclist(0, list)
+                vim.cmd("lclose")
             else
                 vim.fn.setqflist(list)
+                vim.cmd("cclose")
             end
 
             r = math.min(r, #list)
@@ -157,7 +167,6 @@ utils.on_event(
 
         vim.keymap.set('n', '<del>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
         vim.keymap.set('n', '<bs>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
-        vim.keymap.set("n", "q", "<cmd>close<cr>", { desc = "Close list", buffer = evt.buf, silent = true, remap = true })
     end,
     "qf"
 )
@@ -248,6 +257,7 @@ utils.on_event(
 utils.on_event(
     { "LspDetach" },
     function(evt)
+        -- TODO: only compain once per client not per buffer!
         local client = vim.lsp.get_client_by_id(evt.data.client_id)
         utils.warn("Language Server *" .. client.name .. "* has detached!")
     end

@@ -1,5 +1,6 @@
 return {
     "luukvbaal/statuscol.nvim",
+    enabled = false,
     lazy = false,
     config = function()
         local builtin = require "statuscol.builtin"

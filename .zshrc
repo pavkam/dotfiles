@@ -293,11 +293,24 @@ alias vi=nvim
 alias vim=nvim
 
 sesh() {
-    OPTIONS=$(
-        tmux ls -F "#{session_name}" && \
-        [ "$PROJECTS_ROOT" != "" ] && fd -c never --hidden --relative-path --base-directory $PROJECTS_ROOT .git$ -t directory -E .github | xargs dirname && \
+    if [ "$TMUX" != "" ]; then
+        echo "Already in a tmux session! Detach bro!"
+        return 1
+    fi
+
+    local TMUX_SESSIONS=""
+    tmux ls 2>/dev/null 1>/dev/null && TMUX_SESSIONS=$(tmux ls -F "#{session_name}")
+
+    local PROJECTS=$(
+        [ "$PROJECTS_ROOT" != "" ] && fd -c never --hidden --relative-path --base-directory $PROJECTS_ROOT .git$ -t directory -E .github | xargs dirname
+    )
+
+    local OPTIONS=$(
+        [ "$TMUX_SESSIONS" != "" ] && echo $TMUX_SESSIONS
+        [ "$PROJECTS" != "" ] && echo $PROJECTS
         echo "+new"
     )
+
     OPTIONS=$(echo "$OPTIONS" | sort | uniq)
 
     local SESSION=$(echo $OPTIONS | fzf --reverse --preview-window 'right:80%:nohidden' --preview="[ '{}' != '+new' ] && tmux capture-pane -e -pt {} 2> /dev/null || echo 'Session not running'")
