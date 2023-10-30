@@ -5,59 +5,19 @@ return {
     },
     event = "VeryLazy",
     opts = function()
-        local utils = require "utils"
+
         local ui = require "utils.ui"
         local icons = require "utils.icons"
         local lsp = require "utils.lsp"
         local format = require "utils.format"
         local lint = require "utils.lint"
+        local settings = require "utils.settings"
 
         local copilot_colors = {
             ["Normal"] = ui.hl_fg_color("Special"),
             ["Warning"] = ui.hl_fg_color("DiagnosticError"),
             ["InProgress"] = ui.hl_fg_color("DiagnosticWarn"),
         }
-
-        local function schedule_update_copilot()
-            utils.trigger_user_event("CopilotLuaLineUpdate")
-        end
-
-        -- TODO: this fucks up with the lua line if these events happen in a different buffer.
-        local
-            linters_text,
-            linters_cond,
-            formatters_text,
-            formatters_cond,
-            lsp_text,
-            lsp_cond,
-            copilot_cond = utils.event_memoized({ "BufEnter", "LspAttach", "LspDetach" }, "*",
-                function(buffer) return ui.sexy_list(lint.active_names_for_buffer(buffer), icons.UI.Lint) end,
-                function(buffer) return lint.active_for_buffer(buffer) end,
-                function(buffer) return ui.sexy_list(format.active_names_for_buffer(buffer), icons.UI.Format) end,
-                function(buffer) return format.active_for_buffer(buffer) end,
-                function(buffer) return ui.sexy_list(lsp.active_names_for_buffer(buffer), icons.UI.LSP) end,
-                function(buffer) return lsp.any_active_for_buffer() end,
-                function(buffer)
-                    local is_active = lsp.is_active_for_buffer(buffer, "copilot")
-                    if is_active then
-                        require("copilot.api").register_status_notification_handler(schedule_update_copilot)
-                        schedule_update_copilot()
-                    end
-
-                    return is_active
-                end
-            )
-
-        local
-            copilot_text,
-            copilot_color = utils.user_event_memoized("CopilotLuaLineUpdate",
-                function()
-                    return icons.Symbols.Copilot .. " " .. (require("copilot.api").status.data.message or "")
-                end,
-                function()
-                    return copilot_colors[require("copilot.api").status.data.status] or copilot_colors["Normal"]
-                end
-            )
 
         return {
             options = {
@@ -93,30 +53,34 @@ return {
                 },
                 lualine_x = {
                      {
-                        linters_text,
-                        cond = linters_cond,
+                        settings.transient(function(buffer) return ui.sexy_list(lint.active_names_for_buffer(buffer), icons.UI.Lint) end),
+                        cond = settings.transient(function(buffer) return lint.active_for_buffer(buffer) end),
                         color = ui.hl_fg_color("DiagnosticWarn"),
                     },
                     {
-                        formatters_text,
-                        cond = formatters_cond,
+                        settings.transient(function(buffer) return ui.sexy_list(format.active_names_for_buffer(buffer), icons.UI.Format) end),
+                        cond = settings.transient(function(buffer) return format.active_for_buffer(buffer) end),
                         color = ui.hl_fg_color("DiagnosticOk"),
                         on_click = function()
                             vim.cmd("ConformInfo")
                         end
                     },
                     {
-                        lsp_text,
-                        cond = lsp_cond,
+                        function() return ui.sexy_list(lsp.active_names_for_buffer(buffer), icons.UI.LSP) end,
+                        cond = settings.transient(function(buffer)
+                             return lsp.any_active_for_buffer()
+                        end),
                         color = ui.hl_fg_color("Title"),
                         on_click = function()
                             vim.cmd("LspInfo")
                         end
                     },
                     {
-                        copilot_text,
-                        cond = copilot_cond,
-                        color = copilot_color,
+                        function() return icons.Symbols.Copilot .. " " .. (require("copilot.api").status.data.message or "") end,
+                        cond = settings.transient(function(buffer) return lsp.is_active_for_buffer(buffer, "copilot") end),
+                        color = function()
+                            return copilot_colors[require("copilot.api").status.data.status] or copilot_colors["Normal"]
+                        end,
                     },
                 },
                 lualine_y = {
@@ -162,5 +126,15 @@ return {
             },
             extensions = { "neo-tree", "lazy" },
         }
+    end,
+    config = function(_, opts)
+        local utils = require "utils"
+        local lualine = require "lualine"
+
+        lualine.setup(opts)
+
+        utils.on_user_event("CopilotStatusUpdate", function()
+            lualine.refresh()
+        end)
     end
 }

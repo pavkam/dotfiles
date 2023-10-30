@@ -119,7 +119,6 @@ end
 function M.active_names_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local filetype = vim.api.nvim_get_option_value("filetype", { buf = buffer })
     local buf_client_names = {}
 
     for _, client in pairs(vim.lsp.get_active_clients { bufnr = buffer }) do

@@ -561,6 +561,7 @@ link .zprofile
 link .zshrc.p10k
 link .curlrc
 link .wgetrc
+link .ideavimrc
 link .nuget/NuGet/NuGet.Config
 link .config/mc
 link .config/htop

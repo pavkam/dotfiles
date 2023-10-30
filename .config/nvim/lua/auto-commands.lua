@@ -1,4 +1,5 @@
 local utils = require 'utils'
+local settings = require 'utils.settings'
 local ui = require 'utils.ui'
 
 -- highlight on yank
@@ -66,6 +67,7 @@ utils.on_event(
     }
 )
 
+-- TODO: move to keymaps
 -- quick-fix functionality
 utils.on_event(
     "FileType",
@@ -127,50 +129,6 @@ utils.on_event(
     end
 )
 
-utils.on_event(
-    "FileType",
-    function(evt)
-        vim.keymap.set('n', 'x', function ()
-            if package.loaded["bqf"] then
-                require('bqf').hidePreviewWindow()
-            end
-
-            local info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
-            local qftype
-            if info.quickfix == 0 then
-                qftype = nil
-            elseif info.loclist == 0 then
-                qftype = "c"
-            else
-                qftype = "l"
-            end
-
-            local list = qftype == "l" and vim.fn.getloclist(0) or vim.fn.getqflist()
-            local r, c = unpack(vim.api.nvim_win_get_cursor(0))
-
-            table.remove(list, r)
-
-            local close = #list == 0
-            if qftype == "l" then
-                vim.fn.setloclist(0, list)
-                vim.cmd("lclose")
-            else
-                vim.fn.setqflist(list)
-                vim.cmd("cclose")
-            end
-
-            r = math.min(r, #list)
-            if (r > 0) then
-                vim.api.nvim_win_set_cursor(0, { r, c })
-            end
-        end, { desc = 'Remove item', buffer = evt.buf })
-
-        vim.keymap.set('n', '<del>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
-        vim.keymap.set('n', '<bs>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
-    end,
-    "qf"
-)
-
 -- Auto create dir when saving a file, in case some intermediate directory does not exist
 utils.on_event(
     "BufWritePre",
@@ -181,17 +139,6 @@ utils.on_event(
 
         local file = vim.loop.fs_realpath(evt.match) or evt.match
         vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
-    end
-)
-
--- HACK: re-caclulate folds when entering a buffer through Telescope
--- @see https://github.com/nvim-telescope/telescope.nvim/issues/699
-utils.on_event(
-    "BufEnter",
-    function()
-        if vim.opt.foldmethod:get() == "expr" then
-            vim.schedule(function() vim.opt.foldmethod = "expr" end)
-        end
     end
 )
 
@@ -210,45 +157,38 @@ vim.on_key(
 
 -- HACK: Disable custom statuscolumn for terminals because truncation/wrapping bug
 -- https://github.com/neovim/neovim/issues/25472
-utils.on_event(
-    "TermOpen",
-    function()
-        vim.opt_local.foldcolumn = "0"
-        vim.opt_local.signcolumn = "no"
-        vim.opt_local.statuscolumn = nil
-    end
-)
+-- utils.on_event(
+--     "TermOpen",
+--     function()
+--         vim.opt_local.foldcolumn = "0"
+--         vim.opt_local.signcolumn = "no"
+--         vim.opt_local.statuscolumn = nil
+--     end
+-- )
+-- TODO: this is probably gone!
 
 -- mkview and loadview for real files
 utils.on_event(
     { "BufWinLeave", "BufWritePost", "WinLeave" },
     function(args)
-        if vim.b[args.buf].view_activated then vim.cmd.mkview { mods = { emsg_silent = true } } end
+        if settings.get_permanent_for_buffer(args.buf, "view_activated") then
+            vim.cmd.mkview { mods = { emsg_silent = true } }
+        end
     end
 )
 
 utils.on_event(
     "BufWinEnter",
     function(evt)
-        if not vim.b[evt.buf].view_activated then
+        if not settings.get_permanent_for_buffer(evt.buf, "view_activated") then
             local filetype = vim.api.nvim_get_option_value("filetype", { buf = evt.buf })
             local buftype = vim.api.nvim_get_option_value("buftype", { buf = evt.buf })
             local ignore_filetypes = { "gitcommit", "gitrebase", "svg", "hgcommit" }
 
             if buftype == "" and filetype and filetype ~= "" and not vim.tbl_contains(ignore_filetypes, filetype) then
-                vim.b[evt.buf].view_activated = true
+                settings.set_permanent_for_buffer(evt.buf, "view_activated", true)
                 vim.cmd.loadview { mods = { emsg_silent = true } }
             end
-        end
-    end
-)
-
--- clear root path cache when LSP changes
-utils.on_event(
-    { "LspDetach", "LspAttach", "BufWritePost" },
-    function(evt)
-        if vim.api.nvim_buf_is_valid(evt.buf) then
-            vim.b[evt.buf].root_path_cache = nil
         end
     end
 )
@@ -270,7 +210,7 @@ utils.on_event(
         local current_file = vim.fn.resolve(vim.fn.expand "%")
 
         -- if custom events have been triggered, bail
-        if vim.b[evt.buf].custom_events_triggered then
+        if settings.get_permanent_for_buffer(evt.buf, "custom_events_triggered") then
             return
         end
 
@@ -284,7 +224,7 @@ utils.on_event(
 
         -- do not retrigger these events if the file name is set
         if current_file ~= "" then
-            vim.b[evt.buf].custom_events_triggered = true
+            settings.set_permanent_for_buffer(evt.buf, "custom_events_triggered", true)
         end
     end
 )

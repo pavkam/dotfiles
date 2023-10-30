@@ -1,6 +1,9 @@
 local utils = require "utils"
+local settings = require "utils.settings"
 
 local M = {}
+
+local setting_name = "format_enabled"
 
 local function formatters(buffer)
     local conform = require "conform"
@@ -23,8 +26,16 @@ function M.active_for_buffer(buffer)
     return #formatters(buffer) > 0
 end
 
-function M.apply(buffer, injected)
+function M.apply(buffer, force, injected)
     local conform = require "conform"
+
+    settings.get_permanent_for_buffer(buffer, "auto_format_enabled", true)
+    if not force and (
+        not settings.get_global(setting_name, true) or
+        not settings.get_permanent_for_buffer(buffer, "auto_format_enabled", true)
+    ) then
+        return
+    end
 
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -37,52 +48,21 @@ function M.apply(buffer, injected)
     conform.format(utils.tbl_merge({ bufnr = buffer }, additional))
 end
 
-function M.enabled_for_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local enabled = vim.api.nvim_buf_is_valid(buffer) and vim.b[buffer].conform_auto_format_enabled
-    if enabled == nil or enabled == true then
-        return true
-    end
-
-    return false
-end
-
 function M.toggle_for_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
+    local enabled = settings.get_permanent_for_buffer(buffer, setting_name, true)
 
-    local enabled = M.enabled_for_buffer(buffer)
+    utils.info(string.format("Turning **%s** auto-formatting for *%s*.", enabled and "off" or "on", vim.fn.expand("%:t"))) -- TODO: get name of the passed buffer
+    settings.set_permanent_for_buffer(buffer, setting_name, not enabled)
 
-    utils.info(string.format("Turning **%s** auto-formatting for *%s*.", enabled and "off" or "on", vim.fn.expand("%:t")))
-    vim.b[buffer].format_enabled = not enabled
-
-    if enabled then
-        vim.b[buffer].format_enabled = false
-    else
-        vim.b[buffer].format_enabled = true
-    end
-end
-
-function M.enabled()
-    local enabled = vim.g.format_enabled
-    if enabled == nil or enabled == true then
-        return true
-    end
-
-    return false
+    -- TODO: format on enable
 end
 
 function M.toggle()
-    local enabled = M.enabled()
+    local enabled = settings.get_global(setting_name, true)
 
     utils.info(string.format("Turning **%s** auto-formatting *globally*.", enabled and "off" or "on"))
-    vim.g.format_enabled = not enabled
-
-    if enabled then
-        vim.g.format_enabled = false
-    else
-        vim.g.format_enabled = true
-    end
+    settings.set_global(setting_name, not enabled)
+    -- TODO: format on enable
 end
 
 return M

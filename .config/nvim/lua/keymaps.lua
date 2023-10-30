@@ -1,4 +1,6 @@
 local ui = require "utils.ui"
+local utils = require "utils"
+local settings = require "utils.settings"
 
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
@@ -123,6 +125,46 @@ vim.keymap.set("n", "<leader[q", "<cmd>cprev<cr>", { desc = "Previous quick-fix 
 vim.keymap.set("n", "<leader]l", "<cmd>lnext<cr>", { desc = "Next location item" })
 vim.keymap.set("n", "<leader[l", "<cmd>lprev<cr>", { desc = "Previous location item" })
 
+utils.attach_keymaps("qf", function(set)
+    set('n', 'x', function ()
+        if package.loaded["bqf"] then
+            require('bqf').hidePreviewWindow()
+        end
+
+        local info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
+        local qftype
+        if info.quickfix == 0 then
+            qftype = nil
+        elseif info.loclist == 0 then
+            qftype = "c"
+        else
+            qftype = "l"
+        end
+
+        local list = qftype == "l" and vim.fn.getloclist(0) or vim.fn.getqflist()
+        local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+
+        table.remove(list, r)
+
+        local close = #list == 0
+        if qftype == "l" then
+            vim.fn.setloclist(0, list)
+            vim.cmd("lclose")
+        else
+            vim.fn.setqflist(list)
+            vim.cmd("cclose")
+        end
+
+        r = math.min(r, #list)
+        if (r > 0) then
+            vim.api.nvim_win_set_cursor(0, { r, c })
+        end
+    end, { desc = 'Remove item', buffer = evt.buf })
+
+    set('n', '<del>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
+    set('n', '<bs>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
+end)
+
 -- diagnostics
 local function jump_to_diagnostic(next_or_prev, severity)
     local go = next_or_prev and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
@@ -161,8 +203,7 @@ vim.keymap.set(
 vim.keymap.set(
     "n", "<leader>um",
     function()
-        local buffer = vim.api.nvim_get_current_buf()
-        local enabled = vim.b[buffer].diagnostics_enabled or true
+        local enabled = settings.get_permanent_for_buffer(buffer, "diagnostics_enabled", true)
 
         utils.info(string.format("Turning diagnostics **%s** for *%s*.", enabled and "off" or "on", vim.fn.expand("%:t")))
 
@@ -172,7 +213,7 @@ vim.keymap.set(
             vim.diagnostic.enable(buffer)
         end
 
-        vim.b[buffer].diagnostics_enabled = not enabled
+        settings.set_permanent_for_buffer(buffer, "diagnostics_enabled", not enabled)
     end,
     { desc = "Toggle buffer diagnostics" }
 )

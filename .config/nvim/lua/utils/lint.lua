@@ -1,8 +1,11 @@
 local utils = require "utils"
 local lsp = require "utils.lsp"
 local project = require "utils.project"
+local settings = require "utils.settings"
 
 local M = {}
+
+local setting_name = "auto_linting_enabled"
 
 local function linters(buffer)
     if not package.loaded["lint"] then
@@ -36,8 +39,11 @@ function M.active_for_buffer(buffer)
     return #linters(buffer) > 0
 end
 
-function M.apply(buffer)
-    if not M.enabled() or not M.enabled_for_buffer(buffer) then
+function M.apply(buffer, force)
+    if not force and (
+        not settings.get_global(setting_name, true) or
+        not settings.get_permanent_for_buffer(buffer, setting_name, true)
+    ) then
         return
     end
 
@@ -65,56 +71,30 @@ function M.apply(buffer)
     end)
 end
 
-function M.enabled_for_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local enabled = vim.api.nvim_buf_is_valid(buffer) and vim.b[buffer].linting_enabled
-    if enabled == nil or enabled == true then
-        return true
-    end
-
-    return false
-end
-
 function M.toggle_for_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
+    local enabled = settings.get_permanent_for_buffer(buffer, setting_name, true)
 
-    if not vim.api.nvim_buf_is_valid(buffer) then
-        return
-    end
-
-    local enabled = M.enabled_for_buffer(buffer)
-
-    utils.info(string.format("Turning **%s** auto-linting for *%s*.", enabled and "off" or "on", vim.fn.expand("%:t")))
-    vim.b[buffer].linting_enabled = not enabled
+    utils.info(string.format("Turning **%s** auto-linting for *%s*.", enabled and "off" or "on", vim.fn.expand("%:t"))) -- TODO get the actual name of the buffer
+    settings.set_permanent_for_buffer(buffer, setting_name, not enabled)
 
     if enabled then
         -- clear diagnostics from buffer linters
-        lsp.clear_diagnostics(linters(buffer), buffer)
+        lsp.clear_diagnostics(linters(buffer), buffer) -- TODO: this will fail
     else
         -- re-lint
         M.apply(buffer)
     end
 end
 
-function M.enabled()
-    local enabled = vim.g.linting_enabled
-    if enabled == nil or enabled == true then
-        return true
-    end
-
-    return false
-end
-
 function M.toggle()
-    local enabled = M.enabled()
+    local enabled = settings.get_global(setting_name, true)
 
     utils.info(string.format("Turning **%s** auto-linting *globally*.", enabled and "off" or "on"))
-    vim.g.linting_enabled = not enabled
+    settings.set_global(setting_name, not enabled)
 
     if enabled then
         -- clear diagnostics from all buffers
-        for _, buffer in ipairs(utils.get_listed_buffers()) do
+        for _, buffer in ipairs(utils.get_listed_buffers()) do -- TODO: this will fail
             lsp.clear_diagnostics(linters(buffer), buffer)
         end
     else

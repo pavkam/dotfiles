@@ -5,35 +5,25 @@ return {
     keys = {
         {
             "<leader>sj",
-            function()
-                local format = require "utils.format"
-                format.apply(nil, true)
-            end,
+            function() require("utils.format").apply(nil, true, true) end,
             mode = { "n", "v" },
             desc = "Format buffer injected",
         },
         {
             "<leader>sf",
-            function()
-                local format = require "utils.format"
-                format.apply(nil)
-            end,
+            function() require("utils.format").apply(nil, true) end,
             mode = { "n", "v" },
             desc = "Format buffer",
         },
         {
             "<leader>uf",
-            function()
-                require("utils.format").toggle_for_buffer()
-            end,
+            function() require("utils.format").toggle_for_buffer() end,
             mode = { "n" },
             desc = "Toggle buffer auto-formatting",
         },
         {
             "<leader>uF",
-            function()
-                require("utils.format").toggle()
-            end,
+            function() require("utils.format").toggle() end,
             mode = { "n" },
             desc = "Toggle global auto-formatting",
         },
@@ -96,11 +86,7 @@ return {
         utils.on_event(
             "BufWritePre",
              function(evt)
-                local format = require "utils.format"
-
-                if format.enabled() and format.enabled_for_buffer(evt.buf) then
-                    format.apply(evt.buf)
-                end
+                require("utils.format").apply(evt.buf)
             end,
             "*"
         )

@@ -23,6 +23,7 @@ return {
                         { find = "%d+L, %d+B" },
                         { find = "; after #%d+" },
                         { find = "; before #%d+" },
+                        { find = "%d+ lines yanked" },
                     },
                 },
                 view = "mini",

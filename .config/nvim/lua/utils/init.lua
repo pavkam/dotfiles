@@ -147,6 +147,22 @@ function M.on_user_event(event, callback)
     M.on_event("User", function(evt) callback(evt.match, evt) end, event)
 end
 
+function M.attach_keymaps(file_types, callback)
+    assert(type(callback) == "function")
+    file_types = M.to_list(file_types)
+
+    M.on_event(
+        "FileType",
+        function(evt)
+            local mapper = function(mode, lhs, rhs, opts)
+                vim.keymap.set(mode, lhs, rhs, M.tbl_merge({ buffer = evt.buf }, opts or {}))
+            end
+            callback(mapper)
+        end,
+        file_types
+    )
+end
+
 function M.debounce(ms, callback)
     assert(type(ms) == "number" and ms > 0)
     assert(type(callback) == "function")
@@ -158,35 +174,6 @@ function M.debounce(ms, callback)
         timer:stop()
         wrapped()
     end)
-end
-
-function M.event_memoized(event, pattern, ...)
-    local funcs = {...}
-    assert(#funcs > 0)
-
-    -- create memoized functions using a local cache
-    local cache = {}
-    local out_functions = {}
-    for i, func in ipairs(funcs) do
-        assert(type(func) == "function")
-        table.insert(out_functions, function() return cache[i] end)
-    end
-
-    M.on_event(
-        event,
-        function(evt)
-            for i, func in ipairs(funcs) do
-                cache[i] = func(evt.buf)
-            end
-        end,
-        pattern
-    )
-
-    return unpack(out_functions)
-end
-
-function M.user_event_memoized(event, ...)
-    return M.event_memoized("User", event, ...)
 end
 
 function M.trigger_user_event(event, data)
@@ -220,12 +207,14 @@ end
 local terminals = {}
 
 function M.float_term(cmd, opts)
-    opts = vim.tbl_deep_extend("force", {
+    cmd = M.stringify(cmd)
+
+    opts = utils.tbl_merge({
         ft = "lazyterm",
         size = { width = 0.9, height = 0.9 },
     }, opts or {}, { persistent = true })
 
-  local termkey = vim.inspect({
+    local termkey = vim.inspect({
         cmd = cmd or "shell",
         cwd = opts.cwd,
         env = opts.env,
@@ -238,7 +227,7 @@ function M.float_term(cmd, opts)
         terminals[termkey] = require("lazy.util").float_term(cmd, opts)
 
         local buf = terminals[termkey].buf
-        vim.b[buf].lazyterm_cmd = cmd
+        -- vim.b[buf].lazyterm_cmd = cmd -- TODO why?
 
         vim.api.nvim_create_autocmd(
             "BufEnter",
@@ -272,7 +261,7 @@ function M.get_listed_buffers()
         return (
             vim.api.nvim_buf_is_valid(b) and
             vim.api.nvim_buf_is_loaded(b) and
-            true --vim.b[b].buflisted
+            true --vim.b[b].buflisted -- TODO: why?
         )
     end, vim.api.nvim_list_bufs())
 end

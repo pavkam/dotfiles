@@ -1,5 +1,8 @@
 local lsp = require "utils.lsp"
 local utils = require "utils"
+local settings = require "utils.settings"
+
+local setting_name = "root_paths"
 
 local M = {}
 
@@ -36,13 +39,13 @@ function M.roots(target)
     local buffer, path = utils.expand_target(target)
 
     -- check for cached roots
-    local valid_buffer = vim.api.nvim_buf_is_valid(buffer)
-    if valid_buffer and vim.b[buffer].root_path_cache then
-        return vim.b[buffer].root_path_cache
+    local roots = settings.get_transient_for_buffer(buffer, setting_name)
+    if roots then
+        return roots
     end
 
     -- obtain all LSP roots
-    local roots = lsp.roots(target)
+    roots = lsp.roots(target)
 
     -- find also roots based on patterns
     local cwd = vim.loop.cwd()
@@ -68,10 +71,7 @@ function M.roots(target)
     table.sort(roots, function(a, b) return #a > #b end)
 
     -- cache the roots for buffer
-    if valid_buffer then
-        vim.b[buffer].root_path_cache = roots
-    end
-
+    settings.set_transient_for_buffer(buffer, setting_name, roots)
     return roots
 end
 
