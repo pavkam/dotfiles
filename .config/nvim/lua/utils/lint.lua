@@ -72,14 +72,18 @@ function M.apply(buffer, force)
 end
 
 function M.toggle_for_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
     local enabled = settings.get_permanent_for_buffer(buffer, setting_name, true)
 
-    utils.info(string.format("Turning **%s** auto-linting for *%s*.", enabled and "off" or "on", vim.fn.expand("%:t"))) -- TODO get the actual name of the buffer
+    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ":t")
+
+    utils.info(string.format("Turning **%s** auto-linting for *%s*.", enabled and "off" or "on", file_name))
     settings.set_permanent_for_buffer(buffer, setting_name, not enabled)
 
     if enabled then
         -- clear diagnostics from buffer linters
-        lsp.clear_diagnostics(linters(buffer), buffer) -- TODO: this will fail
+        lsp.clear_diagnostics(linters(buffer), buffer)
     else
         -- re-lint
         M.apply(buffer)
@@ -94,7 +98,7 @@ function M.toggle()
 
     if enabled then
         -- clear diagnostics from all buffers
-        for _, buffer in ipairs(utils.get_listed_buffers()) do -- TODO: this will fail
+        for _, buffer in ipairs(utils.get_listed_buffers()) do
             lsp.clear_diagnostics(linters(buffer), buffer)
         end
     else

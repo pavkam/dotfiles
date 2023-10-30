@@ -39,93 +39,18 @@ utils.on_event(
     end
 )
 
--- TODO: not working in help buffers
--- close some filetypes with <q>
+-- configure some special buffers
 utils.on_event(
     "FileType",
     function(evt)
-        vim.bo[evt.buf].buflisted = false
-
-        local has_mapping = not vim.tbl_isempty(vim.fn.maparg("q", "n", 0, 1))
-        if not has_mapping then
-            vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = evt.buf, silent = true, remap = true })
-        end
-    end,
-    ui.special_file_types
-)
-
--- wrap and check for spell in text filetypes
-utils.on_event(
-    "FileType",
-    function()
-        vim.opt_local.wrap = true
-        vim.opt_local.spell = true
-    end,
-    {
-        "gitcommit",
-        "markdown",
-    }
-)
-
--- TODO: move to keymaps
--- quick-fix functionality
-utils.on_event(
-    "FileType",
-    function(evt)
-        if ui.is_special_buffer(evt.buf) then
-            return
+        if utils.is_special_buffer(evt.buf) then
+            vim.bo[evt.buf].buflisted = false
         end
 
-        vim.keymap.set(
-            "n", "<leader>qa",
-            function ()
-                local r, c = unpack(vim.api.nvim_win_get_cursor(0))
-                local line = vim.api.nvim_get_current_line()
-                if not line or line == '' then
-                    line = '<empty>'
-                end
-
-                utils.info(string.format("Added position **%d:%d** to quick-fix list.", r, c))
-
-                vim.fn.setqflist({
-                    {
-                        bufnr = vim.api.nvim_get_current_buf(),
-                        lnum = r,
-                        col = c,
-                        text = line
-                    },
-                }, "a")
-
-                vim.api.nvim_command("copen")
-                vim.api.nvim_command("wincmd p")
-            end,
-            { desc = "Add quick-fix item" }
-        )
-
-        vim.keymap.set(
-            "n", "<leader>qA",
-            function ()
-                local r, c = unpack(vim.api.nvim_win_get_cursor(0))
-                local line = vim.api.nvim_get_current_line()
-                if not line or line == '' then
-                    line = '<empty>'
-                end
-
-                utils.info(string.format("Added position **%d:%d** to locations list.", r, c))
-                vim.fn.setloclist(0, {
-                    {
-                        bufnr = vim.api.nvim_get_current_buf(),
-                        lnum = r,
-                        col = c,
-                        text = line
-                    },
-                }, "a")
-
-                vim.api.nvim_command("lopen")
-                vim.api.nvim_command("wincmd p")
-            end,
-            { desc = "Add location item" }
-        )
+        if vim.tbl_contains({ "gitcommit", "markdown" }, vim.bo[evt.buf].filetype) then
+            vim.opt_local.wrap = true
+            vim.opt_local.spell = true
+        end
     end
 )
 
@@ -155,23 +80,11 @@ vim.on_key(
     vim.api.nvim_create_namespace("auto_hlsearch")
 )
 
--- HACK: Disable custom statuscolumn for terminals because truncation/wrapping bug
--- https://github.com/neovim/neovim/issues/25472
--- utils.on_event(
---     "TermOpen",
---     function()
---         vim.opt_local.foldcolumn = "0"
---         vim.opt_local.signcolumn = "no"
---         vim.opt_local.statuscolumn = nil
---     end
--- )
--- TODO: this is probably gone!
-
 -- mkview and loadview for real files
 utils.on_event(
     { "BufWinLeave", "BufWritePost", "WinLeave" },
-    function(args)
-        if settings.get_permanent_for_buffer(args.buf, "view_activated") then
+    function(evt)
+        if settings.get_permanent_for_buffer(evt.buf, "view_activated") then
             vim.cmd.mkview { mods = { emsg_silent = true } }
         end
     end
@@ -214,7 +127,7 @@ utils.on_event(
             return
         end
 
-        if not ui.is_special_buffer(evt.buf) then
+        if not utils.is_special_buffer(evt.buf) then
             utils.trigger_user_event("NormalFile")
 
             if utils.file_is_under_git(current_file) then

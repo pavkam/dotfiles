@@ -66,8 +66,18 @@ vim.keymap.set("i", "<S-Tab>", "<C-d>", { desc = "Unindent" })
 vim.keymap.set("n", "<Tab>", ">>", { desc = "Indent" })
 vim.keymap.set("n", "<S-Tab>", "<<", { desc = "Indent" })
 
-vim.keymap.set({ "i", "n" }, "<PageUp>", function() return vim.api.nvim_win_get_height(0) .. "kzz" end, { desc = "Page up", expr = true })
-vim.keymap.set({ "i", "n" }, "<PageDown>", function() return vim.api.nvim_win_get_height(0) .. "jzz" end, { desc = "Page down", expr = true })
+
+-- Better page up/down
+local function page_expr(dir)
+    jump = vim.api.nvim_win_get_height(0)
+    if vim.v.count > 0 then
+        jump = jump * vim.v.count
+    end
+
+    vim.cmd("normal! " .. jump .. dir .. "zz")
+end
+vim.keymap.set({ "i", "n" }, "<PageUp>", function() page_expr("k") end, { desc = "Page up" })
+vim.keymap.set({ "i", "n" }, "<PageDown>", function() page_expr("j") end, { desc = "Page down" })
 
 -- Disable the annoying yank on chnage
 vim.keymap.set({ "n", "x" }, "c", [["_c]], { desc = "Change" })
@@ -159,10 +169,63 @@ utils.attach_keymaps("qf", function(set)
         if (r > 0) then
             vim.api.nvim_win_set_cursor(0, { r, c })
         end
-    end, { desc = 'Remove item', buffer = evt.buf })
+    end, { desc = 'Remove item' })
 
-    set('n', '<del>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
-    set('n', '<bs>', 'x', { desc = "Remove item", buffer = evt.buf, remap = true })
+    set('n', '<del>', 'x', { desc = "Remove item", remap = true })
+    set('n', '<bs>', 'x', { desc = "Remove item", remap = true })
+end, true)
+
+utils.attach_keymaps(nil, function(set)
+    set(
+        "n", "<leader>qa",
+        function ()
+            local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+            local line = vim.api.nvim_get_current_line()
+            if not line or line == '' then
+                line = '<empty>'
+            end
+
+            utils.info(string.format("Added position **%d:%d** to quick-fix list.", r, c))
+
+            vim.fn.setqflist({
+                {
+                    bufnr = vim.api.nvim_get_current_buf(),
+                    lnum = r,
+                    col = c,
+                    text = line
+                },
+            }, "a")
+
+            vim.api.nvim_command("copen")
+            vim.api.nvim_command("wincmd p")
+        end,
+        { desc = "Add quick-fix item" }
+    )
+
+    set(
+        "n", "<leader>qA",
+        function ()
+            local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+            local line = vim.api.nvim_get_current_line()
+            if not line or line == '' then
+                line = '<empty>'
+            end
+
+            utils.info(string.format("Added position **%d:%d** to locations list.", r, c))
+            vim.fn.setloclist(0, {
+                {
+                    bufnr = vim.api.nvim_get_current_buf(),
+                    lnum = r,
+                    col = c,
+                    text = line
+                },
+            }, "a")
+
+            vim.api.nvim_command("lopen")
+            vim.api.nvim_command("wincmd p")
+        end,
+        { desc = "Add location item" }
+    )
 end)
 
 -- diagnostics
@@ -232,6 +295,15 @@ vim.keymap.set(
     end,
     { desc = "Toggle treesitter highlighting" }
 )
+
+-- Add "q" to special windows
+utils.attach_keymaps(utils.special_file_types, function(set)
+    set("n", "q", "<cmd>close<cr>", { silent = true, remap = true })
+end)
+
+utils.attach_keymaps("help", function(set)
+    set("n", "q", "<cmd>close<cr>", { silent = true, remap = true })
+end, true)
 
 -- Specials using "Command/Super" key (when available!)
 vim.keymap.set("n", "<M-]>", "<C-i>")

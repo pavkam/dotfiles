@@ -1,5 +1,5 @@
 local icons = require "utils.icons"
-local ui = require "utils.ui"
+local utils = require "utils"
 
 return {
     "nvim-neo-tree/neo-tree.nvim",
@@ -41,7 +41,7 @@ return {
                 { source = "document_symbols", display_name = icons.Symbols.Package .. " " .. "Symbols" },
             }
         },
-        open_files_do_not_replace_types = ui.special_file_types,
+        open_files_do_not_replace_types = utils.special_file_types,
         filesystem = {
             window = {
                 position = "float"

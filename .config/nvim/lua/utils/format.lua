@@ -49,12 +49,18 @@ function M.apply(buffer, force, injected)
 end
 
 function M.toggle_for_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
     local enabled = settings.get_permanent_for_buffer(buffer, setting_name, true)
 
-    utils.info(string.format("Turning **%s** auto-formatting for *%s*.", enabled and "off" or "on", vim.fn.expand("%:t"))) -- TODO: get name of the passed buffer
+    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ":t")
+    utils.info(string.format("Turning **%s** auto-formatting for *%s*.", enabled and "off" or "on", file_name))
     settings.set_permanent_for_buffer(buffer, setting_name, not enabled)
 
-    -- TODO: format on enable
+    if not enabled then
+        -- re-format
+        M.apply(buffer)
+    end
 end
 
 function M.toggle()
@@ -62,7 +68,13 @@ function M.toggle()
 
     utils.info(string.format("Turning **%s** auto-formatting *globally*.", enabled and "off" or "on"))
     settings.set_global(setting_name, not enabled)
-    -- TODO: format on enable
+
+    if not enabled then
+        -- re-format
+        for _, buffer in ipairs(utils.get_listed_buffers()) do
+            M.apply(buffer)
+        end
+    end
 end
 
 return M

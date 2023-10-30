@@ -147,15 +147,27 @@ function M.on_user_event(event, callback)
     M.on_event("User", function(evt) callback(evt.match, evt) end, event)
 end
 
-function M.attach_keymaps(file_types, callback)
+function M.attach_keymaps(file_types, callback, force)
     assert(type(callback) == "function")
-    file_types = M.to_list(file_types)
+
+    if file_types == nil then
+        file_types = "*"
+    else
+        file_types = M.to_list(file_types)
+    end
 
     M.on_event(
         "FileType",
         function(evt)
+            if file_types == "*" and M.is_special_buffer(evt.buf) then
+                return
+            end
+
             local mapper = function(mode, lhs, rhs, opts)
-                vim.keymap.set(mode, lhs, rhs, M.tbl_merge({ buffer = evt.buf }, opts or {}))
+                local has_mapping = not vim.tbl_isempty(vim.fn.maparg(lhs, mode, 0, 1))
+                if not has_mapping or force then
+                    vim.keymap.set(mode, lhs, rhs, M.tbl_merge({ buffer = evt.buf }, opts or {}))
+                end
             end
             callback(mapper)
         end,
@@ -209,7 +221,7 @@ local terminals = {}
 function M.float_term(cmd, opts)
     cmd = M.stringify(cmd)
 
-    opts = utils.tbl_merge({
+    opts = M.tbl_merge({
         ft = "lazyterm",
         size = { width = 0.9, height = 0.9 },
     }, opts or {}, { persistent = true })
@@ -227,8 +239,6 @@ function M.float_term(cmd, opts)
         terminals[termkey] = require("lazy.util").float_term(cmd, opts)
 
         local buf = terminals[termkey].buf
-        -- vim.b[buf].lazyterm_cmd = cmd -- TODO why?
-
         vim.api.nvim_create_autocmd(
             "BufEnter",
             {
@@ -261,9 +271,60 @@ function M.get_listed_buffers()
         return (
             vim.api.nvim_buf_is_valid(b) and
             vim.api.nvim_buf_is_loaded(b) and
-            true --vim.b[b].buflisted -- TODO: why?
+            vim.bo[b].buflisted
         )
     end, vim.api.nvim_list_bufs())
+end
+
+M.special_file_types = {
+    "neo-tree",
+    "dap-float",
+    "dap-repl",
+    "dapui_console",
+    "dapui_watches",
+    "dapui_stacks",
+    "dapui_breakpoints",
+    "dapui_scopes",
+    "PlenaryTestPopup",
+    "help",
+    "lspinfo",
+    "man",
+    "notify",
+    "noice",
+    "Outline",
+    "qf",
+    "query",
+    "spectre_panel",
+    "startuptime",
+    "tsplayground",
+    "checkhealth",
+    "Trouble",
+    "terminal",
+    "neotest-summary",
+    "neotest-output",
+    "neotest-output-panel",
+    "WhichKey",
+    "TelescopePrompt",
+    "TelescopeResults",
+}
+
+M.special_buffer_types = {
+    "prompt",
+    "nofile",
+    "terminal",
+    "help",
+}
+
+function M.is_special_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = buffer })
+    local buftype = vim.api.nvim_get_option_value("buftype", { buf = buffer })
+
+    return (
+        vim.tbl_contains(M.special_buffer_types, buftype) or
+        vim.tbl_contains(M.special_file_types, filetype)
+    )
 end
 
 -- file utils

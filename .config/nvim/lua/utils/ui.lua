@@ -4,57 +4,6 @@ local utils = require 'utils'
 
 M = {}
 
-M.special_file_types = {
-    "neo-tree",
-    "dap-float",
-    "dap-repl",
-    "dapui_console",
-    "dapui_watches",
-    "dapui_stacks",
-    "dapui_breakpoints",
-    "dapui_scopes",
-    "PlenaryTestPopup",
-    "help",
-    "lspinfo",
-    "man",
-    "notify",
-    "noice",
-    "Outline",
-    "qf",
-    "query",
-    "spectre_panel",
-    "startuptime",
-    "tsplayground",
-    "checkhealth",
-    "Trouble",
-    "terminal",
-    "neotest-summary",
-    "neotest-output",
-    "neotest-output-panel",
-    "WhichKey",
-    "TelescopePrompt",
-    "TelescopeResults",
-}
-
-M.special_buffer_types = {
-    "prompt",
-    "nofile",
-    "terminal",
-    "help",
-}
-
-function M.is_special_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local filetype = vim.api.nvim_get_option_value("filetype", { buf = buffer })
-    local buftype = vim.api.nvim_get_option_value("buftype", { buf = buffer })
-
-    return (
-        vim.tbl_contains(M.special_buffer_types, buftype) or
-        vim.tbl_contains(M.special_file_types, filetype)
-    )
-end
-
 function M.fold_text()
     local ok = pcall(vim.treesitter.get_parser, vim.api.nvim_get_current_buf())
     local ret = ok and vim.treesitter.foldtext and vim.treesitter.foldtext()
