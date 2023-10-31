@@ -41,7 +41,10 @@ local M = {}
 function M.get_transient_for_buffer(buffer, option, default)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    return get("transient", buffer)[utils.stringify(option)] or default
+    local val = get("transient", buffer)[utils.stringify(option)]
+    if val == nil then val = default end
+
+    return val
 end
 
 function M.set_transient_for_buffer(buffer, option, value)
@@ -74,20 +77,27 @@ end
 function M.get_permanent_for_buffer(buffer, option, default)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    return get("permanent", buffer)[utils.stringify(option)] or default
+    local val = get("permanent", buffer)[utils.stringify(option)]
+    if val == nil then val = default end
+
+    return val
 end
 
 function M.set_permanent_for_buffer(buffer, option, value)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local tbl = get("permanent", buffer)
+
     tbl[utils.stringify(option)] = value
 
     set("permanent", buffer, tbl)
 end
 
 function M.get_global(option, default)
-    return get("global")[utils.stringify(option)] or default
+    local val = get("global")[utils.stringify(option)]
+    if val == nil then val = default end
+
+    return val
 end
 
 function M.set_global(option, value)

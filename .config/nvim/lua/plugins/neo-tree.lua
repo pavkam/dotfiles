@@ -1,69 +1,71 @@
-local icons = require "utils.icons"
-local utils = require "utils"
+local icons = require 'utils.icons'
+local utils = require 'utils'
 
 return {
-    "nvim-neo-tree/neo-tree.nvim",
+    'nvim-neo-tree/neo-tree.nvim',
     dependencies = {
-        "nvim-lua/plenary.nvim",
-        "nvim-tree/nvim-web-devicons",
-        "MunifTanjim/nui.nvim",
+        'nvim-lua/plenary.nvim',
+        'nvim-tree/nvim-web-devicons',
+        'MunifTanjim/nui.nvim',
     },
-    cmd = "Neotree",
+    cmd = 'Neotree',
     keys = {
         {
-            "<leader>e",
+            '<leader>e',
             function()
-                require("neo-tree.command").execute({ toggle = true, reveal=true })
+                require('neo-tree.command').execute { toggle = true, reveal = true }
             end,
-            desc = "File explorer",
+            desc = 'File explorer',
         },
     },
     deactivate = function()
-        vim.cmd([[Neotree close]])
+        vim.cmd [[Neotree close]]
     end,
     init = function()
         if vim.fn.argc() == 1 then
+            -- TODO: check this is actually working
+            ---@diagnostic disable-next-line: param-type-mismatch
             local stat = vim.loop.fs_stat(vim.fn.argv(0))
-            if stat and stat.type == "directory" then
-                require("neo-tree")
+            if stat and stat.type == 'directory' then
+                require 'neo-tree'
             end
         end
     end,
     opts = {
-        sources = { "filesystem", "buffers", "git_status", "document_symbols" },
+        sources = { 'filesystem', 'buffers', 'git_status', 'document_symbols' },
         source_selector = {
             winbar = true,
-            content_layout = "center",
+            content_layout = 'center',
             sources = {
-                { source = "filesystem", display_name = icons.Files.ClosedFolder .. " " .. "File" },
-                { source = "buffers", display_name = icons.UI.Buffers .. " " .. "Bufs" },
-                { source = "git_status", display_name = icons.UI.Git .. " " .. "Git" },
-                { source = "document_symbols", display_name = icons.Symbols.Package .. " " .. "Symbols" },
-            }
+                { source = 'filesystem', display_name = icons.Files.ClosedFolder .. ' ' .. 'File' },
+                { source = 'buffers', display_name = icons.UI.Buffers .. ' ' .. 'Bufs' },
+                { source = 'git_status', display_name = icons.UI.Git .. ' ' .. 'Git' },
+                { source = 'document_symbols', display_name = icons.Symbols.Package .. ' ' .. 'Symbols' },
+            },
         },
         open_files_do_not_replace_types = utils.special_file_types,
         filesystem = {
             window = {
-                position = "float"
+                position = 'float',
             },
             bind_to_cwd = false,
             follow_current_file = { enabled = true },
             use_libuv_file_watcher = true,
-            hijack_netrw_behavior = "open_current",
+            hijack_netrw_behavior = 'open_current',
         },
         buffers = {
             window = {
-                position = "float"
+                position = 'float',
             },
         },
         git_status = {
             window = {
-                position = "float"
+                position = 'float',
             },
         },
         symbols = {
             window = {
-                position = "float"
+                position = 'float',
             },
         },
         default_component_configs = {
@@ -72,7 +74,7 @@ return {
                 with_expanders = true,
                 expander_collapsed = icons.TUI.CollapsedGroup,
                 expander_expanded = icons.TUI.ExpandedGroup,
-                expander_highlight = "NeoTreeExpander",
+                expander_highlight = 'NeoTreeExpander',
             },
             icon = {
                 folder_closed = icons.Files.ClosedFolder,
@@ -82,7 +84,7 @@ return {
                 default = icons.Files.Normal,
             },
             modified = {
-                symbol = icons.Files.Modified
+                symbol = icons.Files.Modified,
             },
             git_status = {
                 symbols = {
@@ -100,19 +102,19 @@ return {
             commands = {
                 parent_or_close = function(state)
                     local node = state.tree:get_node()
-                    if (node.type == "directory" or node:has_children()) and node:is_expanded() then
+                    if (node.type == 'directory' or node:has_children()) and node:is_expanded() then
                         state.commands.toggle_node(state)
                     else
-                        require("neo-tree.ui.renderer").focus_node(state, node:get_parent_id())
+                        require('neo-tree.ui.renderer').focus_node(state, node:get_parent_id())
                     end
                 end,
                 child_or_open = function(state)
                     local node = state.tree:get_node()
-                    if node.type == "directory" or node:has_children() then
+                    if node.type == 'directory' or node:has_children() then
                         if not node:is_expanded() then -- if unexpanded, expand
                             state.commands.toggle_node(state)
                         else -- if expanded and has children, seleect the next child
-                            require("neo-tree.ui.renderer").focus_node(state, node:get_child_ids()[1])
+                            require('neo-tree.ui.renderer').focus_node(state, node:get_child_ids()[1])
                         end
                     else -- if not a directory just open it
                         state.commands.open(state)
@@ -121,47 +123,48 @@ return {
                 find_in_dir = function(state)
                     local node = state.tree:get_node()
                     local path = node:get_id()
-                    require("telescope.builtin").find_files {
-                        cwd = node.type == "directory" and path or vim.fn.fnamemodify(path, ":h"),
+                    require('telescope.builtin').find_files {
+                        cwd = node.type == 'directory' and path or vim.fn.fnamemodify(path, ':h'),
                     }
                 end,
             },
             window = {
                 width = 30,
                 mappings = {
-                    ["<space>"] = false, -- disable space until we figure out which-key disabling
-                    F = "find_in_dir",
-                    h = "parent_or_close",
-                    l = "child_or_open",
-                    o = "open",
-                    ["<del>"] = "delete",
-                    ["S"] = false,
-                    ["s"] = false,
-                    ["\\"] = "open_split",
-                    ["|"] = "open_vsplit",
+                    ['<space>'] = false, -- disable space until we figure out which-key disabling
+                    F = 'find_in_dir',
+                    h = 'parent_or_close',
+                    l = 'child_or_open',
+                    o = 'open',
+                    ['<del>'] = 'delete',
+                    ['S'] = false,
+                    ['s'] = false,
+                    ['\\'] = 'open_split',
+                    ['|'] = 'open_vsplit',
                 },
                 fuzzy_finder_mappings = { -- define keymaps for filter popup window in fuzzy_finder_mode
-                    ["<C-j>"] = "move_cursor_down",
-                    ["<C-k>"] = "move_cursor_up",
+                    ['<C-j>'] = 'move_cursor_down',
+                    ['<C-k>'] = 'move_cursor_up',
                 },
             },
             event_handlers = {
                 {
-                    event = "neo_tree_buffer_enter",
-                    handler = function(_) vim.opt_local.signcolumn = "auto" end,
+                    event = 'neo_tree_buffer_enter',
+                    handler = function(_)
+                        vim.opt_local.signcolumn = 'auto'
+                    end,
                 },
             },
         },
     },
     config = function(_, opts)
-        local utils = require("utils")
-        local lsp = require("utils.lsp")
+        local lsp = require 'utils.lsp'
 
         local function on_move(data)
             lsp.notify_file_renamed(data.source, data.destination)
         end
 
-        local events = require("neo-tree.events")
+        local events = require 'neo-tree.events'
         opts.event_handlers = opts.event_handlers or {}
 
         vim.list_extend(opts.event_handlers, {
@@ -169,22 +172,18 @@ return {
             { event = events.FILE_RENAMED, handler = on_move },
         })
 
-        require("neo-tree").setup(opts)
+        require('neo-tree').setup(opts)
 
-        utils.on_event(
-            "TermClose",
-            function()
-                local ok, manager = pcall(require, "neo-tree.sources.manager")
-                if ok then
-                    for _, source in ipairs { "filesystem", "git_status", "document_symbols" } do
-                        local module = "neo-tree.sources." .. source
-                        if package.loaded[module] then
-                            manager.refresh(require(module).name)
-                        end
+        utils.on_event('TermClose', function()
+            local ok, manager = pcall(require, 'neo-tree.sources.manager')
+            if ok then
+                for _, source in ipairs { 'filesystem', 'git_status', 'document_symbols' } do
+                    local module = 'neo-tree.sources.' .. source
+                    if package.loaded[module] then
+                        manager.refresh(require(module).name)
                     end
                 end
-            end,
-            "*lazygit*"
-        )
-    end
+            end
+        end, '*lazygit*')
+    end,
 }

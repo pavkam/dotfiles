@@ -1,6 +1,6 @@
 return {
-    "catppuccin/nvim",
-    name = "catppuccin",
+    'catppuccin/nvim',
+    name = 'catppuccin',
     opts = {
         integrations = {
             alpha = true,
@@ -15,13 +15,13 @@ return {
             native_lsp = {
                 enabled = true,
                 underlines = {
-                    errors = { "undercurl" },
-                    hints = { "undercurl" },
-                    warnings = { "undercurl" },
-                    information = { "undercurl" },
+                    errors = { 'undercurl' },
+                    hints = { 'undercurl' },
+                    warnings = { 'undercurl' },
+                    information = { 'undercurl' },
                 },
             },
-            navic = { enabled = true, custom_bg = "lualine" },
+            navic = { enabled = true, custom_bg = 'lualine' },
             neotest = true,
             noice = true,
             notify = true,

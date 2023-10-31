@@ -1,11 +1,11 @@
 local dap = require 'dap'
 local dap_utils = require 'dap.utils'
 local dap_vscode = require 'dap.ext.vscode'
-local utils = require "utils"
-local project_internals = require "utils.project.internals"
+local utils = require 'utils'
+local project_internals = require 'utils.project.internals'
 
-local bin_filetypes = {'typescript', 'javascript'}
-local jsx_filetypes = {'typescriptreact', 'javascriptreact'}
+local bin_filetypes = { 'typescript', 'javascript' }
+local jsx_filetypes = { 'typescriptreact', 'javascriptreact' }
 local filetypes = vim.tbl_flatten { bin_filetypes, jsx_filetypes }
 
 local M = {}
@@ -23,7 +23,7 @@ local function parsed_package_json_has_dependency(parsed_json, type, dependency)
 end
 
 local function read_package_json(target)
-    local full_name = utils.first_found_file(project_internals.roots(target), "package.json")
+    local full_name = utils.first_found_file(project_internals.roots(target), 'package.json')
 
     local json_content = full_name and utils.read_text_file(full_name)
     return json_content and vim.json.decode(json_content)
@@ -36,13 +36,13 @@ function M.has_dependency(target, dependency)
     end
 
     return (
-        parsed_package_json_has_dependency(parsed_json, 'dependencies', dependency) or
-        parsed_package_json_has_dependency(parsed_json, 'devDependencies', dependency)
+        parsed_package_json_has_dependency(parsed_json, 'dependencies', dependency)
+        or parsed_package_json_has_dependency(parsed_json, 'devDependencies', dependency)
     )
 end
 
 function M.get_bin_path(target, bin)
-    return utils.first_found_file(project_internals.roots(target), utils.join_paths("node_modules", ".bin", bin))
+    return utils.first_found_file(project_internals.roots(target), utils.join_paths('node_modules', '.bin', bin))
 end
 
 function M.get_eslint_config_path(target)
@@ -77,14 +77,14 @@ local dap_configurations = {
         request = 'launch',
         name = 'Launch file',
         program = '${file}',
-        cwd = '${workspaceFolder}'
+        cwd = '${workspaceFolder}',
     },
     pwa_node_attach = {
         type = 'pwa-node',
         request = 'attach',
         name = 'Attach',
         processId = dap_utils.pick_process,
-        cwd = '${workspaceFolder}'
+        cwd = '${workspaceFolder}',
     },
     pwa_node_jest = {
         type = 'pwa-node',
@@ -93,14 +93,14 @@ local dap_configurations = {
         runtimeExecutable = 'node',
         runtimeArgs = function()
             return {
-                M.get_bin_path(path, "jest"),
-                '--runInBand'
+                M.get_bin_path(path, 'jest'),
+                '--runInBand',
             }
         end,
         rootPath = '${workspaceFolder}',
         cwd = '${workspaceFolder}',
         console = 'integratedTerminal',
-        internalConsoleOptions = 'neverOpen'
+        internalConsoleOptions = 'neverOpen',
     },
     pwa_chrome_attach = {
         type = 'pwa-chrome',
@@ -111,7 +111,7 @@ local dap_configurations = {
         sourceMaps = true,
         protocol = 'inspector',
         port = 9222, -- Start Chrome google-chrome --remote-debugging-port=9222
-        webRoot = '${workspaceFolder}'
+        webRoot = '${workspaceFolder}',
     },
     pwa_chrome_launch = {
         type = 'pwa-chrome',
@@ -119,8 +119,8 @@ local dap_configurations = {
         request = 'launch',
         url = 'http://localhost:5173', -- This is for Vite. Change it to the framework you use
         webRoot = '${workspaceFolder}',
-        userDataDir = '${workspaceFolder}/.vscode/vscode-chrome-debug-userdatadir'
-    }
+        userDataDir = '${workspaceFolder}/.vscode/vscode-chrome-debug-userdatadir',
+    },
 }
 
 function M.configure_debugging(target)
@@ -147,7 +147,7 @@ function M.configure_debugging(target)
             ['pwa-node'] = filetypes,
             ['node'] = filetypes,
             ['chrome'] = filetypes,
-            ['pwa-chrome'] = filetypes
+            ['pwa-chrome'] = filetypes,
         })
     end
 end

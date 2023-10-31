@@ -1,31 +1,32 @@
-local utils = require "utils"
-local lsp = require "utils.lsp"
-local project = require "utils.project"
-local settings = require "utils.settings"
+local utils = require 'utils'
+local lsp = require 'utils.lsp'
+local project = require 'utils.project'
+local settings = require 'utils.settings'
 
 local M = {}
 
-local setting_name = "auto_linting_enabled"
+local setting_name = 'auto_linting_enabled'
 
 local function linters(buffer)
-    if not package.loaded["lint"] then
+    if not package.loaded['lint'] then
         return {}
     end
 
-    local lint = require "lint"
-    local linters = vim.api.nvim_buf_is_valid(buffer) and lint.linters_by_ft[vim.bo[buffer].filetype] or {}
+    local lint = require 'lint'
+    local clients = vim.api.nvim_buf_is_valid(buffer) and lint.linters_by_ft[vim.bo[buffer].filetype] or {}
 
     local file_name = vim.api.nvim_buf_get_name(buffer)
     local ctx = {
         filename = file_name,
-        dirname = vim.fn.fnamemodify(file_name, ":h"),
+        dirname = vim.fn.fnamemodify(file_name, ':h'),
         buf = buffer,
     }
 
     return vim.tbl_filter(function(name)
         local linter = lint.linters[name]
-        return linter and not (type(linter) == "table" and linter.condition and not linter.condition(ctx))
-    end, linters)
+        ---@diagnostic disable-next-line: undefined-field
+        return linter and not (type(linter) == 'table' and linter.condition and not linter.condition(ctx))
+    end, clients)
 end
 
 function M.active_names_for_buffer(buffer)
@@ -40,10 +41,7 @@ function M.active_for_buffer(buffer)
 end
 
 function M.apply(buffer, force)
-    if not force and (
-        not settings.get_global(setting_name, true) or
-        not settings.get_permanent_for_buffer(buffer, setting_name, true)
-    ) then
+    if not force and (not settings.get_global(setting_name, true) or not settings.get_permanent_for_buffer(buffer, setting_name, true)) then
         return
     end
 
@@ -55,7 +53,7 @@ function M.apply(buffer, force)
         return
     end
 
-    local lint = require "lint"
+    local lint = require 'lint'
 
     utils.debounce(100, function()
         local do_lint = function()
@@ -76,9 +74,9 @@ function M.toggle_for_buffer(buffer)
 
     local enabled = settings.get_permanent_for_buffer(buffer, setting_name, true)
 
-    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ":t")
+    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
 
-    utils.info(string.format("Turning **%s** auto-linting for *%s*.", enabled and "off" or "on", file_name))
+    utils.info(string.format('Turning **%s** auto-linting for *%s*.', enabled and 'off' or 'on', file_name))
     settings.set_permanent_for_buffer(buffer, setting_name, not enabled)
 
     if enabled then
@@ -93,7 +91,7 @@ end
 function M.toggle()
     local enabled = settings.get_global(setting_name, true)
 
-    utils.info(string.format("Turning **%s** auto-linting *globally*.", enabled and "off" or "on"))
+    utils.info(string.format('Turning **%s** auto-linting *globally*.', enabled and 'off' or 'on'))
     settings.set_global(setting_name, not enabled)
 
     if enabled then

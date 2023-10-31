@@ -1,8 +1,8 @@
 local dap = require 'dap'
 local dap_vscode = require 'dap.ext.vscode'
 
-local utils = require "utils"
-local project_internals = require "utils.project.internals"
+local utils = require 'utils'
+local project_internals = require 'utils.project.internals'
 
 local M = {}
 
@@ -19,26 +19,26 @@ function M.type(target)
 end
 
 local dap_configurations = {
-	{
-		type = 'go',
-		name = 'Debug',
-		request = 'launch',
-		program = './${relativeFileDirname}',
-	},
-	{
-		type = 'go',
-		name = 'Debug Test',
-		request = 'launch',
-		mode = 'test',
-		program = '${file}',
-	},
-	{
-		type = 'go',
-		name = 'Debug Tests (go.mod)',
-		request = 'launch',
-		mode = 'test',
-		program = './${relativeFileDirname}',
-	},
+    {
+        type = 'go',
+        name = 'Debug',
+        request = 'launch',
+        program = './${relativeFileDirname}',
+    },
+    {
+        type = 'go',
+        name = 'Debug Test',
+        request = 'launch',
+        mode = 'test',
+        program = '${file}',
+    },
+    {
+        type = 'go',
+        name = 'Debug Tests (go.mod)',
+        request = 'launch',
+        mode = 'test',
+        program = './${relativeFileDirname}',
+    },
 }
 
 function M.configure_debugging(target)

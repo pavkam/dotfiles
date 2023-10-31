@@ -1,6 +1,6 @@
 return {
-    "kevinhwang91/nvim-bqf",
-    ft = "qf",
+    'kevinhwang91/nvim-bqf',
+    ft = 'qf',
     opts = {
         func_map = {
             split = '\\',
@@ -16,9 +16,9 @@ return {
             ptoggleitem = '',
             ptogglemode = '',
             pscrollorig = '',
-        }
+        },
     },
     config = function(_, opts)
-        require("bqf").setup(opts)
-    end
+        require('bqf').setup(opts)
+    end,
 }

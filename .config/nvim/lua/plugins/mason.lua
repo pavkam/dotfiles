@@ -1,15 +1,15 @@
-local icons = require "utils.icons"
+local icons = require 'utils.icons'
 
 return {
-    "williamboman/mason.nvim",
+    'williamboman/mason.nvim',
     cmd = {
-        "Mason",
-        "MasonInstall",
-        "MasonUninstall",
-        "MasonUninstallAll",
-        "MasonLog"
+        'Mason',
+        'MasonInstall',
+        'MasonUninstall',
+        'MasonUninstallAll',
+        'MasonLog',
     },
-    build = ":MasonUpdate",
+    build = ':MasonUpdate',
     opts = {
         ui = {
             icons = {
@@ -17,57 +17,57 @@ return {
                 package_uninstalled = icons.Dependencies.Uninstalled,
                 package_pending = icons.Dependencies.Pending,
             },
-            border = "single"
+            border = 'single',
         },
         ensure_installed = {
             -- shell
-            "shellcheck",
-            "shfmt",
+            'shellcheck',
+            'shfmt',
             -- docker
-            "hadolint",
+            'hadolint',
             -- lua
-            "luacheck",
-            "stylua",
+            'luacheck',
+            'stylua',
             -- proto
-            "buf",
+            'buf',
             -- python
-            "black",
-            "isort",
-            "debugpy",
+            'black',
+            'isort',
+            'debugpy',
             -- go
-            "golines",
-            "gofumpt",
-            "goimports",
-            "goimports-reviser",
-            "golangci-lint",
-            "staticcheck",
-            "delve",
-            "gomodifytags",
-            "impl",
-            "iferr",
-            "gotests",
-            "gotestsum",
+            'golines',
+            'gofumpt',
+            'goimports',
+            'goimports-reviser',
+            'golangci-lint',
+            'staticcheck',
+            'delve',
+            'gomodifytags',
+            'impl',
+            'iferr',
+            'gotests',
+            'gotestsum',
             -- js
-            "eslint_d",
-            "prettier",
-            "prettierd",
-            "js-debug-adapter",
+            'eslint_d',
+            'prettier',
+            'prettierd',
+            'js-debug-adapter',
             -- csharp
-            "csharpier",
-            "netcoredbg",
+            'csharpier',
+            'netcoredbg',
             -- markdown
-            "markdownlint",
-        }
+            'markdownlint',
+        },
     },
     config = function(_, opts)
-        require("mason").setup(opts)
+        require('mason').setup(opts)
 
-        local mr = require("mason-registry")
+        local mr = require 'mason-registry'
 
         -- trigger FileType event to possibly load this newly installed LSP server
-        mr:on("package:install:success", function()
+        mr:on('package:install:success', function()
             vim.defer_fn(function()
-                vim.api.nvim_exec_autocmds("FileType", {
+                vim.api.nvim_exec_autocmds('FileType', {
                     buffer = vim.api.nvim_get_current_buf(),
                     modeline = false,
                 })
@@ -76,7 +76,7 @@ return {
 
         local function ensure_installed()
             for _, tool in ipairs(opts.ensure_installed) do
-            local p = mr.get_package(tool)
+                local p = mr.get_package(tool)
                 if not p:is_installed() then
                     p:install()
                 end

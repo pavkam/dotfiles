@@ -302,7 +302,7 @@ sesh() {
     tmux ls 2>/dev/null 1>/dev/null && TMUX_SESSIONS=$(tmux ls -F "#{session_name}")
 
     local PROJECTS=$(
-        [ "$PROJECTS_ROOT" != "" ] && fd -c never --hidden --relative-path --base-directory $PROJECTS_ROOT .git$ -t directory -E .github | xargs dirname
+        [ "$PROJECTS_ROOT" != "" ] && fd -c never --follow --hidden --relative-path --base-directory $PROJECTS_ROOT .git$ -t directory -E .github | xargs dirname
     )
 
     local OPTIONS=$(

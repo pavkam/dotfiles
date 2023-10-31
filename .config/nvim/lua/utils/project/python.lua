@@ -1,13 +1,13 @@
 local dap = require 'dap'
 local dap_vscode = require 'dap.ext.vscode'
 
-local utils = require "utils"
-local project_internals = require "utils.project.internals"
+local utils = require 'utils'
+local project_internals = require 'utils.project.internals'
 
 local M = {}
 
 function M.type(target)
-    if utils.first_found_file(project_internals.roots(target), { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "poetry.lock" }) then
+    if utils.first_found_file(project_internals.roots(target), { 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'poetry.lock' }) then
         return 'python'
     end
 
@@ -15,13 +15,13 @@ function M.type(target)
 end
 
 local dap_configurations = {
-	{
-		type = 'python',
-		request = 'launch',
-		name = 'Current File',
-		program = '${file}',
-		pythonPath = vim.fn.exepath("python3") or vim.fn.exepath("python") or nil
-	},
+    {
+        type = 'python',
+        request = 'launch',
+        name = 'Current File',
+        program = '${file}',
+        pythonPath = vim.fn.exepath 'python3' or vim.fn.exepath 'python' or nil,
+    },
 }
 
 function M.configure_debugging(target)

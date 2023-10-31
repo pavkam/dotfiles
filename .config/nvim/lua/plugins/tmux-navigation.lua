@@ -1,45 +1,45 @@
 return {
-    "alexghergh/nvim-tmux-navigation",
+    'alexghergh/nvim-tmux-navigation',
     keys = {
         {
-            "<A-Tab>",
+            '<A-Tab>',
             function()
-                require("nvim-tmux-navigation").NvimTmuxNavigateLastActive()
+                require('nvim-tmux-navigation').NvimTmuxNavigateLastActive()
             end,
-            mode = "n",
-            desc = "Switch window"
+            mode = 'n',
+            desc = 'Switch window',
         },
         {
-            "<A-Left>",
+            '<A-Left>',
             function()
-                require("nvim-tmux-navigation").NvimTmuxNavigateLeft()
+                require('nvim-tmux-navigation').NvimTmuxNavigateLeft()
             end,
-            mode = "n",
-            desc = "Go to left window"
+            mode = 'n',
+            desc = 'Go to left window',
         },
         {
-            "<A-Right>",
+            '<A-Right>',
             function()
-                require("nvim-tmux-navigation").NvimTmuxNavigateRight()
+                require('nvim-tmux-navigation').NvimTmuxNavigateRight()
             end,
-            mode = "n",
-            desc = "Go to right window"
+            mode = 'n',
+            desc = 'Go to right window',
         },
         {
-            "<A-Down>",
+            '<A-Down>',
             function()
-                require("nvim-tmux-navigation").NvimTmuxNavigateDown()
+                require('nvim-tmux-navigation').NvimTmuxNavigateDown()
             end,
-            mode = "n",
-            desc = "Go to window below"
+            mode = 'n',
+            desc = 'Go to window below',
         },
         {
-            "<A-Up>",
+            '<A-Up>',
             function()
-                require("nvim-tmux-navigation").NvimTmuxNavigateUp()
+                require('nvim-tmux-navigation').NvimTmuxNavigateUp()
             end,
-            mode = "n",
-            desc = "Go to window above"
+            mode = 'n',
+            desc = 'Go to window above',
         },
-    }
+    },
 }

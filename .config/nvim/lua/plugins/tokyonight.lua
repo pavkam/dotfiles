@@ -1,7 +1,7 @@
 return {
-    "folke/tokyonight.nvim",
-    opts = { style = "moon" },
+    'folke/tokyonight.nvim',
+    opts = { style = 'moon' },
     config = function(opts)
-        require("tokyonight").load()
-    end
+        require('tokyonight').load(opts)
+    end,
 }

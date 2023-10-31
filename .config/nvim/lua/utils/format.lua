@@ -1,19 +1,21 @@
-local utils = require "utils"
-local settings = require "utils.settings"
+local utils = require 'utils'
+local settings = require 'utils.settings'
 
 local M = {}
 
-local setting_name = "format_enabled"
+local setting_name = 'format_enabled'
 
 local function formatters(buffer)
-    local conform = require "conform"
-    local ok, formatters = pcall(conform.list_formatters, buffer)
+    local conform = require 'conform'
+    local ok, clients = pcall(conform.list_formatters, buffer)
 
     if not ok then
         return {}
     end
 
-    return vim.tbl_map(function(v) return v.name end, formatters)
+    return vim.tbl_map(function(v)
+        return v.name
+    end, clients)
 end
 
 function M.active_names_for_buffer(buffer)
@@ -27,13 +29,10 @@ function M.active_for_buffer(buffer)
 end
 
 function M.apply(buffer, force, injected)
-    local conform = require "conform"
+    local conform = require 'conform'
 
-    settings.get_permanent_for_buffer(buffer, "auto_format_enabled", true)
-    if not force and (
-        not settings.get_global(setting_name, true) or
-        not settings.get_permanent_for_buffer(buffer, "auto_format_enabled", true)
-    ) then
+    settings.get_permanent_for_buffer(buffer, 'auto_format_enabled', true)
+    if not force and (not settings.get_global(setting_name, true) or not settings.get_permanent_for_buffer(buffer, 'auto_format_enabled', true)) then
         return
     end
 
@@ -43,7 +42,7 @@ function M.apply(buffer, force, injected)
         return
     end
 
-    local additional = injected and { formatters = { "injected" } } or {}
+    local additional = injected and { formatters = { 'injected' } } or {}
 
     conform.format(utils.tbl_merge({ bufnr = buffer }, additional))
 end
@@ -53,8 +52,8 @@ function M.toggle_for_buffer(buffer)
 
     local enabled = settings.get_permanent_for_buffer(buffer, setting_name, true)
 
-    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ":t")
-    utils.info(string.format("Turning **%s** auto-formatting for *%s*.", enabled and "off" or "on", file_name))
+    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
+    utils.info(string.format('Turning **%s** auto-formatting for *%s*.', enabled and 'off' or 'on', file_name))
     settings.set_permanent_for_buffer(buffer, setting_name, not enabled)
 
     if not enabled then
@@ -66,7 +65,7 @@ end
 function M.toggle()
     local enabled = settings.get_global(setting_name, true)
 
-    utils.info(string.format("Turning **%s** auto-formatting *globally*.", enabled and "off" or "on"))
+    utils.info(string.format('Turning **%s** auto-formatting *globally*.', enabled and 'off' or 'on'))
     settings.set_global(setting_name, not enabled)
 
     if not enabled then

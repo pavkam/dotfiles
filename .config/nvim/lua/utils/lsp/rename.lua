@@ -1,4 +1,4 @@
-local utils = require "utils"
+local utils = require 'utils'
 
 local function handle_post_rename(result)
     if not result then
@@ -9,7 +9,7 @@ local function handle_post_rename(result)
 
     local function add_entry(uri, edits)
         -- extend notification
-        local file_name = vim.fn.fnamemodify(vim.uri_to_fname(uri)  , ":.")
+        local file_name = vim.fn.fnamemodify(vim.uri_to_fname(uri), ':.')
 
         if #notification > 0 then
             notification = notification .. '\n'
@@ -30,7 +30,7 @@ local function handle_post_rename(result)
                 buffer = buffer,
                 lnum = start_line,
                 col = edit.range.start.character + 1,
-                text = line
+                text = line,
             })
         end
     end
@@ -43,9 +43,7 @@ local function handle_post_rename(result)
             end
         end
     elseif result.changes then
-        changes = result.changes
-
-        for uri, edits in pairs(changes) do
+        for uri, edits in pairs(result.changes) do
             add_entry(uri, edits)
         end
     end
@@ -54,8 +52,8 @@ local function handle_post_rename(result)
     utils.info(notification)
 
     if #entries > 0 then
-        vim.fn.setqflist(entries, "a")
-        vim.cmd("copen")
+        vim.fn.setqflist(entries, 'a')
+        vim.cmd 'copen'
     end
 end
 
@@ -66,4 +64,3 @@ return function(...)
     handle_post_rename(result)
     vim.lsp.handlers[ctx.method](...)
 end
-

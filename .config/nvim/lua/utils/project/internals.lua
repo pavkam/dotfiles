@@ -1,38 +1,38 @@
-local lsp = require "utils.lsp"
-local utils = require "utils"
-local settings = require "utils.settings"
+local lsp = require 'utils.lsp'
+local utils = require 'utils'
+local settings = require 'utils.settings'
 
-local setting_name = "root_paths"
+local setting_name = 'root_paths'
 
 local M = {}
 
 -- root patterns to find project root if the LSP failed
 M.root_patterns = {
     -- git is the end of the search
-    ".git",
+    '.git',
 
     -- JS/TS projects
-    "package.json",
+    'package.json',
 
     -- Go projects
-    "go.mod",
-    "go.sum",
+    'go.mod',
+    'go.sum',
 
     -- Makefile-based projects
-    "Makefile",
+    'Makefile',
 
     -- Rust projects
-    "Cargo.toml",
+    'Cargo.toml',
 
     -- Python projects
-    "pyproject.toml",
-    "setup.py",
-    "setup.cfg",
-    "requirements.txt",
-    "poetry.lock",
+    'pyproject.toml',
+    'setup.py',
+    'setup.cfg',
+    'requirements.txt',
+    'poetry.lock',
 
     -- .NET
-    "*.sln"
+    '*.sln',
 }
 
 function M.roots(target)
@@ -51,10 +51,10 @@ function M.roots(target)
     local cwd = vim.loop.cwd()
     path = path and vim.fs.dirname(path) or cwd
 
-    root = vim.fs.find(M.root_patterns, {
+    local root = vim.fs.find(M.root_patterns, {
         path = path,
         upward = true,
-        stop = vim.fs.normalize("~")
+        stop = vim.fs.normalize '~',
     })[1]
 
     -- add new root to the list
@@ -68,7 +68,9 @@ function M.roots(target)
         roots[#roots + 1] = cwd
     end
 
-    table.sort(roots, function(a, b) return #a > #b end)
+    table.sort(roots, function(a, b)
+        return #a > #b
+    end)
 
     -- cache the roots for buffer
     settings.set_transient_for_buffer(buffer, setting_name, roots)
