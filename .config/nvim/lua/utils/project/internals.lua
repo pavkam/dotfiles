@@ -31,6 +31,9 @@ M.root_patterns = {
     'requirements.txt',
     'poetry.lock',
 
+    -- lua / neovim
+    'lazy-lock.json',
+
     -- .NET
     '*.sln',
 }

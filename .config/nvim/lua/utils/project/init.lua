@@ -10,6 +10,7 @@ local project_internals = require 'utils.project.internals'
 local M = {}
 
 M.root = project_internals.root
+M.roots = project_internals.roots
 
 function M.type(target)
     return (js_project.type(target) or go_project.type(target) or python_project.type(target) or dotnet_project.type(target))
