@@ -5,7 +5,12 @@ local M = {}
 
 local setting_name = 'format_enabled'
 
+--- Gets the names of all active formatters for a buffer
+---@param buffer integer # the buffer to get the formatters for
+---@return string[] # the names of the active formatters
 local function formatters(buffer)
+    assert(type(buffer) == 'number' and buffer)
+
     local conform = require 'conform'
     local ok, clients = pcall(conform.list_formatters, buffer)
 
@@ -18,16 +23,26 @@ local function formatters(buffer)
     end, clients)
 end
 
+--- Gets the names of all active formatters for a buffer
+---@param buffer integer|nil # the buffer to get the formatters for or nil for current
+---@return string[] # the names of the active formatters
 function M.active_names_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     return formatters(buffer)
 end
 
+--- Checks whether there are any active formatters for a buffer
+---@param buffer integer|nil # the buffer to check the formatters for or nil for current
+---@return boolean # whether there are any active formatters
 function M.active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     return #formatters(buffer) > 0
 end
 
+--- Applies all active formatters to a buffer
+---@param buffer integer|nil # the buffer to apply the formatters to or nil for current
+---@param force boolean|nil # whether to force the formatting
+---@param injected boolean|nil # whether to format injected code
 function M.apply(buffer, force, injected)
     local conform = require 'conform'
 
@@ -47,6 +62,8 @@ function M.apply(buffer, force, injected)
     conform.format(utils.tbl_merge({ bufnr = buffer }, additional))
 end
 
+--- Toggles auto-formatting for a buffer
+---@param buffer integer|nil # the buffer to toggle the formatting for or nil for current
 function M.toggle_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -62,6 +79,7 @@ function M.toggle_for_buffer(buffer)
     end
 end
 
+--- Toggles auto-formatting globally
 function M.toggle()
     local enabled = settings.get_global(setting_name, true)
 

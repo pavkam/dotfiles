@@ -91,7 +91,7 @@ local dap_configurations = {
         request = 'launch',
         name = 'Debug Jest Tests',
         runtimeExecutable = 'node',
-        runtimeArgs = function()
+        runtimeArgs = function(path)
             return {
                 M.get_bin_path(path, 'jest'),
                 '--runInBand',

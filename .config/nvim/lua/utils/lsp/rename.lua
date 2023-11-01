@@ -1,5 +1,7 @@
 local utils = require 'utils'
 
+--- Handles the result of a rename request
+---@param result any # the result of the request
 local function handle_post_rename(result)
     if not result then
         return
@@ -57,6 +59,8 @@ local function handle_post_rename(result)
     end
 end
 
+--- Handles a rename request
+---@param ... any # the arguments passed to the handler
 return function(...)
     local result = select(2, ...)
     local ctx = select(3, ...)

@@ -94,7 +94,13 @@ local keymaps = {
     },
 }
 
+--- Attaches keymaps to a client
+---@param client any # the client to attach the keymaps to
+---@param buffer integer # the buffer to attach the keymaps to
 local function attach_keymaps(client, buffer)
+    assert(type(client) == 'table' and client)
+    assert(type(buffer) == 'number' and buffer)
+
     local Keys = require 'lazy.core.handler.keys'
     local resolved_keymaps = {}
 
@@ -116,7 +122,12 @@ local function attach_keymaps(client, buffer)
     end
 end
 
+--- Attaches keymaps to a client
+---@param client any # the client to attach the keymaps to
+---@param buffer integer|nil # the buffer to attach the keymaps to or nil for current
 function M.attach(client, buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
     attach_keymaps(client, buffer)
 
     if lsp.client_has_capability(client, 'codeLens') then

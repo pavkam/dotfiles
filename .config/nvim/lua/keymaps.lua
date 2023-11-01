@@ -102,7 +102,9 @@ vim.keymap.set('n', '|', '<C-W>v', { desc = 'Split window right', remap = true }
 vim.keymap.set('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
 
 -- buffer management
+
 vim.keymap.set('n', '<leader><leader>', function()
+    ---@diagnostic disable-next-line: param-type-mismatch
     pcall(vim.cmd, 'e #')
 end, { desc = 'Switch buffer', silent = true })
 vim.keymap.set('n', '<leader>bw', '<cmd>w<cr>', { desc = 'Save buffer' })

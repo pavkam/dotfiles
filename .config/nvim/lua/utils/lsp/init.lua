@@ -2,25 +2,39 @@ local utils = require 'utils'
 
 local M = {}
 
+--- Normalizes the name of a capability
+---@param method string # the name of the capability
+---@return string # the normalized name of the capability
 local function normalize_capability(method)
-    method = utils.stringify(method)
+    assert(type(method) == 'string' and method)
+
     method = method:find '/' and method or 'textDocument/' .. method
 
     return method
 end
 
+--- Checks whether a client is a special client
+---@param client { name: string } # the client to check
 function M.is_special(client)
     assert(client and client.name)
 
     return client.name == 'copilot'
 end
 
+--- Checks whether a client has a capability
+---@param client { supports_method: function } # the client to check
+---@param method string # the name of the capability
+---@return boolean # whether the client has the capability
 function M.client_has_capability(client, method)
     assert(client and client.supports_method)
 
     return client.supports_method(normalize_capability(method))
 end
 
+--- Checks whether a buffer has a capability
+---@param buffer integer|nil # the buffer to check the capability for or 0 or nil for current
+---@param method string # the name of the capability
+---@return boolean # whether the buffer has the capability
 function M.buffer_has_capability(buffer, method)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -34,6 +48,9 @@ function M.buffer_has_capability(buffer, method)
     return false
 end
 
+--- Notifies all clients that a file has been renamed
+---@param from any # the old name of the file
+---@param to any # the new name of the file
 function M.notify_file_renamed(from, to)
     from = utils.stringify(from)
     from = utils.stringify(to)
@@ -60,13 +77,24 @@ function M.notify_file_renamed(from, to)
     end
 end
 
+--- Registers a callback for a client attach event
+---@param callback function # the callback to register
+---@param target string|integer|any[]|nil # the target to register the callback for
 function M.on_attach(callback, target)
+    assert(type(callback) == 'function' and callback)
+
     return utils.on_event('LspAttach', function(evt)
         local client = vim.lsp.get_client_by_id(evt.data.client_id)
         callback(client, evt.buf)
     end, target)
 end
 
+--- Registers a callback for as long a buffer has a capability
+---@param events string|string[] # the events to register the callback for
+---@param capability string # the name of the capability
+---@param buffer integer|nil # the buffer to register the callback for or 0 or nil for current
+---@param callback function # the callback to register
+---@return integer|nil # the ID of the auto group
 function M.on_capability_event(events, capability, buffer, callback)
     assert(type(callback) == 'function')
 
@@ -91,8 +119,13 @@ function M.on_capability_event(events, capability, buffer, callback)
         group = group,
         buffer = buffer,
     })
+
+    return group
 end
 
+--- Gets the names of all active clients for a buffer
+---@param buffer integer|nil # the buffer to get the clients for or 0 or nil for current
+---@return string[] # the names of the active clients
 function M.active_names_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -107,6 +140,9 @@ function M.active_names_for_buffer(buffer)
     return buf_client_names
 end
 
+--- Checks whether there are any active clients for a buffer
+---@param buffer integer|nil # the buffer to check the clients for or 0 or nil for current
+---@return boolean # whether there are any active clients
 function M.any_active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_active_clients { bufnr = buffer }
@@ -114,6 +150,10 @@ function M.any_active_for_buffer(buffer)
     return #clients > 1 or (#clients == 1 and not M.is_special(clients[1]))
 end
 
+--- Checks whether a client is active for a buffer
+---@param buffer integer|nil # the buffer to check the client for or 0 or nil for current
+---@param name any # the name of the client
+---@return boolean # whether the client is active
 function M.is_active_for_buffer(buffer, name)
     buffer = buffer or vim.api.nvim_get_current_buf()
     name = utils.stringify(name)
@@ -125,6 +165,10 @@ function M.is_active_for_buffer(buffer, name)
     return ok and #clients > 0
 end
 
+--- Gets the root directories of all active clients for a target buffer or path
+---@param target integer|string|function|nil # the target to get the roots for or 0 or nil for current
+---@param sort boolean|nil # whether to sort the roots by length
+---@return string[] # the root directories of the active clients
 function M.roots(target, sort)
     local buffer, path = utils.expand_target(target)
 
@@ -158,6 +202,9 @@ function M.roots(target, sort)
     return roots
 end
 
+--- Clears the diagnostics for a buffer or globally
+---@param sources string|string[]|nil # the sources to clear the diagnostics for, or nil for all
+---@param buffer integer|nil # the buffer to clear the diagnostics for or 0 or nil for all
 function M.clear_diagnostics(sources, buffer)
     if not sources then
         vim.diagnostic.reset(nil, buffer)
@@ -167,6 +214,7 @@ function M.clear_diagnostics(sources, buffer)
     local ns = vim.diagnostic.get_namespaces()
 
     for _, source in ipairs(utils.to_list(sources)) do
+        assert(type(source) == 'string' and source)
         for id, n in pairs(ns) do
             if n.name == source or n.name:find('vim.lsp.' .. source, 1, true) then
                 vim.diagnostic.reset(id, buffer)

@@ -32,11 +32,11 @@ return {
             end,
         }
 
-        opts.adapters = utils.list_insert_unique(opts.adapters, {
+        opts.adapters = {
             require 'neotest-go',
             vitest,
             jest,
-        })
+        }
 
         return opts
     end,

@@ -7,7 +7,11 @@ local M = {}
 
 local setting_name = 'auto_linting_enabled'
 
+--- Gets the names of all active linters for a buffer
+---@param buffer integer # the buffer to get the linters for
+---@return string[] # the names of the active linters
 local function linters(buffer)
+    assert(type(buffer) == 'number' and buffer)
     if not package.loaded['lint'] then
         return {}
     end
@@ -29,17 +33,26 @@ local function linters(buffer)
     end, clients)
 end
 
+--- Gets the names of all active linters for a buffer
+---@param buffer integer|nil # the buffer to get the linters for or nil for current
+---@return string[] # the names of the active linters
 function M.active_names_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     return linters(buffer)
 end
 
+--- Checks whether there are any active linters for a buffer
+---@param buffer integer|nil # the buffer to check the linters for or nil for current
+---@return boolean # whether there are any active linters
 function M.active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     return #linters(buffer) > 0
 end
 
+--- Applies all active linters to a buffer
+---@param buffer integer|nil # the buffer to apply the linters to or nil for current
+---@param force boolean|nil # whether to force the linting
 function M.apply(buffer, force)
     if not force and (not settings.get_global(setting_name, true) or not settings.get_permanent_for_buffer(buffer, setting_name, true)) then
         return
@@ -69,6 +82,8 @@ function M.apply(buffer, force)
     end)
 end
 
+--- Toggles auto-linting for a buffer
+---@param buffer integer|nil # the buffer to toggle the linters for or nil for current
 function M.toggle_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -88,6 +103,7 @@ function M.toggle_for_buffer(buffer)
     end
 end
 
+--- Toggles auto-linting globally
 function M.toggle()
     local enabled = settings.get_global(setting_name, true)
 

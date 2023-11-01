@@ -1,10 +1,11 @@
 local M = {}
 
--- general utils
-
+---Converts a value to a string
+---@param value any # any value that will be converted to a string
+---@return string|nil # the tringified version of the value
 local function stringify(value)
     if value == nil then
-        return 'nil'
+        return nil
     elseif type(value) == 'string' then
         return value
     elseif type(value) == 'table' then
@@ -16,6 +17,9 @@ local function stringify(value)
     end
 end
 
+--- Converts a value to a list
+---@param value any # any value that will be converted to a list
+---@return table # the listified version of the value
 function M.to_list(value)
     if value == nil then
         return {}
@@ -33,27 +37,13 @@ function M.to_list(value)
     end
 end
 
-function M.list_insert_unique(list, values)
-    list = M.to_list(list)
-    values = M.to_list(values)
-
-    local added = {}
-    vim.tbl_map(function(v)
-        added[v] = true
-    end, list)
-
-    for _, val in ipairs(values) do
-        if not added[val] then
-            table.insert(list, val)
-            added[val] = true
-        end
-    end
-
-    return list
-end
-
+--- Checks if a list contains a value
+---@param list table # the list to check
+---@param what any # the value to check for
+---@return boolean # true if the list contains the value, false otherwise
 function M.list_contains(list, what)
     assert(vim.tbl_islist(list))
+
     for _, val in ipairs(list) do
         if val == what then
             return true
@@ -63,6 +53,10 @@ function M.list_contains(list, what)
     return false
 end
 
+--- Joins all items in a list into a string
+---@param items table # the list of items to join
+---@param separator string # the separator to use between items
+---@return string|nil # the joined string
 function M.tbl_join(items, separator)
     if not vim.tbl_islist(items) then
         return stringify(items)
@@ -81,10 +75,18 @@ function M.tbl_join(items, separator)
     return result
 end
 
+--- Shallows copies a table
+---@param table table # the table to copy
+---@return table # the copied table
 function M.tbl_copy(table)
+    assert(type(table) == 'table')
+
     return vim.tbl_extend('force', {}, table)
 end
 
+--- Merges multiple tables into one
+---@vararg table|nil # the tables to merge
+---@return table # the merged table
 function M.tbl_merge(...)
     local all = {}
 
@@ -103,19 +105,27 @@ function M.tbl_merge(...)
     end
 end
 
+--- Converts any value to a string
+---@vararg any # the values to stringify
+---@return string|nil # the stringified version of the value
 function M.stringify(...)
     local args = { ... }
     if #args == 1 then
         return stringify(...)
+    elseif #args == 0 then
+        return nil
     else
         return M.tbl_join(args, ' ')
     end
 end
 
--- vim utils
-
 local group_index = 0
 
+--- Creates an auto command that triggers on a given list of events
+---@param events string|table # the list of events to trigger on
+---@param callback function # the callback to call when the event is triggered
+---@param target table|string|number|nil # the target to trigger on
+---@return number # the group id of the created group
 function M.on_event(events, callback, target)
     assert(type(callback) == 'function')
 
@@ -147,12 +157,22 @@ function M.on_event(events, callback, target)
     return group
 end
 
-function M.on_user_event(event, callback)
-    M.on_event('User', function(evt)
+--- Creates an auto command that triggers on a given list of user events
+---@param events string|table # the list of events to trigger on
+---@param callback function # the callback to call when the event is triggered
+---@return number # the group id of the created group
+function M.on_user_event(events, callback)
+    events = M.to_list(events)
+    return M.on_event('User', function(evt)
         callback(evt.match, evt)
-    end, event)
+    end, events)
 end
 
+--- Allows attaching keymaps in a given buffer alone.
+---@param file_types string|table|nil # the list of file types to attach the keymaps to
+---@param callback fun(set: fun(mode: string|table|nil, lhs: string, rhs: string|function, opts: table)) # the callback to call when the event is triggered
+---@param force boolean # whether to force the keymaps to be set even if they are already set
+---@return number # the group id of the created group
 function M.attach_keymaps(file_types, callback, force)
     assert(type(callback) == 'function')
 
@@ -162,7 +182,7 @@ function M.attach_keymaps(file_types, callback, force)
         file_types = M.to_list(file_types)
     end
 
-    M.on_event('FileType', function(evt)
+    return M.on_event('FileType', function(evt)
         if file_types == '*' and M.is_special_buffer(evt.buf) then
             return
         end
@@ -178,6 +198,9 @@ function M.attach_keymaps(file_types, callback, force)
     end, file_types)
 end
 
+--- Runs a given callback after a given number of milliseconds
+---@param ms number # the number of milliseconds to wait
+---@param callback function # the callback to call
 function M.debounce(ms, callback)
     assert(type(ms) == 'number' and ms > 0)
     assert(type(callback) == 'function')
@@ -191,34 +214,50 @@ function M.debounce(ms, callback)
     end)
 end
 
+--- Trigger a user event
+---@param event string # the name of the event to trigger
+---@param data any # the data to pass to the event
 function M.trigger_user_event(event, data)
     vim.api.nvim_exec_autocmds('User', { pattern = event, modeline = false, data = data })
 end
 
--- notification utils
-
+--- Shows a notification
+---@param msg any # the message to show
+---@param type integer # the type of the notification
+---@param opts? table # the options to pass to the notification
 function M.notify(msg, type, opts)
+    assert(msg ~= nil)
+
     vim.schedule(function()
-        vim.notify(M.stringify(msg), type, M.tbl_merge({ title = 'NeoVim' }, opts))
+        vim.notify(M.stringify(msg) or '', type, M.tbl_merge({ title = 'NeoVim' }, opts))
     end)
 end
 
+--- Shows a notification with the INFO type
+---@param msg any # the message to show
 function M.info(msg)
     M.notify(msg, vim.log.levels.INFO)
 end
 
+--- Shows a notification with the WARN type
+---@param msg any # the message to show
 function M.warn(msg)
     M.notify(msg, vim.log.levels.WARN)
 end
 
+--- Shows a notification with the ERROR type
+---@param msg any # the message to show
 function M.error(msg)
     M.notify(msg, vim.log.levels.ERROR)
 end
 
--- terminal and buffer utils
-
+---@type table<string, LazyFloat>
 local terminals = {}
 
+--- Creates a floating terminal
+---@param cmd any # the command to run in the terminal
+---@param opts? table # the options to pass to the terminal
+---@return LazyFloat # the created terminal
 function M.float_term(cmd, opts)
     cmd = M.stringify(cmd)
 
@@ -242,15 +281,16 @@ function M.float_term(cmd, opts)
         local buf = terminals[termkey].buf
         vim.api.nvim_create_autocmd('BufEnter', {
             buffer = buf,
-            callback = function()
-                vim.cmd.startinsert()
-            end,
+            callback = vim.cmd.startinsert,
         })
     end
 
     return terminals[termkey]
 end
 
+--- Expands a target of any command to a buffer and a path
+---@param target integer|function|string|nil # the target to expand
+---@return integer, string|nil # the buffer and the path
 function M.expand_target(target)
     if type(target) == 'function' then
         target = target()
@@ -264,6 +304,8 @@ function M.expand_target(target)
     end
 end
 
+--- Gets the list of listed file buffers
+---@return table<number, number> # the list of buffers
 function M.get_listed_buffers()
     return vim.tbl_filter(function(b)
         return (vim.api.nvim_buf_is_valid(b) and vim.api.nvim_buf_is_loaded(b) and vim.bo[b].buflisted)
@@ -309,6 +351,9 @@ M.special_buffer_types = {
     'help',
 }
 
+--- Checks if a buffer is a special buffer
+---@param buffer integer|nil # the buffer to check
+---@return boolean # true if the buffer is a special buffer, false otherwise
 function M.is_special_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -318,8 +363,10 @@ function M.is_special_buffer(buffer)
     return (vim.tbl_contains(M.special_buffer_types, buftype) or vim.tbl_contains(M.special_file_types, filetype))
 end
 
--- file utils
-
+--- Joins two paths
+---@param part1 string # the first part of the path
+---@param part2 string # the second part of the path
+---@return string # the joined path
 local function join_paths(part1, part2)
     part1 = part1:gsub('([^/])$', '%1/'):gsub('//', '/')
     part2 = part2:gsub('^/', '')
@@ -327,23 +374,35 @@ local function join_paths(part1, part2)
     return part1 .. part2
 end
 
+--- Joins multiple paths
+---@vararg any # the paths to join
+---@return string|nil # the joined path or nil if none of the paths are valid
 function M.join_paths(...)
-    local parts = { ... }
-    if #parts == 0 then
-        return nil
-    elseif #parts == 1 then
-        return parts[1]
-    end
-
-    local acc = M.stringify(table.remove(parts, 1))
-    for _, part in ipairs(parts) do
-        acc = join_paths(acc, M.stringify(part))
+    ---@type string|nil
+    local acc
+    for _, part in ipairs { ... } do
+        if part ~= nil then
+            local s = M.stringify(part)
+            if s then
+                if acc then
+                    acc = join_paths(acc, s)
+                else
+                    acc = s
+                end
+            end
+        end
     end
 
     return acc
 end
 
+--- Checks if a file exists
+---@param path any # the path to check
+---@return boolean # true if the file exists, false otherwise
 function M.file_exists(path)
+    assert(path ~= nil)
+    path = M.stringify(path) or ''
+
     local file = io.open(path, 'r')
     if file then
         file:close()
@@ -353,6 +412,10 @@ function M.file_exists(path)
     end
 end
 
+--- Checks if files exist in a given directory and returns the first one that exists
+---@param base_paths string|table<number, string> # the list of base paths to check
+---@param files string|table<number, string> # the list of files to check
+---@return string|nil # the first found file or nil if none exists
 function M.first_found_file(base_paths, files)
     base_paths = M.to_list(base_paths)
     files = M.to_list(files)
@@ -368,7 +431,13 @@ function M.first_found_file(base_paths, files)
     return nil
 end
 
+--- Reads a text file
+---@param path any # the path to the file to read
+---@return string|nil # the content of the file or nil if the file does not exist
 function M.read_text_file(path)
+    assert(path ~= nil)
+    path = M.stringify(path) or ''
+
     local file = io.open(path, 'rb')
     if not file then
         return nil
@@ -380,6 +449,10 @@ function M.read_text_file(path)
     return content
 end
 
+--- Executes a given command and returns the output
+---@param cmd string|table<number, string> # the command to execute
+---@param show_error boolean # whether to show an error if the command fails
+---@return string|nil # the output of the command or nil if the command failed
 function M.cmd(cmd, show_error)
     cmd = M.to_list(cmd)
 
@@ -397,7 +470,13 @@ function M.cmd(cmd, show_error)
     return success and result:gsub('[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]', '') or nil
 end
 
+--- Checks if a file is under git
+---@param file_name any # the name of the file to check
+---@return boolean # true if the file is under git, false otherwise
 function M.file_is_under_git(file_name)
+    assert(file_name ~= nil)
+    file_name = M.stringify(file_name)
+
     return M.cmd({ 'git', '-C', vim.fn.fnamemodify(file_name, ':p:h'), 'rev-parse' }, false) ~= nil
 end
 
