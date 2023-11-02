@@ -4,6 +4,7 @@ local dap_vscode = require 'dap.ext.vscode'
 local utils = require 'utils'
 local project_internals = require 'utils.project.internals'
 
+---@class utils.project.python
 local M = {}
 
 --- Returns the type of the project

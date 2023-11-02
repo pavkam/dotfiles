@@ -4,6 +4,7 @@ local dap_vscode = require 'dap.ext.vscode'
 local utils = require 'utils'
 local project_internals = require 'utils.project.internals'
 
+---@class utils.project.go
 local M = {}
 
 --- Returns the path to the golangci file for a given target

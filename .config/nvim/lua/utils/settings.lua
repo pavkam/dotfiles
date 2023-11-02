@@ -41,6 +41,7 @@ utils.on_event({ 'BufDelete' }, function(evt)
     set('permanent', evt.buf, nil)
 end)
 
+---@class utils.settings
 local M = {}
 
 --- Gets a transient option for a buffer

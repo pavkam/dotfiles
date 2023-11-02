@@ -1,5 +1,5 @@
 local icons = require 'utils.icons'
-local utils = require 'utils'
+local terminal = require 'utils.terminal'
 
 return {
     'lewis6991/gitsigns.nvim',
@@ -44,7 +44,7 @@ return {
 
             if vim.fn.executable 'lazygit' == 1 then
                 vim.api.nvim_buf_create_user_command(buffer, 'Lazygit', function()
-                    utils.float_term 'lazygit'
+                    terminal.floating 'lazygit'
                 end, { desc = 'Run Lazygit', nargs = 0 })
 
                 vim.keymap.set('n', '<leader>gg', function()

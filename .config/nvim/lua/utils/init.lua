@@ -1,3 +1,4 @@
+---@class utils
 local M = {}
 
 ---Converts a value to a string
@@ -19,7 +20,7 @@ end
 
 --- Converts a value to a list
 ---@param value any # any value that will be converted to a list
----@return table # the listified version of the value
+---@return any[] # the listified version of the value
 function M.to_list(value)
     if value == nil then
         return {}
@@ -38,7 +39,7 @@ function M.to_list(value)
 end
 
 --- Checks if a list contains a value
----@param list table # the list to check
+---@param list any[] # the list to check
 ---@param what any # the value to check for
 ---@return boolean # true if the list contains the value, false otherwise
 function M.list_contains(list, what)
@@ -55,7 +56,7 @@ end
 
 --- Joins all items in a list into a string
 ---@param items table # the list of items to join
----@param separator string # the separator to use between items
+---@param separator string|nil # the separator to use between items
 ---@return string|nil # the joined string
 function M.tbl_join(items, separator)
     if not vim.tbl_islist(items) then
@@ -122,7 +123,7 @@ end
 local group_index = 0
 
 --- Creates an auto command that triggers on a given list of events
----@param events string|table # the list of events to trigger on
+---@param events string|string[] # the list of events to trigger on
 ---@param callback function # the callback to call when the event is triggered
 ---@param target table|string|number|nil # the target to trigger on
 ---@return number # the group id of the created group
@@ -251,45 +252,6 @@ function M.error(msg)
     M.notify(msg, vim.log.levels.ERROR)
 end
 
----@type table<string, LazyFloat>
-local terminals = {}
-
---- Creates a floating terminal
----@param cmd any # the command to run in the terminal
----@param opts? table # the options to pass to the terminal
----@return LazyFloat # the created terminal
-function M.float_term(cmd, opts)
-    cmd = M.stringify(cmd)
-
-    opts = M.tbl_merge({
-        ft = 'lazyterm',
-        size = { width = 0.9, height = 0.9 },
-    }, opts or {}, { persistent = true })
-
-    local termkey = vim.inspect {
-        cmd = cmd or 'shell',
-        cwd = opts.cwd,
-        env = opts.env,
-        count = vim.v.count1,
-    }
-
-    if terminals[termkey] and terminals[termkey]:buf_valid() then
-        terminals[termkey]:toggle()
-    else
-        terminals[termkey] = require('lazy.util').float_term(cmd, opts)
-
-        local buf = terminals[termkey].buf
-        vim.api.nvim_create_autocmd('BufEnter', {
-            buffer = buf,
-            callback = function()
-                vim.cmd.startinsert()
-            end,
-        })
-    end
-
-    return terminals[termkey]
-end
-
 --- Expands a target of any command to a buffer and a path
 ---@param target integer|function|string|nil # the target to expand
 ---@return integer, string|nil # the buffer and the path
@@ -307,7 +269,7 @@ function M.expand_target(target)
 end
 
 --- Gets the list of listed file buffers
----@return table<number, number> # the list of buffers
+---@return integer[] # the list of buffers
 function M.get_listed_buffers()
     return vim.tbl_filter(function(b)
         return (vim.api.nvim_buf_is_valid(b) and vim.api.nvim_buf_is_loaded(b) and vim.bo[b].buflisted)
@@ -354,7 +316,7 @@ M.special_buffer_types = {
 }
 
 --- Checks if a buffer is a special buffer
----@param buffer integer|nil # the buffer to check
+---@param buffer integer|nil # the buffer to check or the current buffer if 0 or nil
 ---@return boolean # true if the buffer is a special buffer, false otherwise
 function M.is_special_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
@@ -377,20 +339,17 @@ local function join_paths(part1, part2)
 end
 
 --- Joins multiple paths
----@vararg any # the paths to join
+---@vararg string|nil # the paths to join
 ---@return string|nil # the joined path or nil if none of the paths are valid
 function M.join_paths(...)
     ---@type string|nil
     local acc
     for _, part in ipairs { ... } do
         if part ~= nil then
-            local s = M.stringify(part)
-            if s then
-                if acc then
-                    acc = join_paths(acc, s)
-                else
-                    acc = s
-                end
+            if acc then
+                acc = join_paths(acc, part)
+            else
+                acc = part
             end
         end
     end
@@ -399,11 +358,10 @@ function M.join_paths(...)
 end
 
 --- Checks if a file exists
----@param path any # the path to check
+---@param path string # the path to check
 ---@return boolean # true if the file exists, false otherwise
 function M.file_exists(path)
-    assert(path ~= nil)
-    path = M.stringify(path) or ''
+    assert(type(path) == 'string' and path ~= '')
 
     local file = io.open(path, 'r')
     if file then
@@ -415,8 +373,8 @@ function M.file_exists(path)
 end
 
 --- Checks if files exist in a given directory and returns the first one that exists
----@param base_paths string|table<number, string> # the list of base paths to check
----@param files string|table<number, string> # the list of files to check
+---@param base_paths string|table<number, string|nil> # the list of base paths to check
+---@param files string|table<number, string|nil> # the list of files to check
 ---@return string|nil # the first found file or nil if none exists
 function M.first_found_file(base_paths, files)
     base_paths = M.to_list(base_paths)
@@ -424,7 +382,8 @@ function M.first_found_file(base_paths, files)
 
     for _, path in ipairs(base_paths) do
         for _, file in ipairs(files) do
-            if M.file_exists(M.join_paths(path, file)) then
+            local full = M.join_paths(path, file)
+            if full and M.file_exists(full) then
                 return M.join_paths(path, file)
             end
         end
@@ -434,11 +393,10 @@ function M.first_found_file(base_paths, files)
 end
 
 --- Reads a text file
----@param path any # the path to the file to read
+---@param path string # the path to the file to read
 ---@return string|nil # the content of the file or nil if the file does not exist
 function M.read_text_file(path)
-    assert(path ~= nil)
-    path = M.stringify(path) or ''
+    assert(type(path) == 'string' and path ~= '')
 
     local file = io.open(path, 'rb')
     if not file then
@@ -452,11 +410,12 @@ function M.read_text_file(path)
 end
 
 --- Executes a given command and returns the output
----@param cmd string|table<number, string> # the command to execute
+---@param cmd string|string[] # the command to execute
 ---@param show_error boolean # whether to show an error if the command fails
 ---@return string|nil # the output of the command or nil if the command failed
 function M.cmd(cmd, show_error)
     cmd = M.to_list(cmd)
+    ---@cast cmd string[]
 
     if vim.fn.has 'win32' == 1 then
         cmd = vim.list_extend({ 'cmd.exe', '/C' }, cmd)
@@ -473,11 +432,10 @@ function M.cmd(cmd, show_error)
 end
 
 --- Checks if a file is under git
----@param file_name any # the name of the file to check
+---@param file_name string # the name of the file to check
 ---@return boolean # true if the file is under git, false otherwise
 function M.file_is_under_git(file_name)
-    assert(file_name ~= nil)
-    file_name = M.stringify(file_name)
+    assert(type(file_name) == 'string' and file_name ~= '')
 
     return M.cmd({ 'git', '-C', vim.fn.fnamemodify(file_name, ':p:h'), 'rev-parse' }, false) ~= nil
 end

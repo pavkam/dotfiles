@@ -1,5 +1,6 @@
 local lsp = require 'utils.lsp'
 
+---@class utils.lsp.keymaps
 local M = {}
 
 local keymaps = {

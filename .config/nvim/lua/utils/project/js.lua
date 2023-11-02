@@ -8,6 +8,7 @@ local bin_filetypes = { 'typescript', 'javascript' }
 local jsx_filetypes = { 'typescriptreact', 'javascriptreact' }
 local filetypes = vim.tbl_flatten { bin_filetypes, jsx_filetypes }
 
+---@class utils.project.js
 local M = {}
 
 --- Checks if a parsed package.json has a dependency

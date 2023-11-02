@@ -1,5 +1,6 @@
 local utils = require 'utils'
 
+---@class utils.lsp
 local M = {}
 
 --- Normalizes the name of a capability

@@ -2,7 +2,8 @@
 local icons = require 'utils.icons'
 local utils = require 'utils'
 
-M = {}
+---@class utils.ui
+local M = {}
 
 --- Helper function that calculates folds
 function M.fold_text()

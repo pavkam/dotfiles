@@ -7,6 +7,7 @@ local python_project = require 'utils.project.python'
 local dotnet_project = require 'utils.project.dotnet'
 local project_internals = require 'utils.project.internals'
 
+---@class utils.project
 local M = {}
 
 M.root = project_internals.root

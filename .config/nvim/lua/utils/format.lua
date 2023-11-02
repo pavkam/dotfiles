@@ -1,6 +1,7 @@
 local utils = require 'utils'
 local settings = require 'utils.settings'
 
+---@class utils.format
 local M = {}
 
 local setting_name = 'format_enabled'

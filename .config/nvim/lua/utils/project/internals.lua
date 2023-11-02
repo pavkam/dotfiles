@@ -4,6 +4,7 @@ local settings = require 'utils.settings'
 
 local setting_name = 'root_paths'
 
+---@class utils.project.internals
 local M = {}
 
 -- root patterns to find project root if the LSP failed

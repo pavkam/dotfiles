@@ -3,6 +3,7 @@ local lsp = require 'utils.lsp'
 local project = require 'utils.project'
 local settings = require 'utils.settings'
 
+---@class utils.lint
 local M = {}
 
 local setting_name = 'auto_linting_enabled'
