@@ -12,10 +12,16 @@ local M = {}
 M.root = project_internals.root
 M.roots = project_internals.roots
 
+--- Returns the type of the project
+---@param target string|integer|nil # the target to get the type for
+---@return string|nil # the type of the project
 function M.type(target)
     return (js_project.type(target) or go_project.type(target) or python_project.type(target) or dotnet_project.type(target))
 end
 
+--- Configures debugging for a given target
+---@param target string|integer|nil # the target to configure debugging for
+---@return boolean # whether the debugging was configured
 local function setup_debugging(target)
     if js_project.type(target) then
         js_project.configure_debugging()
@@ -32,6 +38,8 @@ local function setup_debugging(target)
     return true
 end
 
+--- Starts or continues debugging for a given target
+---@param target string|integer|nil # the target to start or continue debugging for
 function M.continue_debugging(target)
     local current_session = dap.session()
     if not current_session then

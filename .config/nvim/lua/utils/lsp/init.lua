@@ -3,14 +3,14 @@ local utils = require 'utils'
 local M = {}
 
 --- Normalizes the name of a capability
----@param method string # the name of the capability
+---@param capability string # the name of the capability
 ---@return string # the normalized name of the capability
-local function normalize_capability(method)
-    assert(type(method) == 'string' and method)
+local function normalize_capability(capability)
+    assert(type(capability) == 'string' and capability ~= '')
 
-    method = method:find '/' and method or 'textDocument/' .. method
+    capability = capability:find '/' and capability or 'textDocument/' .. capability
 
-    return method
+    return capability
 end
 
 --- Checks whether a client is a special client
@@ -23,12 +23,12 @@ end
 
 --- Checks whether a client has a capability
 ---@param client { supports_method: function } # the client to check
----@param method string # the name of the capability
+---@param capability string # the name of the capability
 ---@return boolean # whether the client has the capability
-function M.client_has_capability(client, method)
+function M.client_has_capability(client, capability)
     assert(client and client.supports_method)
 
-    return client.supports_method(normalize_capability(method))
+    return client.supports_method(normalize_capability(capability))
 end
 
 --- Checks whether a buffer has a capability
@@ -49,19 +49,18 @@ function M.buffer_has_capability(buffer, method)
 end
 
 --- Notifies all clients that a file has been renamed
----@param from any # the old name of the file
----@param to any # the new name of the file
+---@param from string # the old name of the file
+---@param to string # the new name of the file
 function M.notify_file_renamed(from, to)
-    from = utils.stringify(from)
-    from = utils.stringify(to)
-
-    assert(from and to)
+    assert(type(from) == 'string' and from ~= '')
+    assert(type(to) == 'string' and to ~= '')
 
     local clients = vim.lsp.get_active_clients()
 
+    local cap = 'workspace/willRenameFiles'
     for _, client in ipairs(clients) do
-        if client:supports_method 'workspace/willRenameFiles' then
-            local resp = client.request_sync('workspace/willRenameFiles', {
+        if M.client_has_capability(client, cap) then
+            local resp = client.request_sync(cap, {
                 files = {
                     {
                         oldUri = vim.uri_from_fname(from),
@@ -78,7 +77,7 @@ function M.notify_file_renamed(from, to)
 end
 
 --- Registers a callback for a client attach event
----@param callback function # the callback to register
+---@param callback fun(client: table, buffer: integer) # the callback to register
 ---@param target string|integer|any[]|nil # the target to register the callback for
 function M.on_attach(callback, target)
     assert(type(callback) == 'function' and callback)
@@ -152,16 +151,14 @@ end
 
 --- Checks whether a client is active for a buffer
 ---@param buffer integer|nil # the buffer to check the client for or 0 or nil for current
----@param name any # the name of the client
+---@param name string # the name of the client
 ---@return boolean # whether the client is active
 function M.is_active_for_buffer(buffer, name)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-    name = utils.stringify(name)
+    assert(type(name) == 'string' and name ~= '')
 
-    assert(name)
+    buffer = buffer or vim.api.nvim_get_current_buf()
 
     local ok, clients = pcall(vim.lsp.get_active_clients, { name = name, bufnr = buffer })
-
     return ok and #clients > 0
 end
 

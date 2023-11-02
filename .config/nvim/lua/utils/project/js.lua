@@ -10,9 +10,18 @@ local filetypes = vim.tbl_flatten { bin_filetypes, jsx_filetypes }
 
 local M = {}
 
-local function parsed_package_json_has_dependency(parsed_json, type, dependency)
-    if parsed_json[type] then
-        for key, _ in pairs(parsed_json[type]) do
+--- Checks if a parsed package.json has a dependency
+---@param parsed_json table<string, any> # the parsed package.json
+---@param dep_type string # the type of the dependency
+---@param dependency string # the name of the dependency
+---@return boolean # whether the dependency exists
+local function parsed_package_json_has_dependency(parsed_json, dep_type, dependency)
+    assert(type(parsed_json) == 'table')
+    assert(type(dep_type) == 'string' and dep_type ~= '')
+    assert(type(dependency) == 'string' and dependency ~= '')
+
+    if parsed_json[dep_type] then
+        for key, _ in pairs(parsed_json[dep_type]) do
             if key == dependency then
                 return true
             end
@@ -22,6 +31,9 @@ local function parsed_package_json_has_dependency(parsed_json, type, dependency)
     return false
 end
 
+--- Reads a package.json for a given target
+---@param target string|integer|nil # the target to read the package.json for
+---@return table<string, any>|nil # the parsed package.json
 local function read_package_json(target)
     local full_name = utils.first_found_file(project_internals.roots(target), 'package.json')
 
@@ -29,6 +41,10 @@ local function read_package_json(target)
     return json_content and vim.json.decode(json_content)
 end
 
+--- Checks if a target has a dependency
+---@param target string|integer|nil # the target to check the dependency for
+---@param dependency string # the name of the dependency
+---@return boolean # whether the dependency exists
 function M.has_dependency(target, dependency)
     local parsed_json = read_package_json(target)
     if not parsed_json then
@@ -41,14 +57,26 @@ function M.has_dependency(target, dependency)
     )
 end
 
+--- Gets the path to a binary for a given target
+---@param target string|integer|nil # the target to get the binary path for
+---@param bin string|nil # the path of the binary
 function M.get_bin_path(target, bin)
-    return utils.first_found_file(project_internals.roots(target), utils.join_paths('node_modules', '.bin', bin))
+    local sub = utils.join_paths('node_modules', '.bin', bin)
+    ---@cast sub string
+
+    return utils.first_found_file(project_internals.roots(target), sub)
 end
 
+--- Gets the path to the eslint config for a given target
+---@param target string|integer|nil # the target to get the eslint config for
+---@return string|nil # the path to the eslint config
 function M.get_eslint_config_path(target)
     return utils.first_found_file(project_internals.roots(target), { '.eslintrc.json', '.eslintrc.js', 'eslint.config.js', 'eslint.config.json' })
 end
 
+--- Returns the type of the project
+---@param target string|integer|nil # the target to get the type for
+---@return string|nil # the type of the project
 function M.type(target)
     local package = read_package_json(target)
 
@@ -123,6 +151,8 @@ local dap_configurations = {
     },
 }
 
+--- Configures debugging for a given target
+---@param target string|integer|nil # the target to configure debugging for
 function M.configure_debugging(target)
     for _, language in ipairs(bin_filetypes) do
         dap.configurations[language] = {

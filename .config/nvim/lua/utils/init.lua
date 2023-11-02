@@ -281,7 +281,9 @@ function M.float_term(cmd, opts)
         local buf = terminals[termkey].buf
         vim.api.nvim_create_autocmd('BufEnter', {
             buffer = buf,
-            callback = vim.cmd.startinsert,
+            callback = function()
+                vim.cmd.startinsert()
+            end,
         })
     end
 
@@ -300,7 +302,7 @@ function M.expand_target(target)
         return target, vim.api.nvim_buf_get_name(target)
     else
         local path = M.stringify(target)
-        return vim.api.nvim_get_current_buf(), path ~= '' and vim.loop.fs_realpath(path) or nil
+        return vim.api.nvim_get_current_buf(), path and vim.loop.fs_realpath(path) or nil
     end
 end
 

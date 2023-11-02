@@ -40,7 +40,7 @@ function M.active_for_buffer(buffer)
 end
 
 --- Applies all active formatters to a buffer
----@param buffer integer|nil # the buffer to apply the formatters to or nil for current
+---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
 ---@param force boolean|nil # whether to force the formatting
 ---@param injected boolean|nil # whether to format injected code
 function M.apply(buffer, force, injected)
@@ -63,7 +63,7 @@ function M.apply(buffer, force, injected)
 end
 
 --- Toggles auto-formatting for a buffer
----@param buffer integer|nil # the buffer to toggle the formatting for or nil for current
+---@param buffer integer|nil # the buffer to toggle the formatting for or 0 or nil for current
 function M.toggle_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 

@@ -34,7 +34,7 @@ local function linters(buffer)
 end
 
 --- Gets the names of all active linters for a buffer
----@param buffer integer|nil # the buffer to get the linters for or nil for current
+---@param buffer integer|nil # the buffer to get the linters for or 0 or nil for current
 ---@return string[] # the names of the active linters
 function M.active_names_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
@@ -42,7 +42,7 @@ function M.active_names_for_buffer(buffer)
 end
 
 --- Checks whether there are any active linters for a buffer
----@param buffer integer|nil # the buffer to check the linters for or nil for current
+---@param buffer integer|nil # the buffer to check the linters for or 0 or nil for current
 ---@return boolean # whether there are any active linters
 function M.active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
@@ -51,7 +51,7 @@ function M.active_for_buffer(buffer)
 end
 
 --- Applies all active linters to a buffer
----@param buffer integer|nil # the buffer to apply the linters to or nil for current
+---@param buffer integer|nil # the buffer to apply the linters to or 0 or nil for current
 ---@param force boolean|nil # whether to force the linting
 function M.apply(buffer, force)
     if not force and (not settings.get_global(setting_name, true) or not settings.get_permanent_for_buffer(buffer, setting_name, true)) then

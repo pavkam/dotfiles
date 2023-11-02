@@ -6,6 +6,9 @@ local project_internals = require 'utils.project.internals'
 
 local M = {}
 
+--- Returns the type of the project
+---@param target string|integer|nil # the target to get the type for
+---@return string|nil # the type of the project
 function M.type(target)
     local root = project_internals.root(target)
 
@@ -17,6 +20,9 @@ function M.type(target)
     return nil
 end
 
+--- Gets the launch DLL for a given target
+---@param target string|integer|nil # the target to get the launch DLL for
+---@return thread # the coroutine to get the DLL
 local function get_dll(target)
     return coroutine.create(function(dap_run_co)
         ---@diagnostic disable-next-line: param-type-mismatch
@@ -49,6 +55,8 @@ local dap_configurations = {
     },
 }
 
+--- Configures debugging for a given target
+---@param target string|integer|nil # the target to configure debugging for
 function M.configure_debugging(target)
     dap.configurations.coreclr = utils.tbl_copy(dap_configurations)
 

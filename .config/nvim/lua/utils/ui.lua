@@ -26,6 +26,8 @@ end
 ---@param name string # the name of the highlight group
 ---@return table<string, string>|nil # the foreground color of the highlight group
 function M.hl_fg_color(name)
+    assert(type(name) == 'string' and name ~= '')
+
     ---@diagnostic disable-next-line: undefined-field
     local hl = vim.api.nvim_get_hl and vim.api.nvim_get_hl(0, { name = name, link = false }) or vim.api.nvim_get_hl_by_name(name, true)
     local fg = hl and hl.fg or hl.foreground
@@ -34,18 +36,19 @@ function M.hl_fg_color(name)
 end
 
 --- Pretty prints a list
----@param list table # the list to pretty print
----@param prefix any # the prefix to use (optional)
----@param separator any|nil # the separator to use (optional)
+---@param list string[] # the list to pretty print
+---@param prefix string|nil # the prefix to use (optional)
+---@param separator string|nil # the separator to use (optional)
 ---@return string # the pretty printed list
 function M.sexy_list(list, prefix, separator)
     separator = separator or icons.TUI.ListSeparator
     prefix = prefix or icons.TUI.SelectionPrefix
-    return utils.stringify(prefix) .. ' ' .. utils.tbl_join(list, ' ' .. utils.stringify(separator) .. ' ')
+
+    return prefix .. ' ' .. utils.tbl_join(list, ' ' .. separator .. ' ')
 end
 
 --- Gets the current cursor position in relation to the word its on
----@param window integer|nil # the window to get the cursor position for or nil for current
+---@param window integer|nil # the window to get the cursor position for or 0 or nil for current
 ---@return boolean, boolean # whether the cursor is at the start of a word, whether the cursor is at the end of a word
 function M.cursor_word_relation(window)
     window = window or 0

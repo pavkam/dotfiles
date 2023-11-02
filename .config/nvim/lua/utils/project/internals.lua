@@ -33,16 +33,28 @@ M.root_patterns = {
 
     -- lua / neovim
     'lazy-lock.json',
+    '.luarc.json',
+    '.luarc.jsonc',
+    '.luacheckrc',
+    '.stylua.toml',
+    'stylua.toml',
+    'selene.toml',
+    'selene.yml',
 
     -- .NET
     '*.sln',
 }
 
+--- Returns the project roots for a given target
+---@param target string|integer|nil # the target to get the roots for
+---@return string[] # the list of roots
 function M.roots(target)
     local buffer, path = utils.expand_target(target)
 
     -- check for cached roots
     local roots = settings.get_transient_for_buffer(buffer, setting_name)
+
+    ---@cast roots string[]
     if roots then
         return roots
     end
@@ -80,6 +92,10 @@ function M.roots(target)
     return roots
 end
 
+--- Returns the primary root for a given target
+---@param target string|integer|nil # the target to get the root for
+---@param deepest boolean|nil # whether to return the deepest or the shallowest root
+---@return string|nil # the root
 function M.root(target, deepest)
     local roots = M.roots(target)
 
@@ -90,6 +106,9 @@ function M.root(target, deepest)
     end
 end
 
+--- Returns the path to the launch.json file for a given target
+---@param target string|integer|nil # the target to get the launch.json for
+---@return string|nil # the path to the launch.json file
 function M.get_launch_json(target)
     return utils.first_found_file(M.roots(target), { '.dap.json', '.vscode/launch.json' })
 end

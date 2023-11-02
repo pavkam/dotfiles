@@ -95,7 +95,7 @@ local keymaps = {
 }
 
 --- Attaches keymaps to a client
----@param client any # the client to attach the keymaps to
+---@param client table # the client to attach the keymaps to
 ---@param buffer integer # the buffer to attach the keymaps to
 local function attach_keymaps(client, buffer)
     assert(type(client) == 'table' and client)
@@ -123,7 +123,7 @@ local function attach_keymaps(client, buffer)
 end
 
 --- Attaches keymaps to a client
----@param client any # the client to attach the keymaps to
+---@param client table # the client to attach the keymaps to
 ---@param buffer integer|nil # the buffer to attach the keymaps to or nil for current
 function M.attach(client, buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
