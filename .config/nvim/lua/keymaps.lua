@@ -317,7 +317,7 @@ vim.keymap.set('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
 vim.keymap.set({ 'n', 'x' }, '<M-x>', 'd')
 
 -- Some custom commands
-vim.api.nvim_create_user_command('DebugBufferSettings', function()
+vim.api.nvim_create_user_command('Buffer', function()
     local health = require 'utils.health'
     health.show_for_buffer()
-end, { desc = 'Show something', nargs = 0 })
+end, { desc = 'Show buffer information', nargs = 0 })

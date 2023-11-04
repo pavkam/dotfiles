@@ -290,6 +290,9 @@ return {
             end
 
             mlsp.setup { ensure_installed = ensure_installed, handlers = { setup } }
+
+            -- re-trigger FileType autocmds to force LSP to start
+            vim.api.nvim_exec_autocmds("FileType", {})
         end,
     },
     {
