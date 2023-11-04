@@ -67,4 +67,18 @@ function M.continue_debugging(target)
     end
 end
 
+--- Gets the dap configurations for a given target
+---@param target string|integer|nil # the target to get the dap configurations for
+---@return Configuration[] # the dap configurations
+function M.dap_configurations(target)
+    if not dap.session() then
+        if not setup_debugging(target) then
+            return {}
+        end
+    end
+
+    local project_type = M.type(target)
+    return project_type and dap.configurations[project_type] or {}
+end
+
 return M

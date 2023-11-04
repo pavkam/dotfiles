@@ -111,3 +111,5 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
         settings.set_permanent_for_buffer(evt.buf, 'custom_events_triggered', true)
     end
 end)
+
+

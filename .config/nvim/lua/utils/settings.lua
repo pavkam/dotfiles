@@ -87,7 +87,7 @@ function M.transient(func, option)
     assert(type(func) == 'function')
 
     auto_transient_id = auto_transient_id + 1
-    local var_name = option or tostring(auto_transient_id)
+    local var_name = option or 'cached_' .. tostring(auto_transient_id)
 
     return function()
         local buffer = vim.api.nvim_get_current_buf()
@@ -162,25 +162,19 @@ function M.set_global(option, value)
     set('global', nil, tbl)
 end
 
-vim.api.nvim_create_user_command('DebugBufferSettings', function()
-    local lsp = require 'utils.lsp'
-    local project = require 'utils.project'
+--- Gets a snapshot of the settings for a buffer
+---@param buffer integer|nil # the buffer to get the settings for or 0 or nil for current
+---@return table<string, table<string, any>> # the settings tables
+function M.snapshot_for_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local buffer = vim.api.nvim_get_current_buf()
     local settings = {
-        project = {
-            lsp_roots = lsp.roots(buffer),
-            roots = project.roots(buffer),
-            type = project.type(buffer),
-        },
         transient = get('transient', buffer),
         permanent = get('permanent', buffer),
         global = get 'global',
     }
 
-    require('noice').redirect(function()
-        print(vim.inspect(settings))
-    end)
-end, { desc = 'Run Lazygit', nargs = 0 })
+    return settings
+end
 
 return M

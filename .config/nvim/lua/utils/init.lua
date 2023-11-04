@@ -9,6 +9,8 @@ local function stringify(value)
         return nil
     elseif type(value) == 'string' then
         return value
+    elseif vim.tbl_islist(value) then
+        return M.tbl_join(value, ', ')
     elseif type(value) == 'table' then
         return vim.inspect(value)
     elseif type(value) == 'function' then
