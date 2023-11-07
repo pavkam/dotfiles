@@ -325,7 +325,6 @@ return {
     },
     {
         'Wansmer/symbol-usage.nvim',
-        enabled = false,
         event = 'BufReadPre', -- need run before LspAttach if you use nvim 0.9. On 0.10 use 'LspAttach'
         opts = {
             kinds = {
@@ -345,6 +344,7 @@ return {
                 enabled = true,
                 include_declaration = false,
             },
+            disable = { lsp = { "lua_ls" } },
         },
     },
 }

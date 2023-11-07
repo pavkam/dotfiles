@@ -120,6 +120,7 @@ local M = {
         Speed = '⚡',
         Clock = '',
         Replace = '󰛔',
+        AI = '󱐏 ',
     },
 }
 

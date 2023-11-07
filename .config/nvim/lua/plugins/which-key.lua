@@ -20,6 +20,7 @@ return {
             ['<leader>?'] = { name = icons.UI.Help .. ' Help' },
             ['<leader>d'] = { name = icons.UI.Debugger .. ' Debugger' },
             ['<leader>s'] = { name = icons.UI.LSP .. ' Source' },
+            ['<leader>x'] = { name = icons.UI.AI .. ' AI' },
         },
     },
     config = function(_, opts)

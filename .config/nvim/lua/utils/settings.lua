@@ -87,7 +87,7 @@ function M.transient(func, option)
     assert(type(func) == 'function')
 
     auto_transient_id = auto_transient_id + 1
-    local var_name = option or 'cached_' .. tostring(auto_transient_id)
+    local var_name = option or ('cached_' .. tostring(auto_transient_id))
 
     return function()
         local buffer = vim.api.nvim_get_current_buf()
