@@ -20,6 +20,9 @@ Inside these `dotfiles` you will be able to find the following setup:
 * `Neovim` is used as the primary editor in conjunction with `tmux` and `kitty` as my primary development environment,
 
 # Screens
+
+![image](https://github.com/pavkam/dotfiles/assets/7327309/81c0d485-5eec-4d23-ac2b-d19f376646fb)
+![image](https://github.com/pavkam/dotfiles/assets/7327309/9249e3ec-4351-4e0a-85d9-7025f67be4e3)
 ![image](https://user-images.githubusercontent.com/7327309/147490998-1a600287-3555-4bce-9a29-d06c2e476aee.png)
 ![image](https://user-images.githubusercontent.com/7327309/147490417-8197f664-31df-45fe-87b4-74ae495cee19.png)
 ![image](https://user-images.githubusercontent.com/7327309/147490500-31312ab3-922b-45ea-9c1a-f2d7f689901b.png)
