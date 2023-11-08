@@ -11,11 +11,16 @@ g.markdown_recommended_style = 0
 
 -- utilities
 o.shell = '/bin/bash -i'
-o.grepprg = [[rg\ --vimgrep\ --no-heading\ --smart-case]]
-o.grepformat = '%f:%l:%c:%m,%f:%l:%m'
+
+if vim.fn.executable 'rg' then
+    o.grepprg = [[rg\ --vimgrep\ --no-heading\ --smart-case]]
+    o.grepformat = '%f:%l:%c:%m,%f:%l:%m'
+end
 
 -- terminal
+o.ttimeout = true
 o.timeoutlen = 300
+o.ttimeoutlen = 10
 o.errorbells = false
 o.visualbell = true
 o.title = true
@@ -47,10 +52,14 @@ o.splitbelow = true
 o.splitkeep = 'screen'
 o.splitright = true
 
+-- spelling
+o.spelloptions:append 'camel'
+
 -- lines
 o.signcolumn = 'yes:1'
 o.relativenumber = true
 o.number = true
+o.breakat = [[\ \	;:,!?]]
 o.foldlevelstart = 99
 o.foldlevel = 99
 o.foldcolumn = '1'
@@ -77,6 +86,7 @@ o.autoread = true
 o.undofile = true
 o.undolevels = 10000
 o.updatetime = 200
+o.shada = { "'1000", '<50', 's10', 'h' }
 
 -- tabs
 o.smartindent = true
@@ -101,6 +111,7 @@ o.conceallevel = 3
 o.confirm = true
 o.backspace = 'indent,eol,start'
 o.whichwrap:append '<,>,[,]'
+o.formatoptions = o.formatoptions - 'a' - 't' + 'c' + 'q' - 'o' + 'r' + 'n' + 'j' - '2'
 
 if vim.fn.has 'nvim-0.10' == 1 then
     o.smoothscroll = true

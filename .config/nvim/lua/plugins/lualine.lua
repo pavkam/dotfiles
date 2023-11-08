@@ -48,6 +48,22 @@ return {
                         end,
                     },
                     { 'filetype', icon_only = true, separator = '', padding = { left = 1, right = 0 } },
+                    {
+                        function()
+                            local title = vim.fn.win_gettype() == 'loclist' and vim.fn.getloclist(0, { title = 0 }).title
+                                or vim.fn.getqflist({ title = 0 }).title
+                            if not title or title == '' then
+                                title = '<untitled>'
+                            end
+
+                            return title
+                        end,
+                        cond = function()
+                            return vim.bo.filetype == 'qf'
+                        end,
+                        separator = '',
+                        padding = { left = 1, right = 1 },
+                    },
                     { 'filename', path = 1, symbols = { modified = ' ' .. icons.Files.Modified .. ' ', readonly = '', unnamed = '' } },
                 },
                 lualine_x = {
@@ -73,11 +89,11 @@ return {
                         end,
                     },
                     {
-                        function()
+                        settings.transient(function(buffer)
                             return ui.sexy_list(lsp.active_names_for_buffer(buffer), icons.UI.LSP)
-                        end,
+                        end),
                         cond = settings.transient(function(buffer)
-                            return lsp.any_active_for_buffer()
+                            return lsp.any_active_for_buffer(buffer)
                         end),
                         color = ui.hl_fg_color 'Title',
                         on_click = function()
@@ -114,6 +130,7 @@ return {
                             removed = icons.Git.Removed .. ' ',
                         },
                         source = function()
+                            ---@diagnostic disable-next-line: undefined-field
                             local gitsigns = vim.b.gitsigns_status_dict
 
                             if gitsigns then

@@ -12,9 +12,12 @@ local M = {
         PromptPrefix = '',
         SelectionPrefix = '',
         ListSeparator = '◦',
+        ScrollLine = '▒',
+        ScrollView = '█',
     },
     Diagnostics = {
         Prefix = '●',
+        Action = ' ',
         LSP = {
             Error = '',
             Warn = '',

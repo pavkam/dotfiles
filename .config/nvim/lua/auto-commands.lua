@@ -1,10 +1,26 @@
 local utils = require 'utils'
 local settings = require 'utils.settings'
 
+-- check if the file has been changed outside of neovim
+utils.on_event({ 'FocusGained', 'TermClose', 'TermLeave' }, function()
+    vim.cmd.checktime()
+end)
+
+-- show cursor only in active window
+utils.on_event({ 'InsertLeave', 'WinEnter' }, function(evt)
+    if vim.bo[evt.buf].buftype == '' then
+        vim.opt_local.cursorline = true
+    end
+end)
+
+utils.on_event({ 'InsertEnter', 'WinLeave' }, function()
+    vim.opt_local.cursorline = false
+end)
+
 -- highlight on yank
 utils.on_event('TextYankPost', function()
     vim.highlight.on_yank()
-end, '*')
+end)
 
 -- resize splits if window got resized
 utils.on_event('VimResized', function()
@@ -12,6 +28,29 @@ utils.on_event('VimResized', function()
     vim.cmd 'tabdo wincmd ='
     vim.cmd('tabnext ' .. current_tab)
 end)
+
+-- disable swap/undo files for certain filetypes
+utils.on_event('BufWritePre', function(evt)
+    vim.opt_local.undofile = false
+    if evt.file == 'COMMIT_EDITMSG' or evt.file == 'MERGE_MSG' then
+        vim.opt_local.swapfile = false
+    end
+end, { '/tmp/*', '*.tmp', '*.bak', 'COMMIT_EDITMSG', 'MERGE_MSG' })
+
+-- disable swap/undo/backup files in temp directories or shm
+utils.on_event({ 'BufNewFile', 'BufReadPre' }, function()
+    vim.opt_local.undofile = false
+    vim.opt_local.swapfile = false
+    vim.opt_global.backup = false
+    vim.opt_global.writebackup = false
+end, {
+    '/tmp/*',
+    '$TMPDIR/*',
+    '$TMP/*',
+    '$TEMP/*',
+    '*/shm/*',
+    '/private/var/*',
+})
 
 -- go to last loc when opening a buffer
 utils.on_event('BufReadPost', function()

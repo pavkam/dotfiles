@@ -262,8 +262,12 @@ return {
                             ['s'] = flash,
                         },
                     },
-                    extensions = {
-                        ['ui-select'] = { require('telescope.themes').get_dropdown {} },
+                },
+                extensions = {
+                    ['ui-select'] = {
+                        require('telescope.themes').get_dropdown {
+                            layout_config = { width = 0.3, height = 0.4 },
+                        },
                     },
                 },
             }

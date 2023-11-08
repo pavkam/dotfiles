@@ -76,7 +76,7 @@ return {
         openai_edit_params = {
             model = 'gpt-4-1106-preview',
         },
-        actions_paths = vim.fn.stdpath 'config' .. '/chat_gpt_actions.json',
+        actions_paths = { vim.fn.stdpath 'config' .. '/chat_gpt_actions.json' },
         show_quickfixes_cmd = 'copen',
     },
     config = function(_, opts)

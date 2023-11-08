@@ -113,7 +113,7 @@ vim.keymap.set('n', '[b', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })
 vim.keymap.set('n', ']b', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 
 -- clear search with <esc>
-vim.keymap.set({ 'i', 'n' }, '<esc>', '<cmd>noh<cr><esc>', { desc = 'Escape and clear highlight' })
+vim.keymap.set({ 'i', 'n' }, '<esc>', '<cmd>nohlsearch<cr><esc>', { desc = 'Escape and clear highlight' })
 
 -- better indenting
 vim.keymap.set('x', '<', '<gv', { desc = 'Indent selection' })
@@ -310,6 +310,13 @@ utils.attach_keymaps('help', function(set)
     set('n', 'q', '<cmd>close<cr>', { silent = true, remap = true })
 end, true)
 
+-- Some custom mappings for file types
+if vim.fn.executable 'jq' then
+    utils.attach_keymaps('json', function(set)
+        set('n', '<leader>sJ', ':%!jq .<cr>', { desc = 'Pretty-format JSON' })
+    end)
+end
+
 -- Specials using "Command/Super" key (when available!)
 vim.keymap.set('n', '<M-]>', '<C-i>')
 vim.keymap.set('n', '<M-[>', '<C-o>')
@@ -321,3 +328,11 @@ vim.api.nvim_create_user_command('Buffer', function()
     local health = require 'utils.health'
     health.show_for_buffer()
 end, { desc = 'Show buffer information', nargs = 0 })
+
+-- misspellings
+vim.cmd.cnoreabbrev('qw', 'wq')
+vim.cmd.cnoreabbrev('Wq', 'wq')
+vim.cmd.cnoreabbrev('WQ', 'wq')
+vim.cmd.cnoreabbrev('Qa', 'qa')
+vim.cmd.cnoreabbrev('Bd', 'bd')
+vim.cmd.cnoreabbrev('bD', 'bd')
