@@ -112,4 +112,5 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     end
 end)
 
-
+-- TODO: detect shell file type using shebang (#!)
+-- https://www.reddit.com/r/neovim/comments/17q3qmd/autodetecting_filetype_from_shebang/

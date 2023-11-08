@@ -1,7 +1,10 @@
 # My personal `dotfiles`
-Inside these dotfiles you will be able to find the following setup:
+
+Inside these `dotfiles` you will be able to find the following setup:
+
 * general setup for unix utilities including `mc`, `htop`, `wget`, `less` and more,
-* `vim` and its plugins,
+* `neovim` and my personal config,
+* `tmux` and some plugins,
 * `vscode` and its plugins,
 * `fzf` and additional settings,
 * `zsh`, including `oh-my-zsh` plus plugins,
@@ -11,9 +14,10 @@ Inside these dotfiles you will be able to find the following setup:
 * other stuff...
 
 # Noteworthy things
-* The dotfiles were developed on **Manjaro Linux** and will only install dependencies on **Arch** (and related) distributions. On other OSes ot will be up to you to install the dependencies.
-* My workflow is deeply influenced by `fzf` as well so a lot of commands will pipe out put through the fuzzy finder. Start by pressing `CTRL + tilde` in the zsh shell to see the core menu "_quickies-menu_".
-* I am not a `vim` user (nor emacs!) so my setup of is heavily skewed towards my way of working which is basecd on IDEs. Also, I use `vim` sparingly so I don't need much productivity.
+
+* The `dotfiles`` were developed on **Manjaro Linux** initially and will tentatively install all dependencies on **Arch** (and related) distributions. Currently, using macOS and Homebrew setup primarily during my day-to-day so the installer is mostly tailored toward that goal.
+* My workflow is deeply influenced by `fzf` as well so a lot of commands will pipe out put through the fuzzy finder,
+* `Neovim` is used as the primary editor in conjunction with `tmux` and `kitty` as my primary development environment,
 
 # Screens
 ![image](https://user-images.githubusercontent.com/7327309/147490998-1a600287-3555-4bce-9a29-d06c2e476aee.png)
