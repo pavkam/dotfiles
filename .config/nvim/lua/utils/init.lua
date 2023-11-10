@@ -171,6 +171,13 @@ function M.on_user_event(events, callback)
     end, events)
 end
 
+--- Creates an auto command that triggers on global status update event
+---@param callback function # the callback to call when the event is triggered
+---@return number # the group id of the created group
+function M.on_status_update_event(callback)
+    return M.on_event('User', callback, 'StatusUpdate')
+end
+
 --- Allows attaching keymaps in a given buffer alone.
 ---@param file_types string|table|nil # the list of file types to attach the keymaps to
 ---@param callback fun(set: fun(mode: string|table|nil, lhs: string, rhs: string|function, opts: table)) # the callback to call when the event is triggered
@@ -222,6 +229,11 @@ end
 ---@param data any # the data to pass to the event
 function M.trigger_user_event(event, data)
     vim.api.nvim_exec_autocmds('User', { pattern = event, modeline = false, data = data })
+end
+
+--- Trigger a status update event
+function M.trigger_status_update_event()
+    M.trigger_user_event 'StatusUpdate'
 end
 
 --- Shows a notification
@@ -440,6 +452,39 @@ function M.file_is_under_git(file_name)
     assert(type(file_name) == 'string' and file_name ~= '')
 
     return M.cmd({ 'git', '-C', vim.fn.fnamemodify(file_name, ':p:h'), 'rev-parse' }, false) ~= nil
+end
+
+--- Gets the foreground color of a highlight group
+---@param name string # the name of the highlight group
+---@return table<string, string>|nil # the foreground color of the highlight group
+function M.hl_fg_color(name)
+    assert(type(name) == 'string' and name ~= '')
+
+    ---@diagnostic disable-next-line: undefined-field
+    local hl = vim.api.nvim_get_hl and vim.api.nvim_get_hl(0, { name = name, link = false }) or vim.api.nvim_get_hl_by_name(name, true)
+    local fg = hl and hl.fg or hl.foreground
+
+    return fg and { fg = string.format('#%06x', fg) }
+end
+
+local icons = require 'utils.icons'
+
+--- Helper function that calculates folds
+function M.fold_text()
+    local ok = pcall(vim.treesitter.get_parser, vim.api.nvim_get_current_buf())
+    ---@diagnostic disable-next-line: undefined-field
+    local ret = ok and vim.treesitter.foldtext and vim.treesitter.foldtext() or nil
+    if not ret then
+        ret = {
+            {
+                vim.api.nvim_buf_get_lines(0, vim.v.lnum - 1, vim.v.lnum, false)[1],
+                {},
+            },
+        }
+    end
+
+    table.insert(ret, { ' ' .. icons.TUI.Ellipsis })
+    return ret
 end
 
 return M

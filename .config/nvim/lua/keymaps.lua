@@ -1,4 +1,3 @@
-local ui = require 'utils.ui'
 local utils = require 'utils'
 local settings = require 'utils.settings'
 
@@ -55,9 +54,16 @@ vim.keymap.set('i', '<Tab>', function()
         end
     end
 
-    local has_before, has_after = ui.cursor_word_relation()
-    if not has_before and has_after then
-        return '<C-t>'
+    local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+    if c and r then
+        local line = vim.api.nvim_buf_get_lines(vim.fn.winbufnr(0), r - 1, r, true)[1]
+
+        local before = string.sub(line, 1, c)
+        local after = string.sub(line, c + 1, -1)
+
+        if string.match(before, '^%s*$') ~= nil and string.match(after, '^%s*$') == nil then
+            return '<C-t>'
+        end
     end
 
     return '<Tab>'

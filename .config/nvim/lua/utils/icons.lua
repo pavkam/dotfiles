@@ -123,6 +123,7 @@ local M = {
         Speed = '⚡',
         Clock = '',
         Replace = '󰛔',
+        Disabled = '✗',
         AI = '󱐏 ',
     },
 }

@@ -74,7 +74,7 @@ end
 
 ---@diagnostic disable-next-line: undefined-field
 if vim.treesitter.foldtext then
-    o.foldtext = [[v:lua.require'utils.ui'.fold_text()]]
+    o.foldtext = [[v:lua.require'utils'.fold_text()]]
 end
 
 -- file management

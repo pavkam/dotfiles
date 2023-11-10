@@ -40,6 +40,13 @@ function M.active_for_buffer(buffer)
     return #formatters(buffer) > 0
 end
 
+--- Checks whether auto-formatting is enabled for a buffer
+---@param buffer integer|nil # the buffer to check the formatting for or 0 or nil for current
+---@return boolean # whether auto-formatting is enabled
+function M.enabled_for_buffer(buffer)
+    return settings.get_toggle_for_buffer(buffer, setting_name)
+end
+
 --- Applies all active formatters to a buffer
 ---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
 ---@param force boolean|nil # whether to force the formatting
@@ -47,8 +54,7 @@ end
 function M.apply(buffer, force, injected)
     local conform = require 'conform'
 
-    settings.get_permanent_for_buffer(buffer, 'auto_format_enabled', true)
-    if not force and (not settings.get_global(setting_name, true) or not settings.get_permanent_for_buffer(buffer, 'auto_format_enabled', true)) then
+    if not force and not M.enabled_for_buffer(buffer) then
         return
     end
 
@@ -66,15 +72,8 @@ end
 --- Toggles auto-formatting for a buffer
 ---@param buffer integer|nil # the buffer to toggle the formatting for or 0 or nil for current
 function M.toggle_for_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local enabled = settings.get_permanent_for_buffer(buffer, setting_name, true)
-
-    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
-    utils.info(string.format('Turning **%s** auto-formatting for *%s*.', enabled and 'off' or 'on', file_name))
-    settings.set_permanent_for_buffer(buffer, setting_name, not enabled)
-
-    if not enabled then
+    local enabled = settings.toggle_for_buffer(buffer, setting_name, 'auto-formatting')
+    if enabled then
         -- re-format
         M.apply(buffer)
     end
@@ -82,12 +81,8 @@ end
 
 --- Toggles auto-formatting globally
 function M.toggle()
-    local enabled = settings.get_global(setting_name, true)
-
-    utils.info(string.format('Turning **%s** auto-formatting *globally*.', enabled and 'off' or 'on'))
-    settings.set_global(setting_name, not enabled)
-
-    if not enabled then
+    local enabled = settings.toggle_global(setting_name, 'auto-formatting')
+    if enabled then
         -- re-format
         for _, buffer in ipairs(utils.get_listed_buffers()) do
             M.apply(buffer)

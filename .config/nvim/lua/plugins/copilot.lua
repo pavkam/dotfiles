@@ -25,8 +25,14 @@ return {
         local copilot_api = require 'copilot.api'
 
         copilot.setup(opts)
+
+        -- status updates for Copilot
+        local curr_status
         copilot_api.register_status_notification_handler(function()
-            utils.trigger_user_event('CopilotStatusUpdate', copilot_api.status.data)
+            if copilot_api.status.data.status ~= curr_status then
+                curr_status = copilot_api.status.data.status
+                utils.trigger_status_update_event()
+            end
         end)
     end,
 }

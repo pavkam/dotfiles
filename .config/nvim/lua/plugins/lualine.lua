@@ -5,7 +5,7 @@ return {
     },
     event = 'VeryLazy',
     opts = function()
-        local ui = require 'utils.ui'
+        local utils = require 'utils'
         local icons = require 'utils.icons'
         local lsp = require 'utils.lsp'
         local format = require 'utils.format'
@@ -13,10 +13,14 @@ return {
         local settings = require 'utils.settings'
 
         local copilot_colors = {
-            ['Normal'] = ui.hl_fg_color 'Special',
-            ['Warning'] = ui.hl_fg_color 'DiagnosticError',
-            ['InProgress'] = ui.hl_fg_color 'DiagnosticWarn',
+            ['Normal'] = utils.hl_fg_color 'Special',
+            ['Warning'] = utils.hl_fg_color 'DiagnosticError',
+            ['InProgress'] = utils.hl_fg_color 'DiagnosticWarn',
         }
+
+        local function sexy_list(list, prefix)
+            return prefix .. ' ' .. utils.tbl_join(list, ' ' .. icons.TUI.ListSeparator .. ' ')
+        end
 
         return {
             options = {
@@ -69,33 +73,45 @@ return {
                 lualine_x = {
                     {
                         settings.transient(function(buffer)
-                            return ui.sexy_list(lint.active_names_for_buffer(buffer), icons.UI.Lint)
+                            return sexy_list(lint.active_names_for_buffer(buffer), lint.enabled_for_buffer(buffer) and icons.UI.Lint or icons.UI.Disabled)
                         end),
                         cond = settings.transient(function(buffer)
                             return lint.active_for_buffer(buffer)
                         end),
-                        color = ui.hl_fg_color 'DiagnosticWarn',
+                        color = settings.transient(function()
+                            if not lint.enabled_for_buffer(buffer) then
+                                return utils.hl_fg_color 'DiagnosticError'
+                            else
+                                return utils.hl_fg_color 'DiagnosticWarn'
+                            end
+                        end),
                     },
                     {
                         settings.transient(function(buffer)
-                            return ui.sexy_list(format.active_names_for_buffer(buffer), icons.UI.Format)
+                            return sexy_list(format.active_names_for_buffer(buffer), format.enabled_for_buffer(buffer) and icons.UI.Format or icons.UI.Disabled)
                         end),
                         cond = settings.transient(function(buffer)
                             return format.active_for_buffer(buffer)
                         end),
-                        color = ui.hl_fg_color 'DiagnosticOk',
+                        color = settings.transient(function()
+                            if not format.enabled_for_buffer(buffer) then
+                                return utils.hl_fg_color 'DiagnosticError'
+                            else
+                                return utils.hl_fg_color 'DiagnosticOk'
+                            end
+                        end),
                         on_click = function()
                             vim.cmd 'ConformInfo'
                         end,
                     },
                     {
                         settings.transient(function(buffer)
-                            return ui.sexy_list(lsp.active_names_for_buffer(buffer), icons.UI.LSP)
+                            return sexy_list(lsp.active_names_for_buffer(buffer), icons.UI.LSP)
                         end),
                         cond = settings.transient(function(buffer)
                             return lsp.any_active_for_buffer(buffer)
                         end),
-                        color = ui.hl_fg_color 'Title',
+                        color = utils.hl_fg_color 'Title',
                         on_click = function()
                             vim.cmd 'LspInfo'
                         end,
@@ -120,7 +136,7 @@ return {
                         cond = function()
                             return package.loaded['dap'] and require('dap').status() ~= ''
                         end,
-                        color = ui.hl_fg_color 'Debug',
+                        color = utils.hl_fg_color 'Debug',
                     },
                     {
                         'diff',
@@ -147,7 +163,7 @@ return {
                     {
                         require('lazy.status').updates,
                         cond = require('lazy.status').has_updates,
-                        color = ui.hl_fg_color 'Comment',
+                        color = utils.hl_fg_color 'Comment',
                         on_click = function()
                             vim.cmd 'Lazy'
                         end,
@@ -158,15 +174,5 @@ return {
             },
             extensions = { 'neo-tree', 'lazy' },
         }
-    end,
-    config = function(_, opts)
-        local utils = require 'utils'
-        local lualine = require 'lualine'
-
-        lualine.setup(opts)
-
-        utils.on_user_event('CopilotStatusUpdate', function()
-            lualine.refresh()
-        end)
-    end,
+    end
 }
