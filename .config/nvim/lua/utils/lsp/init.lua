@@ -1,7 +1,38 @@
 local utils = require 'utils'
+local settings = require 'utils.settings'
 
----@class utils.lsp
 local M = {}
+
+-- emit a warning when an LSP is dettached!
+
+--- Gets the name of the setting for dettaching a client
+---@param client table # the client to get the setting name for
+---@return string # the name of the setting
+local function detach_processed_setting_name(client)
+    return string.format('%s_dettach_processed', client.name)
+end
+
+utils.on_event('LspDetach', function(evt)
+    local client = vim.lsp.get_client_by_id(evt.data.client_id)
+    if not client or M.is_special(client) then
+        return
+    end
+
+    local key = detach_processed_setting_name(client)
+    if not settings.get_global(key, false) then
+        utils.warn('Language Server *' .. client.name .. '* has detached!')
+        settings.set_global(key, true)
+    end
+end)
+
+utils.on_event('LspAttach', function(evt)
+    local client = vim.lsp.get_client_by_id(evt.data.client_id)
+    if not client or M.is_special(client) then
+        return
+    end
+
+    settings.set_global(detach_processed_setting_name(client), false)
+end)
 
 --- Normalizes the name of a capability
 ---@param capability string # the name of the capability

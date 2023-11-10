@@ -261,29 +261,21 @@ vim.keymap.set('n', '[e', jump_to_diagnostic(false, 'ERROR'), { desc = 'Previous
 vim.keymap.set('n', ']w', jump_to_diagnostic(true, 'WARN'), { desc = 'Next Warning' })
 vim.keymap.set('n', '[w', jump_to_diagnostic(false, 'WARN'), { desc = 'Previous Warning' })
 
+local diagnostics_setting_name = 'diagnostics_enabled'
 vim.keymap.set('n', '<leader>uM', function()
-    local enabled = vim.g.diagnostics_enabled or true
-    utils.info(string.format('Turning diagnostics %s globally.', enabled and 'off' or 'on'))
-
-    if enabled then
+    local enabled = settings.toggle_global(diagnostics_setting_name, 'diagnostics')
+    if not enabled then
         vim.diagnostic.disable()
     else
         vim.diagnostic.enable()
     end
-
-    vim.g.diagnostics_enabled = not enabled
 end, { desc = 'Toggle global diagnostics' })
 
 vim.keymap.set('n', '<leader>um', function()
     local buffer = vim.api.nvim_get_current_buf()
 
-    local enabled = settings.get_permanent_for_buffer(buffer, 'diagnostics_enabled', true)
-    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
-
-    utils.info(string.format('Turning diagnostics **%s** for *%s*.', enabled and 'off' or 'on', file_name))
-    settings.set_permanent_for_buffer(buffer, 'diagnostics_enabled', not enabled)
-
-    if enabled then
+    local enabled = settings.toggle_for_buffer(buffer, 'diagnostics_enabled', 'diagnostics')
+    if not enabled then
         vim.diagnostic.disable(buffer)
     else
         vim.diagnostic.enable(buffer)
@@ -294,13 +286,8 @@ end, { desc = 'Toggle buffer diagnostics' })
 vim.keymap.set('n', '<leader>ut', function()
     local buffer = vim.api.nvim_get_current_buf()
 
-    local enabled = settings.get_permanent_for_buffer(buffer, 'treesitter_enabled', true)
-    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
-
-    utils.info(string.format('Turning treesitter **%s** for *s*', enabled and 'off' or 'on', file_name))
-    settings.set_permanent_for_buffer(buffer, 'treesitter_enabled', not enabled)
-
-    if enabled then
+    local enabled = settings.toggle_for_buffer(buffer, 'treesitter_enabled', 'treesitter')
+    if not enabled then
         vim.treesitter.stop(buffer)
     else
         vim.treesitter.start(buffer)

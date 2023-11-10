@@ -181,7 +181,7 @@ end
 --- Allows attaching keymaps in a given buffer alone.
 ---@param file_types string|table|nil # the list of file types to attach the keymaps to
 ---@param callback fun(set: fun(mode: string|table|nil, lhs: string, rhs: string|function, opts: table)) # the callback to call when the event is triggered
----@param force boolean # whether to force the keymaps to be set even if they are already set
+---@param force boolean|nil # whether to force the keymaps to be set even if they are already set
 ---@return number # the group id of the created group
 function M.attach_keymaps(file_types, callback, force)
     assert(type(callback) == 'function')

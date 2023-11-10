@@ -121,13 +121,6 @@ utils.on_event('BufWinEnter', function(evt)
     end
 end)
 
--- emit a warning when an LSP is dettached!
-utils.on_event({ 'LspDetach' }, function(evt)
-    -- TODO: only compain once per client not per buffer!
-    local client = vim.lsp.get_client_by_id(evt.data.client_id)
-    utils.warn('Language Server *' .. client.name .. '* has detached!')
-end)
-
 -- file detection commands
 utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     local current_file = vim.fn.resolve(vim.fn.expand '%')
