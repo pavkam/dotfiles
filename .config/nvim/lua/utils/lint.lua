@@ -77,17 +77,12 @@ function M.apply(buffer, force)
 
     local lint = require 'lint'
 
-    vim.defer_fn(function()
+    utils.defer_unique(buffer, function(actual_buffer)
         local do_lint = function()
-            lint.try_lint(names, { cwd = project.root(buffer) })
+            lint.try_lint(names, { cwd = project.root(actual_buffer) })
         end
 
-        -- lint current buffer or inside another buffer
-        if buffer == vim.api.nvim_get_current_buf() then
-            do_lint()
-        else
-            vim.api.nvim_buf_call(buffer, do_lint)
-        end
+        vim.api.nvim_buf_call(actual_buffer, do_lint)
     end, 100)
 end
 

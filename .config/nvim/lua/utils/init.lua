@@ -122,6 +122,38 @@ function M.stringify(...)
     end
 end
 
+---@type table<integer, uv_timer_t>
+local deffered_buffer_timers = {}
+
+--- Defers a function call for buffer in LIFO mode. If the function is called again before the timeout, the timer is reset.
+---@param buffer integer|nil # the buffer to defer the function for or the current buffer if 0 or nil
+---@param fn fun(buffer: integer) # the function to call
+---@param timeout integer # the timeout in milliseconds
+function M.defer_unique(buffer, fn, timeout)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local timer = deffered_buffer_timers[buffer]
+    if not timer then
+        timer = vim.loop.new_timer()
+        deffered_buffer_timers[buffer] = timer
+    else
+        timer:stop()
+    end
+
+    local res = timer:start(
+        timeout,
+        0,
+        vim.schedule_wrap(function()
+            timer:stop()
+            fn(buffer)
+        end)
+    )
+
+    if res ~= 0 then
+        M.error(string.format('Failed to start defer timer for buffer %d', buffer))
+    end
+end
+
 local group_index = 0
 
 --- Creates an auto command that triggers on a given list of events
