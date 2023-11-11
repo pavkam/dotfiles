@@ -77,7 +77,7 @@ function M.apply(buffer, force)
 
     local lint = require 'lint'
 
-    utils.debounce(100, function()
+    vim.defer_fn(function()
         local do_lint = function()
             lint.try_lint(names, { cwd = project.root(buffer) })
         end
@@ -88,7 +88,7 @@ function M.apply(buffer, force)
         else
             vim.api.nvim_buf_call(buffer, do_lint)
         end
-    end)
+    end, 100)
 end
 
 --- Toggles auto-linting for a buffer

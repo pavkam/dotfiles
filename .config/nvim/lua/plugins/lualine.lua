@@ -78,7 +78,7 @@ return {
                         cond = settings.transient(function(buffer)
                             return lint.active_for_buffer(buffer)
                         end),
-                        color = settings.transient(function()
+                        color = settings.transient(function(buffer)
                             if not lint.enabled_for_buffer(buffer) then
                                 return utils.hl_fg_color 'DiagnosticError'
                             else
@@ -93,7 +93,7 @@ return {
                         cond = settings.transient(function(buffer)
                             return format.active_for_buffer(buffer)
                         end),
-                        color = settings.transient(function()
+                        color = settings.transient(function(buffer)
                             if not format.enabled_for_buffer(buffer) then
                                 return utils.hl_fg_color 'DiagnosticError'
                             else
@@ -174,5 +174,5 @@ return {
             },
             extensions = { 'neo-tree', 'lazy' },
         }
-    end
+    end,
 }

@@ -208,22 +208,6 @@ function M.attach_keymaps(file_types, callback, force)
     end, file_types)
 end
 
---- Runs a given callback after a given number of milliseconds
----@param ms number # the number of milliseconds to wait
----@param callback function # the callback to call
-function M.debounce(ms, callback)
-    assert(type(ms) == 'number' and ms > 0)
-    assert(type(callback) == 'function')
-
-    local timer = vim.loop.new_timer()
-    local wrapped = vim.schedule_wrap(callback)
-
-    timer:start(ms, 0, function()
-        timer:stop()
-        wrapped()
-    end)
-end
-
 --- Trigger a user event
 ---@param event string # the name of the event to trigger
 ---@param data any # the data to pass to the event
