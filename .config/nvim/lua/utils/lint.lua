@@ -35,6 +35,51 @@ local function linters(buffer)
     end, clients)
 end
 
+--- Monitors the status of a linter and updates the progress
+---@param buffer integer|nil # the buffer to monitor the linter for or 0 or nil for current buffer
+---@param linter string # the name of the linter to monitor
+local function poll_linting_status(buffer, linter)
+    assert(type(linter) == 'string' and linter ~= '')
+
+    local lint = require 'lint'
+
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    utils.poll(buffer, function(actual_buffer)
+        ---@type table<integer, table<string, lint.LintProc>>
+        local tbl = utils.get_up_value(lint.try_lint, 'running_procs_by_buf')
+        local handle = tbl and tbl[actual_buffer] ~= nil and tbl[actual_buffer][linter] ~= nil and tbl[actual_buffer][linter].handle
+        ---@diagnostic disable-next-line: undefined-field
+        local running = handle and not handle:is_closing()
+
+        print(vim.inspect(tbl))
+
+        local key = string.format('linter_%s_progress', linter)
+        local progress = settings.get_permanent_for_buffer(actual_buffer, key, 0)
+
+        if running then
+            settings.set_permanent_for_buffer(actual_buffer, key, progress + 1)
+        else
+            settings.set_permanent_for_buffer(actual_buffer, key, nil)
+        end
+
+        utils.trigger_status_update_event()
+
+        return not running
+    end, 200)
+end
+
+--- Gets the progress of a linter for a buffer
+---@param buffer integer|nil # the buffer to get the linter progress for or 0 or nil for current
+---@param linter string # the name of the linter to get the progress for
+---@return integer|nil # the progress of the linter or nil if not running
+function M.get_linting_progress(buffer, linter)
+    assert(type(linter) == 'string' and linter ~= '')
+
+    local key = string.format('linter_%s_progress', linter)
+    return settings.get_permanent_for_buffer(buffer, key, nil)
+end
+
 --- Gets the names of all active linters for a buffer
 ---@param buffer integer|nil # the buffer to get the linters for or 0 or nil for current
 ---@return string[] # the names of the active linters
@@ -77,12 +122,15 @@ function M.apply(buffer, force)
 
     local lint = require 'lint'
 
-    utils.defer_unique(buffer, function(actual_buffer)
+    utils.defer_unique(buffer, function()
         local do_lint = function()
-            lint.try_lint(names, { cwd = project.root(actual_buffer) })
+            lint.try_lint(names, { cwd = project.root(buffer) })
+            for _, name in ipairs(names) do
+                poll_linting_status(buffer, name)
+            end
         end
 
-        vim.api.nvim_buf_call(actual_buffer, do_lint)
+        vim.api.nvim_buf_call(buffer, do_lint)
     end, 100)
 end
 

@@ -122,38 +122,6 @@ function M.stringify(...)
     end
 end
 
----@type table<integer, uv_timer_t>
-local deffered_buffer_timers = {}
-
---- Defers a function call for buffer in LIFO mode. If the function is called again before the timeout, the timer is reset.
----@param buffer integer|nil # the buffer to defer the function for or the current buffer if 0 or nil
----@param fn fun(buffer: integer) # the function to call
----@param timeout integer # the timeout in milliseconds
-function M.defer_unique(buffer, fn, timeout)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local timer = deffered_buffer_timers[buffer]
-    if not timer then
-        timer = vim.loop.new_timer()
-        deffered_buffer_timers[buffer] = timer
-    else
-        timer:stop()
-    end
-
-    local res = timer:start(
-        timeout,
-        0,
-        vim.schedule_wrap(function()
-            timer:stop()
-            fn(buffer)
-        end)
-    )
-
-    if res ~= 0 then
-        M.error(string.format('Failed to start defer timer for buffer %d', buffer))
-    end
-end
-
 local group_index = 0
 
 --- Creates an auto command that triggers on a given list of events
@@ -280,6 +248,102 @@ end
 ---@param msg any # the message to show
 function M.error(msg)
     M.notify(msg, vim.log.levels.ERROR)
+end
+
+
+---@type table<integer, uv_timer_t>
+local deffered_buffer_timers = {}
+
+M.on_event('BufDelete', function(evt)
+    local timer = deffered_buffer_timers[evt.buf]
+    if timer then
+        timer:stop()
+        deffered_buffer_timers[evt.buf] = nil
+    end
+end)
+
+--- Defers a function call for buffer in LIFO mode. If the function is called again before the timeout, the timer is reset.
+---@param buffer integer|nil # the buffer to defer the function for or the current buffer if 0 or nil
+---@param fn fun(buffer: integer) # the function to call
+---@param timeout integer # the timeout in milliseconds
+function M.defer_unique(buffer, fn, timeout)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local timer = deffered_buffer_timers[buffer]
+    if not timer then
+        timer = vim.loop.new_timer()
+        deffered_buffer_timers[buffer] = timer
+    else
+        timer:stop()
+    end
+
+    local res = timer:start(
+        timeout,
+        0,
+        vim.schedule_wrap(function()
+            timer:stop()
+            fn(buffer)
+        end)
+    )
+
+    if res ~= 0 then
+        M.error(string.format('Failed to start defer timer for buffer %d', buffer))
+    end
+end
+
+--- Gets the value of an upvalue of a function
+---@param fn function # the function to get the upvalue from
+---@param name string # the name of the upvalue to get
+---@return any # the value of the upvalue or nil if it does not exist
+function M.get_up_value(fn, name)
+    local i = 1
+    while true do
+        local n, v = debug.getupvalue(fn, i)
+        if n == nil then
+            break
+        end
+
+        if n == name then
+            return v
+        end
+
+        i = i + 1
+    end
+
+    return nil
+end
+
+--- Polls a buffer for a given condition
+---@param buffer integer|nil # the buffer to poll or the current buffer if 0 or nil
+---@param fn fun(buffer: integer): boolean # the function to call
+---@param interval integer # the interval in milliseconds
+function M.poll(buffer, fn, interval)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local timer = vim.loop.new_timer()
+    local max_iterations = 100
+
+    local res = timer:start(
+        interval,
+        interval,
+        vim.schedule_wrap(function()
+            local finished = fn(buffer)
+            if finished then
+                timer:stop()
+                return
+            end
+
+            max_iterations = max_iterations - 1
+            if max_iterations == 0 then
+                timer:stop()
+                M.warn(string.format('Polling for buffer %d timed out', buffer))
+            end
+        end)
+    )
+
+    if res ~= 0 then
+        M.error(string.format('Failed to start monitor timer for buffer %d', buffer))
+    end
 end
 
 --- Expands a target of any command to a buffer and a path
@@ -501,6 +565,13 @@ function M.fold_text()
 
     table.insert(ret, { ' ' .. icons.TUI.Ellipsis })
     return ret
+end
+
+--- Gets the icon for a given level of progress
+---@param index integer # the index of the icon to get
+function M.spinner_icon(index)
+    assert(type(index) == 'number' and index >= 0)
+    return icons.Progress[index % #icons.Progress + 1]
 end
 
 return M

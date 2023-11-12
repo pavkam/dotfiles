@@ -24,6 +24,7 @@ return {
                         { find = '; after #%d+' },
                         { find = '; before #%d+' },
                         { find = '%d+ fewer lines' },
+                        { find = '%d+ more lines' },
                         { find = '%d+ lines yanked' },
                         { find = 'search hit %a+, continuing at %a+' },
                         { find = 'E486' },

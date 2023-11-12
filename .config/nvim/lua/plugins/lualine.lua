@@ -73,7 +73,15 @@ return {
                 lualine_x = {
                     {
                         settings.transient(function(buffer)
-                            return sexy_list(lint.active_names_for_buffer(buffer), lint.enabled_for_buffer(buffer) and icons.UI.Lint or icons.UI.Disabled)
+                            local prefix = lint.enabled_for_buffer(buffer) and icons.UI.Lint or icons.UI.Disabled
+
+                            local list = vim.tbl_map(function(name)
+                                local progress = lint.get_linting_progress(buffer, name)
+                                local progress_prefix = progress ~= nil and utils.spinner_icon(progress) .. ' ' or ''
+                                return progress_prefix .. name
+                            end, lint.active_names_for_buffer(buffer))
+
+                            return prefix .. ' ' .. utils.tbl_join(list, ' ' .. icons.TUI.ListSeparator .. ' ')
                         end),
                         cond = settings.transient(function(buffer)
                             return lint.active_for_buffer(buffer)
