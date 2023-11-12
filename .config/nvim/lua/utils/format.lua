@@ -24,6 +24,36 @@ local function formatters(buffer)
     end, clients)
 end
 
+--- Monitors the status of a formatter and updates the progress
+---@param buffer integer # the buffer to monitor the linter for
+local function poll_formatting_status(buffer)
+    utils.poll(buffer, function(actual_buffer)
+        local jid = vim.b[actual_buffer].conform_jid
+        local running = not jid or vim.fn.jobwait({ jid }, 0)[0] == -1
+
+        local key = 'formatting_progress'
+        local progress = settings.get_permanent_for_buffer(actual_buffer, key, 0)
+
+        if running then
+            settings.set_permanent_for_buffer(actual_buffer, key, progress + 1)
+        else
+            settings.set_permanent_for_buffer(actual_buffer, key, nil)
+        end
+
+        utils.trigger_status_update_event()
+
+        return not running
+    end, 200)
+end
+
+--- Gets the progress of a formatter for a buffer
+---@param buffer integer|nil # the buffer to get the linter progress for or 0 or nil for current
+---@return integer|nil # the progress of the formatter or nil if not running
+function M.progress(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    return settings.get_permanent_for_buffer(buffer, 'formatting_progress', nil)
+end
+
 --- Gets the names of all active formatters for a buffer
 ---@param buffer integer|nil # the buffer to get the formatters for or nil for current
 ---@return string[] # the names of the active formatters
@@ -67,6 +97,7 @@ function M.apply(buffer, force, injected)
     local additional = injected and { formatters = { 'injected' } } or {}
 
     conform.format(utils.tbl_merge({ bufnr = buffer }, additional))
+    poll_formatting_status(buffer)
 end
 
 --- Toggles auto-formatting for a buffer

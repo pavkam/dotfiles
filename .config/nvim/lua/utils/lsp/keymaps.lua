@@ -126,7 +126,7 @@ local function attach_keymaps(client, buffer)
     if not lsp.is_special(client) then
         vim.keymap.set('n', '<leader>uS', lsp.stop_all, { buffer = buffer, desc = 'Stop active LSPs' })
         vim.keymap.set('n', '<leader>us', lsp.start_all, { buffer = buffer, desc = 'Start matching LSPs' })
-        vim.keymap.set('n', '<leader>ur', lsp.restart_all, { buffer = buffer, desc = 'Stop active LSPs' })
+        vim.keymap.set('n', '<leader>ur', lsp.restart_all, { buffer = buffer, desc = 'Restart active LSPs' })
     end
 end
 

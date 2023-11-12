@@ -73,15 +73,17 @@ return {
                 lualine_x = {
                     {
                         settings.transient(function(buffer)
-                            local prefix = lint.enabled_for_buffer(buffer) and icons.UI.Lint or icons.UI.Disabled
+                            local prefix = icons.UI.Format
+                            if not lint.enabled_for_buffer(buffer) then
+                                prefix = icons.UI.Disabled
+                            else
+                                local progress = lint.progress(buffer)
+                                if progress ~= nil then
+                                    prefix = utils.spinner_icon(progress)
+                                end
+                            end
 
-                            local list = vim.tbl_map(function(name)
-                                local progress = lint.get_linting_progress(buffer, name)
-                                local progress_prefix = progress ~= nil and utils.spinner_icon(progress) .. ' ' or ''
-                                return progress_prefix .. name
-                            end, lint.active_names_for_buffer(buffer))
-
-                            return prefix .. ' ' .. utils.tbl_join(list, ' ' .. icons.TUI.ListSeparator .. ' ')
+                            return prefix .. ' ' .. utils.tbl_join(lint.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
                         end),
                         cond = settings.transient(function(buffer)
                             return lint.active_for_buffer(buffer)
@@ -96,7 +98,19 @@ return {
                     },
                     {
                         settings.transient(function(buffer)
-                            return sexy_list(format.active_names_for_buffer(buffer), format.enabled_for_buffer(buffer) and icons.UI.Format or icons.UI.Disabled)
+                            local prefix = icons.UI.Lint
+                            if not format.enabled_for_buffer(buffer) then
+                                prefix = icons.UI.Disabled
+                            else
+                                local progress = format.progress(buffer)
+                                if progress ~= nil then
+                                    prefix = utils.spinner_icon(progress)
+                                end
+                            end
+
+                            local list = format.active_names_for_buffer(buffer)
+
+                            return prefix .. ' ' .. utils.tbl_join(list, ' ' .. icons.TUI.ListSeparator .. ' ')
                         end),
                         cond = settings.transient(function(buffer)
                             return format.active_for_buffer(buffer)
@@ -114,7 +128,7 @@ return {
                     },
                     {
                         settings.transient(function(buffer)
-                            return sexy_list(lsp.active_names_for_buffer(buffer), icons.UI.LSP)
+                            return icons.UI.LSP .. ' ' .. utils.tbl_join(lsp.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
                         end),
                         cond = settings.transient(function(buffer)
                             return lsp.any_active_for_buffer(buffer)
