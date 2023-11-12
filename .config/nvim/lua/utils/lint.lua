@@ -2,6 +2,7 @@ local utils = require 'utils'
 local lsp = require 'utils.lsp'
 local project = require 'utils.project'
 local settings = require 'utils.settings'
+local icons = require 'utils.icons'
 
 ---@class utils.lint
 local M = {}

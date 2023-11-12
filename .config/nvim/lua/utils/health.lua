@@ -61,6 +61,8 @@ function M.show_for_buffer(buffer)
     local lsp = require 'utils.lsp'
     local settings = require 'utils.settings'
     local project = require 'utils.project'
+    local js_project = require 'utils.project.js'
+    local go_project = require 'utils.project.go'
 
     local content = {}
 
@@ -105,8 +107,23 @@ function M.show_for_buffer(buffer)
         roots = project.roots(buffer),
         lsp_roots = lsp.roots(buffer),
     }
+    local js_project_details = js_project.type(buffer) ~= nil
+            and {
+                eslint_config = js_project.get_eslint_config_path(buffer),
+                jest = js_project.get_bin_path(buffer, 'jest'),
+                eslint = js_project.get_bin_path(buffer, 'eslint'),
+                prettier = js_project.get_bin_path(buffer, 'prettier'),
+                vitest = js_project.get_bin_path(buffer, 'vitest'),
+            }
+        or {}
+
+    local go_project_details = go_project.type(buffer) ~= nil and {
+        golangci = go_project.get_golangci_config(buffer),
+    } or {}
 
     list('Project', project_details)
+    list('JS', js_project_details)
+    list('GO', go_project_details)
 
     for name, tb in pairs(settings.snapshot_for_buffer(buffer)) do
         list(string.format('Settings (%s)', name), tb)
