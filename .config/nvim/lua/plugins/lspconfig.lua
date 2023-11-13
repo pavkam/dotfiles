@@ -233,9 +233,11 @@ return {
 
             -- setup register capability
             local register_capability_name = 'client/registerCapability'
-            local register_capability = vim.lsp.handlers[register_capability_name]
+            local register_capability_handler = vim.lsp.handlers[register_capability_name]
             vim.lsp.handlers[register_capability_name] = function(err, res, ctx)
-                local ret = register_capability(err, res, ctx)
+                local ret = register_capability_handler(err, res, ctx)
+
+                ---@type LspClient
                 local client = vim.lsp.get_client_by_id(ctx.client_id)
 
                 if client.supports_method ~= nil then
@@ -243,6 +245,14 @@ return {
                 end
 
                 return ret
+            end
+
+            -- setup progress
+            local progress_capability_name = '$/progress'
+            local progress_capability_handler = vim.lsp.handlers[progress_capability_name]
+            vim.lsp.handlers[progress_capability_name] = function(_, msg, info)
+                utils.trigger_user_event('LspProgress', utils.tbl_merge(msg, { client_id = info.client_id }))
+                progress_capability_handler(_, msg, info)
             end
 
             -- register cmp capabilities
@@ -292,7 +302,7 @@ return {
             mlsp.setup { ensure_installed = ensure_installed, handlers = { setup } }
 
             -- re-trigger FileType autocmds to force LSP to start
-            vim.api.nvim_exec_autocmds("FileType", {})
+            vim.api.nvim_exec_autocmds('FileType', {})
         end,
     },
     {
@@ -344,7 +354,7 @@ return {
                 enabled = true,
                 include_declaration = false,
             },
-            disable = { lsp = { "lua_ls" } },
+            disable = { lsp = { 'lua_ls' } },
         },
     },
 }

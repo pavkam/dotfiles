@@ -103,9 +103,9 @@ local M = {
         OpenFolder = '',
     },
     UI = {
-        LSP = '',
+        LSP = '',
         Format = '󰉿',
-        Lint = '󱫁',
+        Lint = '',
         Git = '󰊢',
         Debugger = '',
         Test = '󰙨',

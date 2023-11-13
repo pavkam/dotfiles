@@ -250,7 +250,6 @@ function M.error(msg)
     M.notify(msg, vim.log.levels.ERROR)
 end
 
-
 ---@type table<integer, uv_timer_t>
 local deffered_buffer_timers = {}
 
@@ -317,11 +316,13 @@ end
 ---@param buffer integer|nil # the buffer to poll or the current buffer if 0 or nil
 ---@param fn fun(buffer: integer): boolean # the function to call
 ---@param interval integer # the interval in milliseconds
-function M.poll(buffer, fn, interval)
+---@param max integer|nil # the maximum time to wait until the polling times out (default: 10 seconds)
+---@return uv_timer_t|nil # the timer that is polling the buffer
+function M.poll(buffer, fn, interval, max)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local timer = vim.loop.new_timer()
-    local max_iterations = 100
+    local max_time = max or 10000 -- ten seconds
 
     local res = timer:start(
         interval,
@@ -333,8 +334,8 @@ function M.poll(buffer, fn, interval)
                 return
             end
 
-            max_iterations = max_iterations - 1
-            if max_iterations == 0 then
+            max_time = max_time - 1
+            if max_time <= 0 then
                 timer:stop()
                 M.warn(string.format('Polling for buffer %d timed out', buffer))
             end
@@ -343,6 +344,8 @@ function M.poll(buffer, fn, interval)
 
     if res ~= 0 then
         M.error(string.format('Failed to start monitor timer for buffer %d', buffer))
+    else
+        return timer
     end
 end
 

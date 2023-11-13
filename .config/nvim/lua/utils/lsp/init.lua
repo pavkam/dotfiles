@@ -7,7 +7,8 @@ local settings = require 'utils.settings'
 ---@field request_sync fun(method: string, params: any, timeout: integer): any
 ---@field stop fun()
 ---@field offset_encoding string
----@field config { workspace_folders: { uri: string }[], root_dir: string }
+---@field config { workspace_folders: { uri: string }[], root_dir: string, capabilities: table }
+---@field server_capabilities table
 
 ---@class utils.lsp
 local M = {}
@@ -44,6 +45,46 @@ utils.on_event('LspAttach', function(evt)
 
     settings.set_global(detach_processed_setting_name(client), false)
 end)
+
+---@type table<string, { title: string, message: string, percentage: number, done: boolean }>
+local lsp_tasks = {}
+---@type uv_timer_t|nil
+local lsp_task_poll_timer
+---@type integer|nil
+local lsp_progress = nil
+
+utils.on_user_event('LspProgress', function(_, evt)
+    local key = string.format('%s.%s', evt.data.client_id, evt.data.token)
+    if evt.data.value.kind ~= 'end' then
+        lsp_tasks[key] = evt.data.value
+        lsp_task_poll_timer = lsp_task_poll_timer
+            or utils.poll(nil, function()
+                local finished = vim.tbl_isempty(lsp_tasks)
+
+                if finished then
+                    lsp_progress = nil
+                elseif lsp_progress == nil then
+                    lsp_progress = 0
+                else
+                    lsp_progress = lsp_progress + 1
+                end
+
+                utils.trigger_status_update_event()
+                return finished
+            end, 100)
+    else
+        lsp_tasks[key] = nil
+        if vim.tbl_isempty(lsp_tasks) then
+            lsp_task_poll_timer = nil
+        end
+    end
+end)
+
+--- Gets the progress of all LSP tasks
+---@return integer|nil # the progress of the LSP tasks or nil if not running
+function M.progress()
+    return lsp_progress
+end
 
 --- Normalizes the name of a capability
 ---@param capability string # the name of the capability

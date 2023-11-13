@@ -43,7 +43,7 @@ local function poll_formatting_status(buffer)
         utils.trigger_status_update_event()
 
         return not running
-    end, 200)
+    end, 100)
 end
 
 --- Gets the progress of a formatter for a buffer

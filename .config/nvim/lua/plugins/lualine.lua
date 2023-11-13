@@ -18,10 +18,6 @@ return {
             ['InProgress'] = utils.hl_fg_color 'DiagnosticWarn',
         }
 
-        local function sexy_list(list, prefix)
-            return prefix .. ' ' .. utils.tbl_join(list, ' ' .. icons.TUI.ListSeparator .. ' ')
-        end
-
         return {
             options = {
                 theme = 'auto',
@@ -128,7 +124,14 @@ return {
                     },
                     {
                         settings.transient(function(buffer)
-                            return icons.UI.LSP .. ' ' .. utils.tbl_join(lsp.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
+                            local prefix = icons.UI.LSP
+
+                            local progress = lsp.progress(buffer)
+                            if progress ~= nil then
+                                prefix = utils.spinner_icon(progress)
+                            end
+
+                            return prefix .. ' ' .. utils.tbl_join(lsp.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
                         end),
                         cond = settings.transient(function(buffer)
                             return lsp.any_active_for_buffer(buffer)
