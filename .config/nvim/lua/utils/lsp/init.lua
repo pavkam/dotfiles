@@ -22,6 +22,9 @@ local function detach_processed_setting_name(client)
     return string.format('%s_dettach_processed', client.name)
 end
 
+---@type table<string, any>
+local lsp_tasks = {}
+
 utils.on_event('LspDetach', function(evt)
     ---@type LspClient
     local client = vim.lsp.get_client_by_id(evt.data.client_id)
@@ -34,6 +37,9 @@ utils.on_event('LspDetach', function(evt)
         utils.warn('Language Server *' .. client.name .. '* has detached!')
         settings.set_global(key, true)
     end
+
+    -- clear the tasks for the all clients to prevent infinite loops
+    lsp_tasks = {}
 end)
 
 utils.on_event('LspAttach', function(evt)
@@ -46,8 +52,6 @@ utils.on_event('LspAttach', function(evt)
     settings.set_global(detach_processed_setting_name(client), false)
 end)
 
----@type table<string, { title: string, message: string, percentage: number, done: boolean }>
-local lsp_tasks = {}
 ---@type uv_timer_t|nil
 local lsp_task_poll_timer
 ---@type integer|nil
@@ -251,27 +255,24 @@ function M.is_active_for_buffer(buffer, name)
     return ok and #clients > 0
 end
 
---- Stops all active, not-special clients
-function M.stop_all()
-    for _, client in ipairs(get_active_clients()) do
-        if not M.is_special(client) then
-            vim.cmd(string.format('LspStop %s', client.name))
-        end
-    end
-end
-
 --- Restarts all active, not-special clients
-function M.restart_all()
-    for _, client in ipairs(get_active_clients()) do
-        if not M.is_special(client) then
-            vim.cmd(string.format('LspRestart %s', client.name))
-        end
-    end
-end
+---@param buffer integer|nil # the buffer to check the client for or 0 or nil for current
+function M.restart_all_for_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    local clients = vim.tbl_filter(function(client)
+        return not M.is_special(client)
+    end, get_active_clients { bufnr = buffer })
 
---- Starts all attachable clients
-function M.start_all()
-    vim.cmd 'LspStart'
+    if #clients == 0 then
+        utils.warn 'No active clients to restart. Starting all.'
+        vim.cmd 'LspStart'
+        return
+    end
+
+    for _, client in ipairs(clients) do
+        utils.warn('Restarting client ' .. client.name .. '...')
+        vim.cmd(string.format('LspRestart %s', client.name))
+    end
 end
 
 --- Gets the root directories of all active clients for a target buffer or path

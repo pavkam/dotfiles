@@ -57,7 +57,7 @@ return {
                         return js_project.get_bin_path(nil, 'eslint')
                     end,
                     condition = function(ctx)
-                        return js_project.has_dependency(ctx.dirname, 'eslint') and js_project.get_eslint_config_path(ctx.dirname)
+                        return js_project.has_dependency(ctx.dirname, 'eslint') and js_project.get_eslint_config_path(ctx.dirname) ~= nil
                     end,
                     args = {
                         '--format',

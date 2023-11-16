@@ -33,7 +33,6 @@ return {
             context_commentstring = { enable = true, enable_autocmd = false },
             highlight = {
                 enable = true,
-                -- disable = function(_, bufnr) return vim.b[bufnr].large_buf end, -- TODO: why?
             },
             indent = { enable = true },
             textobjects = {

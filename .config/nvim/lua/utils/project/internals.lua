@@ -95,10 +95,14 @@ end
 
 --- Returns the primary root for a given target
 ---@param target string|integer|nil # the target to get the root for
----@param deepest boolean|nil # whether to return the deepest or the shallowest root
+---@param deepest boolean|nil # whether to return the deepest or the shallowest root (default is deepest)
 ---@return string|nil # the root
 function M.root(target, deepest)
     local roots = M.roots(target)
+
+    if deepest == nil then
+        deepest = true
+    end
 
     if deepest then
         return roots[1]

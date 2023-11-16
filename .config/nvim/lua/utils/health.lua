@@ -77,12 +77,12 @@ function M.show_for_buffer(buffer)
 
         if vim.tbl_islist(items) then
             for _, item in ipairs(items) do
-                item = string.gsub(utils.stringify(item) or '', '\n', ' ')
+                item = string.gsub(vim.inspect(item) or '', '\n', ' ')
                 table.insert(content, string.format(' - `%s`', item))
             end
         else
             for k, v in pairs(items) do
-                v = string.gsub(utils.stringify(v) or '', '\n', ' ')
+                v = string.gsub(vim.inspect(v) or '', '\n', ' ')
                 table.insert(content, string.format(' - **%s** = `%s`', k, v))
             end
         end

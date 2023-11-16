@@ -312,6 +312,7 @@ function M.get_up_value(fn, name)
     return nil
 end
 
+--TODO: figure out why this is failing when restarting LSPs
 --- Polls a buffer for a given condition
 ---@param buffer integer|nil # the buffer to poll or the current buffer if 0 or nil
 ---@param fn fun(buffer: integer): boolean # the function to call
@@ -321,6 +322,7 @@ end
 function M.poll(buffer, fn, interval, max)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
+    --TODO: add a name for the polling for easy detection
     local timer = vim.loop.new_timer()
     local max_time = max or 10000 -- ten seconds
 

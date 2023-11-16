@@ -90,7 +90,7 @@ shadows=true
 
 [Layout]
 output_lines=0
-left_panel_size=137
+left_panel_size=68
 top_panel_size=0
 message_visible=true
 keybar_visible=true
@@ -121,6 +121,7 @@ color_terminals=
 screen-256color=
 
 xterm-kitty=
+tmux-256color=
 
 [Panels]
 show_mini_info=true
@@ -146,7 +147,7 @@ select_flags=6
 simple_swap=false
 
 [Panelize]
-Find *.orig after patching=find . -name \\*.orig -print
-Find SUID and SGID programs=find . \\( \\( -perm -04000 -a -perm /011 \\) -o \\( -perm -02000 -a -perm /01 \\) \\) -print
-Find rejects after patching=find . -name \\*.rej -print
 Modified git files=git ls-files --modified
+Find rejects after patching=find . -name \\*.rej -print
+Find SUID and SGID programs=find . \\( \\( -perm -04000 -a -perm /011 \\) -o \\( -perm -02000 -a -perm /01 \\) \\) -print
+Find *.orig after patching=find . -name \\*.orig -print

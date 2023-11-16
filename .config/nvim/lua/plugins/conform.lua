@@ -41,6 +41,7 @@ return {
     opts = function()
         local utils = require 'utils'
         local project = require 'utils.project'
+        local js_project = require 'utils.project.js'
 
         return {
             formatters_by_ft = {
@@ -65,6 +66,7 @@ return {
                 yaml = { { 'prettier', 'prettierd' } },
                 graphql = { { 'prettier', 'prettierd' } },
                 handlebars = { { 'prettier', 'prettierd' } },
+                prisma = { 'prisma' },
             },
             formatters = {
                 ['goimports-reviser'] = {
@@ -80,6 +82,20 @@ return {
                 golines = utils.tbl_merge(require 'conform.formatters.golines', {
                     args = { '-m', '180', '--no-reformat-tags', '--base-formatter', 'gofumpt' },
                 }),
+                prisma = {
+                    cwd = function(ctx)
+                        return project.root(ctx.buf or ctx.filename)
+                    end,
+                    meta = {
+                        url = 'https://github.com/prisma/prisma-engines',
+                        description = 'Formatter for the prisma filetype.',
+                    },
+                    command = function(ctx)
+                        return js_project.get_bin_path(ctx.buf or ctx.filename, 'prisma') or 'prisma'
+                    end,
+                    stdin = false,
+                    args = { 'format', '--schema', '$FILENAME' },
+                },
             },
         }
     end,

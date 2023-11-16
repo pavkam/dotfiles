@@ -23,7 +23,6 @@ return {
     end,
     init = function()
         if vim.fn.argc() == 1 then
-            -- TODO: check this is actually working
             ---@diagnostic disable-next-line: param-type-mismatch
             local stat = vim.loop.fs_stat(vim.fn.argv(0))
             if stat and stat.type == 'directory' then

@@ -2,7 +2,6 @@ local lsp = require 'utils.lsp'
 
 ---@class utils.lsp.keymaps
 local M = {}
-
 local keymaps = {
     { 'M', vim.diagnostic.open_float, desc = 'Line diagnostics' },
     { '<leader>sm', 'M', remap = true, desc = 'Line diagnostics (M)' },
@@ -124,9 +123,14 @@ local function attach_keymaps(client, buffer)
 
     -- special keymaps
     if not lsp.is_special(client) then
-        vim.keymap.set('n', '<leader>uS', lsp.stop_all, { buffer = buffer, desc = 'Stop active LSPs' })
-        vim.keymap.set('n', '<leader>us', lsp.start_all, { buffer = buffer, desc = 'Start matching LSPs' })
-        vim.keymap.set('n', '<leader>ur', lsp.restart_all, { buffer = buffer, desc = 'Restart active LSPs' })
+        vim.keymap.set('n', '<leader>!', function()
+            vim.cmd.write()
+
+            lsp.clear_diagnostics(nil)
+            lsp.restart_all_for_buffer()
+
+            vim.cmd.edit()
+        end, { buffer = buffer, desc = 'Nuke buffer LSP' })
     end
 end
 
