@@ -108,6 +108,7 @@ local M = {
         Lint = '',
         Git = '󰊢',
         Debugger = '',
+        ConsoleLog = '',
         Test = '󰙨',
         UI = '󰏖',
         Help = '󰋖',

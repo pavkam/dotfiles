@@ -34,7 +34,12 @@ vim.keymap.set({ 'x', 'o' }, 'n', "'Nn'[v:searchforward]", { expr = true, desc =
 vim.keymap.set('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Previous search result' })
 vim.keymap.set({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Previous search result' })
 
+-- Better jump list navigation
+vim.keymap.set('n', '<C-]>', '<C-i>', { desc = 'Next location' })
+vim.keymap.set('n', '<C-[>', '<C-o>', { desc = 'Previous location' })
+
 -- Add undo break-points
+-- TODO, this fails sometimes with copilot when pressing TAB
 vim.keymap.set('i', ',', ',<c-g>u')
 vim.keymap.set('i', '.', '.<c-g>u')
 vim.keymap.set('i', ';', ';<c-g>u')
@@ -46,14 +51,6 @@ vim.keymap.set('n', '<C-r>', 'Nzzzv', { desc = 'Redo', remap = true })
 vim.keymap.set('i', '<C-BS>', '<C-w>', { desc = 'Delete word' })
 
 vim.keymap.set('i', '<Tab>', function()
-    if package.loaded['copilot'] then
-        local copilot = require 'copilot.suggestion'
-        if copilot.is_visible() then
-            copilot.accept()
-            return
-        end
-    end
-
     local r, c = unpack(vim.api.nvim_win_get_cursor(0))
     if c and r then
         local line = vim.api.nvim_buf_get_lines(vim.fn.winbufnr(0), r - 1, r, true)[1]
@@ -67,7 +64,7 @@ vim.keymap.set('i', '<Tab>', function()
     end
 
     return '<Tab>'
-end, { desc = 'Indent/Tab', expr = true })
+end, { desc = 'Indent/Tab', expr = true, remap = true })
 
 vim.keymap.set('i', '<S-Tab>', '<C-d>', { desc = 'Unindent' })
 vim.keymap.set('n', '<Tab>', '>>', { desc = 'Indent' })

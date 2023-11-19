@@ -26,11 +26,22 @@ return {
             local defaults = require 'cmp.config.default'()
             local luasnip = require 'luasnip'
             local copilot = require 'copilot.suggestion'
+            local settings = require 'utils.settings'
 
             local border_opts = {
                 border = 'rounded',
                 winhighlight = 'Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None',
             }
+
+            local get_menu_height = settings.transient(function()
+                local height = vim.api.nvim_get_option 'pumheight'
+                local total_item_count = #cmp.get_entries()
+
+                height = height ~= 0 and height or total_item_count
+                height = math.min(height, total_item_count)
+
+                return height
+            end)
 
             return {
                 enabled = function()
@@ -66,9 +77,27 @@ return {
                         luasnip.lsp_expand(args.body)
                     end,
                 },
+                view = {
+                    entries = 'custom',
+                },
                 mapping = cmp.mapping.preset.insert {
                     ['<Up>'] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Select },
                     ['<Down>'] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Select },
+                    ['<PageUp>'] = cmp.mapping(function(fallback)
+                        if cmp.visible() then
+                            cmp.select_prev_item { count = get_menu_height(), behavior = cmp.SelectBehavior.Select }
+                        else
+                            fallback()
+                        end
+                    end),
+                    ['<PageDown>'] = cmp.mapping(function(fallback)
+                        if cmp.visible() then
+                            cmp.select_next_item { count = get_menu_height(), behavior = cmp.SelectBehavior.Select }
+                        else
+                            fallback()
+                        end
+                    end),
+
                     ['<C-n>'] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Insert },
                     ['<C-p>'] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Insert },
                     ['<C-b>'] = cmp.mapping.scroll_docs(-4),
@@ -149,7 +178,6 @@ return {
         end,
         config = function(_, opts)
             local cmp = require 'cmp'
-            local copilot = require 'copilot.suggestion'
 
             cmp.setup(opts)
 
@@ -159,11 +187,6 @@ return {
                     { name = 'dap' },
                 },
             })
-
-            -- dimiss copilot when cmp pops up
-            cmp.event:on('menu_opened', function()
-                copilot.dismiss()
-            end)
         end,
     },
     {

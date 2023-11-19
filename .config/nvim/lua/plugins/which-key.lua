@@ -19,6 +19,7 @@ return {
             ['<leader>f'] = { name = icons.UI.Search .. ' Search' },
             ['<leader>?'] = { name = icons.UI.Help .. ' Help' },
             ['<leader>d'] = { name = icons.UI.Debugger .. ' Debugger' },
+            ['<leader>D'] = { name = icons.UI.ConsoleLog .. ' Debug print' },
             ['<leader>s'] = { name = icons.UI.LSP .. ' Source' },
             ['<leader>x'] = { name = icons.UI.AI .. 'AI' },
         },

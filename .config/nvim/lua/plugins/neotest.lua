@@ -1,6 +1,5 @@
 return {
     'nvim-neotest/neotest',
-    --commit = "455155f65e3397022a7b23cc3e152b43a6fc5d23",
     ft = {
         'javascript',
         'typescript',

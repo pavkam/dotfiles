@@ -96,7 +96,7 @@ local auto_transient_id = 0
 --- Wraps a function to be transient option
 ---@param func fun(buffer: integer): any # the function to wrap
 ---@param option string|nil # optionla the name of the option
----@return fun(buffer: integer): any # the wrapped function
+---@return fun(): any # the wrapped function
 function M.transient(func, option)
     assert(type(func) == 'function')
 
