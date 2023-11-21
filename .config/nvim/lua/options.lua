@@ -42,12 +42,21 @@ o.termencoding = 'utf-8'
 o.termguicolors = true
 o.encoding = 'utf-8'
 o.lazyredraw = false
+o.winblend = 20
+
+-- menu and cmd-line
 o.laststatus = 2
 o.cmdheight = 0
+
+o.wildignore:append { '*.o', '*~', '*.pyc', '*pycache*', '*.bak', '*.dll' }
 o.wildmenu = true
-o.wildmode = 'longest:full,full'
+o.wildmode = { 'longest:full', 'full' }
+o.wildoptions = { 'pum' }
+
 o.pumblend = 10
 o.pumheight = 10
+
+-- splits
 o.splitbelow = true
 o.splitkeep = 'screen'
 o.splitright = true
@@ -81,7 +90,7 @@ end
 o.autowrite = true
 o.filetype = 'on'
 o.syntax = 'on'
-o.fileformats = 'unix,dos,mac'
+o.fileformats = { 'unix', 'dos', 'mac' }
 o.autoread = true
 o.undofile = true
 o.undolevels = 10000
@@ -105,7 +114,9 @@ o.sidescrolloff = 8
 o.virtualedit = 'onemore'
 o.showmatch = true
 o.cursorline = true
-o.keymodel = 'startsel,stopsel'
+
+o.keymodel = { 'startsel', 'stopsel' }
+
 o.completeopt = 'menu,menuone,noselect'
 o.conceallevel = 3
 o.confirm = true

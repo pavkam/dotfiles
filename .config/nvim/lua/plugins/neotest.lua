@@ -54,24 +54,7 @@ return {
         }, neotest_ns)
 
         local function confirm_saved(buffer)
-            buffer = buffer or vim.api.nvim_get_current_buf()
-
-            if vim.bo[buffer].modified then
-                local choice = vim.fn.confirm(
-                    string.format('Save changes to %q before running tests?', vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':h')),
-                    '&Yes\n&No\n&Cancel'
-                )
-
-                if choice == 3 then
-                    return false
-                end
-
-                if choice == 1 then
-                    vim.api.nvim_buf_call(buffer, vim.cmd.write)
-                end
-            end
-
-            return true
+            return require('utils').confirm_saved(buffer, 'running tests')
         end
 
         -- register neotest mappings

@@ -161,7 +161,7 @@ function M.attach(client, buffer)
     if lsp.client_has_capability(client, 'inlayHint') then
         local inlay_hint = vim.lsp.buf.inlay_hint or vim.lsp.inlay_hint
         if inlay_hint then
-            inlay_hint(buffer, true)
+            inlay_hint.enable(buffer, true)
         else
             local file_type = vim.api.nvim_buf_get_option(buffer, 'filetype')
 

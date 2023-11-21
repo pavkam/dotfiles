@@ -54,6 +54,19 @@ return {
                 },
                 eslint = {
                     cmd = function()
+--[[
+-- TODO: this seems to fail on first file open (probably because eslint is at a root level or something)
+/Users/alex/.local/share/nvim/lazy/nvim-lint/lua/lint.lua:265: Linter definition must have a `cmd` set: {
+  args = { "--format", "json", "--stdin", "--stdin-filename", <function 1> },
+  cmd = <function 2>,
+  condition = <function 3>,
+  ignore_exitcode = true,
+  name = "eslint",
+  parser = <function 4>,
+  stdin = true,
+  stream = "stdout"
+}
+--]]
                         return js_project.get_bin_path(nil, 'eslint')
                     end,
                     condition = function(ctx)

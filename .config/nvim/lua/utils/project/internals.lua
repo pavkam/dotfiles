@@ -60,29 +60,36 @@ function M.roots(target)
         return roots
     end
 
+    roots = {}
+    local function add(root)
+        if not utils.list_contains(roots, root) then
+            roots[#roots + 1] = root
+        end
+    end
+
     -- obtain all LSP roots
-    roots = lsp.roots(target)
+    for _, val in ipairs(lsp.roots(target)) do
+        add(val)
+    end
 
     -- find also roots based on patterns
     local cwd = vim.loop.cwd()
     path = path and vim.fs.dirname(path) or cwd
 
-    local root = vim.fs.find(M.root_patterns, {
+    -- now add all the roots from the patterns
+    local matched_files = vim.fs.find(M.root_patterns, {
         path = path,
         upward = true,
-        stop = vim.fs.normalize '~',
-    })[1]
+        limit = math.huge,
+        stop = vim.loop.os_homedir(),
+    })
 
-    -- add new root to the list
-    root = root and vim.fs.dirname(root) or path
-    if not utils.list_contains(roots, root) then
-        roots[#roots + 1] = root
+    for _, matched_file in ipairs(matched_files) do
+        add(vim.fs.dirname(matched_file))
     end
 
     -- add the cwd to the list as well, for the last case scenario
-    if not utils.list_contains(roots, cwd) then
-        roots[#roots + 1] = cwd
-    end
+    add(cwd)
 
     table.sort(roots, function(a, b)
         return #a > #b

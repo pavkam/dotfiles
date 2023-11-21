@@ -35,17 +35,16 @@ vim.keymap.set('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Pr
 vim.keymap.set({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Previous search result' })
 
 -- Better jump list navigation
-vim.keymap.set('n', '<C-]>', '<C-i>', { desc = 'Next location' })
-vim.keymap.set('n', '<C-[>', '<C-o>', { desc = 'Previous location' })
+vim.keymap.set('n', ']]', '<C-i>', { desc = 'Next location' })
+vim.keymap.set('n', '[[', '<C-o>', { desc = 'Previous location' })
 
 -- Add undo break-points
--- TODO, this fails sometimes with copilot when pressing TAB
 vim.keymap.set('i', ',', ',<c-g>u')
 vim.keymap.set('i', '.', '.<c-g>u')
 vim.keymap.set('i', ';', ';<c-g>u')
 
 -- Redo
-vim.keymap.set('n', '<C-r>', 'Nzzzv', { desc = 'Redo', remap = true })
+vim.keymap.set('n', 'U', '<C-r>', { desc = 'Redo' })
 
 -- Some editor mappings
 vim.keymap.set('i', '<C-BS>', '<C-w>', { desc = 'Delete word' })
@@ -64,7 +63,7 @@ vim.keymap.set('i', '<Tab>', function()
     end
 
     return '<Tab>'
-end, { desc = 'Indent/Tab', expr = true, remap = true })
+end, { desc = 'Indent/Tab', expr = true })
 
 vim.keymap.set('i', '<S-Tab>', '<C-d>', { desc = 'Unindent' })
 vim.keymap.set('n', '<Tab>', '>>', { desc = 'Indent' })
@@ -98,8 +97,8 @@ vim.keymap.set('n', '<A-Left>', '<cmd>wincmd h<cr>', { desc = 'Go to left window
 vim.keymap.set('n', '<A-Right>', '<cmd>wincmd l<cr>', { desc = 'Go to right window' })
 vim.keymap.set('n', '<A-Down>', '<cmd>wincmd j<cr>', { desc = 'Go to window below' })
 vim.keymap.set('n', '<A-Up>', '<cmd>wincmd k<cr>', { desc = 'Go to window above' })
-vim.keymap.set('n', '\\', '<C-W>s', { desc = 'Split window below', remap = true })
-vim.keymap.set('n', '|', '<C-W>v', { desc = 'Split window right', remap = true })
+vim.keymap.set('n', '\\', '<C-W>s', { desc = 'Split window below' })
+vim.keymap.set('n', '|', '<C-W>v', { desc = 'Split window right' })
 
 -- terminal mappings
 vim.keymap.set('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
@@ -132,7 +131,13 @@ vim.keymap.set('n', '[t', '<cmd>tabprevious<cr>', { desc = 'Previous tab' })
 -- Some useful keymaps for me
 vim.keymap.set('n', 'x', [["_x]], { desc = 'Delete character' })
 vim.keymap.set('n', '<Del>', [["_x]], { desc = 'Delete character' })
-vim.keymap.set('x', '<BS>', 'd', { desc = 'Delete selection', remap = true })
+vim.keymap.set('x', '<BS>', 'd', { desc = 'Delete selection' })
+
+-- Command mode remaps to make my life easier using the keyboard
+vim.keymap.set('c', '<Down>', '<Right>', { desc = 'Select next item' })
+vim.keymap.set('c', '<Up>', '<Left>', { desc = 'Select previous item' })
+vim.keymap.set('c', '<Left>', '<Space><BS><Left>', { desc = 'Left' })
+vim.keymap.set('c', '<Right>', '<Space><BS><Right>', { desc = 'Right' })
 
 -- quick-fix and locations list
 vim.keymap.set('n', '<leader>qm', function()
@@ -149,10 +154,10 @@ vim.keymap.set('n', '<leader>qC', function()
 end, { desc = 'Clear locations list' })
 vim.keymap.set('n', '<leader>qq', '<cmd>copen<cr>', { desc = 'Show quick-fix list' })
 vim.keymap.set('n', '<leader>ql', '<cmd>lopen<cr>', { desc = 'Show locations list' })
-vim.keymap.set('n', '<leader]q', '<cmd>cnext<cr>', { desc = 'Next quick-fix item' })
-vim.keymap.set('n', '<leader[q', '<cmd>cprev<cr>', { desc = 'Previous quick-fix item' })
-vim.keymap.set('n', '<leader]l', '<cmd>lnext<cr>', { desc = 'Next location item' })
-vim.keymap.set('n', '<leader[l', '<cmd>lprev<cr>', { desc = 'Previous location item' })
+vim.keymap.set('n', ']q', '<cmd>cnext<cr>', { desc = 'Next quick-fix item' })
+vim.keymap.set('n', '[q', '<cmd>cprev<cr>', { desc = 'Previous quick-fix item' })
+vim.keymap.set('n', ']l', '<cmd>lnext<cr>', { desc = 'Next location item' })
+vim.keymap.set('n', '[l', '<cmd>lprev<cr>', { desc = 'Previous location item' })
 
 utils.attach_keymaps('qf', function(set)
     set('n', 'x', function()
@@ -293,11 +298,11 @@ end, { desc = 'Toggle buffer treesitter' })
 
 -- Add "q" to special windows
 utils.attach_keymaps(utils.special_file_types, function(set)
-    set('n', 'q', '<cmd>close<cr>', { silent = true, remap = true })
+    set('n', 'q', '<cmd>close<cr>', { silent = true })
 end)
 
 utils.attach_keymaps('help', function(set)
-    set('n', 'q', '<cmd>close<cr>', { silent = true, remap = true })
+    set('n', 'q', '<cmd>close<cr>', { silent = true })
 end, true)
 
 -- Some custom mappings for file types
@@ -308,10 +313,11 @@ if vim.fn.executable 'jq' then
 end
 
 -- Specials using "Command/Super" key (when available!)
-vim.keymap.set('n', '<M-]>', '<C-i>')
-vim.keymap.set('n', '<M-[>', '<C-o>')
+vim.keymap.set('n', '<M-]>', '<C-i>', { desc = 'Next location' })
+vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
 vim.keymap.set('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
-vim.keymap.set({ 'n', 'x' }, '<M-x>', 'd')
+vim.keymap.set('n', '<M-x>', 'dd', { desc = 'Delete line' })
+vim.keymap.set('x', '<M-x>', 'd', { desc = 'Delete selection' })
 
 -- Some custom commands
 vim.api.nvim_create_user_command('Buffer', function()
@@ -326,3 +332,5 @@ vim.cmd.cnoreabbrev('WQ', 'wq')
 vim.cmd.cnoreabbrev('Qa', 'qa')
 vim.cmd.cnoreabbrev('Bd', 'bd')
 vim.cmd.cnoreabbrev('bD', 'bd')
+
+

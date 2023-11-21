@@ -579,4 +579,32 @@ function M.spinner_icon(index)
     return icons.Progress[index % #icons.Progress + 1]
 end
 
+--- Confirms an operation that requires the buffer to be saved
+---@param buffer integer|nil # the buffer to confirm for or the current buffer if 0 or nil
+---@param reason string|nil # the reason for the confirmation
+---@return boolean # true if the buffer was saved or false if the operation was cancelled
+function M.confirm_saved(buffer, reason)
+    local bufremove = require 'mini.bufremove'
+
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    if vim.bo[buffer].modified then
+        local message = reason and 'Save changes to %q before %s?' or 'Save changes to %q?'
+        local choice = vim.fn.confirm(string.format(message, vim.fn.bufname(buffer), reason), '&Yes\n&No\n&Cancel')
+
+        if choice == 1 then -- Yes
+            vim.api.nvim_buf_call(buffer, vim.cmd.write)
+
+            bufremove.delete(buffer)
+        elseif choice == 2 then -- No
+            bufremove.delete(buffer, true)
+
+            return false
+        end
+    else
+        bufremove.delete(buffer)
+    end
+
+    return true
+end
+
 return M

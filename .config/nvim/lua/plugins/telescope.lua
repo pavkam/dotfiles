@@ -71,7 +71,6 @@ return {
                 end,
                 desc = 'Find selected word',
             },
-
             {
                 '<leader>fw',
                 function()
@@ -79,7 +78,13 @@ return {
                 end,
                 desc = 'Find words',
             },
-
+            {
+                '<leader>Df',
+                function()
+                    require('telescope.builtin').grep_string { cwd = require('utils.project').root(), search = "DEBUGPRINT" }
+                end,
+                desc = 'Find words',
+            },
             {
                 '<leader>fW',
                 function()

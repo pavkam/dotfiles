@@ -40,11 +40,9 @@ return {
         {
             '<leader>Dd',
             function()
-                -- TODO this fails with error
-                return require('debugprint').deleteprints()
+                require('debugprint').deleteprints()
             end,
             mode = { 'n' },
-            expr = true,
             desc = 'Remove all debug prints in buffer',
         },
     },
