@@ -190,6 +190,8 @@ end
 function M.on_capability_event(events, capability, buffer, callback)
     assert(type(callback) == 'function')
 
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
     capability = normalize_capability(capability)
     events = utils.to_list(events)
 
@@ -197,9 +199,11 @@ function M.on_capability_event(events, capability, buffer, callback)
         return
     end
 
-    local auto_group_name = 'pavkam_cap_' .. utils.tbl_join(events, '_') .. '_' .. capability
+    local auto_group_name = utils.tbl_join({ 'pavkam', 'buf', 'cap', buffer, unpack(events), capability }, '_')
+    ---@cast auto_group_name string
 
     local group = vim.api.nvim_create_augroup(auto_group_name, { clear = true })
+
     vim.api.nvim_create_autocmd(events, {
         callback = function()
             if not M.buffer_has_capability(buffer, capability) then
@@ -207,6 +211,13 @@ function M.on_capability_event(events, capability, buffer, callback)
                 return
             end
             callback(buffer)
+        end,
+        group = group,
+        buffer = buffer,
+    })
+    vim.api.nvim_create_autocmd('BufDelete', {
+        callback = function()
+            vim.api.nvim_del_augroup_by_name(auto_group_name)
         end,
         group = group,
         buffer = buffer,

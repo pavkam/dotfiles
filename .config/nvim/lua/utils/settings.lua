@@ -32,11 +32,11 @@ local function set(name, buffer, value)
 end
 
 -- Clear the options for a buffer
-utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost' }, function(evt)
+utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost' }, function()
     vim.defer_fn(utils.trigger_status_update_event, 100)
 end)
 
-utils.on_event({ 'BufDelete' }, function(evt)
+utils.on_event('BufDelete', function(evt)
     set('transient', evt.buf, nil)
     set('permanent', evt.buf, nil)
 end)

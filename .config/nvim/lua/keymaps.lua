@@ -134,10 +134,11 @@ vim.keymap.set('n', '<Del>', [["_x]], { desc = 'Delete character' })
 vim.keymap.set('x', '<BS>', 'd', { desc = 'Delete selection' })
 
 -- Command mode remaps to make my life easier using the keyboard
-vim.keymap.set('c', '<Down>', '<Right>', { desc = 'Select next item' })
-vim.keymap.set('c', '<Up>', '<Left>', { desc = 'Select previous item' })
-vim.keymap.set('c', '<Left>', '<Space><BS><Left>', { desc = 'Left' })
-vim.keymap.set('c', '<Right>', '<Space><BS><Right>', { desc = 'Right' })
+-- TODO, these remaps should only appear if wildmenu is shown
+-- vim.keymap.set('c', '<Down>', '<Right>', { desc = 'Select next item' })
+-- vim.keymap.set('c', '<Up>', '<Left>', { desc = 'Select previous item' })
+-- vim.keymap.set('c', '<Left>', '<Space><BS><Left>', { desc = 'Left' })
+-- vim.keymap.set('c', '<Right>', '<Space><BS><Right>', { desc = 'Right' })
 
 -- quick-fix and locations list
 vim.keymap.set('n', '<leader>qm', function()

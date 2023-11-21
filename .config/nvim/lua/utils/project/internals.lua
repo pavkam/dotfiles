@@ -100,6 +100,7 @@ function M.roots(target)
     return roots
 end
 
+-- TODO: this root is not the best choice for Telescope as it only gets the most inner root (wee need to get the shallowes one)
 --- Returns the primary root for a given target
 ---@param target string|integer|nil # the target to get the root for
 ---@param deepest boolean|nil # whether to return the deepest or the shallowest root (default is deepest)
