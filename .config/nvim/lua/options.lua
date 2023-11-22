@@ -88,7 +88,6 @@ end
 
 -- file management
 o.autowrite = true
-o.filetype = 'on'
 o.syntax = 'on'
 o.fileformats = { 'unix', 'dos', 'mac' }
 o.autoread = true
