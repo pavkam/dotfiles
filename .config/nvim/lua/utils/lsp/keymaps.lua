@@ -129,8 +129,10 @@ local function attach_keymaps(client, buffer)
             lsp.clear_diagnostics(nil)
             lsp.restart_all_for_buffer()
 
+            vim.treesitter.stop()
             vim.cmd.edit()
-        end, { buffer = buffer, desc = 'Nuke buffer LSP' })
+            vim.treesitter.start()
+        end, { buffer = buffer, desc = 'Nuke buffer state!' })
     end
 end
 

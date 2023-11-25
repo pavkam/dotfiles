@@ -28,6 +28,8 @@ return {
                         { find = '%d+ more lines' },
                         { find = '%d+ lines yanked' },
                         { find = 'search hit %a+, continuing at %a+' },
+                        { find = '%d+ lines <ed %d+ time' },
+                        { find = '%d+ lines >ed %d+ time' },
                         { find = 'E486' },
                     },
                 },

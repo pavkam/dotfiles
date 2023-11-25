@@ -122,7 +122,7 @@ vim.keymap.set('x', '<', '<gv', { desc = 'Indent selection' })
 vim.keymap.set('x', '>', '>gv', { desc = 'Unindent selection' })
 
 vim.keymap.set('x', '<Tab>', '>gv', { desc = 'Indent selection' })
-vim.keymap.set('x', '<S-Tab>', '>gv', { desc = 'Unindent selection' })
+vim.keymap.set('x', '<S-Tab>', '<gv', { desc = 'Unindent selection' })
 
 -- tabs
 vim.keymap.set('n', ']t', '<cmd>tabnext<cr>', { desc = 'Next tab' })

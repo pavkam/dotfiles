@@ -88,8 +88,10 @@ function M.roots(target)
         add(vim.fs.dirname(matched_file))
     end
 
-    -- add the cwd to the list as well, for the last case scenario
-    add(cwd)
+    -- add the cwd to the list for the last case scenario (only if no other roots were found)
+    if #roots == 0 then
+        add(cwd)
+    end
 
     table.sort(roots, function(a, b)
         return #a > #b

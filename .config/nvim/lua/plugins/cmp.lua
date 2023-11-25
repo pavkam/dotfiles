@@ -134,14 +134,18 @@ return {
                             fallback()
                         end
                     end, { 'i', 's' }),
-                    ['<C-.>'] = cmp.mapping(function()
+                    ['<C-.>'] = cmp.mapping(function(fallback)
                         if copilot.is_visible() then
                             copilot.next()
+                        else
+                            fallback()
                         end
                     end),
-                    ['<C-,>'] = cmp.mapping(function()
+                    ['<C-,>'] = cmp.mapping(function(fallback)
                         if copilot.is_visible() then
                             copilot.prev()
+                        else
+                            fallback()
                         end
                     end),
                 },

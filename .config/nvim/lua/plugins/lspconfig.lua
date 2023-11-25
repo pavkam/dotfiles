@@ -15,7 +15,14 @@ return {
             },
             {
                 'folke/neodev.nvim',
-                opts = {},
+                opts = {
+                    library = {
+                        enabled = true,
+                        runtime = true,
+                        types = true,
+                        plugins = true,
+                    },
+                },
             },
         },
         opts = {
@@ -162,7 +169,7 @@ return {
                                 unusedwrite = true,
                                 useany = true,
                             },
-                            usePlaceholders = false,
+                            usePlaceholders = true,
                             completeUnimported = true,
                             staticcheck = false,
                             directoryFilters = { '-.git', '-.vscode', '-.idea', '-.vscode-test', '-node_modules' },
@@ -175,7 +182,7 @@ return {
                 gopls = function()
                     local lsp = require 'utils.lsp'
 
-                    -- TODO: workaround for gopls not supporting semanticTokensProvider
+                    -- HACK: workaround for gopls not supporting semanticTokensProvider
                     -- https://github.com/golang/go/issues/54531#issuecomment-1464982242
                     lsp.on_attach(function(client, _)
                         if client.name == 'gopls' then
