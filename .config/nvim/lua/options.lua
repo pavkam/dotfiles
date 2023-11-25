@@ -42,7 +42,7 @@ o.termencoding = 'utf-8'
 o.termguicolors = true
 o.encoding = 'utf-8'
 o.lazyredraw = false
-o.winblend = 20
+o.winblend = 10
 
 -- menu and cmd-line
 o.laststatus = 2

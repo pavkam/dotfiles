@@ -28,12 +28,6 @@ end, { desc = 'End of buffer' })
 vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move selection downward' })
 vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move selection upward' })
 
--- https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
-vim.keymap.set('n', 'n', "'Nn'[v:searchforward].'zv'", { expr = true, desc = 'Next search result' })
-vim.keymap.set({ 'x', 'o' }, 'n', "'Nn'[v:searchforward]", { expr = true, desc = 'Next search result' })
-vim.keymap.set('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Previous search result' })
-vim.keymap.set({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Previous search result' })
-
 -- Better jump list navigation
 vim.keymap.set('n', ']]', '<C-i>', { desc = 'Next location' })
 vim.keymap.set('n', '[[', '<C-o>', { desc = 'Previous location' })
@@ -104,7 +98,6 @@ vim.keymap.set('n', '|', '<C-W>v', { desc = 'Split window right' })
 vim.keymap.set('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
 
 -- buffer management
-
 vim.keymap.set('n', '<leader><leader>', function()
     ---@diagnostic disable-next-line: param-type-mismatch
     pcall(vim.cmd, 'e #')
@@ -114,8 +107,18 @@ vim.keymap.set('n', '<leader>bw', '<cmd>w<cr>', { desc = 'Save buffer' })
 vim.keymap.set('n', '[b', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })
 vim.keymap.set('n', ']b', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 
--- clear search with <esc>
+-- search
 vim.keymap.set({ 'i', 'n' }, '<esc>', '<cmd>nohlsearch<cr><esc>', { desc = 'Escape and clear highlight' })
+vim.keymap.set('n', 'n', "'Nn'[v:searchforward].'zv'", { expr = true, desc = 'Next search result' })
+vim.keymap.set({ 'x', 'o' }, 'n', "'Nn'[v:searchforward]", { expr = true, desc = 'Next search result' })
+vim.keymap.set('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Previous search result' })
+vim.keymap.set({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Previous search result' })
+vim.keymap.set('x', '<C-r>', function()
+    local selected_text = utils.get_selected_text()
+    local command = ':<C-u>%s/\\<' .. selected_text .. '\\>//gI<Left><Left><Left>'
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(command, true, false, true), 'n', false)
+end, { desc = 'Replace selection' })
+vim.keymap.set('n', '<C-r>', [[:%s/\<<C-r><C-w>\>//gI<Left><Left><Left>]])
 
 -- better indenting
 vim.keymap.set('x', '<', '<gv', { desc = 'Indent selection' })
@@ -333,5 +336,3 @@ vim.cmd.cnoreabbrev('WQ', 'wq')
 vim.cmd.cnoreabbrev('Qa', 'qa')
 vim.cmd.cnoreabbrev('Bd', 'bd')
 vim.cmd.cnoreabbrev('bD', 'bd')
-
-

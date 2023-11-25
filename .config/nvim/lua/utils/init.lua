@@ -607,4 +607,14 @@ function M.confirm_saved(buffer, reason)
     return true
 end
 
+function M.get_selected_text()
+    local old = vim.fn.getreg 'a'
+    vim.cmd [[silent! normal! "aygv]]
+
+    local original_selection = vim.fn.getreg 'a'
+    vim.fn.setreg('a', old)
+
+    return original_selection:gsub('/', '\\/'):gsub('\n', '\\n')
+end
+
 return M

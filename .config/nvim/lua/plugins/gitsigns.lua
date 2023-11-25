@@ -33,7 +33,7 @@ return {
             vim.keymap.set('n', '<leader>gu', gs.undo_stage_hunk, { buffer = buffer, desc = 'Undo stage hunk' })
             vim.keymap.set('n', '<leader>gR', gs.reset_buffer, { buffer = buffer, desc = 'Reset buffer' })
             vim.keymap.set('n', '<leader>gp', gs.preview_hunk, { buffer = buffer, desc = 'Preview hunk' })
-            vim.keymap.set('n', '<leader>gb', function()
+            vim.keymap.set('n', '<leader>gB', function()
                 gs.blame_line { full = true }
             end, { buffer = buffer, desc = 'Blame line' })
             vim.keymap.set('n', '<leader>gd', gs.diffthis, { buffer = buffer, desc = 'Diff this' })

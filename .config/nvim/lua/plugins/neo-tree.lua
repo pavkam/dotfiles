@@ -47,7 +47,10 @@ return {
             window = {
                 position = 'float',
             },
-            bind_to_cwd = false,
+            bind_to_cwd = true,
+            cwd_target = {
+                current = 'window',
+            },
             follow_current_file = { enabled = true },
             use_libuv_file_watcher = true,
             hijack_netrw_behavior = 'open_current',

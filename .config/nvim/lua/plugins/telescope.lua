@@ -17,42 +17,42 @@ return {
             {
                 '<leader>bb',
                 function()
-                    require('telescope.builtin').buffers { sort_mru = true }
+                    require('telescope.builtin').buffers()
                 end,
                 desc = 'Show buffers',
             },
             {
                 '<leader>gb',
                 function()
-                    require('telescope.builtin').git_branches { use_file_path = true }
+                    require('telescope.builtin').git_branches()
                 end,
                 desc = 'Git branches',
             },
             {
                 '<leader>gc',
                 function()
-                    require('telescope.builtin').git_commits { use_file_path = true }
+                    require('telescope.builtin').git_bcommits()
                 end,
                 desc = 'Git commits',
             },
             {
                 '<leader>gC',
                 function()
-                    require('telescope.builtin').git_bcommits { use_file_path = true }
+                    require('telescope.builtin').git_commits()
                 end,
-                desc = 'Git commits (file)',
+                desc = 'Git commits (all)',
             },
             {
                 '<leader>gt',
                 function()
-                    require('telescope.builtin').git_status { use_file_path = true }
+                    require('telescope.builtin').git_status()
                 end,
                 desc = 'Git status',
             },
             {
                 '<leader>f<cr>',
                 function()
-                    require('telescope.builtin').resume { use_file_path = true }
+                    require('telescope.builtin').resume()
                 end,
                 desc = 'Resume search',
             },
@@ -67,21 +67,21 @@ return {
             {
                 '<leader>fc',
                 function()
-                    require('telescope.builtin').grep_string { cwd = require('utils.project').root() }
+                    require('telescope.builtin').grep_string { cwd = require('utils.project').root(nil, false) }
                 end,
                 desc = 'Find selected word',
             },
             {
                 '<leader>fw',
                 function()
-                    require('telescope.builtin').live_grep { cwd = require('utils.project').root() }
+                    require('telescope.builtin').live_grep { cwd = require('utils.project').root(nil, false) }
                 end,
                 desc = 'Find words',
             },
             {
                 '<leader>Df',
                 function()
-                    require('telescope.builtin').grep_string { cwd = require('utils.project').root(), search = "DEBUGPRINT" }
+                    require('telescope.builtin').grep_string { search = 'DEBUGPRINT', cwd = require('utils.project').root(nil, false) }
                 end,
                 desc = 'Find words',
             },
@@ -92,16 +92,16 @@ return {
                         additional_args = function(args)
                             return vim.list_extend(args, { '--hidden', '--no-ignore' })
                         end,
-                        cwd = require('utils.project').root(),
+                        cwd = require('utils.project').root(nil, false),
                     }
                 end,
-                desc = 'Find Words (all files)',
+                desc = 'Find words (all files)',
             },
 
             {
                 '<leader>ff',
                 function()
-                    require('telescope.builtin').find_files { cwd = require('utils.project').root() }
+                    require('telescope.builtin').find_files { cwd = require('utils.project').root(nil, false) }
                 end,
                 desc = 'Find files',
             },
@@ -109,7 +109,7 @@ return {
             {
                 '<leader>fo',
                 function()
-                    require('telescope.builtin').oldfiles { cwd = require('utils.project').root(), only_cwd = true }
+                    require('telescope.builtin').oldfiles { cwd = require('utils.project').root(nil, false) }
                 end,
                 desc = 'Find used files',
             },
@@ -117,7 +117,7 @@ return {
             {
                 '<leader>fF',
                 function()
-                    require('telescope.builtin').find_files { hidden = true, no_ignore = true, cwd = require('utils.project').root() }
+                    require('telescope.builtin').find_files { hidden = true, no_ignore = true, cwd = require('utils.project').root(nil, false) }
                 end,
                 desc = 'Find all files',
             },
@@ -154,7 +154,7 @@ return {
             {
                 '<leader>uT',
                 function()
-                    require('telescope.builtin').colorscheme { enable_preview = true }
+                    require('telescope.builtin').colorscheme()
                 end,
                 desc = 'Browse themes',
             },
@@ -201,7 +201,6 @@ return {
                 end,
                 desc = 'All warnings',
             },
-
             {
                 '<leader>un',
                 function()
@@ -209,9 +208,17 @@ return {
                 end,
                 desc = 'Browse notifications',
             },
+            {
+                '=z',
+                function()
+                    require('telescope.builtin').spell_suggest()
+                end,
+                desc = 'Browse notifications',
+            },
         },
         opts = function()
             local actions = require 'telescope.actions'
+            local themes = require 'telescope.themes'
 
             local function flash(prompt_bufnr)
                 require('flash').jump {
@@ -232,9 +239,11 @@ return {
                 }
             end
 
+            local ok, gwt = pcall(vim.api.nvim_get_var, 'git_worktrees')
+
             return {
                 defaults = {
-                    git_worktrees = vim.g.git_worktrees,
+                    git_worktrees = ok and gwt or nil,
                     prompt_prefix = icons.TUI.PromptPrefix .. ' ',
                     selection_caret = icons.TUI.SelectionPrefix .. ' ',
                     path_display = { 'truncate' },
@@ -246,6 +255,7 @@ return {
                         height = 0.80,
                         preview_cutoff = 120,
                     },
+                    winblend = 10,
                     mappings = {
                         i = {
                             ['<C-n>'] = actions.cycle_history_next,
@@ -270,9 +280,25 @@ return {
                 },
                 extensions = {
                     ['ui-select'] = {
-                        require('telescope.themes').get_dropdown {
+                        themes.get_dropdown {
                             layout_config = { width = 0.3, height = 0.4 },
                         },
+                    },
+                },
+                pickers = {
+                    buffers = themes.get_dropdown {
+                        previewer = false,
+                        sort_mru = true,
+                    },
+                    git_branches = themes.get_ivy { use_file_path = true },
+                    git_commits = themes.get_ivy { use_file_path = true },
+                    git_bcommits = themes.get_ivy { use_file_path = true },
+                    git_status = themes.get_ivy { use_file_path = true },
+                    resume = { use_file_path = true },
+                    current_buffer_fuzzy_find = { previewer = false },
+                    colorscheme = { enable_preview = true },
+                    spell_suggest = themes.get_cursor {
+                        previewer = false,
                     },
                 },
             }

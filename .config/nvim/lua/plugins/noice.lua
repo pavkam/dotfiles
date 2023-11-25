@@ -30,6 +30,7 @@ return {
                         { find = 'search hit %a+, continuing at %a+' },
                         { find = '%d+ lines <ed %d+ time' },
                         { find = '%d+ lines >ed %d+ time' },
+                        { find = '%d+ substitutions on %d+ lines' },
                         { find = 'E486' },
                     },
                 },
