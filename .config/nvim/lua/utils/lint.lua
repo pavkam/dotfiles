@@ -2,7 +2,6 @@ local utils = require 'utils'
 local lsp = require 'utils.lsp'
 local project = require 'utils.project'
 local settings = require 'utils.settings'
-local icons = require 'utils.icons'
 
 ---@class utils.lint
 local M = {}
@@ -129,7 +128,9 @@ function M.apply(buffer, force)
             poll_linting_status(buffer)
         end
 
-        vim.api.nvim_buf_call(buffer, do_lint)
+        if vim.api.nvim_buf_is_valid(buffer) then
+            vim.api.nvim_buf_call(buffer, do_lint)
+        end
     end, 100)
 end
 

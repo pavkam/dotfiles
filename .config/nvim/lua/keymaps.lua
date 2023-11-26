@@ -1,5 +1,6 @@
 local utils = require 'utils'
 local settings = require 'utils.settings'
+local notes = require 'utils.notes'
 
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
@@ -315,6 +316,31 @@ if vim.fn.executable 'jq' then
         set('n', '<leader>sJ', ':%!jq .<cr>', { desc = 'Pretty-format JSON' })
     end)
 end
+
+-- Notes
+vim.keymap.set('n', '<leader>nn', function()
+    notes.find(true)
+end, { desc = 'Browse global notes' })
+
+vim.keymap.set('n', '<leader>nN', function()
+    notes.find(false)
+end, { desc = 'Browse project notes' })
+
+vim.keymap.set('n', '<leader>ng', function()
+    notes.grep(true)
+end, { desc = 'Grep global notes' })
+
+vim.keymap.set('n', '<leader>nG', function()
+    notes.grep(false)
+end, { desc = 'Grep project notes' })
+
+vim.keymap.set('n', '<leader>nc', function()
+    notes.edit(true)
+end, { desc = 'Open global note' })
+
+vim.keymap.set('n', '<leader>nC', function()
+    notes.edit(false)
+end, { desc = 'Open project note' })
 
 -- Specials using "Command/Super" key (when available!)
 vim.keymap.set('n', '<M-]>', '<C-i>', { desc = 'Next location' })

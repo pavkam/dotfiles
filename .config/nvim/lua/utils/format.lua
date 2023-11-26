@@ -28,6 +28,10 @@ end
 ---@param buffer integer # the buffer to monitor the linter for
 local function poll_formatting_status(buffer)
     utils.poll(buffer, function(actual_buffer)
+        if not vim.api.nvim_buf_is_valid(actual_buffer) then
+            return true
+        end
+
         local jid = vim.b[actual_buffer].conform_jid
         local running = not jid or vim.fn.jobwait({ jid }, 0)[0] == -1
 

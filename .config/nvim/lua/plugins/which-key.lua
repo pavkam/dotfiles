@@ -21,6 +21,7 @@ return {
             ['<leader>d'] = { name = icons.UI.Debugger .. ' Debugger' },
             ['<leader>D'] = { name = icons.UI.ConsoleLog .. ' Debug print' },
             ['<leader>s'] = { name = icons.UI.LSP .. ' Source' },
+            ['<leader>n'] = { name = icons.UI.Notes .. ' Notes' },
             ['<leader>x'] = { name = icons.UI.AI .. 'AI' },
         },
     },

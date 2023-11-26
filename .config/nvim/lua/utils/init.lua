@@ -607,6 +607,8 @@ function M.confirm_saved(buffer, reason)
     return true
 end
 
+--- Gets the selected text from the current buffer in visual mode
+---@return string # the selected text
 function M.get_selected_text()
     local old = vim.fn.getreg 'a'
     vim.cmd [[silent! normal! "aygv]]
@@ -614,7 +616,8 @@ function M.get_selected_text()
     local original_selection = vim.fn.getreg 'a'
     vim.fn.setreg('a', old)
 
-    return original_selection:gsub('/', '\\/'):gsub('\n', '\\n')
+    local res, _ = original_selection:gsub('/', '\\/'):gsub('\n', '\\n')
+    return res
 end
 
 return M

@@ -567,16 +567,14 @@ link .config/mc
 link .config/htop
 link .config/kitty
 
-if [ "$DISTRO_DARWIN" != "" ]; then
-  link .terminfo
-end
-
 if [ "$DISTRO_DARWIN" = "" ]; then
     link .config/Code/User/settings.json
     link .config/Code/User/keybindings.json
 else
     link .config/Code/User/settings.json "./Application Support/Code/User/settings.json"
     link .config/Code/User/keybindings.json "./Application Support/Code/User/keybindings.json"
+    link .terminfo
+    link "Library/KeyBindings/DefaultKeyBinding.dict"
 fi
 
 link .aws/cli/alias
@@ -608,7 +606,7 @@ else
 fi
 
 # Prepare go stuff, if installed
-if command -v go &>/dev/null; then
+if command -v go 1>$LOG_FILE 2>&1; then
     roll "Installing go packages..."
     export GOPATH="$HOME/.go"
 
