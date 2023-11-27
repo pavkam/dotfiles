@@ -260,7 +260,7 @@ _fzf_compgen_dir() {
 
 fif() {
   if [ ! "$#" -gt 0 ]; then
-    echo "Need a string to search for!";
+    echo " Need a string to search for!";
     return 1;
   fi
 
@@ -292,9 +292,42 @@ alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu 
 alias vi=nvim
 alias vim=nvim
 
+if command -v heroku &> /dev/null; then
+    heroku-env() {
+        # Check for correct number of arguments
+        if [ "$#" -ne 2 ]; then
+            echo " Usage: heroku-env [Heroku App Name] \"[Command to Run]\""
+            return 1
+        fi
+
+        # Check heroku session
+        if ! heroku auth:whoami &> /dev/null; then
+            echo " Heroku CLI is not logged in or the authorization has expired. Please log in or renew your authorization." >&2
+            return 1
+        fi
+
+        APP_NAME=$1
+        COMMAND=$2
+
+        # Get the environment variables from Heroku
+        ENV_VARS=$(heroku config -s -a "$APP_NAME" 2>&1)
+
+        # Check if heroku config command was successful
+        if [ $? -ne 0 ]; then
+            echo " Failed to retrieve environment variables from Heroku." >&2
+            return 1
+        fi
+
+        EXPORT_COMMANDS=$(echo "$ENV_VARS" | awk -F '=' '{print "export " $1 "='\''" $2 "'\''"}')
+
+        echo " Running command \"$COMMAND\" with enviroment from app \"$APP_NAME\"..."
+        $SHELL -c "$EXPORT_COMMANDS; $COMMAND"
+    }
+fi
+
 sesh() {
     if [ "$TMUX" != "" ]; then
-        echo "Already in a tmux session! Detach bro!"
+        echo " Already in a tmux session! Detach bro!"
         return 1
     fi
 
@@ -316,14 +349,13 @@ sesh() {
     local SESSION=$(echo $OPTIONS | fzf --reverse --preview-window 'right:80%:nohidden' --preview="[ '{}' != '+new' ] && tmux capture-pane -e -pt {} 2> /dev/null || echo 'Session not running'")
 
     if [ "$SESSION" = "+new" ]; then
-        echo -ne "Enter session name (empty to cancel): "
+        echo -ne " Enter session name (empty to cancel): "
         read SESSION
 
         if [ "$SESSION" != "" ]; then
             tmux new -A -s "$SESSION"
         fi
     elif [ "$SESSION" != "" ]; then
-        #echo -en "\033]0;Kitty\a"
         title "tmux" "$SESSION"
         tmux new -A -s "$SESSION" -c "$PROJECTS_ROOT/$SESSION"
     fi
