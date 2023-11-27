@@ -32,6 +32,8 @@ return {
                         { find = '%d+ lines >ed %d+ time' },
                         { find = '%d+ substitutions on %d+ lines' },
                         { find = 'E486' },
+                        { find = ':!mv' },
+                        { find = ':!rm' },
                     },
                 },
                 view = 'mini',

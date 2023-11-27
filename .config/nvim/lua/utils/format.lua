@@ -24,6 +24,7 @@ local function formatters(buffer)
     end, clients)
 end
 
+-- TODO: clear the status when finished but lua line was not active, it keeps showing the broken status
 --- Monitors the status of a formatter and updates the progress
 ---@param buffer integer # the buffer to monitor the linter for
 local function poll_formatting_status(buffer)

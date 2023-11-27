@@ -349,12 +349,6 @@ vim.keymap.set('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
 vim.keymap.set('n', '<M-x>', 'dd', { desc = 'Delete line' })
 vim.keymap.set('x', '<M-x>', 'd', { desc = 'Delete selection' })
 
--- Some custom commands
-vim.api.nvim_create_user_command('Buffer', function()
-    local health = require 'utils.health'
-    health.show_for_buffer()
-end, { desc = 'Show buffer information', nargs = 0 })
-
 -- misspellings
 vim.cmd.cnoreabbrev('qw', 'wq')
 vim.cmd.cnoreabbrev('Wq', 'wq')

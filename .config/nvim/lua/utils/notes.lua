@@ -61,7 +61,7 @@ end
 ---@param global boolean|nil: If true, edit a new note in the global notes directory
 function M.edit(global)
     vim.ui.input({ prompt = 'Note name: ', default = os.date '%Y-%m-%d' }, function(name)
-        if name == '' then
+        if name == nil or name == '' then
             return
         end
 
