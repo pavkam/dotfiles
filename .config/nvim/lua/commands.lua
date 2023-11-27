@@ -17,7 +17,13 @@ utils.on_user_event('NormalFile', function(_, evt)
             local new_path = utils.join_paths(directory, new_name)
             ---@cast new_path string
 
+            if not utils.file_exists(new_path) then
+                vim.api.nvim_buf_set_name(evt.buf, new_name)
+                return
+            end
+
             vim.api.nvim_command(string.format('!mv "%%" "%s"', new_path))
+
             if utils.file_exists(new_path) then
                 require('mini.bufremove').delete(0, true)
 
@@ -43,19 +49,32 @@ utils.on_user_event('NormalFile', function(_, evt)
         end)
     end, { desc = 'Rename current file', nargs = '?' })
 
-    vim.api.nvim_buf_create_user_command(evt.buf, 'Delete', function()
+    vim.api.nvim_buf_create_user_command(evt.buf, 'Delete', function(args)
         local path = vim.fn.expand '%:p'
+        local name = vim.fn.expand '%:t'
 
-        local message = string.format('Are you sure you want to delete %s?', vim.fn.expand '%:t')
-        local choice = vim.fn.confirm(message, '&Yes\n&No')
+        if not utils.file_exists(path) then
+            require('mini.bufremove').delete(0, true)
+            return
+        end
 
-        if choice == 1 then -- Yes
+        local function delete()
             vim.api.nvim_command(string.format('!rm "%%"', path))
             if not utils.file_exists(path) then
                 require('mini.bufremove').delete(0, true)
             else
-                utils.error(string.format('Failed to delete file "%s"!', path))
+                utils.error(string.format('Failed to delete file "%s"!', name))
             end
         end
-    end, { desc = 'Delete current file', nargs = 0 })
+
+        if not args.bang then
+            local message = string.format('Are you sure you want to delete %s?', name)
+            local choice = vim.fn.confirm(message, '&Yes\n&No')
+            if choice ~= 1 then -- Yes
+                return
+            end
+        end
+
+        delete()
+    end, { desc = 'Delete current file', nargs = 0, bang = true })
 end)
