@@ -163,7 +163,7 @@ return {
                                 rangeVariableTypes = true,
                             },
                             analyses = {
-                                fieldalignment = false, -- too may complaints
+                                fieldalignment = false, -- too noisy
                                 nilness = true,
                                 unusedparams = true,
                                 unusedwrite = true,

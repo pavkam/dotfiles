@@ -1,5 +1,6 @@
 local utils = require 'utils'
 local settings = require 'utils.settings'
+local shell = require 'utils.shell'
 
 -- check if the file has been changed outside of neovim
 utils.on_event({ 'FocusGained', 'TermClose', 'TermLeave' }, function()
@@ -133,7 +134,7 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     if not utils.is_special_buffer(evt.buf) then
         utils.trigger_user_event 'NormalFile'
 
-        if utils.file_is_under_git(current_file) then
+        if shell.file_is_under_git(current_file) then
             utils.trigger_user_event 'GitFile'
         end
     end

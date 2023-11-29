@@ -126,7 +126,7 @@ return {
                         settings.transient(function(buffer)
                             local prefix = icons.UI.LSP
 
-                            local progress = lsp.progress(buffer)
+                            local progress = lsp.progress()
                             if progress ~= nil then
                                 prefix = utils.spinner_icon(progress)
                             end

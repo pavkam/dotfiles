@@ -13,7 +13,7 @@ g.markdown_recommended_style = 0
 o.shell = '/bin/bash -i'
 
 if vim.fn.executable 'rg' then
-    o.grepprg = [[rg\ --vimgrep\ --no-heading\ --smart-case]]
+    o.grepprg = [[rg --vimgrep --no-heading --smart-case]]
     o.grepformat = '%f:%l:%c:%m,%f:%l:%m'
 end
 

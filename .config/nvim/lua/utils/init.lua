@@ -508,37 +508,6 @@ function M.read_text_file(path)
     return content
 end
 
---- Executes a given command and returns the output
----@param cmd string|string[] # the command to execute
----@param show_error boolean # whether to show an error if the command fails
----@return string|nil # the output of the command or nil if the command failed
-function M.cmd(cmd, show_error)
-    cmd = M.to_list(cmd)
-    ---@cast cmd string[]
-
-    if vim.fn.has 'win32' == 1 then
-        cmd = vim.list_extend({ 'cmd.exe', '/C' }, cmd)
-    end
-
-    local result = vim.fn.system(cmd)
-    local success = vim.api.nvim_get_vvar 'shell_error' == 0
-
-    if not success and (show_error == nil or show_error) then
-        M.error(string.format('Error running command *%s*\nError message:\n**%s**', M.tbl_join(cmd, ' '), result))
-    end
-
-    return success and result:gsub('[\27\155][][()#;?%d]*[A-PRZcf-ntqry=><~]', '') or nil
-end
-
---- Checks if a file is under git
----@param file_name string # the name of the file to check
----@return boolean # true if the file is under git, false otherwise
-function M.file_is_under_git(file_name)
-    assert(type(file_name) == 'string' and file_name ~= '')
-
-    return M.cmd({ 'git', '-C', vim.fn.fnamemodify(file_name, ':p:h'), 'rev-parse' }, false) ~= nil
-end
-
 --- Gets the foreground color of a highlight group
 ---@param name string # the name of the highlight group
 ---@return table<string, string>|nil # the foreground color of the highlight group
