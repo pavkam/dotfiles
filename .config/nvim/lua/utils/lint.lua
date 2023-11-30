@@ -63,10 +63,11 @@ end
 
 --- Gets the progress of linting for a buffer
 ---@param buffer integer|nil # the buffer to get the linter progress for or 0 or nil for current
----@return string|nil # the progress of the linter or nil if not running
-function M.progress_spinner(buffer)
+---@return string|nil,string[]|nil # the progress of the linter or nil if not running
+function M.progress(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
-    return progress.spinner_for_buffer(buffer, progress_class)
+
+    return progress.status_for_buffer(buffer, progress_class)
 end
 
 --- Gets the names of all active linters for a buffer
@@ -114,7 +115,7 @@ function M.apply(buffer, force)
     utils.defer_unique(buffer, function()
         local do_lint = function()
             lint.try_lint(names, { cwd = project.root(buffer) })
-            progress.register_task_for_buffer(buffer, progress_class, { prv = true, fn = linting_status })
+            progress.register_task_for_buffer(buffer, progress_class, { prv = true, fn = linting_status, ctx = names })
         end
 
         if vim.api.nvim_buf_is_valid(buffer) then

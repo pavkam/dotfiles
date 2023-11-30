@@ -1,10 +1,63 @@
 local utils = require 'utils'
+local shell = require 'utils.shell'
+local health = require 'utils.health'
+
+--- Parses a string of arguments into a table
+---@param args string # the string of arguments to parse
+---@return string[] # the parsed arguments
+local function parse_args(args)
+    local parsed_args = {}
+    local in_quote = false
+    local current_arg = ''
+
+    for i = 1, #args do
+        local char = args:sub(i, i)
+        if char == '"' then
+            in_quote = not in_quote
+        elseif char == ' ' and not in_quote then
+            if #current_arg > 0 then
+                table.insert(parsed_args, current_arg)
+                current_arg = ''
+            end
+        else
+            current_arg = current_arg .. char
+        end
+    end
+
+    if #current_arg > 0 then
+        table.insert(parsed_args, current_arg)
+    end
+
+    return parsed_args
+end
 
 -- Show buffer information
 vim.api.nvim_create_user_command('Buffer', function()
-    local health = require 'utils.health'
     health.show_for_buffer()
 end, { desc = 'Show buffer information', nargs = 0 })
+
+vim.api.nvim_create_user_command('Run', function(args)
+    local cmd_line = parse_args(args.args)
+    if #cmd_line == 0 then
+        error 'No command specified'
+    end
+
+    local cmd_line_desc = table.concat(cmd_line, ' ')
+    local cmd = table.remove(cmd_line, 1)
+
+    shell.async_cmd(cmd, cmd_line, function(output)
+        if not args.bang then
+            if #output > 0 then
+                local message = table.concat(output, '\n')
+                message = message:gsub('```', '\\`\\`\\`')
+
+                utils.info(string.format('Command "%s" finished:\n\n```sh\n%s\n```', cmd_line_desc, message))
+            else
+                utils.info(string.format('Command "%s" finished', cmd_line_desc))
+            end
+        end
+    end)
+end, { desc = 'Run a shell command', bang = true, nargs = '+' })
 
 -- File manipulation
 utils.on_user_event('NormalFile', function(_, evt)
@@ -23,17 +76,13 @@ utils.on_user_event('NormalFile', function(_, evt)
                 return
             end
 
-            vim.api.nvim_command(string.format('!mv "%%" "%s"', new_path))
-
-            if utils.file_exists(new_path) then
+            shell.async_cmd('mv', { old_path, new_path }, function()
                 require('mini.bufremove').delete(0, true)
 
                 vim.api.nvim_command(string.format('e %s', new_path))
 
                 require('utils.lsp').notify_file_renamed(old_path, new_path)
-            else
-                utils.error(string.format('Failed to rename file "%s" to "%s"!', old_path, new_path))
-            end
+            end)
         end
 
         if args.args ~= '' then
@@ -60,12 +109,9 @@ utils.on_user_event('NormalFile', function(_, evt)
         end
 
         local function delete()
-            vim.api.nvim_command(string.format('!rm "%%"', path))
-            if not utils.file_exists(path) then
+            shell.async_cmd('rm', { path }, function()
                 require('mini.bufremove').delete(0, true)
-            else
-                utils.error(string.format('Failed to delete file "%s"!', name))
-            end
+            end, { no_checktime = true })
         end
 
         if not args.bang then

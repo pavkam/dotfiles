@@ -134,9 +134,11 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     if not utils.is_special_buffer(evt.buf) then
         utils.trigger_user_event 'NormalFile'
 
-        if shell.file_is_under_git(current_file) then
-            utils.trigger_user_event 'GitFile'
-        end
+        shell.check_file_is_tracked_by_git(current_file, function(yes)
+            if yes then
+                utils.trigger_user_event 'GitFile'
+            end
+        end)
     end
 
     -- do not retrigger these events if the file name is set

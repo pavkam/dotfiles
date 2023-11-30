@@ -66,16 +66,16 @@ utils.on_user_event('LspProgress', function(_, evt)
     local key = string.format('%s.%s', evt.data.client_id, evt.data.token)
     if evt.data.value.kind ~= 'end' then
         lsp_tasks[key] = evt.data.value
-        progress.register_task(progress_class, { prv = true, fn = lsp_status, desc = evt.data.value.message })
+        progress.register_task(progress_class, { prv = true, fn = lsp_status, ctx = evt.data.value.message })
     else
         lsp_tasks[key] = nil
     end
 end)
 
 --- Gets the unified progress of all LSP tasks
----@return string|nil # the progress of the LSP tasks or nil if not running
-function M.progress_spinner()
-    return progress.spinner(progress_class)
+---@return string|nil,any|nil # the progress of the LSP tasks or nil if not running
+function M.progress()
+    return progress.status(progress_class)
 end
 
 --- Normalizes the name of a capability

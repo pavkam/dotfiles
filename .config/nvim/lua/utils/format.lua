@@ -44,10 +44,11 @@ end
 
 --- Gets the progress of a formatter for a buffer
 ---@param buffer integer|nil # the buffer to get the linter progress for or 0 or nil for current
----@return string|nil # the progress spinner of the formatter or nil if not running
-function M.progress_spinner(buffer)
+---@return string|nil,string[]|nil # the progress spinner of the formatter or nil if not running
+function M.progress(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
-    return progress.spinner_for_buffer(buffer, progress_class)
+
+    return progress.status_for_buffer(buffer, progress_class)
 end
 
 --- Gets the names of all active formatters for a buffer
@@ -94,7 +95,7 @@ function M.apply(buffer, force, injected)
 
     conform.format(utils.tbl_merge({ bufnr = buffer }, additional))
 
-    progress.register_task_for_buffer(buffer, progress_class, { prv = true, fn = formatting_status })
+    progress.register_task_for_buffer(buffer, progress_class, { prv = true, fn = formatting_status, ctx = formatters(buffer) })
 end
 
 --- Toggles auto-formatting for a buffer

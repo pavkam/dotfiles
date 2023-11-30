@@ -13,7 +13,7 @@ vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up',
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
 vim.keymap.set('n', '<Up>', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
 vim.keymap.set('n', '<Down>', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
-
+-- TODO: vimgrep + apply to quickfix (replace all)
 -- Better normal mode navigation
 vim.keymap.set({ 'n', 'x' }, 'gg', function()
     if vim.v.count > 0 then

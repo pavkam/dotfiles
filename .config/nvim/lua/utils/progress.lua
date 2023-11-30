@@ -5,13 +5,13 @@ local utils = require 'utils'
 local M = {}
 
 ---@class utils.progress.Task
----@field desc string|nil # the description of the task
+---@field ctx any|nil # any context for the task
 ---@field ttl number # the time to live of the task in milliseconds
 ---@field prv boolean # whether the task is private (not reported globally)
 ---@field fn nil|fun(buffer: integer|nil): boolean # the function to check whether the task is still active
 
 ---@class utils.progress.TaskOptions
----@field desc string|nil # the description of the task
+---@field ctx any|nil # any context for the task
 ---@field timeout number|nil # the timeout of the task in milliseconds
 ---@field prv boolean|nil # whether the task is private (not reported globally)
 ---@field fn nil|fun(buffer: integer|nil): boolean # the function to check whether the task is still active
@@ -28,7 +28,6 @@ local function register_task(buffer, class, opts)
 
     opts = opts or {}
 
-    assert(type(opts.desc) == 'string' or opts.desc == nil)
     assert(type(opts.timeout) == 'number' or opts.timeout == nil)
 
     local key = buffer or 'global'
@@ -40,11 +39,11 @@ local function register_task(buffer, class, opts)
 
     local task = tasks[class]
     if task then
-        task.desc = opts.desc
+        task.ctx = opts.ctx
         task.ttl = opts.timeout
     else
         task = {
-            desc = opts.desc,
+            ctx = opts.ctx,
             ttl = opts.timeout or 10000,
             prv = opts.prv,
             fn = opts.fn,
@@ -96,7 +95,8 @@ local function update_tasks(interval)
         for _, class in ipairs(classes) do
             local task = tasks[class]
             task.ttl = task.ttl and task.ttl - interval
-            if task.ttl <= 0 then
+            if not task.ttl or task.ttl <= 0 then
+                utils.warn('Task "' .. class .. '" timed out!')
                 tasks[class] = nil
             else
                 if task.fn and not task.fn(buffer) then
@@ -136,7 +136,7 @@ local function ensure_polling()
         interval,
         vim.schedule_wrap(function()
             local active_tasks = update_tasks(interval)
-            if not active_tasks then
+            if not active_tasks and timer then
                 spinner_index = nil
                 timer:stop()
                 timer = nil
@@ -190,16 +190,24 @@ function M.unregister_task(class)
     unregister_task(nil, class)
 end
 
-function M.spinner_for_buffer(buffer, class)
+function M.status_for_buffer(buffer, class)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local task = M.tasks[buffer] and M.tasks[buffer][class]
-    return task and spinner_icon(spinner_index or 0)
+    if task then
+        return spinner_icon(spinner_index or 0), task.ctx
+    end
+
+    return nil, nil
 end
 
-function M.spinner(class)
+function M.status(class)
     local task = M.tasks['global'] and M.tasks['global'][class]
-    return task and spinner_icon(spinner_index or 0)
+    if task then
+        return spinner_icon(spinner_index or 0), task.ctx
+    end
+
+    return nil, nil
 end
 
 return M

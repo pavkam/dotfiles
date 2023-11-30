@@ -10,6 +10,7 @@ return {
         local lsp = require 'utils.lsp'
         local format = require 'utils.format'
         local lint = require 'utils.lint'
+        local shell = require 'utils.shell'
         local settings = require 'utils.settings'
 
         local copilot_colors = {
@@ -67,12 +68,36 @@ return {
                     { 'filename', path = 1, symbols = { modified = ' ' .. icons.Files.Modified .. ' ', readonly = '', unnamed = '' } },
                 },
                 lualine_x = {
+                    {
+                        function()
+                            local prefix, tasks = shell.progress()
+
+                            local tasks_names = tasks
+                                and vim.tbl_map(function(task)
+                                    ---@cast task utils.shell.RunningProcess
+                                    return task.cmd .. ' ' .. utils.tbl_join(task.args, ' ')
+                                end, tasks)
+
+                            if prefix and tasks_names then
+                                return prefix .. ' ' .. utils.tbl_join(tasks_names, ' ' .. icons.TUI.ListSeparator .. ' ')
+                            end
+
+                            return ''
+                        end,
+                        cond = function()
+                            return shell.progress() ~= nil
+                        end,
+                        color = function()
+                            return utils.hl_fg_color 'DiagnosticError'
+                        end,
+                    },
+
                     -- TODO: show progress of shell commands
                     {
                         settings.transient(function(buffer)
                             local prefix = icons.UI.Disabled
                             if lint.enabled_for_buffer(buffer) then
-                                prefix = lint.progress_spinner(buffer) or icons.UI.Format
+                                prefix = lint.progress(buffer) or icons.UI.Format
                             end
 
                             return prefix .. ' ' .. utils.tbl_join(lint.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
@@ -92,7 +117,7 @@ return {
                         settings.transient(function(buffer)
                             local prefix = icons.UI.Disabled
                             if format.enabled_for_buffer(buffer) then
-                                prefix = format.progress_spinner(buffer) or icons.UI.Lint
+                                prefix = format.progress(buffer) or icons.UI.Lint
                             end
 
                             return prefix .. ' ' .. utils.tbl_join(format.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
@@ -113,7 +138,7 @@ return {
                     },
                     {
                         settings.transient(function(buffer)
-                            local prefix = lsp.progress_spinner() or icons.UI.LSP
+                            local prefix = lsp.progress() or icons.UI.LSP
                             return prefix .. ' ' .. utils.tbl_join(lsp.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
                         end),
                         cond = settings.transient(function(buffer)
