@@ -1,5 +1,8 @@
 local utils = require 'utils'
 local settings = require 'utils.settings'
+local progress = require 'utils.progress'
+
+local progress_class = 'lsp'
 
 ---@class LspClient
 ---@field name string
@@ -52,42 +55,27 @@ utils.on_event('LspAttach', function(evt)
     settings.set_global(detach_processed_setting_name(client), false)
 end)
 
----@type uv_timer_t|nil
-local lsp_task_poll_timer
----@type integer|nil
-local lsp_progress = nil
+--- Checks whether there are any active LSP tasks
+---@return boolean # whether there are any active tasks
+local function lsp_status()
+    local finished = vim.tbl_isempty(lsp_tasks)
+    return not finished
+end
 
 utils.on_user_event('LspProgress', function(_, evt)
     local key = string.format('%s.%s', evt.data.client_id, evt.data.token)
     if evt.data.value.kind ~= 'end' then
         lsp_tasks[key] = evt.data.value
-        lsp_task_poll_timer = lsp_task_poll_timer
-            or utils.poll(nil, function()
-                local finished = vim.tbl_isempty(lsp_tasks)
-
-                if finished then
-                    lsp_progress = nil
-                elseif lsp_progress == nil then
-                    lsp_progress = 0
-                else
-                    lsp_progress = lsp_progress + 1
-                end
-
-                utils.trigger_status_update_event()
-                return finished
-            end, 100)
+        progress.register_task(progress_class, { prv = true, fn = lsp_status, desc = evt.data.value.message })
     else
         lsp_tasks[key] = nil
-        if vim.tbl_isempty(lsp_tasks) then
-            lsp_task_poll_timer = nil
-        end
     end
 end)
 
---- Gets the progress of all LSP tasks
----@return integer|nil # the progress of the LSP tasks or nil if not running
-function M.progress()
-    return lsp_progress
+--- Gets the unified progress of all LSP tasks
+---@return string|nil # the progress of the LSP tasks or nil if not running
+function M.progress_spinner()
+    return progress.spinner(progress_class)
 end
 
 --- Normalizes the name of a capability

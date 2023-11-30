@@ -2,6 +2,8 @@ local utils = require 'utils'
 local settings = require 'utils.settings'
 local notes = require 'utils.notes'
 
+--TODO: make the "hidden" files option global for neotree and telescopoe
+--TODO: add go ang gO to insert, paste, insert (up and down)
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('n', '<BS>', '<Nop>', { silent = true })
@@ -206,6 +208,7 @@ utils.attach_keymaps('qf', function(set)
 end, true)
 
 utils.attach_keymaps(nil, function(set)
+    -- TODO: share code
     set('n', '<leader>qa', function()
         local r, c = unpack(vim.api.nvim_win_get_cursor(0))
         local line = vim.api.nvim_get_current_line()

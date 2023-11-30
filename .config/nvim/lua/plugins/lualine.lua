@@ -67,16 +67,12 @@ return {
                     { 'filename', path = 1, symbols = { modified = ' ' .. icons.Files.Modified .. ' ', readonly = '', unnamed = '' } },
                 },
                 lualine_x = {
+                    -- TODO: show progress of shell commands
                     {
                         settings.transient(function(buffer)
-                            local prefix = icons.UI.Format
-                            if not lint.enabled_for_buffer(buffer) then
-                                prefix = icons.UI.Disabled
-                            else
-                                local progress = lint.progress(buffer)
-                                if progress ~= nil then
-                                    prefix = utils.spinner_icon(progress)
-                                end
+                            local prefix = icons.UI.Disabled
+                            if lint.enabled_for_buffer(buffer) then
+                                prefix = lint.progress_spinner(buffer) or icons.UI.Format
                             end
 
                             return prefix .. ' ' .. utils.tbl_join(lint.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
@@ -94,19 +90,12 @@ return {
                     },
                     {
                         settings.transient(function(buffer)
-                            local prefix = icons.UI.Lint
-                            if not format.enabled_for_buffer(buffer) then
-                                prefix = icons.UI.Disabled
-                            else
-                                local progress = format.progress(buffer)
-                                if progress ~= nil then
-                                    prefix = utils.spinner_icon(progress)
-                                end
+                            local prefix = icons.UI.Disabled
+                            if format.enabled_for_buffer(buffer) then
+                                prefix = format.progress_spinner(buffer) or icons.UI.Lint
                             end
 
-                            local list = format.active_names_for_buffer(buffer)
-
-                            return prefix .. ' ' .. utils.tbl_join(list, ' ' .. icons.TUI.ListSeparator .. ' ')
+                            return prefix .. ' ' .. utils.tbl_join(format.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
                         end),
                         cond = settings.transient(function(buffer)
                             return format.active_for_buffer(buffer)
@@ -124,13 +113,7 @@ return {
                     },
                     {
                         settings.transient(function(buffer)
-                            local prefix = icons.UI.LSP
-
-                            local progress = lsp.progress()
-                            if progress ~= nil then
-                                prefix = utils.spinner_icon(progress)
-                            end
-
+                            local prefix = lsp.progress_spinner() or icons.UI.LSP
                             return prefix .. ' ' .. utils.tbl_join(lsp.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
                         end),
                         cond = settings.transient(function(buffer)

@@ -2,11 +2,13 @@ local utils = require 'utils'
 local lsp = require 'utils.lsp'
 local project = require 'utils.project'
 local settings = require 'utils.settings'
+local progress = require 'utils.progress'
 
 ---@class utils.lint
 local M = {}
 
 local setting_name = 'auto_linting_enabled'
+local progress_class = 'linting'
 
 --- Gets the names of all active linters for a buffer
 ---@param buffer integer|nil # the buffer to get the linters for or 0 or nil for current
@@ -35,49 +37,36 @@ local function linters(buffer)
     end, clients)
 end
 
---- Monitors the status of a linter and updates the progress
----@param buffer integer|nil # the buffer to monitor the linter for or 0 or nil for current buffer
-local function poll_linting_status(buffer)
+--- Checks the status of linting for a buffer
+---@param buffer integer # the buffer to monitor the linting for
+---@return boolean # whether linting is running
+local function linting_status(buffer)
+    assert(type(buffer) == 'number')
+
     local lint = require 'lint'
 
-    buffer = buffer or vim.api.nvim_get_current_buf()
+    ---@type table<integer, table<string, lint.LintProc>>
+    local tbl = utils.get_up_value(lint.try_lint, 'running_procs_by_buf')
+    local running_linters = tbl and tbl[buffer] or {}
 
-    utils.poll(buffer, function(actual_buffer)
-        ---@type table<integer, table<string, lint.LintProc>>
-        local tbl = utils.get_up_value(lint.try_lint, 'running_procs_by_buf')
-
-        local running = false
-        if tbl and tbl[actual_buffer] ~= nil then
-            for _, linter in pairs(tbl[actual_buffer]) do
-                ---@diagnostic disable-next-line: undefined-field
-                running = linter.handle and not linter.handle:is_closing()
-
-                if running then
-                    break
-                end
-            end
-        end
-
-        local key = 'linting_progress'
-        local progress = settings.get_permanent_for_buffer(actual_buffer, key, 0)
+    for _, linter in pairs(running_linters) do
+        ---@diagnostic disable-next-line: undefined-field
+        local running = linter.handle and not linter.handle:is_closing()
 
         if running then
-            settings.set_permanent_for_buffer(actual_buffer, key, progress + 1)
-        else
-            settings.set_permanent_for_buffer(actual_buffer, key, nil)
+            return true
         end
+    end
 
-        utils.trigger_status_update_event()
-
-        return not running
-    end, 100)
+    return false
 end
 
---- Gets the progress of a linter for a buffer
+--- Gets the progress of linting for a buffer
 ---@param buffer integer|nil # the buffer to get the linter progress for or 0 or nil for current
----@return integer|nil # the progress of the linter or nil if not running
-function M.progress(buffer)
-    return settings.get_permanent_for_buffer(buffer, 'linting_progress', nil)
+---@return string|nil # the progress of the linter or nil if not running
+function M.progress_spinner(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    return progress.spinner_for_buffer(buffer, progress_class)
 end
 
 --- Gets the names of all active linters for a buffer
@@ -125,7 +114,7 @@ function M.apply(buffer, force)
     utils.defer_unique(buffer, function()
         local do_lint = function()
             lint.try_lint(names, { cwd = project.root(buffer) })
-            poll_linting_status(buffer)
+            progress.register_task_for_buffer(buffer, progress_class, { prv = true, fn = linting_status })
         end
 
         if vim.api.nvim_buf_is_valid(buffer) then

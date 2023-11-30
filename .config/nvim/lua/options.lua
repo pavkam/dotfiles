@@ -1,3 +1,4 @@
+-- TODO: add option to disable some plugins through env vars
 local icons = require 'utils.icons'
 
 -- Global options for neovim

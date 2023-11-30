@@ -8,6 +8,7 @@ end, { desc = 'Show buffer information', nargs = 0 })
 
 -- File manipulation
 utils.on_user_event('NormalFile', function(_, evt)
+    -- TODO: use the new shell module to invoke commands
     vim.api.nvim_buf_create_user_command(evt.buf, 'Rename', function(args)
         local old_path = vim.fn.expand '%:p'
         local old_file_name = vim.fn.expand '%:t'

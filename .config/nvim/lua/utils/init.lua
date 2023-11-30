@@ -312,45 +312,6 @@ function M.get_up_value(fn, name)
     return nil
 end
 
---TODO: figure out why this is failing when restarting LSPs
---- Polls a buffer for a given condition
----@param buffer integer|nil # the buffer to poll or the current buffer if 0 or nil
----@param fn fun(buffer: integer): boolean # the function to call
----@param interval integer # the interval in milliseconds
----@param max integer|nil # the maximum time to wait until the polling times out (default: 10 seconds)
----@return uv_timer_t|nil # the timer that is polling the buffer
-function M.poll(buffer, fn, interval, max)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    --TODO: add a name for the polling for easy detection
-    local timer = vim.loop.new_timer()
-    local max_time = max or 10000 -- ten seconds
-
-    local res = timer:start(
-        interval,
-        interval,
-        vim.schedule_wrap(function()
-            local finished = fn(buffer)
-            if finished then
-                timer:stop()
-                return
-            end
-
-            max_time = max_time - 1
-            if max_time <= 0 then
-                timer:stop()
-                M.warn(string.format('Polling for buffer %d timed out', buffer))
-            end
-        end)
-    )
-
-    if res ~= 0 then
-        M.error(string.format('Failed to start monitor timer for buffer %d', buffer))
-    else
-        return timer
-    end
-end
-
 --- Expands a target of any command to a buffer and a path
 ---@param target integer|function|string|nil # the target to expand
 ---@return integer, string|nil # the buffer and the path
@@ -539,13 +500,6 @@ function M.fold_text()
 
     table.insert(ret, { ' ' .. icons.TUI.Ellipsis })
     return ret
-end
-
---- Gets the icon for a given level of progress
----@param index integer # the index of the icon to get
-function M.spinner_icon(index)
-    assert(type(index) == 'number' and index >= 0)
-    return icons.Progress[index % #icons.Progress + 1]
 end
 
 --- Confirms an operation that requires the buffer to be saved
