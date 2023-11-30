@@ -147,5 +147,12 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     end
 end)
 
--- TODO: detect shell file type using shebang (#!)
--- https://www.reddit.com/r/neovim/comments/17q3qmd/autodetecting_filetype_from_shebang/
+-- detect shebangs!
+utils.on_event('BufReadPost', function(evt)
+    if vim.bo[evt.buf].filetype == '' and not utils.is_special_buffer(evt.buf) then
+        local first_line = vim.api.nvim_buf_get_lines(evt.buf, 0, 1, false)[1]
+        if first_line and string.match(first_line, '^#!.*/bin/bash') or string.match(first_line, '^#!.*/bin/env%s+bash') then
+            vim.bo[evt.buf].filetype = 'bash'
+        end
+    end
+end)
