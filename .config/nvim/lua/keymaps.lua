@@ -2,8 +2,8 @@ local utils = require 'utils'
 local settings = require 'utils.settings'
 local notes = require 'utils.notes'
 
---TODO: make the "hidden" files option global for neotree and telescopoe
---TODO: add go ang gO to insert, paste, insert (up and down)
+-- TODO: make the "hidden" files option global for neotree and telescopoe
+
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('n', '<BS>', '<Nop>', { silent = true })
@@ -139,6 +139,28 @@ vim.keymap.set('n', 'x', [["_x]], { desc = 'Delete character' })
 vim.keymap.set('n', '<Del>', [["_x]], { desc = 'Delete character' })
 vim.keymap.set('x', '<BS>', 'd', { desc = 'Delete selection' })
 
+--- Inserts a new line and pastes
+---@param op "o"|"O" # the operation to perform
+local function ins_paste(op)
+    local count = vim.v.count
+
+    vim.cmd('normal! ' .. op)
+    vim.cmd 'stopinsert'
+    if count > 0 then
+        vim.cmd('normal! ' .. count .. 'p')
+    else
+        vim.cmd 'normal! p'
+    end
+end
+
+vim.keymap.set('n', 'go', function()
+    ins_paste 'o'
+end, { desc = 'Paste below' })
+
+vim.keymap.set('n', 'gO', function()
+    ins_paste 'O'
+end, { desc = 'Paste below' })
+
 -- Command mode remaps to make my life easier using the keyboard
 -- TODO, these remaps should only appear if wildmenu is shown
 -- vim.keymap.set('c', '<Down>', '<Right>', { desc = 'Select next item' })
@@ -208,48 +230,39 @@ utils.attach_keymaps('qf', function(set)
 end, true)
 
 utils.attach_keymaps(nil, function(set)
-    -- TODO: share code
-    set('n', '<leader>qa', function()
+    ---@param qftype 'c'|'l'
+    local function add_line(qftype)
         local r, c = unpack(vim.api.nvim_win_get_cursor(0))
         local line = vim.api.nvim_get_current_line()
         if not line or line == '' then
             line = '<empty>'
         end
 
-        utils.info(string.format('Added position **%d:%d** to quick-fix list.', r, c))
+        utils.info(string.format('Added position **%d:%d** to %s list.', r, c, qftype == 'l' and 'locations' or 'quick-fix'))
 
-        vim.fn.setqflist({
-            {
-                bufnr = vim.api.nvim_get_current_buf(),
-                lnum = r,
-                col = c,
-                text = line,
-            },
-        }, 'a')
+        local entry = {
+            bufnr = vim.api.nvim_get_current_buf(),
+            lnum = r,
+            col = c,
+            text = line,
+        }
 
-        vim.api.nvim_command 'copen'
+        if qftype == 'l' then
+            vim.fn.setloclist(0, { entry }, 'a')
+        else
+            vim.fn.setqflist({ entry }, 'a')
+        end
+
+        vim.api.nvim_command(qftype == 'c' and 'copen' or 'lopen')
         vim.api.nvim_command 'wincmd p'
+    end
+
+    set('n', '<leader>qa', function()
+        add_line 'c'
     end, { desc = 'Add quick-fix item' })
 
     set('n', '<leader>qA', function()
-        local r, c = unpack(vim.api.nvim_win_get_cursor(0))
-        local line = vim.api.nvim_get_current_line()
-        if not line or line == '' then
-            line = '<empty>'
-        end
-
-        utils.info(string.format('Added position **%d:%d** to locations list.', r, c))
-        vim.fn.setloclist(0, {
-            {
-                bufnr = vim.api.nvim_get_current_buf(),
-                lnum = r,
-                col = c,
-                text = line,
-            },
-        }, 'a')
-
-        vim.api.nvim_command 'lopen'
-        vim.api.nvim_command 'wincmd p'
+        add_line 'l'
     end, { desc = 'Add location item' })
 end)
 

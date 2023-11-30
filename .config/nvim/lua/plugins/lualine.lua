@@ -91,8 +91,6 @@ return {
                             return utils.hl_fg_color 'DiagnosticError'
                         end,
                     },
-
-                    -- TODO: show progress of shell commands
                     {
                         settings.transient(function(buffer)
                             local prefix = icons.UI.Disabled

@@ -26,7 +26,6 @@ local function formatters(buffer)
     end, clients)
 end
 
--- TODO: move the progress as a separate module and share
 -- TODO: clear the status when finished but lua line was not active, it keeps showing the broken status
 -- TODO: figure out if format fucks up LSP diagnostics
 

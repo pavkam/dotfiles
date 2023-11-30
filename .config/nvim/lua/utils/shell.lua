@@ -9,7 +9,6 @@ local M = {}
 ---@type table<string, LazyFloat>
 M.terminals = {}
 
--- TODO: use progress module to report progress
 --- Creates a floating terminal
 ---@param cmd string # the command to run in the terminal
 ---@param opts? table # the options to pass to the terminal
