@@ -247,7 +247,8 @@ end
 ---@param callback fun(under_git: boolean) # the callback to call when the command finishes
 function M.check_file_is_tracked_by_git(file_name, callback)
     assert(type(file_name) == 'string' and file_name ~= '')
-    M.async_cmd('git', { 'ls-files', '--error-unmatch', file_name }, function(_, code)
+
+    M.async_cmd('git', { 'ls-files', '--error-unmatch', file_name }, function(output, code)
         callback(code == 0)
     end, { ignore_codes = { 0, 1, 128 }, cwd = vim.fn.fnamemodify(file_name, ':h') })
 end

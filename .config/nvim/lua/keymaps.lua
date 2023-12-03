@@ -2,8 +2,6 @@ local utils = require 'utils'
 local settings = require 'utils.settings'
 local notes = require 'utils.notes'
 
--- TODO: make the "hidden" files option global for neotree and telescopoe
-
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('n', '<BS>', '<Nop>', { silent = true })
@@ -13,7 +11,7 @@ vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up',
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
 vim.keymap.set('n', '<Up>', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
 vim.keymap.set('n', '<Down>', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
--- TODO: vimgrep + apply to quickfix (replace all)
+
 -- Better normal mode navigation
 vim.keymap.set({ 'n', 'x' }, 'gg', function()
     if vim.v.count > 0 then
@@ -162,11 +160,37 @@ vim.keymap.set('n', 'gO', function()
 end, { desc = 'Paste below' })
 
 -- Command mode remaps to make my life easier using the keyboard
--- TODO, these remaps should only appear if wildmenu is shown
--- vim.keymap.set('c', '<Down>', '<Right>', { desc = 'Select next item' })
--- vim.keymap.set('c', '<Up>', '<Left>', { desc = 'Select previous item' })
--- vim.keymap.set('c', '<Left>', '<Space><BS><Left>', { desc = 'Left' })
--- vim.keymap.set('c', '<Right>', '<Space><BS><Right>', { desc = 'Right' })
+vim.keymap.set('c', '<Down>', function()
+    if vim.fn.wildmenumode() then
+        return '<C-n>'
+    else
+        return '<Down>'
+    end
+end, { expr = true })
+
+vim.keymap.set('c', '<Up>', function()
+    if vim.fn.wildmenumode() then
+        return '<C-p>'
+    else
+        return '<Up>'
+    end
+end, { expr = true })
+
+vim.keymap.set('c', '<Left>', function()
+    if vim.fn.wildmenumode() then
+        return '<Space><BS><Left>'
+    else
+        return '<Left>'
+    end
+end, { expr = true })
+
+vim.keymap.set('c', '<Right>', function()
+    if vim.fn.wildmenumode() then
+        return '<Space><BS><Right>'
+    else
+        return '<Right>'
+    end
+end, { expr = true })
 
 -- quick-fix and locations list
 vim.keymap.set('n', '<leader>qm', function()

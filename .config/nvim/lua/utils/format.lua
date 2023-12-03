@@ -26,8 +26,7 @@ local function formatters(buffer)
     end, clients)
 end
 
--- TODO: clear the status when finished but lua line was not active, it keeps showing the broken status
--- TODO: figure out if format fucks up LSP diagnostics
+
 
 --- Checks the status of the formatting operation for the buffer
 ---@param buffer integer # the buffer to monitor the formatter for
@@ -73,6 +72,7 @@ function M.enabled_for_buffer(buffer)
     return settings.get_toggle_for_buffer(buffer, setting_name)
 end
 
+-- TODO: do not run if no active formatters, use LSP only
 --- Applies all active formatters to a buffer
 ---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
 ---@param force boolean|nil # whether to force the formatting

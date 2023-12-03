@@ -40,7 +40,7 @@ local function register_task(buffer, class, opts)
     local task = tasks[class]
     if task then
         task.ctx = opts.ctx
-        task.ttl = opts.timeout
+        task.ttl = opts.timeout or task.ttl
     else
         task = {
             ctx = opts.ctx,

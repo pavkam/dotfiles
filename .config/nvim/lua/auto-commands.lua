@@ -124,7 +124,7 @@ end)
 
 -- file detection commands
 utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
-    local current_file = vim.fn.resolve(vim.fn.expand '%')
+    local current_file = vim.fn.expand '%:p'
 
     -- if custom events have been triggered, bail
     if settings.get_permanent_for_buffer(evt.buf, 'custom_events_triggered') then

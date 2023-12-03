@@ -295,8 +295,8 @@ alias vim=nvim
 if command -v heroku &> /dev/null; then
     heroku-env() {
         # Check for correct number of arguments
-        if [ "$#" -ne 2 ]; then
-            echo " Usage: heroku-env [Heroku App Name] \"[Command to Run]\""
+        if [ "$#" -lt 2 ]; then
+            echo " Usage: heroku-env <Heroku App Name> \"<Command to Run>\" [Exlude Var Regex]"
             return 1
         fi
 
@@ -308,6 +308,9 @@ if command -v heroku &> /dev/null; then
 
         APP_NAME=$1
         COMMAND=$2
+        EXCLUDE=$3
+
+        echo " Retrieving environment variables from app \"$APP_NAME\"..."
 
         # Get the environment variables from Heroku
         ENV_VARS=$(heroku config -s -a "$APP_NAME" 2>&1)
@@ -316,6 +319,11 @@ if command -v heroku &> /dev/null; then
         if [ $? -ne 0 ]; then
             echo " Failed to retrieve environment variables from Heroku." >&2
             return 1
+        fi
+
+        if [ "$EXCLUDE" != "" ]; then
+            # Filter out unwanted variables (HEROKU_*, DD_*, ENVIRONMENT)
+            ENV_VARS=$(echo "$ENV_VARS" | grep -vE "^($EXCLUDE)=")
         fi
 
         EXPORT_COMMANDS=$(echo "$ENV_VARS" | awk -F '=' '{print "export " $1 "='\''" $2 "'\''"}')
