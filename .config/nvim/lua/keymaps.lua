@@ -382,6 +382,15 @@ vim.keymap.set('n', '<leader>nC', function()
     notes.edit(false)
 end, { desc = 'Open project note' })
 
+-- hidden
+vim.keymap.set('n', '<leader>uh', function()
+    local val = settings.toggle_global('show_hidden', 'showing hidden', false)
+
+    -- Update Neo-Tree state
+    local state = require('neo-tree.sources.manager').get_state 'filesystem'
+    state.filtered_items.visible = val
+end, { desc = 'Toggle show hidden' })
+
 -- Specials using "Command/Super" key (when available!)
 vim.keymap.set('n', '<M-]>', '<C-i>', { desc = 'Next location' })
 vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })

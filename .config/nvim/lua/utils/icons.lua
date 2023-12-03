@@ -127,6 +127,7 @@ local M = {
         Disabled = '✗',
         AI = '󱐏 ',
         Notes = '󰠮',
+        Hidden = '󰛑',
     },
     Progress = {
         '⣾',

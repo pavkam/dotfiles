@@ -469,15 +469,23 @@ function M.read_text_file(path)
     return content
 end
 
+--- Get the highlight group for a name
+---@param name string # the name of the highlight group
+---@return table<string, string>|nil # the foreground color of the highlight group
+function M.hl(name)
+    assert(type(name) == 'string' and name ~= '')
+
+    ---@diagnostic disable-next-line: undefined-field
+    return vim.api.nvim_get_hl and vim.api.nvim_get_hl(0, { name = name, link = false }) or vim.api.nvim_get_hl_by_name(name, true)
+end
+
 --- Gets the foreground color of a highlight group
 ---@param name string # the name of the highlight group
 ---@return table<string, string>|nil # the foreground color of the highlight group
 function M.hl_fg_color(name)
-    assert(type(name) == 'string' and name ~= '')
+    local hl = M.hl(name)
 
-    ---@diagnostic disable-next-line: undefined-field
-    local hl = vim.api.nvim_get_hl and vim.api.nvim_get_hl(0, { name = name, link = false }) or vim.api.nvim_get_hl_by_name(name, true)
-    local fg = hl and hl.fg or hl.foreground
+    local fg = hl and (hl.fg or hl.foreground)
 
     return fg and { fg = string.format('#%06x', fg) }
 end

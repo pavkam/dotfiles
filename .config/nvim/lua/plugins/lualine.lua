@@ -13,10 +13,29 @@ return {
         local shell = require 'utils.shell'
         local settings = require 'utils.settings'
 
+        local function color(name)
+            local hl = utils.hl(name)
+
+            if not hl then
+                return nil
+            end
+
+            local fg = hl.fg or hl.foreground
+            local attrs = {}
+
+            for _, attr in ipairs { 'italic', 'bold', 'undercurl', 'underdotted', 'underlined', 'strikethrough' } do
+                if hl[attr] then
+                    table.insert(attrs, attr)
+                end
+            end
+
+            return { fg = string.format('#%06x', fg), gui = table.concat(attrs, ',') }
+        end
+
         local copilot_colors = {
-            ['Normal'] = utils.hl_fg_color 'Special',
-            ['Warning'] = utils.hl_fg_color 'DiagnosticError',
-            ['InProgress'] = utils.hl_fg_color 'DiagnosticWarn',
+            ['Normal'] = 'CopilotIdle',
+            ['InProgress'] = 'CopilotFetching',
+            ['Warning'] = 'CopilotWarning',
         }
 
         return {
@@ -69,7 +88,7 @@ return {
                 },
                 lualine_x = {
                     {
-                        function()
+                        settings.transient(function()
                             local prefix, tasks = shell.progress()
 
                             local tasks_names = tasks
@@ -82,14 +101,12 @@ return {
                                 return prefix .. ' ' .. utils.tbl_join(tasks_names, ' ' .. icons.TUI.ListSeparator .. ' ')
                             end
 
-                            return ''
-                        end,
-                        cond = function()
+                            return nil
+                        end),
+                        cond = settings.transient(function()
                             return shell.progress() ~= nil
-                        end,
-                        color = function()
-                            return utils.hl_fg_color 'DiagnosticError'
-                        end,
+                        end),
+                        color = color 'ShellProgress',
                     },
                     {
                         settings.transient(function(buffer)
@@ -105,11 +122,12 @@ return {
                         end),
                         color = settings.transient(function(buffer)
                             if not lint.enabled_for_buffer(buffer) then
-                                return utils.hl_fg_color 'DiagnosticError'
+                                return color 'DisabledLinters'
                             else
-                                return utils.hl_fg_color 'DiagnosticWarn'
+                                return color 'ActiveLinters'
                             end
                         end),
+                        separator = false,
                     },
                     {
                         settings.transient(function(buffer)
@@ -125,14 +143,15 @@ return {
                         end),
                         color = settings.transient(function(buffer)
                             if not format.enabled_for_buffer(buffer) then
-                                return utils.hl_fg_color 'DiagnosticError'
+                                return color 'DisabledFormatters'
                             else
-                                return utils.hl_fg_color 'DiagnosticOk'
+                                return color 'ActiveFormatters'
                             end
                         end),
                         on_click = function()
                             vim.cmd 'ConformInfo'
                         end,
+                        separator = false,
                     },
                     {
                         settings.transient(function(buffer)
@@ -142,21 +161,21 @@ return {
                         cond = settings.transient(function(buffer)
                             return lsp.any_active_for_buffer(buffer)
                         end),
-                        color = utils.hl_fg_color 'Title',
+                        color = color 'ActiveLSPs',
                         on_click = function()
                             vim.cmd 'LspInfo'
                         end,
                     },
                     {
-                        function()
+                        settings.transient(function()
                             return icons.Symbols.Copilot .. ' ' .. (require('copilot.api').status.data.message or '')
-                        end,
+                        end),
                         cond = settings.transient(function(buffer)
                             return lsp.is_active_for_buffer(buffer, 'copilot')
                         end),
-                        color = function()
-                            return copilot_colors[require('copilot.api').status.data.status] or copilot_colors['Normal']
-                        end,
+                        color = settings.transient(function()
+                            return color(copilot_colors[require('copilot.api').status.data.status] or copilot_colors['Normal'])
+                        end),
                     },
                 },
                 lualine_y = {
@@ -167,7 +186,7 @@ return {
                         cond = function()
                             return package.loaded['dap'] and require('dap').status() ~= ''
                         end,
-                        color = utils.hl_fg_color 'Debug',
+                        color = color 'Debug',
                     },
                     {
                         'diff',
@@ -192,9 +211,21 @@ return {
                 },
                 lualine_z = {
                     {
+                        function()
+                            return icons.UI.Hidden
+                        end,
+                        cond = function()
+                            return not settings.get_global_toggle('show_hidden', false)
+                        end,
+                        color = color 'ShowHiddenDisabled',
+                        on_click = function()
+                            vim.cmd '<leader>uh'
+                        end,
+                    },
+                    {
                         require('lazy.status').updates,
                         cond = require('lazy.status').has_updates,
-                        color = utils.hl_fg_color 'Comment',
+                        color = color 'UpdatesAvailable',
                         on_click = function()
                             vim.cmd 'Lazy'
                         end,

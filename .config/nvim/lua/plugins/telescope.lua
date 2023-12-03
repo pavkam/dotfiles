@@ -13,209 +13,215 @@ return {
         },
         cmd = 'Telescope',
         version = false, -- telescope did only one release, so use HEAD for now
-        keys = {
-            {
-                '<leader>bb',
-                function()
-                    require('telescope.builtin').buffers()
-                end,
-                desc = 'Show buffers',
-            },
-            {
-                '<leader>gb',
-                function()
-                    require('telescope.builtin').git_branches()
-                end,
-                desc = 'Git branches',
-            },
-            {
-                '<leader>gc',
-                function()
-                    require('telescope.builtin').git_bcommits()
-                end,
-                desc = 'Git commits',
-            },
-            {
-                '<leader>gC',
-                function()
-                    require('telescope.builtin').git_commits()
-                end,
-                desc = 'Git commits (all)',
-            },
-            {
-                '<leader>gt',
-                function()
-                    require('telescope.builtin').git_status()
-                end,
-                desc = 'Git status',
-            },
-            {
-                '<leader>f<cr>',
-                function()
-                    require('telescope.builtin').resume()
-                end,
-                desc = 'Resume search',
-            },
+        keys = function()
+            local settings = require 'utils.settings'
+            local utils = require 'utils'
 
-            {
-                '<leader>f/',
-                function()
-                    require('telescope.builtin').current_buffer_fuzzy_find()
-                end,
-                desc = 'Fuzzy-find in file',
-            },
-            {
-                '<leader>fc',
-                function()
-                    require('telescope.builtin').grep_string { cwd = require('utils.project').root(nil, false) }
-                end,
-                desc = 'Find selected word',
-            },
-            {
-                '<leader>fw',
-                function()
-                    require('telescope.builtin').live_grep { cwd = require('utils.project').root(nil, false) }
-                end,
-                desc = 'Find words',
-            },
-            {
-                '<leader>Df',
-                function()
-                    require('telescope.builtin').grep_string { search = 'DEBUGPRINT', cwd = require('utils.project').root(nil, false) }
-                end,
-                desc = 'Find words',
-            },
-            {
-                '<leader>fW',
-                function()
-                    require('telescope.builtin').live_grep {
-                        additional_args = function(args)
-                            return vim.list_extend(args, { '--hidden', '--no-ignore' })
-                        end,
-                        cwd = require('utils.project').root(nil, false),
-                    }
-                end,
-                desc = 'Find words (all files)',
-            },
+            --- Wraps the options for telescope to add some defaults
+            --- @param opts table|nil
+            --- @return table
+            local function wrap(opts)
+                local show_hidden = settings.get_global_toggle('show_hidden', false)
+                local add = {
+                    additional_args = show_hidden and function(args)
+                        return vim.list_extend(args, { '--hidden', '--no-ignore' })
+                    end or nil,
+                    cwd = require('utils.project').root(nil, false),
+                    hidden = show_hidden,
+                    no_ignore = show_hidden,
+                }
 
-            {
-                '<leader>ff',
-                function()
-                    require('telescope.builtin').find_files { cwd = require('utils.project').root(nil, false) }
-                end,
-                desc = 'Find files',
-            },
+                return utils.tbl_merge(add, opts)
+            end
 
-            {
-                '<leader>fo',
-                function()
-                    require('telescope.builtin').oldfiles { cwd = require('utils.project').root(nil, false) }
-                end,
-                desc = 'Find used files',
-            },
+            return {
+                {
+                    '<leader>bb',
+                    function()
+                        require('telescope.builtin').buffers()
+                    end,
+                    desc = 'Show buffers',
+                },
+                {
+                    '<leader>gb',
+                    function()
+                        require('telescope.builtin').git_branches()
+                    end,
+                    desc = 'Git branches',
+                },
+                {
+                    '<leader>gc',
+                    function()
+                        require('telescope.builtin').git_bcommits()
+                    end,
+                    desc = 'Git commits',
+                },
+                {
+                    '<leader>gC',
+                    function()
+                        require('telescope.builtin').git_commits()
+                    end,
+                    desc = 'Git commits (all)',
+                },
+                {
+                    '<leader>gt',
+                    function()
+                        require('telescope.builtin').git_status()
+                    end,
+                    desc = 'Git status',
+                },
+                {
+                    '<leader>f<cr>',
+                    function()
+                        require('telescope.builtin').resume()
+                    end,
+                    desc = 'Resume search',
+                },
 
-            {
-                '<leader>fF',
-                function()
-                    require('telescope.builtin').find_files { hidden = true, no_ignore = true, cwd = require('utils.project').root(nil, false) }
-                end,
-                desc = 'Find all files',
-            },
-
-            {
-                '<leader>?c',
-                function()
-                    require('telescope.builtin').commands()
-                end,
-                desc = 'Show commands',
-            },
-            {
-                '<leader>?k',
-                function()
-                    require('telescope.builtin').keymaps()
-                end,
-                desc = 'Show keymaps',
-            },
-            {
-                '<leader>?h',
-                function()
-                    require('telescope.builtin').help_tags()
-                end,
-                desc = 'Browse help',
-            },
-            {
-                '<leader>?m',
-                function()
-                    require('telescope.builtin').man_pages()
-                end,
-                desc = 'Browse manual',
-            },
-
-            {
-                '<leader>uT',
-                function()
-                    require('telescope.builtin').colorscheme()
-                end,
-                desc = 'Browse themes',
-            },
-
-            {
-                '<leader>sm',
-                function()
-                    require('telescope.builtin').diagnostics { bufnr = 0 }
-                end,
-                desc = 'Buffer diagnostics',
-            },
-            {
-                '<leader>sM',
-                function()
-                    require('telescope.builtin').diagnostics()
-                end,
-                desc = 'All diagnostics',
-            },
-            {
-                '<leader>se',
-                function()
-                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'ERROR' }
-                end,
-                desc = 'Buffer errors',
-            },
-            {
-                '<leader>sE',
-                function()
-                    require('telescope.builtin').diagnostics { severity = 'ERROR' }
-                end,
-                desc = 'All errors',
-            },
-            {
-                '<leader>sw',
-                function()
-                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'WARN' }
-                end,
-                desc = 'Buffer warnings',
-            },
-            {
-                '<leader>sW',
-                function()
-                    require('telescope.builtin').diagnostics { severity = 'WARN' }
-                end,
-                desc = 'All warnings',
-            },
-            {
-                '<leader>un',
-                function()
-                    require('telescope').extensions.notify.notify()
-                end,
-                desc = 'Browse notifications',
-            },
-            {
-                '=z',
-                function()
-                    require('telescope.builtin').spell_suggest()
-                end,
-                desc = 'Browse notifications',
-            },
-        },
+                {
+                    '<leader>f/',
+                    function()
+                        require('telescope.builtin').current_buffer_fuzzy_find()
+                    end,
+                    desc = 'Fuzzy-find in file',
+                },
+                {
+                    '<leader>fc',
+                    function()
+                        require('telescope.builtin').grep_string(wrap())
+                    end,
+                    desc = 'Find selected word',
+                },
+                {
+                    '<leader>fw',
+                    function()
+                        require('telescope.builtin').live_grep(wrap())
+                    end,
+                    desc = 'Find words',
+                },
+                {
+                    '<leader>Df',
+                    function()
+                        require('telescope.builtin').grep_string(wrap {
+                            search = 'DEBUGPRINT',
+                        })
+                    end,
+                    desc = 'Find words',
+                },
+                {
+                    '<leader>ff',
+                    function()
+                        require('telescope.builtin').find_files(wrap())
+                    end,
+                    desc = 'Find files',
+                },
+                {
+                    '<leader>fo',
+                    function()
+                        require('telescope.builtin').oldfiles(wrap())
+                    end,
+                    desc = 'Find used files',
+                },
+                {
+                    '<leader>fF',
+                    function()
+                        require('telescope.builtin').find_files(wrap())
+                    end,
+                    desc = 'Find all files',
+                },
+                {
+                    '<leader>?c',
+                    function()
+                        require('telescope.builtin').commands()
+                    end,
+                    desc = 'Show commands',
+                },
+                {
+                    '<leader>?k',
+                    function()
+                        require('telescope.builtin').keymaps()
+                    end,
+                    desc = 'Show keymaps',
+                },
+                {
+                    '<leader>?h',
+                    function()
+                        require('telescope.builtin').help_tags()
+                    end,
+                    desc = 'Browse help',
+                },
+                {
+                    '<leader>?m',
+                    function()
+                        require('telescope.builtin').man_pages()
+                    end,
+                    desc = 'Browse manual',
+                },
+                {
+                    '<leader>uT',
+                    function()
+                        require('telescope.builtin').colorscheme()
+                    end,
+                    desc = 'Browse themes',
+                },
+                {
+                    '<leader>sm',
+                    function()
+                        require('telescope.builtin').diagnostics { bufnr = 0 }
+                    end,
+                    desc = 'Buffer diagnostics',
+                },
+                {
+                    '<leader>sM',
+                    function()
+                        require('telescope.builtin').diagnostics()
+                    end,
+                    desc = 'All diagnostics',
+                },
+                {
+                    '<leader>se',
+                    function()
+                        require('telescope.builtin').diagnostics { bufnr = 0, severity = 'ERROR' }
+                    end,
+                    desc = 'Buffer errors',
+                },
+                {
+                    '<leader>sE',
+                    function()
+                        require('telescope.builtin').diagnostics { severity = 'ERROR' }
+                    end,
+                    desc = 'All errors',
+                },
+                {
+                    '<leader>sw',
+                    function()
+                        require('telescope.builtin').diagnostics { bufnr = 0, severity = 'WARN' }
+                    end,
+                    desc = 'Buffer warnings',
+                },
+                {
+                    '<leader>sW',
+                    function()
+                        require('telescope.builtin').diagnostics { severity = 'WARN' }
+                    end,
+                    desc = 'All warnings',
+                },
+                {
+                    '<leader>un',
+                    function()
+                        require('telescope').extensions.notify.notify()
+                    end,
+                    desc = 'Browse notifications',
+                },
+                {
+                    '=z',
+                    function()
+                        require('telescope.builtin').spell_suggest()
+                    end,
+                    desc = 'Browse notifications',
+                },
+            }
+        end,
         opts = function()
             local actions = require 'telescope.actions'
             local themes = require 'telescope.themes'

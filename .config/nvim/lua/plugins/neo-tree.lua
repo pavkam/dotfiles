@@ -1,5 +1,6 @@
 local icons = require 'utils.icons'
 local utils = require 'utils'
+local settings = require 'utils.settings'
 
 return {
     'nvim-neo-tree/neo-tree.nvim',
@@ -149,13 +150,20 @@ return {
                     ['<C-k>'] = 'move_cursor_up',
                 },
             },
-            event_handlers = {
-                {
-                    event = 'neo_tree_buffer_enter',
-                    handler = function(_)
-                        vim.opt_local.signcolumn = 'auto'
-                    end,
-                },
+        },
+        event_handlers = {
+            {
+                event = 'neo_tree_buffer_enter',
+                handler = function(_)
+                    vim.opt_local.signcolumn = 'auto'
+                end,
+            },
+            {
+                event = 'neo_tree_buffer_leave',
+                handler = function()
+                    local state = require('neo-tree.sources.manager').get_state 'filesystem'
+                    settings.set_global('show_hidden', state.filtered_items.visible)
+                end,
             },
         },
     },

@@ -26,8 +26,6 @@ local function formatters(buffer)
     end, clients)
 end
 
-
-
 --- Checks the status of the formatting operation for the buffer
 ---@param buffer integer # the buffer to monitor the formatter for
 ---@return boolean # whether formatting is running
@@ -72,7 +70,6 @@ function M.enabled_for_buffer(buffer)
     return settings.get_toggle_for_buffer(buffer, setting_name)
 end
 
--- TODO: do not run if no active formatters, use LSP only
 --- Applies all active formatters to a buffer
 ---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
 ---@param force boolean|nil # whether to force the formatting
@@ -94,7 +91,10 @@ function M.apply(buffer, force, injected)
 
     conform.format(utils.tbl_merge({ bufnr = buffer }, additional))
 
-    progress.register_task_for_buffer(buffer, progress_class, { prv = true, fn = formatting_status, ctx = formatters(buffer) })
+    local names = formatters(buffer)
+    if #names > 0 then
+        progress.register_task_for_buffer(buffer, progress_class, { prv = true, fn = formatting_status, ctx = names })
+    end
 end
 
 --- Toggles auto-formatting for a buffer

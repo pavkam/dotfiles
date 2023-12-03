@@ -32,7 +32,7 @@ local function set(name, buffer, value)
 end
 
 -- Clear the options for a buffer
-utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost' }, function()
+utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost', 'BufEnter' }, function()
     vim.defer_fn(utils.trigger_status_update_event, 100)
 end)
 
@@ -176,6 +176,18 @@ function M.get_toggle_for_buffer(buffer, option, default)
     end
 
     return M.get_global(option, default) == true and M.get_permanent_for_buffer(buffer, option, default) == true
+end
+
+--- Gets a global toggle option
+---@param option string # the name of the option
+---@param default any|nil # the default value of the option
+---@return boolean # whether the option is enabled
+function M.get_global_toggle(option, default)
+    if default == nil then
+        default = true
+    end
+
+    return M.get_global(option, default) == true
 end
 
 --- Gets a permanent option for a buffer

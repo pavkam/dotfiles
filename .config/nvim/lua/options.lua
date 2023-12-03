@@ -1,7 +1,5 @@
 -- TODO: add option to disable some plugins through env vars
--- TODO: make the "hidden" files option global for neotree and telescopoe
 -- TODO: vimgrep + apply to quickfix (replace all)
--- TODO: clear the status when finished but lua line was not active, it keeps showing the broken status
 -- TODO: figure out if format fucks up LSP diagnostics
 -- TODO: make sure all file functions go through my utils that will normalize everything
 
