@@ -213,12 +213,11 @@ return {
                 lualine_z = {
                     {
                         function()
-                            return icons.UI.Hidden
+                            return settings.global.ignore_hidden_files and icons.UI.IgnoreHidden or icons.UI.ShowHidden
                         end,
-                        cond = function()
-                            return settings.global.ignore_hidden_files
+                        color = function()
+                            return settings.global.ignore_hidden_files and color 'IgnoreHiddenFilesStatus' or color 'ShowHiddenFilesStatus'
                         end,
-                        color = color 'IgnoreHiddenFilesStatus',
                         on_click = function()
                             toggles.toggle_ignore_hidden_files()
                         end,

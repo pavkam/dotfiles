@@ -22,5 +22,7 @@ hl('ActiveLSPsStatus', { fg = '#339933', ctermfg = 5, bg = '#1e2030' })
 hl('DisabledLintersStatus', utils.hl 'ActiveLinters', { strikethrough = true })
 hl('DisabledFormattersStatus', utils.hl 'ActiveFormatters', { strikethrough = true })
 
-hl('IgnoreHiddenFilesStatus', { fg = '#66004d', ctermfg = 5, bg = '#1e2030', bold = true })
+hl('IgnoreHiddenFilesStatus', { fg = '#994d00', ctermfg = 5, bg = '#1e2030', bold = true })
+hl('ShowHiddenFilesStatus', { fg = '#e6e600', ctermfg = 5, bg = '#1e2030', bold = true })
+
 hl('UpdatesAvailableStatus', { fg = '#3385ff', bg = '#1e2030' })
