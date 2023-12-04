@@ -12,6 +12,7 @@ return {
         local lint = require 'utils.lint'
         local shell = require 'utils.shell'
         local settings = require 'utils.settings'
+        local toggles = require 'utils.toggles'
 
         local function color(name)
             local hl = utils.hl(name)
@@ -106,12 +107,12 @@ return {
                         cond = settings.transient(function()
                             return shell.progress() ~= nil
                         end),
-                        color = color 'ShellProgress',
+                        color = color 'ShellProgressStatus',
                     },
                     {
                         settings.transient(function(buffer)
                             local prefix = icons.UI.Disabled
-                            if lint.enabled_for_buffer(buffer) then
+                            if settings.global.auto_linting_enabled and settings.buf[buffer].auto_linting_enabled then
                                 prefix = lint.progress(buffer) or icons.UI.Format
                             end
 
@@ -121,10 +122,10 @@ return {
                             return lint.active_for_buffer(buffer)
                         end),
                         color = settings.transient(function(buffer)
-                            if not lint.enabled_for_buffer(buffer) then
-                                return color 'DisabledLinters'
+                            if not settings.global.auto_linting_enabled and settings.buf[buffer].auto_linting_enabled then
+                                return color 'DisabledLintersStatus'
                             else
-                                return color 'ActiveLinters'
+                                return color 'ActiveLintersStatus'
                             end
                         end),
                         separator = false,
@@ -132,7 +133,7 @@ return {
                     {
                         settings.transient(function(buffer)
                             local prefix = icons.UI.Disabled
-                            if format.enabled_for_buffer(buffer) then
+                            if settings.global.auto_formatting_enabled and settings.buf[buffer].auto_formatting_enabled then
                                 prefix = format.progress(buffer) or icons.UI.Lint
                             end
 
@@ -142,10 +143,10 @@ return {
                             return format.active_for_buffer(buffer)
                         end),
                         color = settings.transient(function(buffer)
-                            if not format.enabled_for_buffer(buffer) then
-                                return color 'DisabledFormatters'
+                            if not settings.global.auto_formatting_enabled and settings.buf[buffer].auto_formatting_enabled then
+                                return color 'DisabledFormattersStatus'
                             else
-                                return color 'ActiveFormatters'
+                                return color 'ActiveFormattersStatus'
                             end
                         end),
                         on_click = function()
@@ -161,7 +162,7 @@ return {
                         cond = settings.transient(function(buffer)
                             return lsp.any_active_for_buffer(buffer)
                         end),
-                        color = color 'ActiveLSPs',
+                        color = color 'ActiveLSPsStatus',
                         on_click = function()
                             vim.cmd 'LspInfo'
                         end,
@@ -215,17 +216,17 @@ return {
                             return icons.UI.Hidden
                         end,
                         cond = function()
-                            return not settings.get_global_toggle('show_hidden', false)
+                            return settings.global.ignore_hidden_files
                         end,
-                        color = color 'ShowHiddenDisabled',
+                        color = color 'IgnoreHiddenFilesStatus',
                         on_click = function()
-                            vim.cmd '<leader>uh'
+                            toggles.toggle_ignore_hidden_files()
                         end,
                     },
                     {
                         require('lazy.status').updates,
                         cond = require('lazy.status').has_updates,
-                        color = color 'UpdatesAvailable',
+                        color = color 'UpdatesAvailableStatus',
                         on_click = function()
                             vim.cmd 'Lazy'
                         end,

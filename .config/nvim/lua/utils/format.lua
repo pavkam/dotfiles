@@ -63,23 +63,11 @@ function M.active_for_buffer(buffer)
     return #formatters(buffer) > 0
 end
 
---- Checks whether auto-formatting is enabled for a buffer
----@param buffer integer|nil # the buffer to check the formatting for or 0 or nil for current
----@return boolean # whether auto-formatting is enabled
-function M.enabled_for_buffer(buffer)
-    return settings.get_toggle_for_buffer(buffer, setting_name)
-end
-
 --- Applies all active formatters to a buffer
 ---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
----@param force boolean|nil # whether to force the formatting
 ---@param injected boolean|nil # whether to format injected code
-function M.apply(buffer, force, injected)
+function M.apply(buffer, injected)
     local conform = require 'conform'
-
-    if not force and not M.enabled_for_buffer(buffer) then
-        return
-    end
 
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -94,27 +82,6 @@ function M.apply(buffer, force, injected)
     local names = formatters(buffer)
     if #names > 0 then
         progress.register_task_for_buffer(buffer, progress_class, { prv = true, fn = formatting_status, ctx = names })
-    end
-end
-
---- Toggles auto-formatting for a buffer
----@param buffer integer|nil # the buffer to toggle the formatting for or 0 or nil for current
-function M.toggle_for_buffer(buffer)
-    local enabled = settings.toggle_for_buffer(buffer, setting_name, 'auto-formatting')
-    if enabled then
-        -- re-format
-        M.apply(buffer)
-    end
-end
-
---- Toggles auto-formatting globally
-function M.toggle()
-    local enabled = settings.toggle_global(setting_name, 'auto-formatting')
-    if enabled then
-        -- re-format
-        for _, buffer in ipairs(utils.get_listed_buffers()) do
-            M.apply(buffer)
-        end
     end
 end
 

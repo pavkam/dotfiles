@@ -53,8 +53,7 @@ function M.roots(target)
     local buffer, path = utils.expand_target(target)
 
     -- check for cached roots
-    local roots = settings.get_transient_for_buffer(buffer, setting_name)
-
+    local roots = settings.get(setting_name, { buffer = buffer, transient = true })
     ---@cast roots string[]
     if roots then
         return roots
@@ -98,7 +97,7 @@ function M.roots(target)
     end)
 
     -- cache the roots for buffer
-    settings.set_transient_for_buffer(buffer, setting_name, roots)
+    settings.set(setting_name, roots, { buffer = buffer, transient = true })
     return roots
 end
 

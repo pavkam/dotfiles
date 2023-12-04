@@ -21,7 +21,7 @@ return {
             --- @param opts table|nil
             --- @return table
             local function wrap(opts)
-                local show_hidden = settings.get_global_toggle('show_hidden', false)
+                local show_hidden = not settings.global.ignore_hidden_files
                 local add = {
                     additional_args = show_hidden and function(args)
                         return vim.list_extend(args, { '--hidden', '--no-ignore' })

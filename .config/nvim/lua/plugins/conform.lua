@@ -5,7 +5,7 @@ return {
         {
             '<leader>sj',
             function()
-                require('utils.format').apply(nil, true, true)
+                require('utils.format').apply(nil, true)
             end,
             mode = { 'n', 'v' },
             desc = 'Format buffer injected',
@@ -13,7 +13,7 @@ return {
         {
             '<leader>sf',
             function()
-                require('utils.format').apply(nil, true)
+                require('utils.format').apply()
             end,
             mode = { 'n', 'v' },
             desc = 'Format buffer',
@@ -21,7 +21,7 @@ return {
         {
             '<leader>uf',
             function()
-                require('utils.format').toggle_for_buffer()
+                require('utils.toggles').toggle_auto_formatting { buffer = vim.api.nvim_get_current_buf() }
             end,
             mode = { 'n' },
             desc = 'Toggle buffer auto-formatting',
@@ -29,7 +29,7 @@ return {
         {
             '<leader>uF',
             function()
-                require('utils.format').toggle()
+                require('utils.toggles').toggle_auto_formatting()
             end,
             mode = { 'n' },
             desc = 'Toggle global auto-formatting',
@@ -101,12 +101,15 @@ return {
     end,
     config = function(_, opts)
         local conform = require 'conform'
-        conform.setup(opts)
-
+        local settings = require 'utils.settings'
         local utils = require 'utils'
 
+        conform.setup(opts)
+
         utils.on_event('BufWritePre', function(evt)
-            require('utils.format').apply(evt.buf)
+            if settings.global.auto_formatting_enabled and settings.buf[evt.buf].auto_formatting_enabled then
+                require('utils.format').apply(evt.buf)
+            end
         end, '*')
     end,
 }

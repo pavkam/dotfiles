@@ -5,7 +5,7 @@ return {
         {
             '<leader>ul',
             function()
-                require('utils.lint').toggle_for_buffer()
+                require('utils.toggles').toggle_auto_linting { buffer = vim.api.nvim_get_current_buf() }
             end,
             mode = { 'n' },
             desc = 'Toggle buffer auto-linting',
@@ -13,7 +13,7 @@ return {
         {
             '<leader>uL',
             function()
-                require('utils.lint').toggle()
+                require('utils.toggles').toggle_auto_linting()
             end,
             mode = { 'n' },
             desc = 'Toggle global auto-linting',
@@ -104,6 +104,7 @@ return {
     end,
     config = function(_, opts)
         local utils = require 'utils'
+        local settings = require 'utils.settings'
         local lint = require 'lint'
 
         -- apply user options to the default config
@@ -112,7 +113,13 @@ return {
                 local args = linter.args
                 linter.args = nil
 
-                lint.linters[name] = utils.tbl_merge(lint.linters[name], linter)
+                local linter_def = lint.linters[name]
+                if type(linter_def) ~= 'table' then
+                    error('linter ' .. name .. ' is defined as function, cannot override!')
+                end
+
+                ---@cast linter_def lint.Linter
+                lint.linters[name] = utils.tbl_merge(linter_def, linter)
 
                 if args then
                     lint.linters[name].args = args
@@ -127,7 +134,9 @@ return {
 
         -- setup auto-commands
         utils.on_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(evt)
-            require('utils.lint').apply(evt.buf)
+            if settings.global.auto_linting_enabled and settings.buf[evt.buf].auto_linting_enabled then
+                require('utils.lint').apply(evt.buf)
+            end
         end, '*')
     end,
 }

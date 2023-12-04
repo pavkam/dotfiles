@@ -36,9 +36,9 @@ utils.on_event('LspDetach', function(evt)
     end
 
     local key = detach_processed_setting_name(client)
-    if not settings.get_global(key, false) then
+    if not settings.get(key, { default = false }) then
         utils.warn('Language Server *' .. client.name .. '* has detached!')
-        settings.set_global(key, true)
+        settings.set(key, true)
     end
 
     -- clear the tasks for the all clients to prevent infinite loops
@@ -52,7 +52,7 @@ utils.on_event('LspAttach', function(evt)
         return
     end
 
-    settings.set_global(detach_processed_setting_name(client), false)
+    settings.set(detach_processed_setting_name(client), false)
 end)
 
 --- Checks whether there are any active LSP tasks

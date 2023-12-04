@@ -1,6 +1,6 @@
 local utils = require 'utils'
-local settings = require 'utils.settings'
 local notes = require 'utils.notes'
+local toggles = require 'utils.toggles'
 
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
@@ -308,37 +308,17 @@ vim.keymap.set('n', '[e', jump_to_diagnostic(false, 'ERROR'), { desc = 'Previous
 vim.keymap.set('n', ']w', jump_to_diagnostic(true, 'WARN'), { desc = 'Next Warning' })
 vim.keymap.set('n', '[w', jump_to_diagnostic(false, 'WARN'), { desc = 'Previous Warning' })
 
-local diagnostics_setting_name = 'diagnostics_enabled'
 vim.keymap.set('n', '<leader>uM', function()
-    local enabled = settings.toggle_global(diagnostics_setting_name, 'diagnostics')
-    if not enabled then
-        vim.diagnostic.disable()
-    else
-        vim.diagnostic.enable()
-    end
+    toggles.toggle_diagnostics()
 end, { desc = 'Toggle global diagnostics' })
 
-vim.keymap.set('n', '<leader>um', function()
-    local buffer = vim.api.nvim_get_current_buf()
-
-    local enabled = settings.toggle_for_buffer(buffer, 'diagnostics_enabled', 'diagnostics')
-    if not enabled then
-        vim.diagnostic.disable(buffer)
-    else
-        vim.diagnostic.enable(buffer)
-    end
+vim.keymap.set('n', '<leader>um', function(evt)
+    toggles.toggle_diagnostics { buffer = evt.buf }
 end, { desc = 'Toggle buffer diagnostics' })
 
 -- Treesitter
-vim.keymap.set('n', '<leader>ut', function()
-    local buffer = vim.api.nvim_get_current_buf()
-
-    local enabled = settings.toggle_for_buffer(buffer, 'treesitter_enabled', 'treesitter')
-    if not enabled then
-        vim.treesitter.stop(buffer)
-    else
-        vim.treesitter.start(buffer)
-    end
+vim.keymap.set('n', '<leader>ut', function(evt)
+    toggles.toggle_treesitter { buffer = evt.buf }
 end, { desc = 'Toggle buffer treesitter' })
 
 -- Add "q" to special windows
@@ -382,13 +362,9 @@ vim.keymap.set('n', '<leader>nC', function()
     notes.edit(false)
 end, { desc = 'Open project note' })
 
--- hidden
+-- show hidden
 vim.keymap.set('n', '<leader>uh', function()
-    local val = settings.toggle_global('show_hidden', 'showing hidden', false)
-
-    -- Update Neo-Tree state
-    local state = require('neo-tree.sources.manager').get_state 'filesystem'
-    state.filtered_items.visible = val
+    toggles.toggle_ignore_hidden_files()
 end, { desc = 'Toggle show hidden' })
 
 -- Specials using "Command/Super" key (when available!)

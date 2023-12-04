@@ -104,19 +104,19 @@ end, vim.api.nvim_create_namespace 'auto_hlsearch')
 
 -- mkview and loadview for real files
 utils.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
-    if settings.get_permanent_for_buffer(evt.buf, 'view_activated') then
+    if settings.get('view_activated', { buffer = evt.buf }) then
         vim.cmd.mkview { mods = { emsg_silent = true } }
     end
 end)
 
 utils.on_event('BufWinEnter', function(evt)
-    if not settings.get_permanent_for_buffer(evt.buf, 'view_activated') then
+    if not settings.get('view_activated', { buffer = evt.buf }) then
         local filetype = vim.api.nvim_get_option_value('filetype', { buf = evt.buf })
         local buftype = vim.api.nvim_get_option_value('buftype', { buf = evt.buf })
         local ignore_filetypes = { 'gitcommit', 'gitrebase', 'svg', 'hgcommit' }
 
         if buftype == '' and filetype and filetype ~= '' and not vim.tbl_contains(ignore_filetypes, filetype) then
-            settings.set_permanent_for_buffer(evt.buf, 'view_activated', true)
+            settings.set('view_activated', true, { buffer = evt.buf })
             vim.cmd.loadview { mods = { emsg_silent = true } }
         end
     end
@@ -127,7 +127,7 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     local current_file = vim.fn.expand '%:p'
 
     -- if custom events have been triggered, bail
-    if settings.get_permanent_for_buffer(evt.buf, 'custom_events_triggered') then
+    if settings.get('custom_events_triggered', { buffer = evt.buf }) then
         return
     end
 
@@ -143,7 +143,7 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
 
     -- do not retrigger these events if the file name is set
     if current_file ~= '' then
-        settings.set_permanent_for_buffer(evt.buf, 'custom_events_triggered', true)
+        settings.set('custom_events_triggered', true, { buffer = evt.buf })
     end
 end)
 

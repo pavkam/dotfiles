@@ -162,7 +162,7 @@ return {
                 event = 'neo_tree_buffer_leave',
                 handler = function()
                     local state = require('neo-tree.sources.manager').get_state 'filesystem'
-                    settings.set_global('show_hidden', state.filtered_items.visible)
+                    settings.global.ignore_hidden_files = not state.filtered_items.visible
                 end,
             },
         },

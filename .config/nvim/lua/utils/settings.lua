@@ -56,41 +56,6 @@ end)
 ---@class utils.settings
 local M = {}
 
---- Gets a transient option for a buffer
----@param buffer integer|nil # the buffer to get the option for or 0 or nil for current
----@param option string # the name of the option
----@param default any|nil # the default value of the option
----@return any|nil # the value of the option
-function M.get_transient_for_buffer(buffer, option, default)
-    assert(type(option) == 'string' and option ~= '')
-
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local val = get('transient', buffer)[option]
-    if val == nil then
-        val = default
-    end
-
-    return val
-end
-
---- Sets a transient option for a buffer
----@param buffer integer|nil # the buffer to set the option for or 0 or nil for current
----@param option string # the name of the option
----@param value any # the value of the option
-function M.set_transient_for_buffer(buffer, option, value)
-    assert(type(option) == 'string' and option ~= '')
-
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local tbl = get('transient', buffer)
-
-    if tbl[option] ~= value then
-        tbl[option] = value
-        set('transient', buffer, tbl)
-    end
-end
-
 local auto_transient_id = 0
 
 --- Wraps a function to be transient option
@@ -105,156 +70,72 @@ function M.transient(func, option)
 
     return function()
         local buffer = vim.api.nvim_get_current_buf()
-        local val = M.get_transient_for_buffer(buffer, var_name)
+        local val = M.get(var_name, { buffer = buffer, transient = true })
         if val == nil then
             val = func(buffer)
-            M.set_transient_for_buffer(buffer, var_name, val)
+            M.set(var_name, val, { buffer = buffer, transient = true })
         end
 
         return val
     end
 end
 
---- Toggles a transient option for a buffer
----@param buffer integer|nil # the buffer to toggle the option for or 0 or nil for current
----@param option string # the name of the option
----@param description string|nil # the description of the option
----@param default boolean|nil # the default value of the option
----@return boolean # whether the option is enabled
-function M.toggle_for_buffer(buffer, option, description, default)
-    assert(type(option) == 'string' and option ~= '')
-
-    description = description or option
-    assert(type(description) == 'string' and description ~= '')
-
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    if default == nil then
-        default = true
-    end
-
-    local enabled = M.get_permanent_for_buffer(buffer, option, default)
-
-    local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
-    utils.info(string.format('Turning **%s** %s for *%s*.', enabled and 'off' or 'on', description, file_name))
-    M.set_permanent_for_buffer(buffer, option, not enabled)
-
-    return not enabled
-end
-
---- Toggles a global option
----@param option string # the name of the option
----@param description string|nil # the description of the option
----@param default boolean|nil # the default value of the option
----@return boolean # whether the option is enabled
-function M.toggle_global(option, description, default)
-    assert(type(option) == 'string' and option ~= '')
-
-    description = description or option
-    assert(type(description) == 'string' and description ~= '')
-
-    if default == nil then
-        default = true
-    end
-
-    local enabled = M.get_global(option, default)
-
-    utils.info(string.format('Turning **%s** %s *globally*.', enabled and 'off' or 'on', description))
-    M.set_global(option, not enabled)
-
-    return not enabled
-end
-
---- Gets a toggle option for a buffer
----@param buffer integer|nil # the buffer to get the option for or 0 or nil for current
----@param option string # the name of the option
----@param default any|nil # the default value of the option
----@return boolean # whether the option is enabled
-function M.get_toggle_for_buffer(buffer, option, default)
-    if default == nil then
-        default = true
-    end
-
-    return M.get_global(option, default) == true and M.get_permanent_for_buffer(buffer, option, default) == true
-end
-
---- Gets a global toggle option
----@param option string # the name of the option
----@param default any|nil # the default value of the option
----@return boolean # whether the option is enabled
-function M.get_global_toggle(option, default)
-    if default == nil then
-        default = true
-    end
-
-    return M.get_global(option, default) == true
-end
-
---- Gets a permanent option for a buffer
----@param buffer integer|nil # the buffer to get the option for or 0 or nil for current
----@param option string # the name of the option
----@param default any|nil # the default value of the option
----@return any|nil # the value of the option
-function M.get_permanent_for_buffer(buffer, option, default)
-    assert(type(option) == 'string' and option ~= '')
-
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local val = get('permanent', buffer)[option]
-    if val == nil then
-        val = default
-    end
-
-    return val
-end
-
---- Sets a permanent option for a buffer
----@param buffer integer|nil # the buffer to set the option for or 0 or nil for current
+--- Changes the value of an option
 ---@param option string # the name of the option
 ---@param value any|nil # the value of the option
-function M.set_permanent_for_buffer(buffer, option, value)
+---@param opts? { buffer?: integer, transient?: boolean } # optional options
+function M.set(option, value, opts)
     assert(type(option) == 'string' and option ~= '')
 
-    buffer = buffer or vim.api.nvim_get_current_buf()
+    opts = opts or {}
 
-    local tbl = get('permanent', buffer)
+    if opts.buffer == nil then
+        local tbl = get 'global'
+        if tbl[option] ~= value then
+            tbl[option] = value
+            set('global', nil, tbl)
+        end
+    else
+        local buffer = opts.buffer or vim.api.nvim_get_current_buf()
+        local key = opts.transient and 'transient' or 'permanent'
 
-    if tbl[option] ~= value then
-        tbl[option] = value
-        set('permanent', buffer, tbl)
+        local tbl = get(key, buffer)
 
+        if tbl[option] ~= value then
+            tbl[option] = value
+            set(key, buffer, tbl)
+        end
+    end
+
+    if not opts.transient then
         utils.trigger_status_update_event()
     end
 end
 
 --- Gets a global option
 ---@param option string # the name of the option
----@param default any|nil # the default value of the option
+---@param opts? { buffer?: integer, transient?: boolean, default?: any } # optional options
 ---@return any|nil # the value of the option
-function M.get_global(option, default)
+function M.get(option, opts)
     assert(type(option) == 'string' and option ~= '')
 
-    local val = get('global')[option]
+    opts = opts or {}
+
+    local val
+    if opts.buffer == nil then
+        val = get('global')[option]
+    else
+        local buffer = opts.buffer or vim.api.nvim_get_current_buf()
+        local key = opts.transient and 'transient' or 'permanent'
+
+        val = get(key, buffer)[option]
+    end
+
     if val == nil then
-        val = default
+        val = opts.default
     end
 
     return val
-end
-
---- Sets a global option
----@param option string # the name of the option
----@param value any|nil # the value of the option
-function M.set_global(option, value)
-    assert(type(option) == 'string' and option ~= '')
-
-    local tbl = get 'global'
-    if tbl[option] ~= value then
-        tbl[option] = value
-        set('global', nil, tbl)
-
-        utils.trigger_status_update_event()
-    end
 end
 
 --- Gets a snapshot of the settings for a buffer
@@ -271,5 +152,40 @@ function M.snapshot_for_buffer(buffer)
 
     return settings
 end
+
+--- Gets the global settings
+---@class utils.settings.GlobalSettings
+---@field auto_formatting_enabled boolean # whether auto-formatting is enabled
+---@field auto_linting_enabled boolean # whether auto-linting is enabled
+---@field ignore_hidden_files boolean # whether hidden files should be hidden
+M.global = setmetatable({}, {
+    __index = function(_, key)
+        return M.get(key, { default = true })
+    end,
+    __newindex = function(_, key, value)
+        M.set(key, value)
+    end,
+})
+
+---@class utils.settings.BufferSettings
+---@field auto_formatting_enabled boolean # whether auto-formatting is enabled
+---@field auto_linting_enabled boolean # whether auto-linting is enabled
+
+--- Gets the settings for a buffer
+---@type utils.settings.BufferSettings[]
+M.buf = setmetatable({}, {
+    __index = function(_, buffer)
+        assert(type(buffer) == 'number' and buffer >= 0)
+
+        return setmetatable({}, {
+            __index = function(_, key)
+                return M.get(key, { buffer = buffer, default = true })
+            end,
+            __newindex = function(_, key, value)
+                M.set(key, value, { buffer = buffer })
+            end,
+        })
+    end,
+})
 
 return M

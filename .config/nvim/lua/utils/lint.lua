@@ -1,13 +1,10 @@
 local utils = require 'utils'
-local lsp = require 'utils.lsp'
 local project = require 'utils.project'
-local settings = require 'utils.settings'
 local progress = require 'utils.progress'
 
 ---@class utils.lint
 local M = {}
 
-local setting_name = 'auto_linting_enabled'
 local progress_class = 'linting'
 
 --- Gets the names of all active linters for a buffer
@@ -87,21 +84,9 @@ function M.active_for_buffer(buffer)
     return #linters(buffer) > 0
 end
 
---- Checks whether auto-linting is enabled for a buffer
----@param buffer integer|nil # the buffer to check the linting for or 0 or nil for current
----@return boolean # whether auto-linting is enabled
-function M.enabled_for_buffer(buffer)
-    return settings.get_toggle_for_buffer(buffer, setting_name)
-end
-
 --- Applies all active linters to a buffer
 ---@param buffer integer|nil # the buffer to apply the linters to or 0 or nil for current
----@param force boolean|nil # whether to force the linting
-function M.apply(buffer, force)
-    if not force and not M.enabled_for_buffer(buffer) then
-        return
-    end
-
+function M.apply(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     -- check if we have any linters for this fie type
@@ -122,37 +107,6 @@ function M.apply(buffer, force)
             vim.api.nvim_buf_call(buffer, do_lint)
         end
     end, 100)
-end
-
---- Toggles auto-linting for a buffer
----@param buffer integer|nil # the buffer to toggle the linters for or nil for current
-function M.toggle_for_buffer(buffer)
-    local enabled = settings.toggle_for_buffer(buffer, setting_name, 'auto-linting')
-
-    if not enabled then
-        -- clear diagnostics from buffer linters
-        lsp.clear_diagnostics(linters(buffer), buffer)
-    else
-        -- re-lint
-        M.apply(buffer)
-    end
-end
-
---- Toggles auto-linting globally
-function M.toggle()
-    local enabled = settings.toggle_global(setting_name, 'auto-linting')
-
-    if not enabled then
-        -- clear diagnostics from all buffers
-        for _, buffer in ipairs(utils.get_listed_buffers()) do
-            lsp.clear_diagnostics(linters(buffer), buffer)
-        end
-    else
-        -- re-lint
-        for _, buffer in ipairs(utils.get_listed_buffers()) do
-            M.apply(buffer)
-        end
-    end
 end
 
 return M
