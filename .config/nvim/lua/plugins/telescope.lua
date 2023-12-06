@@ -26,6 +26,7 @@ return {
                     additional_args = show_hidden and function(args)
                         return vim.list_extend(args, { '--hidden', '--no-ignore' })
                     end or nil,
+                    file_ignore_patterns = { [[.git/]], [[node_modules/]], [[.idea/]], [[.DS_Store]] },
                     cwd = require('utils.project').root(nil, false),
                     hidden = show_hidden,
                     no_ignore = show_hidden,

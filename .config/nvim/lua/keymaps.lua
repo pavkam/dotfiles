@@ -333,6 +333,7 @@ end, true)
 -- Some custom mappings for file types
 if vim.fn.executable 'jq' then
     utils.attach_keymaps('json', function(set)
+        --TODO: use the shell extension
         set('n', '<leader>sJ', ':%!jq .<cr>', { desc = 'Pretty-format JSON' })
     end)
 end

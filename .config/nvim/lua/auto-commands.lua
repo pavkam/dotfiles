@@ -124,7 +124,7 @@ end)
 
 -- file detection commands
 utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
-    local current_file = vim.fn.expand '%:p'
+    local current_file = vim.api.nvim_buf_get_name(evt.buf)
 
     -- if custom events have been triggered, bail
     if settings.get('custom_events_triggered', { buffer = evt.buf }) then
@@ -134,7 +134,7 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     if not utils.is_special_buffer(evt.buf) then
         utils.trigger_user_event 'NormalFile'
 
-        shell.check_file_is_tracked_by_git(current_file, function(yes)
+        shell.check_file_is_tracked_by_git(vim.loop.fs_realpath(current_file) or current_file, function(yes)
             if yes then
                 utils.trigger_user_event 'GitFile'
             end

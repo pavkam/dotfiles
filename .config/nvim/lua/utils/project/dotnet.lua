@@ -59,7 +59,7 @@ local dap_configurations = {
 --- Configures debugging for a given target
 ---@param target string|integer|nil # the target to configure debugging for
 function M.configure_debugging(target)
-    dap.configurations.coreclr = utils.tbl_copy(dap_configurations)
+    dap.configurations.coreclr = vim.tbl_extend('force', {}, dap_configurations)
 
     local launch_json = project_internals.get_launch_json(target)
     if launch_json then

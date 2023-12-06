@@ -62,26 +62,28 @@ end, { desc = 'Run a shell command', bang = true, nargs = '+' })
 -- File manipulation
 utils.on_user_event('NormalFile', function(_, evt)
     vim.api.nvim_buf_create_user_command(evt.buf, 'Rename', function(args)
-        local old_path = vim.fn.expand '%:p'
-        local old_file_name = vim.fn.expand '%:t'
+        local old_path = vim.api.nvim_buf_get_name(evt.buf)
+        local old_file_name = vim.fn.fnamemodify(old_path, ':t')
+        local directory = vim.fn.fnamemodify(old_path, ':h')
 
         local function rename(new_name)
-            local directory = vim.fn.expand '%:h'
             local new_path = utils.join_paths(directory, new_name)
             ---@cast new_path string
 
-            if not utils.file_exists(new_path) then
+            if not utils.file_exists(old_path) then
                 vim.api.nvim_buf_set_name(evt.buf, new_name)
                 return
             end
 
-            shell.async_cmd('mv', { old_path, new_path }, function()
-                require('mini.bufremove').delete(0, true)
+            local ok, _, msg = vim.loop.fs_rename(old_path, new_path)
+            if not ok then
+                utils.error(string.format('Failed to rename file: **%s**', msg))
+                return
+            end
 
-                vim.api.nvim_command(string.format('e %s', new_path))
-
-                require('utils.lsp').notify_file_renamed(old_path, new_path)
-            end)
+            require('mini.bufremove').delete(0, true)
+            vim.api.nvim_command(string.format('e %s', new_path))
+            require('utils.lsp').notify_file_renamed(old_path, new_path)
         end
 
         if args.args ~= '' then
@@ -99,18 +101,12 @@ utils.on_user_event('NormalFile', function(_, evt)
     end, { desc = 'Rename current file', nargs = '?' })
 
     vim.api.nvim_buf_create_user_command(evt.buf, 'Delete', function(args)
-        local path = vim.fn.expand '%:p'
-        local name = vim.fn.expand '%:t'
+        local path = vim.api.nvim_buf_get_name(evt.buf)
+        local name = vim.fn.fnamemodify(path, ':t')
 
         if not utils.file_exists(path) then
             require('mini.bufremove').delete(0, true)
             return
-        end
-
-        local function delete()
-            shell.async_cmd('rm', { path }, function()
-                require('mini.bufremove').delete(0, true)
-            end, { no_checktime = true })
         end
 
         if not args.bang then
@@ -121,6 +117,12 @@ utils.on_user_event('NormalFile', function(_, evt)
             end
         end
 
-        delete()
+        local ok, _, msg = vim.loop.fs_unlink(path)
+        if not ok then
+            utils.error(string.format('Failed to delete file: **%s**', msg))
+            return
+        end
+
+        require('mini.bufremove').delete(0, true)
     end, { desc = 'Delete current file', nargs = 0, bang = true })
 end)

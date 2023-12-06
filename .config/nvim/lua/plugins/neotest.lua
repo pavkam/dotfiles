@@ -75,7 +75,7 @@ return {
             end, { buffer = args.buf, desc = 'Togglee test watching' })
 
             vim.keymap.set('n', '<leader>tf', function()
-                neotest.run.run(vim.fn.expand '%')
+                neotest.run.run(vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf()))
             end, { buffer = args.buf, desc = 'Run all tests' })
 
             vim.keymap.set('n', '<leader>tr', function()

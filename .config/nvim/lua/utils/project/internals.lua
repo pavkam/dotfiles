@@ -61,7 +61,7 @@ function M.roots(target)
 
     roots = {}
     local function add(root)
-        if not utils.list_contains(roots, root) then
+        if not vim.tbl_contains(roots, root) then
             roots[#roots + 1] = root
         end
     end

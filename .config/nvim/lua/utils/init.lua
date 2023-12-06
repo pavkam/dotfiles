@@ -40,22 +40,6 @@ function M.to_list(value)
     end
 end
 
---- Checks if a list contains a value
----@param list any[] # the list to check
----@param what any # the value to check for
----@return boolean # true if the list contains the value, false otherwise
-function M.list_contains(list, what)
-    assert(vim.tbl_islist(list))
-
-    for _, val in ipairs(list) do
-        if val == what then
-            return true
-        end
-    end
-
-    return false
-end
-
 --- Joins all items in a list into a string
 ---@param items table # the list of items to join
 ---@param separator string|nil # the separator to use between items
@@ -78,15 +62,6 @@ function M.tbl_join(items, separator)
     return result
 end
 
---- Shallows copies a table
----@param table table # the table to copy
----@return table # the copied table
-function M.tbl_copy(table)
-    assert(type(table) == 'table')
-
-    return vim.tbl_extend('force', {}, table)
-end
-
 --- Merges multiple tables into one
 ---@vararg table|nil # the tables to merge
 ---@return table # the merged table
@@ -105,20 +80,6 @@ function M.tbl_merge(...)
         return all[1]
     else
         return vim.tbl_deep_extend('force', unpack(all))
-    end
-end
-
---- Converts any value to a string
----@vararg any # the values to stringify
----@return string|nil # the stringified version of the value
-function M.stringify(...)
-    local args = { ... }
-    if #args == 1 then
-        return stringify(...)
-    elseif #args == 0 then
-        return nil
-    else
-        return M.tbl_join(args, ' ')
     end
 end
 
@@ -224,30 +185,30 @@ end
 ---@param msg any # the message to show
 ---@param type integer # the type of the notification
 ---@param opts? table # the options to pass to the notification
-function M.notify(msg, type, opts)
+local function notify(msg, type, opts)
     assert(msg ~= nil)
 
     vim.schedule(function()
-        vim.notify(M.stringify(msg) or '', type, M.tbl_merge({ title = 'NeoVim' }, opts))
+        vim.notify(stringify(msg) or '', type, M.tbl_merge({ title = 'NeoVim' }, opts))
     end)
 end
 
 --- Shows a notification with the INFO type
 ---@param msg any # the message to show
 function M.info(msg)
-    M.notify(msg, vim.log.levels.INFO)
+    notify(msg, vim.log.levels.INFO)
 end
 
 --- Shows a notification with the WARN type
 ---@param msg any # the message to show
 function M.warn(msg)
-    M.notify(msg, vim.log.levels.WARN)
+    notify(msg, vim.log.levels.WARN)
 end
 
 --- Shows a notification with the ERROR type
 ---@param msg any # the message to show
 function M.error(msg)
-    M.notify(msg, vim.log.levels.ERROR)
+    notify(msg, vim.log.levels.ERROR)
 end
 
 ---@type table<integer, uv_timer_t>
@@ -313,18 +274,15 @@ function M.get_up_value(fn, name)
 end
 
 --- Expands a target of any command to a buffer and a path
----@param target integer|function|string|nil # the target to expand
----@return integer, string|nil # the buffer and the path
+---@param target integer|string|nil # the target to expand
+---@return integer, string # the buffer and the path
 function M.expand_target(target)
-    if type(target) == 'function' then
-        target = target()
-    end
-
-    if type(target) == 'number' then
+    if type(target) == 'number' or target == nil then
+        target = target or vim.api.nvim_get_current_buf()
         return target, vim.api.nvim_buf_get_name(target)
     else
-        local path = M.stringify(target)
-        return vim.api.nvim_get_current_buf(), path and vim.loop.fs_realpath(path) or nil
+        local path = vim.fn.expand(target --[[@as string]])
+        return vim.api.nvim_get_current_buf(), vim.loop.fs_realpath(vim.fn.expand(path)) or path
     end
 end
 
@@ -423,13 +381,8 @@ end
 function M.file_exists(path)
     assert(type(path) == 'string' and path ~= '')
 
-    local file = io.open(path, 'r')
-    if file then
-        file:close()
-        return true
-    else
-        return false
-    end
+    local stat = vim.loop.fs_stat(path)
+    return stat and stat.type == 'file' or false
 end
 
 --- Checks if files exist in a given directory and returns the first one that exists
