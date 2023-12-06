@@ -36,8 +36,8 @@ o.modeline = false
 o.ruler = false
 o.showcmd = true
 o.wrap = false
----@diagnostic disable-next-line: assign-type-mismatch
-o.showbreak = icons.TUI.LineContinuation .. ' '
+o.showbreak = icons.TUI.LineContinuation --[[@as vim.opt.showbreak]]
+    .. ' '
 o.nrformats = ''
 o.winminwidth = 5
 o.ttyfast = true
