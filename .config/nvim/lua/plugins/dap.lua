@@ -1,6 +1,7 @@
 return {
     {
         'mfussenegger/nvim-dap',
+        enabled = feature_level(3),
         dependencies = {
             {
                 'theHamsta/nvim-dap-virtual-text',
@@ -8,6 +9,9 @@ return {
                     'mfussenegger/nvim-dap',
                 },
                 opts = {},
+            },
+            {
+                'rcarriga/cmp-dap',
             },
             {
                 'leoluz/nvim-dap-go',

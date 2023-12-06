@@ -1,6 +1,7 @@
 return {
     {
         'nvim-treesitter/nvim-treesitter',
+        enabled = feature_level(2),
         dependencies = {
             {
                 'nvim-treesitter/nvim-treesitter-textobjects',
@@ -141,6 +142,7 @@ return {
     {
         -- HACK: remove when https://github.com/windwp/nvim-ts-autotag/issues/125 closed.
         'windwp/nvim-ts-autotag',
+        enabled = feature_level(2),
         event = 'User NormalFile',
         opts = {
             autotag = {

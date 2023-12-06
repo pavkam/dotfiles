@@ -504,4 +504,17 @@ function M.get_selected_text()
     return res
 end
 
+--- Checks if a plugin is available
+---@param name string # the name of the plugin
+---@return boolean # true if the plugin is available, false otherwise
+function M.has_plugin(name)
+    assert(type(name) == 'string' and name ~= '')
+
+    if package.loaded['lazy'] then
+        return require('lazy.core.config').spec.plugins[name] ~= nil
+    end
+
+    return false
+end
+
 return M

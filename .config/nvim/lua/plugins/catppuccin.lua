@@ -1,5 +1,6 @@
 return {
     'catppuccin/nvim',
+    enabled = feature_level(3),
     name = 'catppuccin',
     opts = {
         integrations = {

@@ -1,5 +1,6 @@
 return {
     'goolord/alpha-nvim',
+    enabled = feature_level(2),
     dependencies = {
         'nvim-tree/nvim-web-devicons',
     },

@@ -3,6 +3,7 @@ local utils = require 'utils'
 
 return {
     'lukas-reineke/indent-blankline.nvim',
+    enabled = feature_level(2),
     event = 'User NormalFile',
     opts = {
         indent = {

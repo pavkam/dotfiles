@@ -12,6 +12,10 @@ local progress_class = 'formatting'
 local function formatters(buffer)
     assert(type(buffer) == 'number' and buffer)
 
+    if not utils.has_plugin 'conform.nvim' then
+        return {}
+    end
+
     local conform = require 'conform'
     local ok, clients = pcall(conform.list_formatters, buffer)
 
@@ -65,6 +69,11 @@ end
 ---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
 ---@param injected boolean|nil # whether to format injected code
 function M.apply(buffer, injected)
+    if not package.loaded['conform'] then
+        utils.warn 'Conform plugin is not installed!'
+        return
+    end
+
     local conform = require 'conform'
 
     buffer = buffer or vim.api.nvim_get_current_buf()

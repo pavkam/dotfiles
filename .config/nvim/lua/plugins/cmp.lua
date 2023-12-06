@@ -1,10 +1,10 @@
 return {
     {
         'hrsh7th/nvim-cmp',
+        enabled = feature_level(2),
         version = false,
         event = 'InsertEnter',
         dependencies = {
-            'rcarriga/cmp-dap',
             'hrsh7th/cmp-nvim-lsp',
             'hrsh7th/cmp-buffer',
             'hrsh7th/cmp-path',
@@ -175,19 +175,23 @@ return {
         end,
         config = function(_, opts)
             local cmp = require 'cmp'
+            local utils = require 'utils'
 
             cmp.setup(opts)
 
-            ---@diagnostic disable-next-line: missing-fields
-            cmp.setup.filetype({ 'dap-repl', 'dapui_watches', 'dapui_hover' }, {
-                sources = {
-                    { name = 'dap' },
-                },
-            })
+            if not utils.has_plugin 'cmp-dap' then
+                ---@diagnostic disable-next-line: missing-fields
+                cmp.setup.filetype({ 'dap-repl', 'dapui_watches', 'dapui_hover' }, {
+                    sources = {
+                        { name = 'dap' },
+                    },
+                })
+            end
         end,
     },
     {
         'L3MON4D3/LuaSnip',
+        enabled = feature_level(2),
         build = vim.fn.has 'win32' == 0 and "echo 'NOTE: jsregexp is optional, so not a big deal if it fails to build\n'; make install_jsregexp" or nil,
         dependencies = {
             'rafamadriz/friendly-snippets',

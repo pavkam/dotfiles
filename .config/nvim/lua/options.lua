@@ -1,4 +1,3 @@
--- TODO: add option to disable some plugins through env vars
 -- TODO: vimgrep + apply to quickfix (replace all)
 -- TODO: figure out if format fucks up LSP diagnostics
 

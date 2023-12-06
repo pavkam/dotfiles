@@ -1,5 +1,6 @@
 return {
     'folke/flash.nvim',
+    enabled = feature_level(2),
     vscode = true,
     opts = {},
     keys = {

@@ -1,5 +1,6 @@
 return {
     'alexghergh/nvim-tmux-navigation',
+    enabled = feature_level(2),
     keys = {
         {
             '<A-Tab>',

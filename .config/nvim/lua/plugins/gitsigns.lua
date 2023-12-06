@@ -3,6 +3,7 @@ local shell = require 'utils.shell'
 
 return {
     'lewis6991/gitsigns.nvim',
+    enabled = feature_level(2),
     event = 'User GitFile',
     opts = {
         signs = {

@@ -1,5 +1,6 @@
 return {
     'mfussenegger/nvim-lint',
+    enabled = feature_level(3),
     event = 'User NormalFile',
     keys = {
         {

@@ -1,5 +1,6 @@
 return {
     'nvim-neotest/neotest',
+    enabled = feature_level(3),
     ft = {
         'javascript',
         'typescript',
@@ -14,7 +15,6 @@ return {
         'nvim-neotest/neotest-go',
     },
     opts = function(_, opts)
-        local utils = require 'utils'
         local project = require 'utils.project'
         local jest = require 'neotest-jest'
         local vitest = require 'neotest-vitest'

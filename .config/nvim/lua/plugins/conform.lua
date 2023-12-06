@@ -1,5 +1,6 @@
 return {
     'stevearc/conform.nvim',
+    enabled = feature_level(3),
     cmd = 'ConformInfo',
     keys = {
         {

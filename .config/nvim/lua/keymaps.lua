@@ -226,7 +226,7 @@ map('n', ']l', '<cmd>lnext<cr>', { desc = 'Next location item' })
 map('n', '[l', '<cmd>lprev<cr>', { desc = 'Previous location item' })
 
 utils.attach_keymaps('qf', function(set)
-    set('n', 'x', function()
+    set('n', 'dd', function()
         if package.loaded['bqf'] then
             require('bqf').hidePreviewWindow()
         end
@@ -262,8 +262,8 @@ utils.attach_keymaps('qf', function(set)
         end
     end, { desc = 'Remove item' })
 
-    set('n', '<del>', 'x', { desc = 'Remove item', remap = true })
-    set('n', '<bs>', 'x', { desc = 'Remove item', remap = true })
+    set('n', '<del>', 'dd', { desc = 'Remove item', remap = true })
+    set('n', '<bs>', 'dd', { desc = 'Remove item', remap = true })
 end, true)
 
 utils.attach_keymaps(nil, function(set)
@@ -326,21 +326,23 @@ map('n', '<leader>uM', function()
 end, { desc = 'Toggle global diagnostics' })
 
 map('n', '<leader>um', function()
-    toggles.toggle_diagnostics { buffer = vim.nvim.nvim_get_current_buf() }
+    toggles.toggle_diagnostics { buffer = vim.api.nvim_get_current_buf() }
 end, { desc = 'Toggle buffer diagnostics' })
 
 -- Treesitter
 map('n', '<leader>ut', function()
-    toggles.toggle_treesitter { buffer = vim.nvim.nvim_get_current_buf() }
+    toggles.toggle_treesitter { buffer = vim.api.nvim_get_current_buf() }
 end, { desc = 'Toggle buffer treesitter' })
 
 -- Add "q" to special windows
 utils.attach_keymaps(utils.special_file_types, function(set)
     set('n', 'q', '<cmd>close<cr>', { silent = true })
+    set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
 end)
 
 utils.attach_keymaps('help', function(set)
     set('n', 'q', '<cmd>close<cr>', { silent = true })
+    set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
 end, true)
 
 -- Some custom mappings for file types

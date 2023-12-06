@@ -291,6 +291,9 @@ alias ts='date -d @1639018800 "+%F %T"'
 alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu | tail -10
 alias vi=nvim
 alias vim=nvim
+alias nvim-0='NVIM_FEATURE_LEVEL=0 nvim'
+alias nvim-1='NVIM_FEATURE_LEVEL=1 nvim'
+alias nvim-2='NVIM_FEATURE_LEVEL=2 nvim'
 
 if command -v heroku &> /dev/null; then
     heroku-env() {

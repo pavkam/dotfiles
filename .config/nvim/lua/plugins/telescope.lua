@@ -3,6 +3,7 @@ local icons = require 'utils.icons'
 return {
     {
         'nvim-telescope/telescope.nvim',
+        enabled = feature_level(1),
         dependencies = {
             {
                 'nvim-telescope/telescope-fzf-native.nvim',
@@ -78,7 +79,6 @@ return {
                     end,
                     desc = 'Resume search',
                 },
-
                 {
                     '<leader>f/',
                     function()
@@ -320,5 +320,6 @@ return {
     },
     {
         'nvim-telescope/telescope-ui-select.nvim',
+        enabled = feature_level(1),
     },
 }

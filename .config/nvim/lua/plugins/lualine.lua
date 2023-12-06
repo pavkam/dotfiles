@@ -1,5 +1,6 @@
 return {
     'nvim-lualine/lualine.nvim',
+    enabled = feature_level(2),
     dependencies = {
         'nvim-tree/nvim-web-devicons',
     },
@@ -14,6 +15,8 @@ return {
         local settings = require 'utils.settings'
         local toggles = require 'utils.toggles'
 
+        --- Extracts the color and attributes from a highlight group.
+        ---@param name string
         local function color(name)
             local hl = utils.hl(name)
 
@@ -31,6 +34,21 @@ return {
             end
 
             return { fg = string.format('#%06x', fg), gui = table.concat(attrs, ',') }
+        end
+
+        --- Formats a list of items into a string with a cut-off
+        ---@param prefix string # The prefix to add to the string
+        ---@param list string[]|string # The list of items to format
+        ---@param min? number # The minimum width of the string
+        local function sexify(prefix, list, min)
+            min = min or 150
+
+            local col = vim.api.nvim_get_option 'columns'
+            if col < min then
+                return prefix
+            end
+
+            return prefix .. ' ' .. utils.tbl_join(utils.to_list(list), ' ' .. icons.TUI.ListSeparator .. ' ')
         end
 
         local copilot_colors = {
@@ -99,7 +117,7 @@ return {
                                 end, tasks)
 
                             if prefix and tasks_names then
-                                return prefix .. ' ' .. utils.tbl_join(tasks_names, ' ' .. icons.TUI.ListSeparator .. ' ')
+                                return sexify(prefix, tasks_names)
                             end
 
                             return nil
@@ -116,7 +134,7 @@ return {
                                 prefix = lint.progress(buffer) or icons.UI.Format
                             end
 
-                            return prefix .. ' ' .. utils.tbl_join(lint.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
+                            return sexify(prefix, lint.active_names_for_buffer(buffer))
                         end),
                         cond = settings.transient(function(buffer)
                             return lint.active_for_buffer(buffer)
@@ -137,7 +155,7 @@ return {
                                 prefix = format.progress(buffer) or icons.UI.Lint
                             end
 
-                            return prefix .. ' ' .. utils.tbl_join(format.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
+                            return sexify(prefix, format.active_names_for_buffer(buffer))
                         end),
                         cond = settings.transient(function(buffer)
                             return format.active_for_buffer(buffer)
@@ -157,7 +175,7 @@ return {
                     {
                         settings.transient(function(buffer)
                             local prefix = lsp.progress() or icons.UI.LSP
-                            return prefix .. ' ' .. utils.tbl_join(lsp.active_names_for_buffer(buffer), ' ' .. icons.TUI.ListSeparator .. ' ')
+                            return sexify(prefix, lsp.active_names_for_buffer(buffer))
                         end),
                         cond = settings.transient(function(buffer)
                             return lsp.any_active_for_buffer(buffer)
@@ -169,7 +187,7 @@ return {
                     },
                     {
                         settings.transient(function()
-                            return icons.Symbols.Copilot .. ' ' .. (require('copilot.api').status.data.message or '')
+                            return sexify(icons.Symbols.Copilot, require('copilot.api').status.data.message or '')
                         end),
                         cond = settings.transient(function(buffer)
                             return lsp.is_active_for_buffer(buffer, 'copilot')
