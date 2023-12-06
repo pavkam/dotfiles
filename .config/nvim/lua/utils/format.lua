@@ -1,11 +1,9 @@
 local utils = require 'utils'
-local settings = require 'utils.settings'
 local progress = require 'utils.progress'
 
 ---@class utils.format
 local M = {}
 
-local setting_name = 'format_enabled'
 local progress_class = 'formatting'
 
 --- Gets the names of all active formatters for a buffer

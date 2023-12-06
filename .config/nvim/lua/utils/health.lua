@@ -1,5 +1,3 @@
-local utils = require 'utils'
-
 ---@class utils.health.ShowOpts
 ---@field public height number|nil
 ---@field public width number|nil
@@ -129,8 +127,10 @@ function M.show_for_buffer(buffer)
         list(string.format('Settings (%s)', name), tb)
     end
 
-    for _, cfg in ipairs(project.dap_configurations(buffer)) do
-        list(string.format('DAP (%s)', cfg.name), cfg)
+    if package.loaded['dap'] then
+        for _, cfg in ipairs(project.dap_configurations(buffer)) do
+            list(string.format('DAP (%s)', cfg.name), cfg)
+        end
     end
 
     M.show_content(content)

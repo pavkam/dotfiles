@@ -16,9 +16,13 @@ M.terminals = {}
 function M.floating(cmd, opts)
     assert(type(cmd) == 'string' and cmd ~= '')
 
+    local cwd = vim.loop.cwd()
+    utils.info(cwd and vim.loop.fs_realpath(cwd))
+
     opts = utils.tbl_merge({
         ft = 'lazyterm',
         size = { width = 0.9, height = 0.9 },
+        cwd = cwd and vim.loop.fs_realpath(cwd),
     }, opts or {}, { persistent = true })
 
     local key = vim.inspect {

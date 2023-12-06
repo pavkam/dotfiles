@@ -61,6 +61,14 @@ end, { desc = 'Run a shell command', bang = true, nargs = '+' })
 
 -- File manipulation
 utils.on_user_event('NormalFile', function(_, evt)
+    local function delete_buffer(buffer)
+        if package.loaded['mini.bufremove'] then
+            require('mini.bufremove').delete(buffer, true)
+        else
+            vim.api.nvim_command(string.format('bdelete %s', buffer))
+        end
+    end
+
     vim.api.nvim_buf_create_user_command(evt.buf, 'Rename', function(args)
         local old_path = vim.api.nvim_buf_get_name(evt.buf)
         local old_file_name = vim.fn.fnamemodify(old_path, ':t')
@@ -81,7 +89,8 @@ utils.on_user_event('NormalFile', function(_, evt)
                 return
             end
 
-            require('mini.bufremove').delete(0, true)
+            delete_buffer(evt.buf)
+
             vim.api.nvim_command(string.format('e %s', new_path))
             require('utils.lsp').notify_file_renamed(old_path, new_path)
         end
@@ -105,7 +114,7 @@ utils.on_user_event('NormalFile', function(_, evt)
         local name = vim.fn.fnamemodify(path, ':t')
 
         if not utils.file_exists(path) then
-            require('mini.bufremove').delete(0, true)
+            delete_buffer(evt.buf)
             return
         end
 
@@ -123,6 +132,6 @@ utils.on_user_event('NormalFile', function(_, evt)
             return
         end
 
-        require('mini.bufremove').delete(0, true)
+        delete_buffer(evt.buf)
     end, { desc = 'Delete current file', nargs = 0, bang = true })
 end)

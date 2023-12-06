@@ -1,6 +1,3 @@
-local dap = require 'dap'
-local dap_vscode = require 'dap.ext.vscode'
-
 local utils = require 'utils'
 local project_internals = require 'utils.project.internals'
 
@@ -31,6 +28,9 @@ local dap_configurations = {
 --- Configures debugging for a given target
 ---@param target string|integer|nil # the target to configure debugging for
 function M.configure_debugging(target)
+    local dap = require 'dap'
+    local dap_vscode = require 'dap.ext.vscode'
+
     dap.configurations.python = vim.tbl_extend('force', {}, dap_configurations)
 
     local launch_json = project_internals.get_launch_json(target)

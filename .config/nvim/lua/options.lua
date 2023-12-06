@@ -1,7 +1,6 @@
 -- TODO: add option to disable some plugins through env vars
 -- TODO: vimgrep + apply to quickfix (replace all)
 -- TODO: figure out if format fucks up LSP diagnostics
--- TODO: make sure all file functions go through my utils that will normalize everything
 
 local icons = require 'utils.icons'
 

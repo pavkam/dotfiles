@@ -1,6 +1,3 @@
-local dap = require 'dap'
-local dap_utils = require 'dap.utils'
-local dap_vscode = require 'dap.ext.vscode'
 local utils = require 'utils'
 local project_internals = require 'utils.project.internals'
 
@@ -112,7 +109,9 @@ local dap_configurations = {
         type = 'pwa-node',
         request = 'attach',
         name = 'Attach',
-        processId = dap_utils.pick_process,
+        processId = function()
+            return require('dap.utils').pick_process()
+        end,
         cwd = '${workspaceFolder}',
     },
     pwa_node_jest = {
@@ -155,6 +154,9 @@ local dap_configurations = {
 --- Configures debugging for a given target
 ---@param target string|integer|nil # the target to configure debugging for
 function M.configure_debugging(target)
+    local dap = require 'dap'
+    local dap_vscode = require 'dap.ext.vscode'
+
     for _, language in ipairs(bin_filetypes) do
         dap.configurations[language] = {
             dap_configurations.pwa_node_launch,

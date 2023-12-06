@@ -1,5 +1,3 @@
-local dap = require 'dap'
-local dap_ui = require 'dap.ui'
 local utils = require 'utils'
 local js_project = require 'utils.project.js'
 local go_project = require 'utils.project.go'
@@ -42,6 +40,9 @@ end
 --- Starts or continues debugging for a given target
 ---@param target string|integer|nil # the target to start or continue debugging for
 function M.continue_debugging(target)
+    local dap = require 'dap'
+    local dap_ui = require 'dap.ui'
+
     local current_session = dap.session()
     if not current_session then
         if not setup_debugging(target) then
@@ -71,6 +72,8 @@ end
 ---@param target string|integer|nil # the target to get the dap configurations for
 ---@return Configuration[] # the dap configurations
 function M.dap_configurations(target)
+    local dap = require 'dap'
+
     if not dap.session() then
         if not setup_debugging(target) then
             return {}
