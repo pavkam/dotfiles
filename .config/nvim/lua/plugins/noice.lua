@@ -2,7 +2,7 @@ local icons = require 'utils.icons'
 
 return {
     'folke/noice.nvim',
-    enabled = feature_level(2),
+    cond = feature_level(2),
     event = 'VeryLazy',
     dependencies = {
         'MunifTanjim/nui.nvim',

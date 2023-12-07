@@ -1,6 +1,6 @@
 return {
     'rcarriga/nvim-notify',
-    enabled = feature_level(1),
+    cond = feature_level(1),
     lazy = false,
     keys = {
         {

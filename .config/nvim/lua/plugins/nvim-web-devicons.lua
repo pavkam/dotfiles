@@ -1,6 +1,6 @@
 return {
     'nvim-tree/nvim-web-devicons',
-    enabled = feature_level(1),
+    cond = feature_level(1),
     lazy = true,
     opts = {
         override = {

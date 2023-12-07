@@ -2,7 +2,7 @@ local icons = require 'utils.icons'
 
 return {
     'stevearc/dressing.nvim',
-    enabled = feature_level(2),
+    cond = feature_level(2),
     opts = {
         input = { default_prompt = icons.TUI.PromptPrefix },
         select = { backend = { 'telescope', 'builtin' } },

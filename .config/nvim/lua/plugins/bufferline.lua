@@ -2,7 +2,7 @@ local icons = require 'utils.icons'
 
 return {
     'akinsho/bufferline.nvim',
-    enabled = feature_level(2),
+    cond = feature_level(2),
     version = '*',
     dependencies = {
         'nvim-tree/nvim-web-devicons',

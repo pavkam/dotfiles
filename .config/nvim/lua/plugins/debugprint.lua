@@ -1,6 +1,6 @@
 return {
     'andrewferrier/debugprint.nvim',
-    enabled = feature_level(3),
+    cond = feature_level(3),
     keys = {
         {
             '<leader>Dp',

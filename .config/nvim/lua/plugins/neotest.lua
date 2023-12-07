@@ -1,6 +1,6 @@
 return {
     'nvim-neotest/neotest',
-    enabled = feature_level(3),
+    cond = feature_level(3),
     ft = {
         'javascript',
         'typescript',

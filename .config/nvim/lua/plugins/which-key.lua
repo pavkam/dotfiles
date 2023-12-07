@@ -2,7 +2,7 @@ local icons = require 'utils.icons'
 
 return {
     'folke/which-key.nvim',
-    enabled = feature_level(1),
+    cond = feature_level(1),
     event = 'VeryLazy',
     opts = {
         plugins = { spelling = true },

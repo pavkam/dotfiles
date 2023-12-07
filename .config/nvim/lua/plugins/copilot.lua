@@ -1,6 +1,6 @@
 return {
     'zbirenbaum/copilot.lua',
-    enabled = feature_level(2),
+    cond = feature_level(2),
     cmd = 'Copilot',
     build = ':Copilot auth',
     opts = {

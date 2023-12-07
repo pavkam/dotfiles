@@ -1,6 +1,6 @@
 return {
     'ray-x/go.nvim',
-    enabled = feature_level(3),
+    cond = feature_level(3),
     dependencies = {
         'ray-x/guihua.lua',
         'neovim/nvim-lspconfig',

@@ -1,7 +1,7 @@
 return {
     {
         'hrsh7th/nvim-cmp',
-        enabled = feature_level(2),
+        cond = feature_level(2),
         version = false,
         event = 'InsertEnter',
         dependencies = {
@@ -191,7 +191,7 @@ return {
     },
     {
         'L3MON4D3/LuaSnip',
-        enabled = feature_level(2),
+        cond = feature_level(2),
         build = vim.fn.has 'win32' == 0 and "echo 'NOTE: jsregexp is optional, so not a big deal if it fails to build\n'; make install_jsregexp" or nil,
         dependencies = {
             'rafamadriz/friendly-snippets',

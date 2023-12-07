@@ -1,6 +1,6 @@
 return {
     'vuki656/package-info.nvim',
-    enabled = feature_level(3),
+    cond = feature_level(3),
     event = 'BufRead package.json',
     dependencies = {
         'MunifTanjim/nui.nvim',

@@ -2,7 +2,7 @@ local icons = require 'utils.icons'
 
 return {
     'williamboman/mason.nvim',
-    enabled = feature_level(2),
+    cond = feature_level(2),
     cmd = {
         'Mason',
         'MasonInstall',
