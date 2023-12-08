@@ -566,15 +566,19 @@ link .nuget/NuGet/NuGet.Config
 link .config/mc
 link .config/htop
 link .config/kitty
+link .config/bat
+
 
 if [ "$DISTRO_DARWIN" = "" ]; then
     link .config/Code/User/settings.json
     link .config/Code/User/keybindings.json
+    link .config/lazygit/config.yml
 else
     link .config/Code/User/settings.json "./Application Support/Code/User/settings.json"
     link .config/Code/User/keybindings.json "./Application Support/Code/User/keybindings.json"
     link .terminfo
-    link "Library/KeyBindings/DefaultKeyBinding.dict"
+    link "./Library/KeyBindings/DefaultKeyBinding.dict"
+    link .config/lazygit/config.yml "./Library/Application Support/lazygit/config.yml"
 fi
 
 link .aws/cli/alias
@@ -591,6 +595,13 @@ roll "Tmux is installed and at the latest version."
 link .config/tmux/tmux.conf
 
 roll "Tmux ready to use!"
+
+roll "Setting up bat..."
+bat cache --build 1>> $LOG_FILE 2>> $LOG_FILE
+if [ $? -ne 0 ]; then
+    warn "Failed to build bat cache. Please run 'bat cache --build' by hand."
+fi
+roll "Bat ready to use!"
 
 check_installed "code"
 if [ $? -eq 0 ]; then

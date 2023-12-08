@@ -1,0 +1,29 @@
+gui:
+  nerdFontsVersion: '2'
+  border: 'rounded'
+  theme:
+    activeBorderColor:
+        - green
+        - bold
+    inactiveBorderColor:
+        - white
+    optionsTextColor:
+        - blue
+    selectedLineBgColor:
+        - white
+    selectedRangeBgColor:
+        - blue
+    cherryPickedCommitBgColor:
+        - cyan
+    cherryPickedCommitFgColor:
+        - blue
+    unstagedChangesColor:
+        - red
+  commitLength:
+    show: true
+  showListFooter: true
+  showFileTree: true
+  showBottomLine: true
+os:
+  editPreset: 'nvim'
+  openLinkCommand: open {{link}}
