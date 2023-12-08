@@ -337,13 +337,8 @@ if command -v heroku &> /dev/null; then
 fi
 
 sesh() {
-    if [ "$TMUX" != "" ]; then
-        echo " Already in a tmux session! Detach bro!"
-        return 1
-    fi
-
     local TMUX_SESSIONS=""
-    tmux ls 2>/dev/null 1>/dev/null && TMUX_SESSIONS=$(tmux ls -F "#{session_name}")
+    tmux ls &>/dev/null && TMUX_SESSIONS=$(tmux ls -F "#{session_name}")
 
     local PROJECTS=$(
         [ "$PROJECTS_ROOT" != "" ] && fd -c never --follow --hidden --relative-path --base-directory $PROJECTS_ROOT .git$ -t directory -E .github | xargs dirname
@@ -364,11 +359,16 @@ sesh() {
         read SESSION
 
         if [ "$SESSION" != "" ]; then
-            tmux new -A -s "$SESSION"
+            tmux new -d -s "$SESSION" && tmux switch -t "$SESSION"
         fi
     elif [ "$SESSION" != "" ]; then
         title "tmux" "$SESSION"
-        tmux new -A -s "$SESSION" -c "$PROJECTS_ROOT/$SESSION"
+
+        if tmux has -t "$SESSION" &> /dev/null; then
+            tmux switch -t "$SESSION"
+        else
+            tmux new -d -s "$SESSION" && tmux switch -t "$SESSION"
+        fi
     fi
 }
 

@@ -129,6 +129,7 @@ local M = {
         Notes = '󰠮',
         IgnoreHidden = '󰛑',
         ShowHidden = '󰛐',
+        TMux = '',
     },
     Progress = {
         '⣾',

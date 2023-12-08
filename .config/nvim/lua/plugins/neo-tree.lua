@@ -33,14 +33,7 @@ return {
         end
     end,
     opts = {
-        sources = { 'filesystem', 'buffers', 'git_status', 'document_symbols' },
-        source_selector = {
-            winbar = true,
-            content_layout = 'center',
-            sources = {
-                { source = 'filesystem', display_name = icons.Files.ClosedFolder .. ' ' .. 'File' },
-            },
-        },
+        sources = { 'filesystem' },
         open_files_do_not_replace_types = utils.special_file_types,
         filesystem = {
             window = {
@@ -51,23 +44,16 @@ return {
                 current = 'window',
             },
             follow_current_file = { enabled = true },
+            filtered_items = {
+                never_show = {
+                    '.DS_Store',
+                    'thumbs.db',
+                    '.git',
+                    '.idea',
+                },
+            },
             use_libuv_file_watcher = true,
             hijack_netrw_behavior = 'open_current',
-        },
-        buffers = {
-            window = {
-                position = 'float',
-            },
-        },
-        git_status = {
-            window = {
-                position = 'float',
-            },
-        },
-        symbols = {
-            window = {
-                position = 'float',
-            },
         },
         default_component_configs = {
             with_markers = true,

@@ -24,7 +24,7 @@ return {
                 return nil
             end
 
-            local fg = hl.fg or hl.foreground
+            local fg = hl.fg or hl.foreground or 0
             local attrs = {}
 
             for _, attr in ipairs { 'italic', 'bold', 'undercurl', 'underdotted', 'underlined', 'strikethrough' } do
@@ -36,19 +36,34 @@ return {
             return { fg = string.format('#%06x', fg), gui = table.concat(attrs, ',') }
         end
 
+        --- Cuts off a string if it is too long
+        ---@param str string # The string to cut off
+        ---@param max? number # The maximum length of the string
+        ---@return string # The cut-off string
+        local function delongify(str, max)
+            max = max or 40
+
+            if #str > max then
+                return str:sub(1, max - 1) .. icons.TUI.Ellipsis
+            end
+
+            return str
+        end
+
         --- Formats a list of items into a string with a cut-off
         ---@param prefix string # The prefix to add to the string
         ---@param list string[]|string # The list of items to format
-        ---@param min? number # The minimum width of the string
-        local function sexify(prefix, list, min)
-            min = min or 150
+        ---@param collapse_max? number # The minimum width of the screen to show the full list
+        ---@param len_max? number # The maximum length of the string
+        local function sexify(prefix, list, len_max, collapse_max)
+            collapse_max = collapse_max or 150
 
             local col = vim.api.nvim_get_option 'columns'
-            if col < min then
+            if col < collapse_max then
                 return prefix
             end
 
-            return prefix .. ' ' .. utils.tbl_join(utils.to_list(list), ' ' .. icons.TUI.ListSeparator .. ' ')
+            return delongify(prefix .. ' ' .. utils.tbl_join(utils.to_list(list), ' ' .. icons.TUI.ListSeparator .. ' '), len_max)
         end
 
         local copilot_colors = {
@@ -61,7 +76,7 @@ return {
             options = {
                 theme = 'auto',
                 globalstatus = true,
-                disabled_filetypes = { statusline = { 'dashboard', 'alpha' } },
+                disabled_filetypes = { statusline = { 'alpha' } },
             },
             sections = {
                 lualine_a = { 'mode' },
@@ -87,22 +102,6 @@ return {
                         end,
                     },
                     { 'filetype', icon_only = true, separator = '', padding = { left = 1, right = 0 } },
-                    {
-                        function()
-                            local title = vim.fn.win_gettype() == 'loclist' and vim.fn.getloclist(0, { title = 0 }).title
-                                or vim.fn.getqflist({ title = 0 }).title
-                            if not title or title == '' then
-                                title = '<untitled>'
-                            end
-
-                            return title
-                        end,
-                        cond = function()
-                            return vim.bo.filetype == 'qf'
-                        end,
-                        separator = '',
-                        padding = { left = 1, right = 1 },
-                    },
                     { 'filename', path = 1, symbols = { modified = ' ' .. icons.Files.Modified .. ' ', readonly = '', unnamed = '' } },
                 },
                 lualine_x = {
@@ -117,7 +116,7 @@ return {
                                 end, tasks)
 
                             if prefix and tasks_names then
-                                return sexify(prefix, tasks_names)
+                                return sexify(prefix, tasks_names, 70)
                             end
 
                             return nil
@@ -233,17 +232,36 @@ return {
                         function()
                             return settings.global.ignore_hidden_files and icons.UI.IgnoreHidden or icons.UI.ShowHidden
                         end,
-                        color = function()
-                            return settings.global.ignore_hidden_files and color 'IgnoreHiddenFilesStatus' or color 'ShowHiddenFilesStatus'
-                        end,
+                        color = color 'Comment',
                         on_click = function()
                             toggles.toggle_ignore_hidden_files()
                         end,
+                        separator = false,
+                    },
+                    {
+                        function()
+                            return icons.UI.TMux
+                        end,
+                        color = color 'Comment',
+                        cond = function()
+                            return os.getenv 'TMUX' ~= nil
+                        end,
+                        separator = false,
+                    },
+                    {
+                        function()
+                            return '󰓆'
+                        end,
+                        color = color 'Comment',
+                        cond = function()
+                            return vim.o.spell
+                        end,
+                        separator = false,
                     },
                     {
                         require('lazy.status').updates,
                         cond = require('lazy.status').has_updates,
-                        color = color 'UpdatesAvailableStatus',
+                        color = color 'Comment',
                         on_click = function()
                             vim.cmd 'Lazy'
                         end,
@@ -252,7 +270,7 @@ return {
                     { 'location', padding = { left = 0, right = 1 } },
                 },
             },
-            extensions = { 'neo-tree', 'lazy' },
+            extensions = { 'neo-tree', 'lazy', 'man', 'mason', 'nvim-dap-ui', 'quickfix' },
         }
     end,
 }

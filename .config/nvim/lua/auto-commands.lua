@@ -156,3 +156,27 @@ utils.on_event('BufReadPost', function(evt)
         end
     end
 end)
+
+-- pin special buffers into their windows and prevent accidental
+-- replacement of them
+local just_removed = {}
+
+utils.on_event('BufWinLeave', function(evt)
+    local win = vim.api.nvim_get_current_win()
+
+    if utils.is_special_buffer(evt.buf) then
+        just_removed[win] = evt.buf
+    else
+        just_removed[win] = nil
+    end
+end)
+
+utils.on_event({ 'BufWinEnter', 'BufEnter' }, function(evt)
+    local win = vim.api.nvim_get_current_win()
+    local new_buffer = evt.buf
+    local old_buffer = just_removed[win]
+
+    if old_buffer and vim.api.nvim_buf_is_valid(old_buffer) and not utils.is_special_buffer(new_buffer) then
+        vim.api.nvim_set_current_buf(old_buffer)
+    end
+end)

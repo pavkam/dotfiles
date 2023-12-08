@@ -297,6 +297,7 @@ return {
                         previewer = false,
                         sort_mru = true,
                     },
+                    oldfiles = { only_cwd = true },
                     git_branches = themes.get_ivy { use_file_path = true },
                     git_commits = themes.get_ivy { use_file_path = true },
                     git_bcommits = themes.get_ivy { use_file_path = true },

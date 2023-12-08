@@ -1,6 +1,6 @@
 return {
     'alexghergh/nvim-tmux-navigation',
-    cond = feature_level(2),
+    cond = feature_level(2) and os.getenv 'TMUX' ~= nil,
     keys = {
         {
             '<A-Tab>',

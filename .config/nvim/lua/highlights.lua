@@ -10,19 +10,17 @@ end
 
 hl('CopilotAnnotation', utils.hl 'Comment', { fg = '#7287fd' })
 hl('CopilotSuggestion', utils.hl 'Comment', { fg = '#7287fd' })
-hl('CopilotIdle', utils.hl 'Special', { bg = '#1e2030' })
-hl('CopilotFetching', utils.hl 'DiagnosticWarn', { bg = '#1e2030' })
-hl('CopilotWarning', utils.hl 'DiagnosticError', { bg = '#1e2030' })
+hl('CopilotIdle', utils.hl 'Special')
+hl('CopilotFetching', utils.hl 'DiagnosticWarn')
+hl('CopilotWarning', utils.hl 'DiagnosticError')
 
-hl('ShellProgressStatus', { fg = '#CC3300', ctermfg = 3, bg = '#1e2030', underdotted = true })
-hl('ActiveLintersStatus', { fg = '#ff9999', ctermfg = 4, bg = '#1e2030', italic = true })
-hl('ActiveFormattersStatus', { fg = '#e699ff', ctermfg = 4, bg = '#1e2030', italic = true })
-hl('ActiveLSPsStatus', { fg = '#339933', ctermfg = 5, bg = '#1e2030' })
+-- other highlights
+hl('ShellProgressStatus', utils.hl 'Comment')
 
-hl('DisabledLintersStatus', utils.hl 'ActiveLinters', { strikethrough = true })
-hl('DisabledFormattersStatus', utils.hl 'ActiveFormatters', { strikethrough = true })
+hl('ActiveLintersStatus', utils.hl 'Statement', { italic = true })
+hl('DisabledLintersStatus', utils.hl 'ActiveLintersStatus', { strikethrough = true })
 
-hl('IgnoreHiddenFilesStatus', { fg = '#994d00', ctermfg = 5, bg = '#1e2030', bold = true })
-hl('ShowHiddenFilesStatus', { fg = '#e6e600', ctermfg = 5, bg = '#1e2030', bold = true })
+hl('ActiveFormattersStatus', utils.hl 'Function', { italic = true })
+hl('DisabledFormattersStatus', utils.hl 'ActiveFormattersStatus', { strikethrough = true })
 
-hl('UpdatesAvailableStatus', { fg = '#3385ff', bg = '#1e2030' })
+hl('ActiveLSPsStatus', utils.hl 'PreProc')
