@@ -14,7 +14,6 @@ _G.feature_level = function(level)
 end
 
 require 'options'
-require 'keymaps'
 require 'commands'
 
 if feature_level(1) then
@@ -65,7 +64,13 @@ if feature_level(1) then
         },
     }
 
-    require 'auto-commands'
+    require 'marks'
+    require 'core'
+    require 'file_types'
+    require 'search'
+    require 'extras'
+    require 'notes'
+    require 'qf'
 
     vim.cmd.colorscheme 'tokyonight'
     require 'highlights'

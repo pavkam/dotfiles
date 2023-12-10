@@ -1,7 +1,5 @@
 local utils = require 'utils'
 
-local M = {}
-
 --- Get the notes root directory
 ---@param global boolean|nil: If true, return the global notes root
 ---@return string: The notes root directory
@@ -22,7 +20,7 @@ end
 
 --- Greps the notes directory
 ---@param global boolean|nil: If true, grep the global notes directory
-function M.grep(global)
+local function grep(global)
     local telescope = require 'telescope.builtin'
     local root = get_notes_root(global)
     if vim.fn.isdirectory(root) == 0 then
@@ -40,7 +38,7 @@ end
 
 --- Finds files in the notes directory
 ---@param global boolean|nil: If true, find files in the global notes directory
-function M.find(global)
+local function find(global)
     local telescope = require 'telescope.builtin'
     local root = get_notes_root(global)
     if vim.fn.isdirectory(root) == 0 then
@@ -59,7 +57,7 @@ end
 
 --- Edits a new or existing note
 ---@param global boolean|nil: If true, edit a new note in the global notes directory
-function M.edit(global)
+local function edit(global)
     vim.ui.input({ prompt = 'Note name: ', default = os.date '%Y-%m-%d' }, function(name)
         if name == nil or name == '' then
             return
@@ -70,4 +68,28 @@ function M.edit(global)
     end)
 end
 
-return M
+if feature_level(2) then
+    vim.keymap.set('n', '<leader>nn', function()
+        find(true)
+    end, { desc = 'Browse global notes' })
+
+    vim.keymap.set('n', '<leader>nN', function()
+        find(false)
+    end, { desc = 'Browse project notes' })
+
+    vim.keymap.set('n', '<leader>ng', function()
+        grep(true)
+    end, { desc = 'Grep global notes' })
+
+    vim.keymap.set('n', '<leader>nG', function()
+        grep(false)
+    end, { desc = 'Grep project notes' })
+
+    vim.keymap.set('n', '<leader>nc', function()
+        edit(true)
+    end, { desc = 'Open global note' })
+
+    vim.keymap.set('n', '<leader>nC', function()
+        edit(false)
+    end, { desc = 'Open project note' })
+end
