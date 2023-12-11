@@ -25,6 +25,10 @@ end
 local function update_signs(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
+    if not vim.api.nvim_buf_is_valid(buffer) then
+        return
+    end
+
     vim.fn.sign_unplace(group, { buffer = buffer })
 
     for i, mark in pairs(get_marks(buffer)) do
