@@ -3,7 +3,7 @@ return {
     cond = feature_level(2) and os.getenv 'TMUX' ~= nil,
     keys = {
         {
-            '<A-Tab>',
+            '<M-Tab>',
             function()
                 require('nvim-tmux-navigation').NvimTmuxNavigateLastActive()
             end,
@@ -11,7 +11,7 @@ return {
             desc = 'Switch window',
         },
         {
-            '<A-Left>',
+            '<M-Left>',
             function()
                 require('nvim-tmux-navigation').NvimTmuxNavigateLeft()
             end,
@@ -19,7 +19,7 @@ return {
             desc = 'Go to left window',
         },
         {
-            '<A-Right>',
+            '<M-Right>',
             function()
                 require('nvim-tmux-navigation').NvimTmuxNavigateRight()
             end,
@@ -27,7 +27,7 @@ return {
             desc = 'Go to right window',
         },
         {
-            '<A-Down>',
+            '<M-Down>',
             function()
                 require('nvim-tmux-navigation').NvimTmuxNavigateDown()
             end,
@@ -35,7 +35,7 @@ return {
             desc = 'Go to window below',
         },
         {
-            '<A-Up>',
+            '<M-Up>',
             function()
                 require('nvim-tmux-navigation').NvimTmuxNavigateUp()
             end,

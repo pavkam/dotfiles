@@ -72,7 +72,7 @@ return {
 
             vim.keymap.set('n', '<leader>tw', function()
                 neotest.watch.toggle()
-            end, { buffer = args.buf, desc = 'Togglee test watching' })
+            end, { buffer = args.buf, desc = 'Toggle test watching' })
 
             vim.keymap.set('n', '<leader>tf', function()
                 neotest.run.run(vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf()))

@@ -135,6 +135,7 @@ return {
                         end
                     end, { 'i', 's' }),
                     ['<C-.>'] = cmp.mapping(function(fallback)
+                        --TODO: this is not working as expected - the CTRL-. is not being processed as expected
                         if copilot.is_visible() then
                             copilot.next()
                         else

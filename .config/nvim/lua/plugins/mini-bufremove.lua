@@ -5,7 +5,10 @@ return {
         {
             '<leader>bd',
             function()
-                require('utils').confirm_saved(nil, 'closing')
+                local should_remove = require('utils').confirm_saved(0, 'closing')
+                if should_remove then
+                    require('mini.bufremove').delete(0, true)
+                end
             end,
             desc = 'Delete buffer',
         },

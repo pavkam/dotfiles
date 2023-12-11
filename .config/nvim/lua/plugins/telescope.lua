@@ -215,11 +215,11 @@ return {
                     desc = 'Browse notifications',
                 },
                 {
-                    '=z',
+                    'z=',
                     function()
                         require('telescope.builtin').spell_suggest()
                     end,
-                    desc = 'Browse notifications',
+                    desc = 'Spell suggestions',
                 },
             }
         end,

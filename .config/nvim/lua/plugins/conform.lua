@@ -71,12 +71,12 @@ return {
             },
             formatters = {
                 ['goimports-reviser'] = {
-                    cwd = function(ctx)
+                    cwd = function(self, ctx)
                         return project.root(ctx.buf or ctx.filename)
                     end,
                 },
                 prettier = {
-                    cwd = function(ctx)
+                    cwd = function(self, ctx)
                         return project.root(ctx.buf or ctx.filename)
                     end,
                 },
@@ -84,14 +84,14 @@ return {
                     args = { '-m', '180', '--no-reformat-tags', '--base-formatter', 'gofumpt' },
                 }),
                 prisma = {
-                    cwd = function(ctx)
+                    cwd = function(self, ctx)
                         return project.root(ctx.buf or ctx.filename)
                     end,
                     meta = {
                         url = 'https://github.com/prisma/prisma-engines',
                         description = 'Formatter for the prisma filetype.',
                     },
-                    command = function(ctx)
+                    command = function(self, ctx)
                         return js_project.get_bin_path(ctx.buf or ctx.filename, 'prisma') or 'prisma'
                     end,
                     stdin = false,

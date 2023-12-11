@@ -1,6 +1,8 @@
 local utils = require 'utils'
 local settings = require 'utils.settings'
 
+-- TODO: exit insert more whenmoving through buffers
+
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('n', '<BS>', '<Nop>', { silent = true })
@@ -46,6 +48,7 @@ vim.keymap.set('n', 'U', '<C-r>', { desc = 'Redo' })
 -- Some editor mappings
 vim.keymap.set('i', '<C-BS>', '<C-w>', { desc = 'Delete word' })
 
+-- TODO: this misbehaves at time and doesn't introduce tab but jumps to something weird
 vim.keymap.set('i', '<Tab>', function()
     local r, c = unpack(vim.api.nvim_win_get_cursor(0))
     if c and r then
@@ -102,11 +105,14 @@ vim.keymap.set('n', '<Del>', [["_x]], { desc = 'Delete character' })
 vim.keymap.set('x', '<BS>', 'd', { desc = 'Delete selection' })
 
 -- window navigation
-vim.keymap.set('n', '<A-Tab>', '<C-W>w', { desc = 'Switch window' })
-vim.keymap.set('n', '<A-Left>', '<cmd>wincmd h<cr>', { desc = 'Go to left window' })
-vim.keymap.set('n', '<A-Right>', '<cmd>wincmd l<cr>', { desc = 'Go to right window' })
-vim.keymap.set('n', '<A-Down>', '<cmd>wincmd j<cr>', { desc = 'Go to window below' })
-vim.keymap.set('n', '<A-Up>', '<cmd>wincmd k<cr>', { desc = 'Go to window above' })
+if not utils.has_plugin 'nvim-tmux-navigation' then
+    vim.keymap.set('n', '<M-Tab>', '<C-W>w', { desc = 'Switch window' })
+    vim.keymap.set('n', '<M-Left>', '<cmd>wincmd h<cr>', { desc = 'Go to left window' })
+    vim.keymap.set('n', '<M-Right>', '<cmd>wincmd l<cr>', { desc = 'Go to right window' })
+    vim.keymap.set('n', '<M-Down>', '<cmd>wincmd j<cr>', { desc = 'Go to window below' })
+    vim.keymap.set('n', '<M-Up>', '<cmd>wincmd k<cr>', { desc = 'Go to window above' })
+end
+
 vim.keymap.set('n', '\\', '<C-W>s', { desc = 'Split window below' })
 vim.keymap.set('n', '|', '<C-W>v', { desc = 'Split window right' })
 
@@ -200,6 +206,7 @@ utils.on_event({ 'BufWinEnter', 'BufEnter' }, function(evt)
     local new_buffer = evt.buf
     local old_buffer = just_removed[win]
 
+    -- TODO: this does caca for popups sometimes
     if old_buffer and vim.api.nvim_buf_is_valid(old_buffer) and not utils.is_special_buffer(new_buffer) then
         vim.api.nvim_set_current_buf(old_buffer)
     end
