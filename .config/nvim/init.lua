@@ -15,7 +15,6 @@ end
 
 -- TODO: figure out why LSP diagnostics get borked
 require 'options'
-require 'commands'
 
 if feature_level(1) then
     -- Setup the Lazy plugin manager
@@ -65,14 +64,25 @@ if feature_level(1) then
         },
     }
 
-    require 'marks'
-    require 'core'
-    require 'file_types'
-    require 'search'
-    require 'extras'
-    require 'notes'
-    require 'qf'
-
     vim.cmd.colorscheme 'tokyonight'
-    require 'highlights'
+
+    local modules = {
+        'core',
+        'highlights',
+        'marks',
+        'file_types',
+        'search',
+        'extras',
+        'notes',
+        'qf',
+        'health',
+    }
+
+    for _, module in ipairs(modules) do
+        local ok, err = pcall(require, module)
+
+        if not ok then
+            vim.api.nvim_err_writeln('Error loading ' .. module .. ': ' .. err)
+        end
+    end
 end

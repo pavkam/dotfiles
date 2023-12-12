@@ -39,6 +39,7 @@ return {
             end, { buffer = buffer, desc = 'Diff This ~' })
             vim.keymap.set({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>', { buffer = buffer, desc = 'Select hunk' })
 
+            -- TODO: move this out of here and enable if lazygit is installed and
             if vim.fn.executable 'lazygit' == 1 then
                 vim.api.nvim_buf_create_user_command(buffer, 'Lazygit', function()
                     shell.floating 'lazygit'

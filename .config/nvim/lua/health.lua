@@ -2,13 +2,10 @@
 ---@field public height number|nil
 ---@field public width number|nil
 
----@class utils.health
-local M = {}
-
 --- Shows a window with the given content
 ---@param content string[] # the content to show
 ---@param opts? utils.health.ShowOpts # the options for the window
-function M.show_content(content, opts)
+local function show_content(content, opts)
     opts = opts or {}
 
     local height = math.floor(vim.o.lines * (opts.height or 0.5))
@@ -53,7 +50,7 @@ end
 
 --- Shows the health of the current buffer
 ---@param buffer integer|nil # the buffer to show the health for, defaults to the current buffer
-function M.show_for_buffer(buffer)
+local function show_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local lsp = require 'utils.lsp'
@@ -136,7 +133,8 @@ function M.show_for_buffer(buffer)
         end
     end
 
-    M.show_content(content)
+    show_content(content)
 end
 
-return M
+-- Show buffer information
+vim.api.nvim_create_user_command('Buffer', show_for_buffer, { desc = 'Show buffer information', nargs = 0 })
