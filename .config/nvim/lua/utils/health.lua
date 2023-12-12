@@ -88,8 +88,11 @@ function M.show_for_buffer(buffer)
         table.insert(content, '')
     end
 
+    -- get windows in which buffer is shown:
+
     local buffer_details = {
         id = buffer,
+        windows = vim.fn.win_findbuf(buffer),
         name = vim.api.nvim_buf_get_name(buffer),
         filetype = vim.api.nvim_buf_get_option(buffer, 'filetype'),
         buftype = vim.api.nvim_buf_get_option(buffer, 'buftype'),

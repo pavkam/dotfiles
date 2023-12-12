@@ -1,8 +1,6 @@
 local utils = require 'utils'
 local settings = require 'utils.settings'
 
--- TODO: exit insert more whenmoving through buffers
-
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('n', '<BS>', '<Nop>', { silent = true })
@@ -187,17 +185,23 @@ utils.on_event('VimResized', function()
     vim.cmd('tabnext ' .. current_tab)
 end)
 
+-- Exit insert mode when switching buffers
+utils.on_event('BufEnter', function()
+    if vim.fn.mode() == 'i' then
+        vim.cmd 'stopinsert'
+    end
+end)
+
 -- pin special buffers into their windows and prevent accidental
 -- replacement of them
 local just_removed = {}
 
 utils.on_event('BufWinLeave', function(evt)
-    local win = vim.api.nvim_get_current_win()
+    local upd = utils.is_special_buffer(evt.buf) and evt.buf --[[@as integer]]
+        or nil
 
-    if utils.is_special_buffer(evt.buf) then
-        just_removed[win] = evt.buf
-    else
-        just_removed[win] = nil
+    for _, win in ipairs(vim.fn.win_findbuf(evt.buf)) do
+        just_removed[win] = upd
     end
 end)
 
@@ -206,8 +210,8 @@ utils.on_event({ 'BufWinEnter', 'BufEnter' }, function(evt)
     local new_buffer = evt.buf
     local old_buffer = just_removed[win]
 
-    -- TODO: this does caca for popups sometimes
     if old_buffer and vim.api.nvim_buf_is_valid(old_buffer) and not utils.is_special_buffer(new_buffer) then
+        just_removed[win] = nil
         vim.api.nvim_set_current_buf(old_buffer)
     end
 end)

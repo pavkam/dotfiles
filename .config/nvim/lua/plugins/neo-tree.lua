@@ -125,7 +125,6 @@ return {
                 ['l'] = 'child_or_open',
                 ['o'] = 'open',
                 ['<del>'] = 'delete',
-                -- TODO: this doesn't work
                 ['S'] = false,
                 ['s'] = false,
                 ['\\'] = 'open_split',

@@ -1,6 +1,3 @@
--- TODO: vimgrep + apply to quickfix (replace all)
--- TODO: figure out if format fucks up LSP diagnostics
-
 local icons = require 'utils.icons'
 
 -- Global options for neovim

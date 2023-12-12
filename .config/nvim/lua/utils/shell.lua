@@ -17,7 +17,6 @@ function M.floating(cmd, opts)
     assert(type(cmd) == 'string' and cmd ~= '')
 
     local cwd = vim.loop.cwd()
-    utils.info(cwd and vim.loop.fs_realpath(cwd))
 
     opts = utils.tbl_merge({
         ft = 'lazyterm',

@@ -13,7 +13,6 @@ _G.feature_level = function(level)
     return env_level >= level
 end
 
--- TODO: support for sessions per folder / branch (see recession maybe)
 -- TODO: figure out why LSP diagnostics get borked
 require 'options'
 require 'commands'

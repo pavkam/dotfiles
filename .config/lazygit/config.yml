@@ -27,3 +27,5 @@ gui:
 os:
   editPreset: 'nvim'
   openLinkCommand: open {{link}}
+notARepository: skip
+promptToReturnFromSubprocess: true
