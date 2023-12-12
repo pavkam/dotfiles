@@ -186,8 +186,10 @@ utils.on_event('VimResized', function()
 end)
 
 -- Exit insert mode when switching buffers
-utils.on_event('BufEnter', function()
-    if vim.fn.mode() == 'i' then
+utils.on_event('BufEnter', function(evt)
+    local ignored_fts = { 'TelescopePrompt' }
+
+    if vim.fn.mode() == 'i' and vim.tbl_contains(ignored_fts, vim.api.nvim_buf_get_option(evt.buf, 'filetype')) then
         vim.cmd 'stopinsert'
     end
 end)

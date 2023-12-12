@@ -1,3 +1,17 @@
+if not vim.fn.executable 'git' then
+    error 'fatal: git required'
+    vim.api.nvim_command 'cq1'
+
+    return
+end
+
+if not vim.fn.has 'nvim-9.4' then
+    error 'fatal: minimum required Neovim version is 0.9.4'
+    vim.api.nvim_command 'cq1'
+
+    return
+end
+
 --- Cheks the level of features supported by the current Neovim instance
 ---@param level 0|1|2|3 # the level to check for
 ---@return boolean # whether the current Neovim instance supports the given feature level

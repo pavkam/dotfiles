@@ -59,13 +59,11 @@ end
 
 --- Toggles ignoring of hidden files on or off
 function M.toggle_ignore_hidden_files()
-    local val = toggle('ignore_hidden_files', { description = 'hiding ignored files', default = true })
+    local ignore = toggle('ignore_hidden_files', { description = 'hiding ignored files', default = true })
 
     -- Update Neo-Tree state
-    if package.loaded['neo-tree'] then
-        local state = require('neo-tree.sources.manager').get_state 'filesystem'
-        state.filtered_items.visible = val
-    end
+    local mgr = require 'neo-tree.sources.manager'
+    mgr.get_state('filesystem').filtered_items.visible = not ignore
 end
 
 --- Toggles auto-autoformatting on or off
