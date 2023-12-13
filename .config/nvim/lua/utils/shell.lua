@@ -58,9 +58,11 @@ M.running_processes = {}
 --- Executes a given command asynchronously and returns the output
 ---@param cmd string # the command to execute
 ---@param args string[] # the arguments to pass to the command
+---@param input string|string[]|nil # the input to pass to the comman
 ---@param callback fun(exit_code_or_error: integer|nil, stdout: string[], stderr: string[]) # the callback to call when the command finishes
 ---@param opts? { cwd: string | nil } # the options to pass to the command
-local function async_cmd(cmd, args, callback, opts)
+local function async_cmd(cmd, args, input, callback, opts)
+    local stdin = input and assert(vim.loop.new_pipe(false), 'Failed to create stdin pipe')
     local stdout = assert(vim.loop.new_pipe(false), 'Failed to create stdout pipe')
     local stderr = assert(vim.loop.new_pipe(false), 'Failed to create stderr pipe')
 
@@ -73,6 +75,11 @@ local function async_cmd(cmd, args, callback, opts)
     local pid
 
     local function cleanup()
+        if stdin then
+            stdin:shutdown()
+            stdin:close()
+        end
+
         if stdout then
             stdout:read_stop()
             stdout:shutdown()
@@ -99,6 +106,8 @@ local function async_cmd(cmd, args, callback, opts)
     end
 
     ---@type string|nil
+    local write_error = nil
+    ---@type string|nil
     local read_error = nil
     ---@type string[]
     local stdout_lines = {}
@@ -111,7 +120,7 @@ local function async_cmd(cmd, args, callback, opts)
         cmd,
         {
             args = args,
-            stdio = { nil, stdout, stderr },
+            stdio = { stdin, stdout, stderr },
             cwd = opts.cwd or vim.loop.cwd(),
         },
         vim.schedule_wrap(function(code)
@@ -136,6 +145,14 @@ local function async_cmd(cmd, args, callback, opts)
         end,
         timeout = 60 * 1000,
     })
+
+    local stdin_write_success, stdin_write_error
+    if stdin then
+        stdin_write_success, stdin_write_error = stdin:write(input --[[@as string]], function(err)
+            write_error = write_error or err
+        end)
+        stdin_write_success, stdin_write_error = stdin:shutdown()
+    end
 
     local stdout_read_success, stdout_read_error = stdout:read_start(function(err, data)
         if err or read_error then
@@ -163,24 +180,27 @@ local function async_cmd(cmd, args, callback, opts)
         end
     end)
 
-    if not stdout_read_success or not stderr_read_success then
+    if (stdin and not stdin_write_success) or not stdout_read_success or not stderr_read_success then
         cleanup()
-        utils.error(string.format('Failed to read from pipes for command *"%s"*: **%s**!', cmd, stdout_read_error or stderr_read_error))
+        utils.error(
+            string.format('Failed to read/write fro/tom pipes for command *"%s"*: **%s**!', cmd, stdin_write_error or stdout_read_error or stderr_read_error)
+        )
     end
 end
 
 --- Executes a given command asynchronously and returns the output
 ---@param cmd string # the command to execute
 ---@param args string[]|nil # the arguments to pass to the command
+---@param input string|string[]|nil # the input to pass to the command
 ---@param callback fun(stdout: string[], code: integer) # the callback to call when the command finishes
 ---@param opts? { cwd: string | nil, ignore_codes: integer[]|nil, no_checktime: boolean|nil } # the options to pass to the command
-function M.async_cmd(cmd, args, callback, opts)
+function M.async_cmd(cmd, args, input, callback, opts)
     opts = opts or {}
     args = args or {}
 
     local ignore_codes = opts.ignore_codes and utils.to_list(opts.ignore_codes) or { 0 }
 
-    async_cmd(cmd, args, function(code, stdout, stderr)
+    async_cmd(cmd, args, input, function(code, stdout, stderr)
         if not opts.no_checktime then
             vim.cmd.checktime()
         end
@@ -196,9 +216,11 @@ function M.async_cmd(cmd, args, callback, opts)
 
             if message then
                 message = message:gsub('```', '\\`\\`\\`')
-                utils.error(string.format('Error running command "%s %s" (%s):\n\n```\n%s\n```', cmd, tostring(code), table.concat(args, ' '), message))
+                utils.error(
+                    string.format('Error running command `%s %s` (error: **%s**):\n\n```\n%s\n```', cmd, table.concat(args, ' '), tostring(code), message)
+                )
             else
-                utils.error(string.format('Error running command "%s %s" (%s)', cmd, tostring(code), table.concat(args, ' ')))
+                utils.error(string.format('Error running command `%s %s` (error: **%s**)', cmd, table.concat(args, ' '), tostring(code)))
             end
 
             return
@@ -226,7 +248,7 @@ end
 ---@param callback fun(results: utils.GrepResult[]) # the callback to call when the command finishes
 function M.grep_dir(term, dir, callback)
     dir = dir or vim.loop.cwd()
-    M.async_cmd('rg', { term, dir, '--vimgrep', '--no-heading', '--smart-case' }, function(stdout)
+    M.async_cmd('rg', { term, dir, '--vimgrep', '--no-heading', '--smart-case' }, nil, function(stdout)
         ---@type utils.GrepResult[]
         local results = {}
         for _, line in ipairs(stdout) do
@@ -251,7 +273,7 @@ end
 function M.check_file_is_tracked_by_git(file_name, callback)
     assert(type(file_name) == 'string' and file_name ~= '')
 
-    M.async_cmd('git', { 'ls-files', '--error-unmatch', file_name }, function(output, code)
+    M.async_cmd('git', { 'ls-files', '--error-unmatch', file_name }, nil, function(_, code)
         callback(code == 0)
     end, { ignore_codes = { 0, 1, 128 }, cwd = vim.fn.fnamemodify(file_name, ':h') })
 end
@@ -262,7 +284,7 @@ end
 function M.get_current_git_branch(dir, callback)
     assert(type(dir) == 'string' and dir ~= '')
 
-    M.async_cmd('git', { 'branch', '--show-current' }, function(output, code)
+    M.async_cmd('git', { 'branch', '--show-current' }, nil, function(output, code)
         callback(code == 0 and output[1] or nil)
     end, { ignore_codes = { 0, 1, 128 }, cwd = dir })
 end

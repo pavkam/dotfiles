@@ -49,8 +49,7 @@ end, true)
 -- Some custom mappings for file types
 if vim.fn.executable 'jq' then
     utils.attach_keymaps('json', function(set)
-        -- TODO: use the shell extension
-        set('n', '<leader>sJ', ':%!jq .<cr>', { desc = 'Pretty-format JSON' })
+        set('n', '<leader>sJ', ':%Apply jq .<cr>', { desc = 'Pretty-format JSON' })
     end)
 end
 
@@ -92,7 +91,7 @@ vim.api.nvim_create_user_command('Run', function(args)
     local cmd_line_desc = table.concat(cmd_line, ' ')
     local cmd = table.remove(cmd_line, 1)
 
-    shell.async_cmd(cmd, cmd_line, function(output)
+    shell.async_cmd(cmd, cmd_line, nil, function(output)
         if not args.bang then
             if #output > 0 then
                 local message = table.concat(output, '\n')
@@ -105,6 +104,37 @@ vim.api.nvim_create_user_command('Run', function(args)
         end
     end)
 end, { desc = 'Run a shell command', bang = true, nargs = '+' })
+
+vim.api.nvim_create_user_command('Apply', function(args)
+    local cmd_line = parse_args(args.args)
+    if #cmd_line == 0 then
+        error 'No command specified'
+    end
+
+    local cmd = table.remove(cmd_line, 1)
+
+    -- extract the contents
+    ---@type integer|nil
+    local start_line = args.line1
+    ---@type integer|nil
+    local end_line = args.line2
+    ---@type string[]
+    local contents
+
+    if start_line and end_line then
+        contents = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+    else
+        contents = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    end
+
+    shell.async_cmd(cmd, cmd_line, contents, function(output)
+        if start_line and end_line then
+            vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, output)
+        else
+            vim.api.nvim_buf_set_lines(0, 0, -1, false, output)
+        end
+    end)
+end, { desc = 'Apply a shell command', nargs = '+', range = '%' })
 
 -- diagnostics
 local function jump_to_diagnostic(next_or_prev, severity)
