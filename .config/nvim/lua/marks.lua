@@ -44,14 +44,17 @@ utils.attach_keymaps(nil, function(set)
     set('n', 'm', function()
         local key_code = vim.fn.getchar()
         local key = vim.fn.nr2char(key_code)
-        local cur = vim.api.nvim_win_get_cursor(0)
+        local r, c = unpack(vim.api.nvim_win_get_cursor(0))
 
         if key:len() == 1 and key:match '[a-zA-Z0-9]' then
-            vim.api.nvim_buf_set_mark(0, key, cur[1], cur[2], {})
+            vim.api.nvim_buf_set_mark(0, key, r, c, {})
+            utils.info(string.format('Marked position **%d:%d** as `%s`.', r, c, key))
         elseif key == '-' then
             for _, mark in pairs(get_marks()) do
-                if mark.pos[2] == cur[1] then
+                if mark.pos[2] == r then
                     key = mark.mark:sub(2, 2)
+                    utils.info(string.format('Unmarked position **%d:%d** as `%s`.', r, c, key))
+
                     if key:match '[a-z]' then
                         vim.api.nvim_buf_del_mark(0, key)
                     else

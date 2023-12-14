@@ -24,6 +24,7 @@ return {
             ['<leader>s'] = { name = icons.UI.LSP .. ' Source' },
             ['<leader>n'] = { name = icons.UI.Notes .. ' Notes' },
             ['<leader>x'] = { name = icons.UI.AI .. 'AI' },
+            ['<leader>g'] = { name = icons.UI.Git .. ' Git' },
         },
     },
     config = function(_, opts)

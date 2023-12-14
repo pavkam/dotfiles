@@ -1,57 +1,20 @@
 local utils = require 'utils'
 local toggles = require 'utils.toggles'
 local shell = require 'utils.shell'
+local forget = require 'utils.forget'
 
--- Command mode remaps to make my life easier using the keyboard
-vim.keymap.set('c', '<Down>', function()
-    if vim.fn.wildmenumode() then
-        return '<C-n>'
-    else
-        return '<Down>'
+utils.on_event('BufDelete', function(evt)
+    if utils.is_special_buffer(evt.buf) then
+        return
     end
-end, { expr = true })
 
-vim.keymap.set('c', '<Up>', function()
-    if vim.fn.wildmenumode() then
-        return '<C-p>'
-    else
-        return '<Up>'
+    local file = vim.api.nvim_buf_get_name(evt.buf)
+    if not file or file == '' or not utils.file_exists(file) then
+        return
     end
-end, { expr = true })
 
-vim.keymap.set('c', '<Left>', function()
-    if vim.fn.wildmenumode() then
-        return '<Space><BS><Left>'
-    else
-        return '<Left>'
-    end
-end, { expr = true })
-
-vim.keymap.set('c', '<Right>', function()
-    if vim.fn.wildmenumode() then
-        return '<Space><BS><Right>'
-    else
-        return '<Right>'
-    end
-end, { expr = true })
-
--- Add "q" to special windows
-utils.attach_keymaps(utils.special_file_types, function(set)
-    set('n', 'q', '<cmd>close<cr>', { silent = true })
-    set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
+    forget.file(file)
 end)
-
-utils.attach_keymaps('help', function(set)
-    set('n', 'q', '<cmd>close<cr>', { silent = true })
-    set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
-end, true)
-
--- Some custom mappings for file types
-if vim.fn.executable 'jq' then
-    utils.attach_keymaps('json', function(set)
-        set('n', '<leader>sJ', ':%Apply jq .<cr>', { desc = 'Pretty-format JSON' })
-    end)
-end
 
 --- Parses a string of arguments into a table
 ---@param args string # the string of arguments to parse
@@ -147,7 +110,7 @@ local function jump_to_diagnostic(next_or_prev, severity)
     end
 end
 
--- File manipulation
+-- File manipulation (delete, rename)
 utils.on_user_event('NormalFile', function(_, evt)
     local function delete_buffer(buffer)
         if package.loaded['mini.bufremove'] then
@@ -224,6 +187,17 @@ utils.on_user_event('NormalFile', function(_, evt)
     end, { desc = 'Delete current file', nargs = 0, bang = true })
 end)
 
+-- Add a command to run lazygit
+if vim.fn.executable 'lazygit' == 1 then
+    vim.api.nvim_create_user_command('Lazygit', function()
+        shell.floating 'lazygit'
+    end, { desc = 'Run Lazygit', nargs = 0 })
+
+    vim.keymap.set('n', '<leader>gg', function()
+        vim.cmd 'Lazygit'
+    end, { desc = 'Lazygit' })
+end
+
 vim.keymap.set('n', ']m', jump_to_diagnostic(true), { desc = 'Next Diagnostic' })
 vim.keymap.set('n', '[m', jump_to_diagnostic(false), { desc = 'Previous Diagnostic' })
 vim.keymap.set('n', ']e', jump_to_diagnostic(true, 'ERROR'), { desc = 'Next Error' })
@@ -249,6 +223,57 @@ if feature_level(1) then
     vim.keymap.set('n', '<leader>uh', function()
         toggles.toggle_ignore_hidden_files()
     end, { desc = 'Toggle show hidden' })
+end
+
+-- Command mode remaps to make my life easier using the keyboard
+vim.keymap.set('c', '<Down>', function()
+    if vim.fn.wildmenumode() then
+        return '<C-n>'
+    else
+        return '<Down>'
+    end
+end, { expr = true })
+
+vim.keymap.set('c', '<Up>', function()
+    if vim.fn.wildmenumode() then
+        return '<C-p>'
+    else
+        return '<Up>'
+    end
+end, { expr = true })
+
+vim.keymap.set('c', '<Left>', function()
+    if vim.fn.wildmenumode() then
+        return '<Space><BS><Left>'
+    else
+        return '<Left>'
+    end
+end, { expr = true })
+
+vim.keymap.set('c', '<Right>', function()
+    if vim.fn.wildmenumode() then
+        return '<Space><BS><Right>'
+    else
+        return '<Right>'
+    end
+end, { expr = true })
+
+-- Add "q" to special windows
+utils.attach_keymaps(utils.special_file_types, function(set)
+    set('n', 'q', '<cmd>close<cr>', { silent = true })
+    set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
+end)
+
+utils.attach_keymaps('help', function(set)
+    set('n', 'q', '<cmd>close<cr>', { silent = true })
+    set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
+end, true)
+
+-- Some custom mappings for file types
+if vim.fn.executable 'jq' then
+    utils.attach_keymaps('json', function(set)
+        set('n', '<leader>sJ', ':%Apply jq .<cr>', { desc = 'Pretty-format JSON' })
+    end)
 end
 
 -- Specials using "Command/Super" key (when available!)

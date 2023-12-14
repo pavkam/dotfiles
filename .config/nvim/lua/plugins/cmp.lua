@@ -97,9 +97,24 @@ return {
                             fallback()
                         end
                     end),
-
-                    ['<C-n>'] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Insert },
-                    ['<C-p>'] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Insert },
+                    ['<C-n>'] = cmp.mapping(function(fallback)
+                        if copilot.is_visible() then
+                            copilot.next()
+                        elseif cmp.visible() then
+                            cmp.select_next_item { behavior = cmp.SelectBehavior.Insert }
+                        else
+                            fallback()
+                        end
+                    end),
+                    ['<C-p>'] = cmp.mapping(function(fallback)
+                        if copilot.is_visible() then
+                            copilot.prev()
+                        elseif cmp.visible() then
+                            cmp.select_prev_item { behavior = cmp.SelectBehavior.Insert }
+                        else
+                            fallback()
+                        end
+                    end),
                     ['<C-b>'] = cmp.mapping.scroll_docs(-4),
                     ['<C-f>'] = cmp.mapping.scroll_docs(4),
                     ['<C-a>'] = cmp.mapping.complete(),
@@ -126,7 +141,9 @@ return {
                         end
                     end, { 'i', 's' }),
                     ['<S-Tab>'] = cmp.mapping(function(fallback)
-                        if cmp.visible() then
+                        if copilot.is_visible() then
+                            copilot.next()
+                        elseif cmp.visible() then
                             cmp.select_prev_item()
                         elseif luasnip.jumpable(-1) then
                             luasnip.jump(-1)
@@ -134,21 +151,6 @@ return {
                             fallback()
                         end
                     end, { 'i', 's' }),
-                    ['<C-.>'] = cmp.mapping(function(fallback)
-                        -- TODO: this is not working as expected - the CTRL-. is not being processed as expected
-                        if copilot.is_visible() then
-                            copilot.next()
-                        else
-                            fallback()
-                        end
-                    end),
-                    ['<C-,>'] = cmp.mapping(function(fallback)
-                        if copilot.is_visible() then
-                            copilot.prev()
-                        else
-                            fallback()
-                        end
-                    end),
                 },
                 sources = cmp.config.sources {
                     { name = 'nvim_lsp' },
