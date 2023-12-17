@@ -1,6 +1,6 @@
-local lsp = require 'languages'
+local lsp = require 'project.lsp'
 
----@class utils.lsp.keymaps
+---@class languages.keymaps
 local M = {}
 local keymaps = {
     { 'M', vim.diagnostic.open_float, desc = 'Line diagnostics' },

@@ -15,7 +15,7 @@ return {
         'nvim-neotest/neotest-go',
     },
     opts = function(_, opts)
-        local project = require 'languages.temp1'
+        local project = require 'project'
         local jest = require 'neotest-jest'
         local vitest = require 'neotest-vitest'
 

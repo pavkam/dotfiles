@@ -181,7 +181,7 @@ return {
             },
             setup = {
                 gopls = function()
-                    local lsp = require 'languages'
+                    local lsp = require 'project.lsp'
 
                     -- HACK: workaround for gopls not supporting semanticTokensProvider
                     -- https://github.com/golang/go/issues/54531#issuecomment-1464982242
@@ -208,8 +208,8 @@ return {
             require('lspconfig.ui.windows').default_options.border = 'single'
 
             local utils = require 'core.utils'
-            local lsp = require 'languages'
-            local keymaps = require 'languages.keymaps'
+            local lsp = require 'project.lsp'
+            local keymaps = require 'project.keymaps'
 
             -- keymaps
             lsp.on_attach(keymaps.attach)
@@ -273,7 +273,7 @@ return {
                 local server_opts = utils.tbl_merge({
                     capabilities = vim.deepcopy(capabilities),
                     handlers = {
-                        ['textDocument/rename'] = require 'languages.rename',
+                        ['textDocument/rename'] = require 'project.rename',
                     },
                 }, servers[server] or {})
 

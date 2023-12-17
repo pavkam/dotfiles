@@ -53,11 +53,10 @@ end
 local function show_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local lsp = require 'languages'
+    local lsp = require 'project.lsp'
     local settings = require 'core.settings'
-    local project = require 'languages.temp1'
-    local js_project = require 'languages.js'
-    local go_project = require 'languages.go'
+    local project = require 'project'
+    local debugging = require 'debugging'
 
     local content = {}
 
@@ -105,18 +104,19 @@ local function show_for_buffer(buffer)
         roots = project.roots(buffer),
         lsp_roots = lsp.roots(buffer),
     }
-    local js_project_details = js_project.type(buffer) ~= nil
+
+    local js_project_details = vim.tbl_contains({'javascript', 'typescript', 'javascriptreact', 'typescriptreact'}, project.type(buffer))
             and {
-                eslint_config = js_project.get_eslint_config_path(buffer),
-                jest = js_project.get_bin_path(buffer, 'jest'),
-                eslint = js_project.get_bin_path(buffer, 'eslint'),
-                prettier = js_project.get_bin_path(buffer, 'prettier'),
-                vitest = js_project.get_bin_path(buffer, 'vitest'),
+                eslint_config = project.get_eslint_config_path(buffer),
+                jest = project.get_bin_path(buffer, 'jest'),
+                eslint = project.get_bin_path(buffer, 'eslint'),
+                prettier = project.get_bin_path(buffer, 'prettier'),
+                vitest = project.get_bin_path(buffer, 'vitest'),
             }
         or {}
 
-    local go_project_details = go_project.type(buffer) ~= nil and {
-        golangci = go_project.get_golangci_config(buffer),
+    local go_project_details = project.type(buffer) == 'go' and {
+        golangci = project.get_golangci_config(buffer),
     } or {}
 
     list('Project', project_details)
@@ -128,7 +128,7 @@ local function show_for_buffer(buffer)
     end
 
     if package.loaded['dap'] then
-        for _, cfg in ipairs(project.dap_configurations(buffer)) do
+        for _, cfg in ipairs(debugging.configurations(buffer)) do
             list(string.format('DAP (%s)', cfg.name), cfg)
         end
     end

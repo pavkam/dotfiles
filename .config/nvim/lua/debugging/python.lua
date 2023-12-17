@@ -1,19 +1,5 @@
 local utils = require 'core.utils'
-local project_internals = require 'languages.internals'
-
----@class utils.project.python
-local M = {}
-
---- Returns the type of the project
----@param target string|integer|nil # the target to get the type for
----@return string|nil # the type of the project
-function M.type(target)
-    if utils.first_found_file(project_internals.roots(target), { 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'poetry.lock' }) then
-        return 'python'
-    end
-
-    return nil
-end
+local project = require 'project'
 
 local dap_configurations = {
     {
@@ -27,7 +13,7 @@ local dap_configurations = {
 
 --- Configures debugging for a given target
 ---@param target string|integer|nil # the target to configure debugging for
-function M.configure_debugging(target)
+return function(target)
     local dap = require 'dap'
     local dap_vscode = require 'dap.ext.vscode'
 
@@ -38,5 +24,3 @@ function M.configure_debugging(target)
         dap_vscode.load_launchjs(launch_json)
     end
 end
-
-return M

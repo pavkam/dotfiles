@@ -92,7 +92,7 @@ end
 ---@param opts? { buffer?: integer } # optional modifiers
 function M.toggle_auto_linting(opts)
     local lint = require 'linting'
-    local lsp = require 'languages'
+    local lsp = require 'project.lsp'
 
     opts = opts or {}
     opts.buffer = opts.buffer == nil and nil or opts.buffer or vim.api.nvim_get_current_buf()

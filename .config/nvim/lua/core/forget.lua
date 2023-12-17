@@ -1,3 +1,5 @@
+local utils = require 'core.utils'
+
 --- Gets all windows in Vim
 ---@return integer[] # a list of window handles
 local function all_windows()

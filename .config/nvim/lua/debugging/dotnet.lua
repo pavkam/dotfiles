@@ -1,21 +1,4 @@
-local project_internals = require 'languages.internals'
-
----@class utils.project.dotnet
-local M = {}
-
---- Returns the type of the project
----@param target string|integer|nil # the target to get the type for
----@return string|nil # the type of the project
-function M.type(target)
-    local root = project_internals.root(target)
-
-    ---@diagnostic disable-next-line: param-type-mismatch
-    if root and #vim.fn.globpath(root, '*.sln', 0, 1) > 0 then
-        return 'dotnet'
-    end
-
-    return nil
-end
+local project = require 'project'
 
 --- Gets the launch DLL for a given target
 ---@param target string|integer|nil # the target to get the launch DLL for
@@ -54,7 +37,7 @@ local dap_configurations = {
 
 --- Configures debugging for a given target
 ---@param target string|integer|nil # the target to configure debugging for
-function M.configure_debugging(target)
+return function(target)
     local dap = require 'dap'
     local dap_vscode = require 'dap.ext.vscode'
 
@@ -65,5 +48,3 @@ function M.configure_debugging(target)
         dap_vscode.load_launchjs(launch_json)
     end
 end
-
-return M

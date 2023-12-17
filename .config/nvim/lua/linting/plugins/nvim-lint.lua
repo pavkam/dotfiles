@@ -21,7 +21,7 @@ return {
         },
     },
     opts = function()
-        local js_project = require 'languages.js'
+        local project = require 'project'
 
         local eslint_severities = {
             vim.diagnostic.severity.WARN,
@@ -55,10 +55,10 @@ return {
                 },
                 eslint = {
                     cmd = function()
-                        return js_project.get_bin_path(nil, 'eslint') or 'eslint'
+                        return project.get_bin_path(nil, 'eslint') or 'eslint'
                     end,
                     condition = function(ctx)
-                        return js_project.has_dependency(ctx.dirname, 'eslint') and js_project.get_eslint_config_path(ctx.dirname) ~= nil
+                        return project.has_dependency(ctx.dirname, 'eslint') and project.get_eslint_config_path(ctx.dirname) ~= nil
                     end,
                     args = {
                         '--format',

@@ -28,7 +28,7 @@ return {
                         return vim.list_extend(args, { '--hidden', '--no-ignore' })
                     end or nil,
                     file_ignore_patterns = { [[.git/]], [[node_modules/]], [[.idea/]], [[.DS_Store]] },
-                    cwd = require('languages.temp1').root(nil, false),
+                    cwd = require('project').root(nil, false),
                     hidden = show_hidden,
                     no_ignore = show_hidden,
                 }

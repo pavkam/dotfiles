@@ -41,8 +41,7 @@ return {
     end,
     opts = function()
         local utils = require 'core.utils'
-        local project = require 'languages.temp1'
-        local js_project = require 'languages.js'
+        local project = require 'project'
 
         return {
             formatters_by_ft = {
@@ -92,7 +91,7 @@ return {
                         description = 'Formatter for the prisma filetype.',
                     },
                     command = function(self, ctx)
-                        return js_project.get_bin_path(ctx.buf or ctx.filename, 'prisma') or 'prisma'
+                        return project.get_bin_path(ctx.buf or ctx.filename, 'prisma') or 'prisma'
                     end,
                     stdin = false,
                     args = { 'format', '--schema', '$FILENAME' },

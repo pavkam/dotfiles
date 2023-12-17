@@ -8,7 +8,7 @@ return {
     opts = function()
         local utils = require 'core.utils'
         local icons = require 'ui.icons'
-        local lsp = require 'languages'
+        local lsp = require 'project.lsp'
         local format = require 'formatting'
         local lint = require 'linting'
         local shell = require 'core.shell'

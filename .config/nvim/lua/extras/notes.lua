@@ -12,7 +12,7 @@ local function get_notes_root(global)
         end
     else
         ---@type string
-        root = utils.join_paths(require('languages.temp1').root(nil, false), '.notes')
+        root = utils.join_paths(require('project').root(nil, false), '.notes')
     end
 
     return root

@@ -35,7 +35,7 @@ local modules = {
     'editor',
     'testing',
     'git',
-    'languages',
+    'project',
     'debugging',
     'formatting',
     'linting',

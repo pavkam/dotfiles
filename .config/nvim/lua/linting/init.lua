@@ -1,5 +1,5 @@
 local utils = require 'core.utils'
-local project = require 'languages.temp1'
+local project = require 'project'
 local progress = require 'ui.progress'
 
 ---@class linting

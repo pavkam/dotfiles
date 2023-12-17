@@ -114,8 +114,7 @@ return {
             {
                 '<leader>dc',
                 function()
-                    local project = require 'languages.temp1'
-                    project.continue_debugging()
+                    require('debugging').continue()
                 end,
                 desc = 'Continue',
             },

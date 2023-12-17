@@ -152,7 +152,7 @@ return {
         },
     },
     config = function(_, opts)
-        local lsp = require 'languages'
+        local lsp = require 'project.lsp'
 
         local function on_move(data)
             lsp.notify_file_renamed(data.source, data.destination)

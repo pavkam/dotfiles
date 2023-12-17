@@ -1,7 +1,7 @@
 local utils = require 'core.utils'
 local progress = require 'ui.progress'
 
----@class utils.format
+---@class formatting
 local M = {}
 
 local progress_class = 'formatting'
