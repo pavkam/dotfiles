@@ -1,6 +1,4 @@
 local utils = require 'core.utils'
-local settings = require 'core.settings'
-local icons = require 'ui.icons'
 
 require 'core.forget'
 require 'core.options'

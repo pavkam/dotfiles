@@ -31,7 +31,7 @@ return function(target)
 
     dap.configurations.go = vim.tbl_extend('force', {}, dap_configurations)
 
-    local launch_json = project_internals.get_launch_json(target)
+    local launch_json = project.get_launch_json(target)
     if launch_json then
         dap_vscode.load_launchjs(launch_json)
     end

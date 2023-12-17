@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local project = require 'project'
 
 local bin_filetypes = { 'typescript', 'javascript' }
@@ -29,7 +28,7 @@ local dap_configurations = {
         runtimeExecutable = 'node',
         runtimeArgs = function(path)
             return {
-                M.get_bin_path(path, 'jest'),
+                project.get_bin_path(path, 'jest'),
                 '--runInBand',
             }
         end,
@@ -82,7 +81,7 @@ return function(target)
     end
 
     -- potentially load the launch.json
-    local launch_json = project_internals.get_launch_json(target)
+    local launch_json = project.get_launch_json(target)
     if launch_json then
         dap_vscode.load_launchjs(launch_json, {
             ['pwa-node'] = filetypes,

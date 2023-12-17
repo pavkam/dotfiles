@@ -6,7 +6,7 @@ local project = require 'project'
 local function get_dll(target)
     return coroutine.create(function(dap_run_co)
         ---@diagnostic disable-next-line: param-type-mismatch
-        local items = vim.fn.globpath(project_internals.root(target), '**/bin/Debug/**/*.dll', 0, 1)
+        local items = vim.fn.globpath(project.root(target), '**/bin/Debug/**/*.dll', 0, 1)
         local opts = {
             format_item = function(path)
                 return vim.fn.fnamemodify(path, ':t')
@@ -43,7 +43,7 @@ return function(target)
 
     dap.configurations.coreclr = vim.tbl_extend('force', {}, dap_configurations)
 
-    local launch_json = project_internals.get_launch_json(target)
+    local launch_json = project.get_launch_json(target)
     if launch_json then
         dap_vscode.load_launchjs(launch_json)
     end

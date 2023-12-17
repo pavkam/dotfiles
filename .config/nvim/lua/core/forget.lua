@@ -131,7 +131,7 @@ end
 
 --- Forget all references to a file
 ---@param file string
-function forget_file(file)
+local function forget_file(file)
     assert(type(file) == 'string' and file ~= '')
 
     forget_old_files(file)

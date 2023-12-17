@@ -1,5 +1,7 @@
 local utils = require 'core.utils'
 local settings = require 'core.settings'
+local shell = require 'core.shell'
+local toggles = require 'core.toggles'
 
 -- apply colorscheme first
 vim.cmd.colorscheme 'tokyonight'

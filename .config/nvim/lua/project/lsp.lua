@@ -275,7 +275,7 @@ function M.restart_all_for_buffer(buffer)
 end
 
 --- Gets the root directories of all active clients for a target buffer or path
----@param target integer|string|function|nil # the target to get the roots for or 0 or nil for current
+---@param target integer|string|nil # the target to get the roots for or 0 or nil for current
 ---@param sort boolean|nil # whether to sort the roots by length
 ---@return string[] # the root directories of the active clients
 function M.roots(target, sort)

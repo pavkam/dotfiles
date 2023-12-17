@@ -249,7 +249,7 @@ end
 function M.grep_dir(term, dir, callback)
     dir = dir or vim.loop.cwd()
     M.async_cmd('rg', { term, dir, '--vimgrep', '--no-heading', '--smart-case' }, nil, function(stdout)
-        ---@type utils.GrepResult[]
+        ---@type core.shell.GrepResult[]
         local results = {}
         for _, line in ipairs(stdout) do
             local file, line_number, column_number, snippet = line:match '^(.+):(%d+):(%d+):(.*)$'

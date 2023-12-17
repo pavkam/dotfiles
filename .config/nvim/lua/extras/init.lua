@@ -1,7 +1,4 @@
 local utils = require 'core.utils'
-local toggles = require 'core.toggles'
-local shell = require 'core.shell'
-local forget = require 'core.forget'
 
 require 'extras.health'
 require 'extras.notes'
