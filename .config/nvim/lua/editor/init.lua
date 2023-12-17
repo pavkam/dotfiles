@@ -44,6 +44,11 @@ vim.keymap.set('n', 'U', '<C-r>', { desc = 'Redo' })
 vim.keymap.set('i', '<C-BS>', '<C-w>', { desc = 'Delete word' })
 
 -- TODO: this misbehaves at time and doesn't introduce tab but jumps to something weird
+local debug_tab = false
+vim.keymap.set({'i', 'n'}, '<leader>u!', function()
+    debug_tab = not debug_tab
+end, { desc = 'Debug tab' })
+
 vim.keymap.set('i', '<Tab>', function()
     local r, c = unpack(vim.api.nvim_win_get_cursor(0))
     if c and r then
@@ -53,8 +58,16 @@ vim.keymap.set('i', '<Tab>', function()
         local after = string.sub(line, c + 1, -1)
 
         if string.match(before, '^%s*$') ~= nil and string.match(after, '^%s*$') == nil then
+            if debug_tab then
+                utils.info('was: indent')
+            end
+
             return '<C-t>'
         end
+    end
+
+    if debug_tab then
+        utils.info('was: tab')
     end
 
     return '<Tab>'
