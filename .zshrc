@@ -380,6 +380,20 @@ epoch() {
   fi
 }
 
+if [ "$JOURNAL_ROOT" != "" ]; then
+    journal() {
+        local DATE=$(date +%Y-%m-%d)
+        local FILE="$JOURNAL_ROOT/$DATE.md"
+
+        if [ ! -f "$FILE" ]; then
+            echo "# Diary entry for [$DATE]\n\n---\n*Until next time, Mr. Diary...*" > "$FILE"
+        fi
+
+        nvim "$FILE"
+    }
+fi
+
+
 # And now define all other goodies.
 
 if command -v dig &> /dev/null; then
