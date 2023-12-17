@@ -45,7 +45,7 @@ vim.keymap.set('i', '<C-BS>', '<C-w>', { desc = 'Delete word' })
 
 -- TODO: this misbehaves at time and doesn't introduce tab but jumps to something weird
 local debug_tab = false
-vim.keymap.set({'i', 'n'}, '<leader>u!', function()
+vim.keymap.set({'n'}, '<leader>u!', function()
     debug_tab = not debug_tab
 end, { desc = 'Debug tab' })
 
