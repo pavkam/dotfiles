@@ -28,7 +28,21 @@ _G.feature_level = function(level)
 end
 
 -- TODO: figure out why LSP diagnostics get borked
-require 'options'
+
+local modules = {
+    'core',
+    'ui',
+    'editor',
+    'testing',
+    'git',
+    'languages',
+    'debugging',
+    'formatting',
+    'linting',
+    'extras',
+}
+
+require 'core'
 
 if feature_level(1) then
     -- Setup the Lazy plugin manager
@@ -47,9 +61,9 @@ if feature_level(1) then
     vim.opt.rtp:prepend(lazypath)
 
     require('lazy').setup {
-        spec = {
-            { import = 'plugins' },
-        },
+        spec = vim.tbl_map(function(module)
+            return { import = module .. '/plugins' }
+        end, modules),
         defaults = {
             lazy = true,
             version = false,
@@ -76,20 +90,6 @@ if feature_level(1) then
                 },
             },
         },
-    }
-
-    vim.cmd.colorscheme 'tokyonight'
-
-    local modules = {
-        'core',
-        'highlights',
-        'marks',
-        'file_types',
-        'search',
-        'extras',
-        'notes',
-        'qf',
-        'health',
     }
 
     for _, module in ipairs(modules) do
