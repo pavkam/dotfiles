@@ -99,4 +99,15 @@ if feature_level(1) then
             vim.api.nvim_err_writeln('Error loading ' .. module .. ': ' .. err)
         end
     end
+
+    -- open neo-tree if opening a directory
+    local opening_a_dir = vim.fn.argc() == 1 and vim.fn.isdirectory(vim.fn.argv(0) --[[@as string]]) == 1
+    if opening_a_dir then
+        vim.api.nvim_create_autocmd('User', {
+            pattern = 'LazyVimStarted',
+            callback = function()
+                require 'neo-tree'
+            end,
+        })
+    end
 end

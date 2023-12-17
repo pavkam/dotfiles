@@ -150,8 +150,7 @@ end)
 local just_removed = {}
 
 utils.on_event('BufWinLeave', function(evt)
-    local upd = utils.is_special_buffer(evt.buf) and evt.buf --[[@as integer]]
-        or nil
+    local upd = utils.is_special_buffer(evt.buf) and not vim.bo[evt.buf].filetype == 'neo-tree' and evt.buf or nil
 
     for _, win in ipairs(vim.fn.win_findbuf(evt.buf)) do
         just_removed[win] = upd

@@ -73,7 +73,7 @@ end
 local function forget_local_marks(file)
     assert(type(file) == 'string' and file ~= '')
 
-    local bufnr = vim.fn.bufnr(file --[[@as integer]], 1) -- TODO: test this actually works
+    local bufnr = vim.fn.bufnr(file --[[@as integer]], 1)
 
     ---@type utils.marks.Mark[]
     local marks = vim.fn.getmarklist(bufnr)

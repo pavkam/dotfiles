@@ -23,15 +23,6 @@ return {
     deactivate = function()
         vim.cmd [[Neotree close]]
     end,
-    init = function()
-        if vim.fn.argc() == 1 then
-            if
-                vim.fn.isdirectory(vim.fn.argv(0) --[[@as string]]) == 1
-            then
-                require 'neo-tree'
-            end
-        end
-    end,
     opts = {
         sources = { 'filesystem' },
         open_files_do_not_replace_types = utils.special_file_types,

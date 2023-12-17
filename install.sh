@@ -567,7 +567,7 @@ link .config/mc
 link .config/htop
 link .config/kitty
 link .config/bat
-
+link .config/yazi
 
 if [ "$DISTRO_DARWIN" = "" ]; then
     link .config/Code/User/settings.json

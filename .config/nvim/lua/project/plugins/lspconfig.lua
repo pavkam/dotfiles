@@ -229,7 +229,7 @@ return {
             if type(opts.diagnostics.virtual_text) == 'table' and opts.diagnostics.virtual_text.prefix == 'icons' then
                 opts.diagnostics.virtual_text.prefix = vim.fn.has 'nvim-0.10.0' == 0 and icons.Diagnostics.Prefix
                     or function(diagnostic)
-                        for d, icon in pairs(icons.diagnostics) do
+                        for d, icon in pairs(icons.Diagnostics) do
                             if diagnostic.severity == vim.diagnostic.severity[d:upper()] then
                                 return icon
                             end
