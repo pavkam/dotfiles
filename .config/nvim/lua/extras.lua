@@ -9,7 +9,7 @@ utils.on_event('BufDelete', function(evt)
     end
 
     local file = vim.api.nvim_buf_get_name(evt.buf)
-    if not file or file == '' or not utils.file_exists(file) then
+    if not file or file == '' or utils.file_exists(file) then
         return
     end
 

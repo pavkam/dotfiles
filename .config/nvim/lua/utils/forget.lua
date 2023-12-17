@@ -1,5 +1,3 @@
-local utils = require 'utils'
-
 ---@class utils.forget
 local M = {}
 
@@ -23,7 +21,6 @@ end
 local function forget_old_files(file)
     for i, old_file in ipairs(vim.v.oldfiles) do
         if old_file == file then
-            utils.info(string.format('Removed file `%s` from oldfiles list.', file))
             vim.cmd('call remove(v:oldfiles, ' .. (i - 1) .. ')')
             break
         end
@@ -51,7 +48,6 @@ local function forget_jump_list(file)
 
         for i, entry in ipairs(jump_list) do
             if entry.filename == file then
-                utils.info(string.format('Removed file `%s` from jump list.', file))
                 vim.cmd('call remove(getjumplist()[1], ' .. (i - 1) .. ')')
             end
         end
@@ -68,7 +64,6 @@ local function forget_global_marks(file)
 
     for _, mark in ipairs(marks) do
         if mark.file == file then
-            utils.info(string.format('Unmarked position **%d:%d** as `%s`.', mark.pos[2], mark.pos[3], mark.mark))
             vim.api.nvim_del_mark(string.sub(mark.mark, -1))
         end
     end
@@ -86,7 +81,6 @@ local function forget_local_marks(file)
 
     for _, mark in ipairs(marks) do
         if mark.mark ~= "'." and mark.mark ~= "'^" then
-            utils.info(string.format('Unmarked (local) position **%d:%d** as `%s`.', mark.pos[2], mark.pos[3], mark.mark))
             vim.api.nvim_buf_del_mark(bufnr, string.sub(mark.mark, -1))
         end
     end
