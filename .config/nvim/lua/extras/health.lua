@@ -105,13 +105,13 @@ local function show_for_buffer(buffer)
         lsp_roots = lsp.roots(buffer),
     }
 
-    local js_project_details = vim.tbl_contains({'javascript', 'typescript', 'javascriptreact', 'typescriptreact'}, project.type(buffer))
+    local js_project_details = vim.tbl_contains({ 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' }, project.type(buffer))
             and {
                 eslint_config = project.get_eslint_config_path(buffer),
-                jest = project.get_bin_path(buffer, 'jest'),
-                eslint = project.get_bin_path(buffer, 'eslint'),
-                prettier = project.get_bin_path(buffer, 'prettier'),
-                vitest = project.get_bin_path(buffer, 'vitest'),
+                jest = project.get_js_bin_path(buffer, 'jest'),
+                eslint = project.get_js_bin_path(buffer, 'eslint'),
+                prettier = project.get_js_bin_path(buffer, 'prettier'),
+                vitest = project.get_js_bin_path(buffer, 'vitest'),
             }
         or {}
 

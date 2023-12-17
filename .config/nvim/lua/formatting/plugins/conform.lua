@@ -91,7 +91,7 @@ return {
                         description = 'Formatter for the prisma filetype.',
                     },
                     command = function(self, ctx)
-                        return project.get_bin_path(ctx.buf or ctx.filename, 'prisma') or 'prisma'
+                        return project.get_js_bin_path(ctx.buf or ctx.filename, 'prisma') or 'prisma'
                     end,
                     stdin = false,
                     args = { 'format', '--schema', '$FILENAME' },

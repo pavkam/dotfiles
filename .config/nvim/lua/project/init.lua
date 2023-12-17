@@ -36,7 +36,6 @@ local function read_package_json(target)
     return json_content and vim.json.decode(json_content)
 end
 
-
 --- Returns the type of the project
 ---@param target string|integer|nil # the target to get the type for
 ---@return string|nil # the type of the project
@@ -233,12 +232,11 @@ function M.get_golangci_config(target)
     return utils.first_found_file(M.roots(target), { '.golangci.yml', '.golangci.yaml', '.golangci.toml', '.golangci.json' })
 end
 
-
 --- Checks if a target has a dependency
 ---@param target string|integer|nil # the target to check the dependency for
 ---@param dependency string # the name of the dependency
 ---@return boolean # whether the dependency exists
-function M.has_dependency(target, dependency)
+function M.js_has_dependency(target, dependency)
     local parsed_json = read_package_json(target)
     if not parsed_json then
         return false
@@ -253,7 +251,7 @@ end
 --- Gets the path to a binary for a given target
 ---@param target string|integer|nil # the target to get the binary path for
 ---@param bin string|nil # the path of the binary
-function M.get_bin_path(target, bin)
+function M.get_js_bin_path(target, bin)
     local sub = utils.join_paths('node_modules', '.bin', bin)
     ---@cast sub string
 

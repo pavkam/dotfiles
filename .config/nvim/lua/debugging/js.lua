@@ -28,7 +28,7 @@ local dap_configurations = {
         runtimeExecutable = 'node',
         runtimeArgs = function(path)
             return {
-                project.get_bin_path(path, 'jest'),
+                project.get_js_bin_path(path, 'jest'),
                 '--runInBand',
             }
         end,
