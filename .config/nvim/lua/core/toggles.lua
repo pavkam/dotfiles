@@ -1,7 +1,7 @@
 local utils = require 'core.utils'
 local settings = require 'core.settings'
 
----@class utils.toggles
+---@class core.toggles
 local M = {}
 
 --- Toggles a transient option for a buffer

@@ -1,4 +1,4 @@
----@class utils
+---@class core.utils
 local M = {}
 
 ---Converts a value to a string

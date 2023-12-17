@@ -1,10 +1,10 @@
----@class utils.health.ShowOpts
+---@class extras.health.ShowOpts
 ---@field public height number|nil
 ---@field public width number|nil
 
 --- Shows a window with the given content
 ---@param content string[] # the content to show
----@param opts? utils.health.ShowOpts # the options for the window
+---@param opts? extras.health.ShowOpts # the options for the window
 local function show_content(content, opts)
     opts = opts or {}
 

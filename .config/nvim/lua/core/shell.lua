@@ -3,7 +3,7 @@ local progress = require 'ui.progress'
 
 local progress_class = 'shell'
 
----@class utils.shell
+---@class core.shell
 local M = {}
 
 ---@type table<string, LazyFloat>
@@ -48,11 +48,11 @@ function M.floating(cmd, opts)
     return M.terminals[key]
 end
 
----@class utils.shell.RunningProcess
+---@class core.shell.RunningProcess
 ---@field cmd string # the command that is running
 ---@field args string[] # the arguments that are running
 
----@type table<integer, utils.shell.RunningProcess>
+---@type table<integer, core.shell.RunningProcess>
 M.running_processes = {}
 
 --- Executes a given command asynchronously and returns the output
@@ -231,12 +231,12 @@ function M.async_cmd(cmd, args, input, callback, opts)
 end
 
 --- Gets the progress of running shell tasks
----@return string|nil,string[]|utils.shell.RunningProcess[]|nil # the progress of the shell tasks or nil if not running
+---@return string|nil,string[]|core.shell.RunningProcess[]|nil # the progress of the shell tasks or nil if not running
 function M.progress()
     return progress.status(progress_class)
 end
 
----@class utils.GrepResult
+---@class core.shell.GrepResult
 ---@field filename string # the name of the file
 ---@field lnum integer # the line number
 ---@field col integer # the column number
@@ -245,7 +245,7 @@ end
 --- Greps a given term in a given directory
 ---@param term string # the term to grep for
 ---@param dir string|nil # the directory to grep in or the current directory if nil
----@param callback fun(results: utils.GrepResult[]) # the callback to call when the command finishes
+---@param callback fun(results: core.shell.GrepResult[]) # the callback to call when the command finishes
 function M.grep_dir(term, dir, callback)
     dir = dir or vim.loop.cwd()
     M.async_cmd('rg', { term, dir, '--vimgrep', '--no-heading', '--smart-case' }, nil, function(stdout)
@@ -288,5 +288,88 @@ function M.get_current_git_branch(dir, callback)
         callback(code == 0 and output[1] or nil)
     end, { ignore_codes = { 0, 1, 128 }, cwd = dir })
 end
+
+--- Parses a string of arguments into a table
+---@param args string # the string of arguments to parse
+---@return string[] # the parsed arguments
+local function parse_args(args)
+    local parsed_args = {}
+    local in_quote = false
+    local current_arg = ''
+
+    for i = 1, #args do
+        local char = args:sub(i, i)
+        if char == '"' then
+            in_quote = not in_quote
+        elseif char == ' ' and not in_quote then
+            if #current_arg > 0 then
+                table.insert(parsed_args, current_arg)
+                current_arg = ''
+            end
+        else
+            current_arg = current_arg .. char
+        end
+    end
+
+    if #current_arg > 0 then
+        table.insert(parsed_args, current_arg)
+    end
+
+    return parsed_args
+end
+
+vim.api.nvim_create_user_command('Run', function(args)
+    local cmd_line = parse_args(args.args)
+    if #cmd_line == 0 then
+        error 'No command specified'
+    end
+
+    local cmd_line_desc = table.concat(cmd_line, ' ')
+    local cmd = table.remove(cmd_line, 1)
+
+    M.async_cmd(cmd, cmd_line, nil, function(output)
+        if not args.bang then
+            if #output > 0 then
+                local message = table.concat(output, '\n')
+                message = message:gsub('```', '\\`\\`\\`')
+
+                utils.info(string.format('Command "%s" finished:\n\n```sh\n%s\n```', cmd_line_desc, message))
+            else
+                utils.info(string.format('Command "%s" finished', cmd_line_desc))
+            end
+        end
+    end)
+end, { desc = 'Run a shell command', bang = true, nargs = '+' })
+
+vim.api.nvim_create_user_command('Apply', function(args)
+    local cmd_line = parse_args(args.args)
+    if #cmd_line == 0 then
+        error 'No command specified'
+    end
+
+    local cmd = table.remove(cmd_line, 1)
+
+    -- extract the contents
+    ---@type integer|nil
+    local start_line = args.line1
+    ---@type integer|nil
+    local end_line = args.line2
+    ---@type string[]
+    local contents
+
+    if start_line and end_line then
+        contents = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+    else
+        contents = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    end
+
+    M.async_cmd(cmd, cmd_line, contents, function(output)
+        if start_line and end_line then
+            vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, output)
+        else
+            vim.api.nvim_buf_set_lines(0, 0, -1, false, output)
+        end
+    end)
+end, { desc = 'Apply a shell command', nargs = '+', range = '%' })
 
 return M

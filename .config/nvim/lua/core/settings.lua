@@ -53,7 +53,7 @@ utils.on_status_update_event(function(evt)
     end
 end)
 
----@class utils.settings
+---@class core.settings
 local M = {}
 
 local auto_transient_id = 0
@@ -154,7 +154,7 @@ function M.snapshot_for_buffer(buffer)
 end
 
 --- Gets the global settings
----@class utils.settings.GlobalSettings
+---@class core.settings.GlobalSettings
 ---@field auto_formatting_enabled boolean # whether auto-formatting is enabled
 ---@field auto_linting_enabled boolean # whether auto-linting is enabled
 ---@field ignore_hidden_files boolean # whether hidden files should be hidden
@@ -167,12 +167,12 @@ M.global = setmetatable({}, {
     end,
 })
 
----@class utils.settings.BufferSettings
+---@class core.settings.BufferSettings
 ---@field auto_formatting_enabled boolean # whether auto-formatting is enabled
 ---@field auto_linting_enabled boolean # whether auto-linting is enabled
 
 --- Gets the settings for a buffer
----@type utils.settings.BufferSettings[]
+---@type core.settings.BufferSettings[]
 M.buf = setmetatable({}, {
     __index = function(_, buffer)
         assert(type(buffer) == 'number' and buffer >= 0)

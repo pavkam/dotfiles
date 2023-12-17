@@ -1,6 +1,3 @@
----@class utils.forget
-local M = {}
-
 --- Gets all windows in Vim
 ---@return integer[] # a list of window handles
 local function all_windows()
@@ -132,7 +129,7 @@ end
 
 --- Forget all references to a file
 ---@param file string
-function M.file(file)
+function forget_file(file)
     assert(type(file) == 'string' and file ~= '')
 
     forget_old_files(file)
@@ -143,4 +140,16 @@ function M.file(file)
     forget_loc_list(file)
 end
 
-return M
+-- forget files that have been deleted
+utils.on_event('BufDelete', function(evt)
+    if utils.is_special_buffer(evt.buf) then
+        return
+    end
+
+    local file = vim.api.nvim_buf_get_name(evt.buf)
+    if not file or file == '' or utils.file_exists(file) then
+        return
+    end
+
+    forget_file(file)
+end)
