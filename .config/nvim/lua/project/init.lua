@@ -1,6 +1,9 @@
 local utils = require 'core.utils'
 local settings = require 'core.settings'
 local lsp = require 'project.lsp'
+local hover = require 'project.hover'
+
+vim.keymap.set('n', 'K', hover)
 
 ---@class languages
 local M = {}

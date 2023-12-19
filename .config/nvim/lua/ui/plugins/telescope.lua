@@ -221,6 +221,13 @@ return {
                     end,
                     desc = 'Spell suggestions',
                 },
+                {
+                    [['']],
+                    function()
+                        require('telescope.builtin').marks()
+                    end,
+                    desc = 'Marks',
+                },
             }
         end,
         opts = function()

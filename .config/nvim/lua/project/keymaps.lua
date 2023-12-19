@@ -3,8 +3,6 @@ local lsp = require 'project.lsp'
 ---@class languages.keymaps
 local M = {}
 local keymaps = {
-    { 'M', vim.diagnostic.open_float, desc = 'Line diagnostics' },
-    { '<leader>sm', 'M', remap = true, desc = 'Line diagnostics (M)' },
     {
         'gd',
         function()
@@ -17,14 +15,8 @@ local keymaps = {
         desc = 'Goto definition',
         capability = 'definition',
     },
-    { '<leader>sd', 'gd', desc = 'Goto definition (gd)', remap = true, capability = 'definition' },
-
     { 'gr', '<cmd>Telescope lsp_references<cr>', desc = 'Show references', capability = 'references' },
-    { '<leader>sr', '<cmd>Telescope lsp_references<cr>', remap = true, desc = 'References (gr)', capability = 'references' },
-
     { 'gD', vim.lsp.buf.declaration, desc = 'Goto declaration', capability = 'declaration' },
-    { '<leader>sD', 'gD', desc = 'Goto declaration (gD)', remap = true, capability = 'declaration' },
-
     {
         'gI',
         function()
@@ -33,8 +25,6 @@ local keymaps = {
         desc = 'Goto Implementation',
         capability = 'implementation',
     },
-    { '<leader>si', 'gI', desc = 'Goto implementation (gI)', remap = true, capability = 'implementation' },
-
     {
         'gy',
         function()
@@ -43,14 +33,7 @@ local keymaps = {
         desc = 'Goto Type Definition',
         capability = 'typeDefinition',
     },
-    { '<leader>st', 'gy', desc = 'Goto type definition (gy)', remap = true, capability = 'typeDefinition' },
-
-    { 'K', vim.lsp.buf.hover, desc = 'Hover', capability = 'hover' },
-    { '<leader>sk', 'K', desc = 'Hover (K)', remap = true, capability = 'hover' },
-
     { 'gK', vim.lsp.buf.signature_help, desc = 'Signature Help', capability = 'signatureHelp' },
-    { '<leader>sh', 'gK', desc = 'Signature Help (gK)', remap = true, capability = 'signatureHelp' },
-
     {
         '<leader>sL',
         function()
@@ -67,23 +50,7 @@ local keymaps = {
         desc = 'Run CodeLens',
         capability = 'codeLens',
     },
-
     { '<leader>ss', vim.lsp.buf.code_action, desc = 'Code Actions', mode = { 'n', 'v' }, capability = 'codeAction' },
-    {
-        '<leader>sS',
-        function()
-            vim.lsp.buf.code_action {
-                context = {
-                    only = {
-                        'source',
-                    },
-                    diagnostics = {},
-                },
-            }
-        end,
-        desc = 'Source Action',
-        capability = 'codeAction',
-    },
     {
         '<leader>sR',
         function()

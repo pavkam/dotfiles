@@ -1,3 +1,7 @@
+if 0 == 0 then
+    return
+end
+
 local utils = require 'core.utils'
 local group = 'pavkam_marks'
 

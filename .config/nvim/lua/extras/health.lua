@@ -86,6 +86,7 @@ local function show_for_buffer(buffer)
 
     -- get windows in which buffer is shown:
 
+    print(vim.inspect(buffer))
     local buffer_details = {
         id = buffer,
         windows = vim.fn.win_findbuf(buffer),
@@ -137,4 +138,6 @@ local function show_for_buffer(buffer)
 end
 
 -- Show buffer information
-vim.api.nvim_create_user_command('Buffer', show_for_buffer, { desc = 'Show buffer information', nargs = 0 })
+vim.api.nvim_create_user_command('Buffer', function()
+    show_for_buffer()
+end, { desc = 'Show buffer information', nargs = 0 })

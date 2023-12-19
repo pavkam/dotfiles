@@ -2,6 +2,7 @@ local utils = require 'core.utils'
 local settings = require 'core.settings'
 local shell = require 'core.shell'
 local toggles = require 'core.toggles'
+local diagnostics = require 'project.diagnostics'
 
 -- apply colorscheme first
 vim.cmd.colorscheme 'tokyonight'
@@ -9,6 +10,7 @@ vim.cmd.colorscheme 'tokyonight'
 require 'ui.highlights'
 require 'ui.marks'
 require 'ui.qf'
+require 'ui.statuscol'
 
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
@@ -48,22 +50,24 @@ vim.keymap.set('n', ']t', '<cmd>tabnext<cr>', { desc = 'Next tab' })
 vim.keymap.set('n', '[t', '<cmd>tabprevious<cr>', { desc = 'Previous tab' })
 
 -- diagnostics
-local function jump_to_diagnostic(next_or_prev, severity)
-    local go = next_or_prev and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
-
-    severity = severity and vim.diagnostic.severity[severity] or nil
-
-    return function()
-        go { severity = severity }
-    end
-end
-
-vim.keymap.set('n', ']m', jump_to_diagnostic(true), { desc = 'Next Diagnostic' })
-vim.keymap.set('n', '[m', jump_to_diagnostic(false), { desc = 'Previous Diagnostic' })
-vim.keymap.set('n', ']e', jump_to_diagnostic(true, 'ERROR'), { desc = 'Next Error' })
-vim.keymap.set('n', '[e', jump_to_diagnostic(false, 'ERROR'), { desc = 'Previous Error' })
-vim.keymap.set('n', ']w', jump_to_diagnostic(true, 'WARN'), { desc = 'Next Warning' })
-vim.keymap.set('n', '[w', jump_to_diagnostic(false, 'WARN'), { desc = 'Previous Warning' })
+vim.keymap.set('n', ']m', function()
+    diagnostics.jump(true)
+end, { desc = 'Next Diagnostic' })
+vim.keymap.set('n', '[m', function()
+    diagnostics.jump(false)
+end, { desc = 'Previous Diagnostic' })
+vim.keymap.set('n', ']e', function()
+    diagnostics.jump(true, 'ERROR')
+end, { desc = 'Next Error' })
+vim.keymap.set('n', '[e', function()
+    diagnostics.jump(false, 'ERROR')
+end, { desc = 'Previous Error' })
+vim.keymap.set('n', ']w', function()
+    diagnostics.jump(true, 'WARN')
+end, { desc = 'Next Warning' })
+vim.keymap.set('n', '[w', function()
+    diagnostics.jump(false, 'WARN')
+end, { desc = 'Previous Warning' })
 
 vim.keymap.set('n', '<leader>uM', function()
     toggles.toggle_diagnostics()
@@ -132,9 +136,8 @@ end, true)
 -- Specials using "Command/Super" key (when available!)
 vim.keymap.set('n', '<M-]>', '<C-i>', { desc = 'Next location' })
 vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
-vim.keymap.set('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
-vim.keymap.set('n', '<M-x>', 'dd', { desc = 'Delete line' })
-vim.keymap.set('x', '<M-x>', 'd', { desc = 'Delete selection' })
+vim.keymap.set('n', '<C-[>', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })
+vim.keymap.set('n', '<C-]>', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 
 -- Exit insert mode when switching buffers
 utils.on_event('BufEnter', function(evt)
