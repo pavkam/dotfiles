@@ -82,12 +82,12 @@ local M = {
         Unstaged = '✗',
         Untracked = '★',
         Signs = {
-            Add = '▌',
-            Change = '▌',
+            Add = '▐',
+            Change = '▐',
             Delete = '',
             TopDelete = '',
-            ChangeDelete = '▌',
-            Untracked = '▌',
+            ChangeDelete = '▐',
+            Untracked = '▐',
         },
     },
     Dependencies = {

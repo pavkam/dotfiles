@@ -83,6 +83,7 @@ return {
                     args = { '-m', '180', '--no-reformat-tags', '--base-formatter', 'gofumpt' },
                 }),
                 prisma = {
+                    ---@diagnostic disable-next-line: unused-local
                     cwd = function(self, ctx)
                         return project.root(ctx.buf or ctx.filename)
                     end,
@@ -90,6 +91,7 @@ return {
                         url = 'https://github.com/prisma/prisma-engines',
                         description = 'Formatter for the prisma filetype.',
                     },
+                    ---@diagnostic disable-next-line: unused-local
                     command = function(self, ctx)
                         return project.get_js_bin_path(ctx.buf or ctx.filename, 'prisma') or 'prisma'
                     end,
