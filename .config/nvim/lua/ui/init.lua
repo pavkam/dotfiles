@@ -10,7 +10,6 @@ vim.cmd.colorscheme 'tokyonight'
 require 'ui.highlights'
 require 'ui.marks'
 require 'ui.qf'
-require 'ui.statuscol'
 
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
