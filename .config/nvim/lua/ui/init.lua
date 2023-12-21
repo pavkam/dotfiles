@@ -1,6 +1,6 @@
 local utils = require 'core.utils'
 local settings = require 'core.settings'
-local shell = require 'core.shell'
+local git = require 'git'
 local toggles = require 'core.toggles'
 local diagnostics = require 'project.diagnostics'
 
@@ -138,6 +138,11 @@ vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
 vim.keymap.set('n', '<C-[>', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })
 vim.keymap.set('n', '<C-]>', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 
+vim.keymap.set('n', '<leader>S', function()
+    local select = require('ui.select').advanced
+    select { { 'a', 'Super option' }, { 'b', 'Super option 222' }, { 'c', 'Alakhu akbarum falamuisdr' } }
+end, { desc = 'Special test' })
+
 -- Exit insert mode when switching buffers
 utils.on_event('BufEnter', function(evt)
     local ignored_fts = { 'TelescopePrompt' }
@@ -194,7 +199,7 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     if not utils.is_special_buffer(evt.buf) then
         utils.trigger_user_event 'NormalFile'
 
-        shell.check_file_is_tracked_by_git(vim.loop.fs_realpath(current_file) or current_file, function(yes)
+        git.check_tracked(vim.loop.fs_realpath(current_file) or current_file, function(yes)
             if yes then
                 utils.trigger_user_event 'GitFile'
             end

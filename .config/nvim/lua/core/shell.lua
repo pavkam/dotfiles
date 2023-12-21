@@ -267,28 +267,6 @@ function M.grep_dir(term, dir, callback)
     end, { ignore_codes = { 0, 1 } })
 end
 
---- Checks if a file is under git
----@param file_name string # the name of the file to check
----@param callback fun(under_git: boolean) # the callback to call when the command finishes
-function M.check_file_is_tracked_by_git(file_name, callback)
-    assert(type(file_name) == 'string' and file_name ~= '')
-
-    M.async_cmd('git', { 'ls-files', '--error-unmatch', file_name }, nil, function(_, code)
-        callback(code == 0)
-    end, { ignore_codes = { 0, 1, 128 }, cwd = vim.fn.fnamemodify(file_name, ':h') })
-end
-
---- Gets the current git branch for a file
----@param dir string # the path under which to check the git branch
----@param callback fun(branch: string|nil) # the callback to call when the command finishes
-function M.get_current_git_branch(dir, callback)
-    assert(type(dir) == 'string' and dir ~= '')
-
-    M.async_cmd('git', { 'branch', '--show-current' }, nil, function(output, code)
-        callback(code == 0 and output[1] or nil)
-    end, { ignore_codes = { 0, 1, 128 }, cwd = dir })
-end
-
 --- Parses a string of arguments into a table
 ---@param args string # the string of arguments to parse
 ---@return string[] # the parsed arguments

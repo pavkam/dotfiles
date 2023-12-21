@@ -10,7 +10,6 @@ return {
                 {
                     sign = {
                         name = { 'Diagnostic', 'mark_', 'Dap' },
-                        auto = true,
                     },
                     colwidth = 1,
                     click = 'v:lua.ScSa',
@@ -23,7 +22,6 @@ return {
                 {
                     sign = {
                         namespace = { 'gitsigns_extmark_signs_' },
-                        auto = true,
                     },
                     colwidth = 1,
                     click = 'v:lua.ScSa',

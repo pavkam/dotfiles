@@ -84,8 +84,8 @@ local M = {
         Signs = {
             Add = '▐',
             Change = '▐',
-            Delete = '',
-            TopDelete = '',
+            Delete = '▐',
+            TopDelete = '▐',
             ChangeDelete = '▐',
             Untracked = '▐',
         },

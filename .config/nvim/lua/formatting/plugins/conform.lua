@@ -70,11 +70,13 @@ return {
             },
             formatters = {
                 ['goimports-reviser'] = {
+                    ---@diagnostic disable-next-line: unused-local
                     cwd = function(self, ctx)
                         return project.root(ctx.buf or ctx.filename)
                     end,
                 },
                 prettier = {
+                    ---@diagnostic disable-next-line: unused-local
                     cwd = function(self, ctx)
                         return project.root(ctx.buf or ctx.filename)
                     end,
