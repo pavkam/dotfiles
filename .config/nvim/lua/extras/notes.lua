@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local icons = require 'ui.icons'
 
 --- Get the notes root directory
 ---@param global boolean|nil: If true, return the global notes root
@@ -69,27 +70,57 @@ local function edit(global)
 end
 
 if feature_level(2) then
-    vim.keymap.set('n', '<leader>nn', function()
-        find(true)
-    end, { desc = 'Browse global notes' })
-
-    vim.keymap.set('n', '<leader>nN', function()
-        find(false)
-    end, { desc = 'Browse project notes' })
-
-    vim.keymap.set('n', '<leader>ng', function()
-        grep(true)
-    end, { desc = 'Grep global notes' })
-
-    vim.keymap.set('n', '<leader>nG', function()
-        grep(false)
-    end, { desc = 'Grep project notes' })
-
-    vim.keymap.set('n', '<leader>nc', function()
-        edit(true)
-    end, { desc = 'Open global note' })
-
-    vim.keymap.set('n', '<leader>nC', function()
-        edit(false)
-    end, { desc = 'Open project note' })
+    vim.keymap.set('n', '<leader>n', function()
+        local s = require 'ui.select'
+        s.command {
+            {
+                name = 'Show global notes',
+                hl = 'Boolean',
+                desc = 'global notes',
+                command = function()
+                    find(true)
+                end,
+            },
+            {
+                name = 'Grep global notes',
+                hl = 'Boolean',
+                desc = 'global notes',
+                command = function()
+                    grep(true)
+                end,
+            },
+            {
+                name = 'Open global note',
+                hl = 'Boolean',
+                desc = 'global notes',
+                command = function()
+                    edit(true)
+                end,
+            },
+            {
+                name = 'Show project notes',
+                hl = 'String',
+                desc = 'project-specific notes',
+                command = function()
+                    find(false)
+                end,
+            },
+            {
+                name = 'Grep project notes',
+                hl = 'String',
+                desc = 'project-specific notes',
+                command = function()
+                    grep(false)
+                end,
+            },
+            {
+                name = 'Open project note',
+                hl = 'String',
+                desc = 'project-specific notes',
+                command = function()
+                    edit(false)
+                end,
+            },
+        }
+    end, { desc = icons.UI.Notes .. ' Notes' })
 end

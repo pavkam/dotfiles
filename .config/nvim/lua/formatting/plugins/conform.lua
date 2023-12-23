@@ -4,17 +4,19 @@ return {
     cmd = 'ConformInfo',
     keys = {
         {
-            '<leader>sj',
+            'g=',
             function()
                 require('formatting').apply(nil, true)
+                require('core.utils').info(string.format('Formatted buffer *%s* (**injected**)', vim.fn.expand '%:t'))
             end,
             mode = { 'n', 'v' },
             desc = 'Format buffer injected',
         },
         {
-            '<leader>sf',
+            '=',
             function()
                 require('formatting').apply()
+                require('core.utils').info(string.format('Formatted buffer *%s*', vim.fn.expand '%:t'))
             end,
             mode = { 'n', 'v' },
             desc = 'Format buffer',

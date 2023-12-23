@@ -33,28 +33,25 @@ local keymaps = {
         desc = 'Goto Type Definition',
         capability = 'typeDefinition',
     },
-    { 'gK', vim.lsp.buf.signature_help, desc = 'Signature Help', capability = 'signatureHelp' },
+    { 'gK', vim.lsp.buf.signature_help, desc = 'Signature help', capability = 'signatureHelp' },
     {
-        '<leader>sL',
-        function()
-            vim.lsp.codelens.refresh()
-        end,
-        desc = 'Refresh CodeLens',
-        capability = 'codeLens',
-    },
-    {
-        '<leader>sl',
-        function()
-            vim.lsp.codelens.run()
-        end,
+        'gl',
+        vim.lsp.codelens.run,
         desc = 'Run CodeLens',
         capability = 'codeLens',
     },
-    { '<leader>ss', vim.lsp.buf.code_action, desc = 'Code Actions', mode = { 'n', 'v' }, capability = 'codeAction' },
+    { '<leader><cr>', vim.lsp.buf.code_action, desc = 'Code actions', mode = { 'n', 'v' }, capability = 'codeAction' },
     {
-        '<leader>sR',
+        '<C-r>',
         function()
-            vim.lsp.buf.rename()
+            local is_identifier = require('editor.syntax').node_under_cursor():type() == 'identifier'
+            if is_identifier then
+                vim.lsp.buf.rename()
+                return ':<nop><cr>'
+            else
+                local command = [[:%s/\<<C-r><C-w>\>//gI<Left><Left><Left><C-r><C-w>]]
+                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(command, true, false, true), 'n', false)
+            end
         end,
         desc = 'Rename',
         capability = 'rename',

@@ -94,18 +94,9 @@ return {
                     desc = 'Find selected word',
                 },
                 {
-                    '<leader>fw',
+                    '<leader>fg',
                     function()
                         require('telescope.builtin').live_grep(wrap())
-                    end,
-                    desc = 'Find words',
-                },
-                {
-                    '<leader>Df',
-                    function()
-                        require('telescope.builtin').grep_string(wrap {
-                            search = 'DEBUGPRINT',
-                        })
                     end,
                     desc = 'Find words',
                 },
@@ -124,88 +115,56 @@ return {
                     desc = 'Find used files',
                 },
                 {
-                    '<leader>fF',
-                    function()
-                        require('telescope.builtin').find_files(wrap())
-                    end,
-                    desc = 'Find all files',
-                },
-                {
-                    '<leader>?c',
-                    function()
-                        require('telescope.builtin').commands()
-                    end,
-                    desc = 'Show commands',
-                },
-                {
-                    '<leader>?k',
-                    function()
-                        require('telescope.builtin').keymaps()
-                    end,
+                    '<leader>uk',
+                    'Telescope keymaps',
                     desc = 'Show keymaps',
                 },
                 {
-                    '<leader>?h',
-                    function()
-                        require('telescope.builtin').help_tags()
-                    end,
-                    desc = 'Browse help',
+                    '<leader>uc',
+                    'Telescope commands',
+                    desc = 'Show commands',
                 },
                 {
-                    '<leader>?m',
-                    function()
-                        require('telescope.builtin').man_pages()
-                    end,
-                    desc = 'Browse manual',
-                },
-                {
-                    '<leader>uT',
-                    function()
-                        require('telescope.builtin').colorscheme()
-                    end,
-                    desc = 'Browse themes',
-                },
-                {
-                    '<leader>sm',
+                    '<leader>fm',
                     function()
                         require('telescope.builtin').diagnostics { bufnr = 0 }
                     end,
-                    desc = 'Buffer diagnostics',
+                    desc = 'Find buffer diagnostics',
                 },
                 {
-                    '<leader>sM',
+                    '<leader>fM',
                     function()
                         require('telescope.builtin').diagnostics()
                     end,
-                    desc = 'All diagnostics',
+                    desc = 'Find all diagnostics',
                 },
                 {
-                    '<leader>se',
+                    '<leader>fe',
                     function()
                         require('telescope.builtin').diagnostics { bufnr = 0, severity = 'ERROR' }
                     end,
-                    desc = 'Buffer errors',
+                    desc = 'Find buffer errors',
                 },
                 {
-                    '<leader>sE',
+                    '<leader>fE',
                     function()
                         require('telescope.builtin').diagnostics { severity = 'ERROR' }
                     end,
-                    desc = 'All errors',
+                    desc = 'Find all errors',
                 },
                 {
-                    '<leader>sw',
+                    '<leader>fw',
                     function()
                         require('telescope.builtin').diagnostics { bufnr = 0, severity = 'WARN' }
                     end,
-                    desc = 'Buffer warnings',
+                    desc = 'Find buffer warnings',
                 },
                 {
-                    '<leader>sW',
+                    '<leader>fW',
                     function()
                         require('telescope.builtin').diagnostics { severity = 'WARN' }
                     end,
-                    desc = 'All warnings',
+                    desc = 'Find all warnings',
                 },
                 {
                     '<leader>un',

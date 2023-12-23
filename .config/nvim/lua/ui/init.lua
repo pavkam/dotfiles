@@ -138,11 +138,6 @@ vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
 vim.keymap.set('n', '<C-[>', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })
 vim.keymap.set('n', '<C-]>', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 
-vim.keymap.set('n', '<leader>S', function()
-    local select = require('ui.select').advanced
-    select { { 'a', 'Super option' }, { 'b', 'Super option 222' }, { 'c', 'Alakhu akbarum falamuisdr' } }
-end, { desc = 'Special test' })
-
 -- Exit insert mode when switching buffers
 utils.on_event('BufEnter', function(evt)
     local ignored_fts = { 'TelescopePrompt' }

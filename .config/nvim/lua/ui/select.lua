@@ -10,14 +10,14 @@ local utils = require 'core.utils'
 
 local M = {}
 
----@alias SelectEntry string|number|boolean|(string|number|boolean)[]) # An entry in the list of items to select from
----@alias SelectCallback fun(entry?: SelectEntry) # The callback to call when an item is selected
----@alias SelectHighlighter fun(entry: SelectEntry, index: number): string # The highlighter to use for the entrygh
----@alias SelectOpts { prompt?: string, separator?: string, callback?: SelectCallback, highlighter?: SelectHighlighter }
+---@alias ui.select.SelectEntry string|number|boolean|(string|number|boolean)[]) # An entry in the list of items to select from
+---@alias ui.select.SelectCallback fun(entry?: ui.select.SelectEntry, index?: integer) # The callback to call when an item is selected
+---@alias ui.select.SelectHighlighter fun(entry: ui.select.SelectEntry, index: integer, col_index: number): string|nil # The highlighter to use for the entrygh
+---@alias ui.select.SelectOpts { prompt?: string, separator?: string, callback?: ui.select.SelectCallback, highlighter?: ui.select.SelectHighlighter, index_fields?: integer[] }
 
 --- Select an item from a list of items
----@param items SelectEntry[] # The list of items to select from
----@param opts? SelectOpts # The options for the select
+---@param items ui.select.SelectEntry[] # The list of items to select from
+---@param opts? ui.select.SelectOpts # The options for the select
 function M.advanced(items, opts)
     opts = opts or {}
 
@@ -87,7 +87,7 @@ function M.advanced(items, opts)
     local display = function(e)
         local mapped = {}
         for i, field in ipairs(e.value) do
-            table.insert(mapped, { field, highlighter(e.value, i) })
+            table.insert(mapped, { field, highlighter(e.value, e.index, i) })
         end
 
         return displayer(mapped)
@@ -96,6 +96,16 @@ function M.advanced(items, opts)
     local dd = themes.get_dropdown(vim.tbl_extend('force', opts, {
         layout_config = { width = 0.3, height = 0.4 },
     }))
+
+    opts.index_fields = opts.index_fields or { 1 }
+    local function make_ordinal(entry)
+        local ordinal = ''
+        for _, index in ipairs(opts.index_fields) do
+            ordinal = ordinal .. tostring(entry[index])
+        end
+
+        return ordinal
+    end
 
     pickers
         .new(dd, {
@@ -106,7 +116,7 @@ function M.advanced(items, opts)
                     return {
                         value = e,
                         display = display,
-                        ordinal = e[1],
+                        ordinal = make_ordinal(e),
                     }
                 end,
             },
@@ -116,13 +126,58 @@ function M.advanced(items, opts)
                     local selection = action_state.get_selected_entry()
                     actions.close(prompt_bufnr)
 
-                    callback(selection.value)
+                    callback(selection.value, selection.index)
                 end)
 
                 return true
             end,
         })
         :find()
+end
+
+---@alias ui.select.CommandItem { name: string, command: string|function, desc?: string, hl?: string}
+
+--- Selects and executes a command
+---@param commands ui.select.CommandItem[] # The list of commands to select from
+function M.command(commands)
+    assert(vim.tbl_islist(commands))
+
+    ---@type (string|integer)[][]
+    local items = {}
+    for i, command in ipairs(commands) do
+        assert(type(command.command) == 'string' or type(command.command) == 'function')
+
+        ---@type string[]
+        local entry = {}
+
+        table.insert(entry, i)
+        table.insert(entry, command.name)
+        table.insert(entry, command.desc and command.desc or type(command.command) == 'string' and command.command or 'function')
+
+        table.insert(items, entry)
+    end
+
+    M.advanced(items, {
+        prompt = 'Select command:',
+        separator = ' ',
+        highlighter = function(_, index, col_index)
+            if col_index == 2 then
+                return commands[index].hl
+            end
+
+            return 'Comment'
+        end,
+        callback = function(_, index)
+            local command = commands[index].command
+
+            if type(command) == 'string' then
+                vim.cmd(command)
+            else
+                command()
+            end
+        end,
+        index_fields = { 1, 2 },
+    })
 end
 
 return M

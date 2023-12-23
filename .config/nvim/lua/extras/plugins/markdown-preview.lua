@@ -7,7 +7,7 @@ return {
     end,
     keys = {
         {
-            '<leader>sP',
+            '<leader>p',
             ft = 'markdown',
             '<cmd>MarkdownPreviewToggle<cr>',
             desc = 'Preview markdown',

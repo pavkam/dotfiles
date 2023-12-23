@@ -42,12 +42,6 @@ vim.keymap.set('n', 'U', '<C-r>', { desc = 'Redo' })
 -- Some editor mappings
 vim.keymap.set('i', '<C-BS>', '<C-w>', { desc = 'Delete word' })
 
--- TODO: this misbehaves at time and doesn't introduce tab but jumps to something weird
-local debug_tab = false
-vim.keymap.set({ 'n' }, '<leader>u!', function()
-    debug_tab = not debug_tab
-end, { desc = 'Debug tab' })
-
 vim.keymap.set('i', '<Tab>', function()
     local r, c = unpack(vim.api.nvim_win_get_cursor(0))
     if c and r then
@@ -57,16 +51,8 @@ vim.keymap.set('i', '<Tab>', function()
         local after = string.sub(line, c + 1, -1)
 
         if string.match(before, '^%s*$') ~= nil and string.match(after, '^%s*$') == nil then
-            if debug_tab then
-                utils.info 'was: indent'
-            end
-
             return '<C-t>'
         end
-    end
-
-    if debug_tab then
-        utils.info 'was: tab'
     end
 
     return '<Tab>'
@@ -141,10 +127,10 @@ vim.keymap.set('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Pr
 vim.keymap.set({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Previous search result' })
 vim.keymap.set('x', '<C-r>', function()
     local selected_text = utils.get_selected_text()
-    local command = ':<C-u>%s/\\<' .. selected_text .. '\\>//gI<Left><Left><Left>'
+    local command = ':<C-u>%s/\\<' .. selected_text .. '\\>/' .. selected_text .. '/gI<Left><Left><Left>'
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(command, true, false, true), 'n', false)
 end, { desc = 'Replace selection' })
-vim.keymap.set('n', '<C-r>', [[:%s/\<<C-r><C-w>\>//gI<Left><Left><Left>]])
+vim.keymap.set('n', '<C-r>', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = 'Replace word under cursor' })
 
 -- special keys
 vim.keymap.set('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
