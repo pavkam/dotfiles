@@ -9,7 +9,7 @@ return {
             segments = {
                 {
                     sign = {
-                        name = { 'Diagnostic', 'mark_', 'Dap' },
+                        name = { 'Diagnostic', 'mark_', 'Dap', 'neotest' },
                     },
                     colwidth = 1,
                     click = 'v:lua.ScSa',
