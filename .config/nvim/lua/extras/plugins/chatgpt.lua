@@ -1,3 +1,4 @@
+local utils = require 'core.utils'
 local icons = require 'ui.icons'
 
 return {
@@ -10,23 +11,79 @@ return {
     },
     cmd = { 'ChatGPT', 'ChatGPTActAs', 'ChatGPTEditWithInstructions', 'ChatGPTRun' },
     keys = {
-        { '<leader>xx', '<Cmd>ChatGPT<CR>', mode = 'n', desc = 'Chat' },
-        { '<leader>xx', '<Cmd>ChatGPTEditWithInstruction<CR>', mode = 'v', desc = 'Edit code' },
-        { '<leader>xg', '<cmd>ChatGPTRun correct_grammar<CR>', desc = 'Correct grammar', mode = 'v' },
-        { '<leader>xc', '<cmd>ChatGPTRun complete_code<CR>', desc = 'Complete code', mode = 'v' },
-        { '<leader>xd', '<cmd>ChatGPTRun document<CR>', desc = 'Document code', mode = 'v' },
-        { '<leader>xt', '<cmd>ChatGPTRun add_tests<CR>', desc = 'Add unit tests', mode = 'v' },
-        { '<leader>xo', '<cmd>ChatGPTRun optimize_code<CR>', desc = 'Optimize code', mode = 'v' },
-        { '<leader>xf', '<cmd>ChatGPTRun fix_bugs<CR>', desc = 'Fix bugs in code', mode = 'v' },
-        { '<leader>xe', '<cmd>ChatGPTRun explain_code<CR>', desc = 'Explain code', mode = 'v' },
-        { '<leader>x', '<Nop>', mode = { 'v', 'n' } },
+        {
+            '<leader>x',
+            function()
+                utils.run_with_visual_selection(nil, function(restore)
+                    require('ui.select').command {
+                        {
+                            name = 'Edit code',
+                            desc = 'Complete code, fix bugs, optimize code, etc.',
+                            command = function()
+                                restore 'ChatGPTEditWithInstructions'
+                            end,
+                        },
+                        {
+                            name = 'Correct grammar',
+                            desc = 'Correct grammar of a sentence.',
+                            command = function()
+                                restore 'ChatGPTRun correct_grammar'
+                            end,
+                        },
+                        {
+                            name = 'Complete code',
+                            desc = 'Complete code and fix bugs.',
+                            command = function()
+                                restore 'ChatGPTRun complete_code'
+                            end,
+                        },
+                        {
+                            name = 'Document code',
+                            desc = 'Document code and explain code.',
+                            command = function()
+                                restore 'ChatGPTRun document'
+                            end,
+                        },
+                        {
+                            name = 'Add unit tests',
+                            desc = 'Add unit tests to code.',
+                            command = function()
+                                restore 'ChatGPTRun add_tests'
+                            end,
+                        },
+                        {
+                            name = 'Optimize code',
+                            desc = 'Optimize code and fix bugs.',
+                            command = function()
+                                restore 'ChatGPTRun optimize_code'
+                            end,
+                        },
+                        {
+                            name = 'Fix bugs in code',
+                            desc = 'Fix bugs in code and optimize code.',
+                            command = function()
+                                restore 'ChatGPTRun fix_bugs'
+                            end,
+                        },
+                        {
+                            name = 'Explain code',
+                            command = function()
+                                restore 'ChatGPTRun explain_code'
+                            end,
+                        },
+                    }
+                end)
+            end,
+            mode = 'v',
+            desc = icons.UI.AI .. 'Edit with AI',
+        },
     },
     opts = {
         api_key_cmd = 'cat ' .. vim.fs.normalize '~/.config/.oai',
         yank_register = '*',
         edit_with_instructions = {
             keymaps = {
-                close = 'C-q',
+                close = '<C-q>',
                 accept = '<C-a>',
                 toggle_diff = '<C-d>',
                 toggle_settings = '<C-o>',

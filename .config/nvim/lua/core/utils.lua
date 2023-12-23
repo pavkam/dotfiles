@@ -511,4 +511,36 @@ function M.has_plugin(name)
     return false
 end
 
+--- Runs a function with the current visual selection
+---@param buffer integer|nil # the buffer to run the function for or the current buffer if 0 or nil
+---@param callback fun(restore_callback: fun(command?: string)) # the callback to call with the selection
+function M.run_with_visual_selection(buffer, callback)
+    assert(type(callback) == 'function')
+
+    if vim.api.nvim_get_mode().mode ~= 'v' then
+        error 'Not in visual mode'
+    end
+
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes([[<esc>]], true, false, true), 'n', false)
+
+    vim.defer_fn(function()
+        local sel_start = vim.api.nvim_buf_get_mark(buffer, '<')
+        local sel_end = vim.api.nvim_buf_get_mark(buffer, '>')
+
+        local restore_callback = function(command)
+            vim.api.nvim_buf_set_mark(buffer, '<', sel_start[1], sel_start[2], {})
+            vim.api.nvim_buf_set_mark(buffer, '>', sel_end[1], sel_end[2], {})
+
+            vim.api.nvim_feedkeys([[gv]], 'n', false)
+
+            if command then
+                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(string.format(':%s<cr>', command), true, false, true), 'n', false)
+            end
+        end
+
+        callback(restore_callback)
+    end, 0)
+end
+
 return M
