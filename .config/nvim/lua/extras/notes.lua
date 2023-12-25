@@ -75,7 +75,7 @@ if feature_level(2) then
         s.command {
             {
                 name = 'Show global notes',
-                hl = 'Boolean',
+                hl = 'SpecialMenuItem',
                 desc = 'global notes',
                 command = function()
                     find(true)
@@ -83,7 +83,7 @@ if feature_level(2) then
             },
             {
                 name = 'Grep global notes',
-                hl = 'Boolean',
+                hl = 'SpecialMenuItem',
                 desc = 'global notes',
                 command = function()
                     grep(true)
@@ -91,7 +91,7 @@ if feature_level(2) then
             },
             {
                 name = 'Open global note',
-                hl = 'Boolean',
+                hl = 'SpecialMenuItem',
                 desc = 'global notes',
                 command = function()
                     edit(true)
@@ -99,7 +99,6 @@ if feature_level(2) then
             },
             {
                 name = 'Show project notes',
-                hl = 'String',
                 desc = 'project-specific notes',
                 command = function()
                     find(false)
@@ -107,7 +106,6 @@ if feature_level(2) then
             },
             {
                 name = 'Grep project notes',
-                hl = 'String',
                 desc = 'project-specific notes',
                 command = function()
                     grep(false)
@@ -115,7 +113,6 @@ if feature_level(2) then
             },
             {
                 name = 'Open project note',
-                hl = 'String',
                 desc = 'project-specific notes',
                 command = function()
                     edit(false)

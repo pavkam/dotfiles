@@ -111,11 +111,11 @@ local function ins_paste(op)
     end
 end
 
-vim.keymap.set('n', 'go', function()
+vim.keymap.set('n', 'gp', function()
     ins_paste 'o'
 end, { desc = 'Paste below' })
 
-vim.keymap.set('n', 'gO', function()
+vim.keymap.set('n', 'gP', function()
     ins_paste 'O'
 end, { desc = 'Paste below' })
 

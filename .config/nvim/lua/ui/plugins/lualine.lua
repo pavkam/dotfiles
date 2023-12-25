@@ -111,7 +111,7 @@ return {
 
                             local tasks_names = tasks
                                 and vim.tbl_map(function(task)
-                                    ---@cast task utils.shell.RunningProcess
+                                    ---@cast task core.shell.RunningProcess
                                     return task.cmd .. ' ' .. utils.tbl_join(task.args, ' ')
                                 end, tasks)
 
