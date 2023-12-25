@@ -1,5 +1,4 @@
 local icons = require 'ui.icons'
-local shell = require 'core.shell'
 
 return {
     'lewis6991/gitsigns.nvim',
@@ -16,23 +15,49 @@ return {
         },
         on_attach = function(buffer)
             local gs = require 'gitsigns'
+            local gsa = require 'gitsigns.actions'
+
+            local names = {
+                reset_hunk = 'Reset hunk',
+                preview_hunk = 'Preview hunk',
+                stage_hunk = 'Stage hunk',
+                undo_stage_hunk = 'Unstage hunk',
+                blame_line = 'Blame line',
+                select_hunk = 'Select hunk',
+            }
+
+            vim.keymap.set('n', '<leader>gi', function()
+                local actions = gsa.get_actions()
+
+                if actions == nil or not next(actions) then
+                    return
+                end
+
+                local items = {}
+                for name, action in pairs(actions) do
+                    table.insert(items, {
+                        name = names[name] or name,
+                        desc = 'Gitsigns ' .. name,
+                        command = action,
+                    })
+                end
+
+                table.insert(items, {
+                    name = 'Stage buffer',
+                    command = 'Gitsigns stage_buffer',
+                    hl = 'SpecialMenuItem',
+                })
+                table.insert(items, {
+                    name = 'Reset buffer',
+                    command = 'Gitsigns reset_buffer',
+                    hl = 'SpecialMenuItem',
+                })
+
+                require('ui.select').command(items)
+            end, { buffer = buffer, desc = 'Inspect change' })
 
             vim.keymap.set('n', ']h', gs.next_hunk, { buffer = buffer, desc = 'Next hunk' })
             vim.keymap.set('n', '[h', gs.prev_hunk, { buffer = buffer, desc = 'Prev hunk' })
-            vim.keymap.set({ 'n', 'v' }, '<leader>gs', ':Gitsigns stage_hunk<CR>', { buffer = buffer, desc = 'Stage hunk' })
-            vim.keymap.set({ 'n', 'v' }, '<leader>gr', ':Gitsigns reset_hunk<CR>', { buffer = buffer, desc = 'Reset hunk' })
-            vim.keymap.set('n', '<leader>gS', gs.stage_buffer, { buffer = buffer, desc = 'Stage buffer' })
-            vim.keymap.set('n', '<leader>gu', gs.undo_stage_hunk, { buffer = buffer, desc = 'Undo stage hunk' })
-            vim.keymap.set('n', '<leader>gR', gs.reset_buffer, { buffer = buffer, desc = 'Reset buffer' })
-            vim.keymap.set('n', '<leader>gp', gs.preview_hunk, { buffer = buffer, desc = 'Preview hunk' })
-            vim.keymap.set('n', '<leader>gB', function()
-                gs.blame_line { full = true }
-            end, { buffer = buffer, desc = 'Blame line' })
-            vim.keymap.set('n', '<leader>gd', gs.diffthis, { buffer = buffer, desc = 'Diff this' })
-            vim.keymap.set('n', '<leader>gD', function()
-                gs.diffthis '~'
-            end, { buffer = buffer, desc = 'Diff This ~' })
-            vim.keymap.set({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>', { buffer = buffer, desc = 'Select hunk' })
         end,
     },
 }

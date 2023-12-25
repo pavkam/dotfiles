@@ -162,7 +162,7 @@ function M.command(commands)
         separator = ' ',
         highlighter = function(_, index, col_index)
             if col_index == 2 then
-                return commands[index].hl
+                return commands[index].hl or 'NormalMenuItem'
             end
 
             return 'Comment'

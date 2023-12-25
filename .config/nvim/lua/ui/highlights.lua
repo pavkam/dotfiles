@@ -27,3 +27,6 @@ hl('DisabledFormattersStatus', utils.hl 'ActiveFormattersStatus', { strikethroug
 hl('ActiveLSPsStatus', utils.hl 'PreProc')
 
 hl('MarkSign', { fg = '#ff966c' })
+
+hl('NormalMenuItem', utils.hl 'Special')
+hl('SpecialMenuItem', utils.hl 'Boolean')
