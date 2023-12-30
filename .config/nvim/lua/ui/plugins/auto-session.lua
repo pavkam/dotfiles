@@ -1,6 +1,7 @@
 return {
     -- TODO: maybe use resession? It allows for much more custom stuff than this
     'rmagatti/auto-session',
+    lazy = false,
     cond = feature_level(2),
     opts = {
         log_level = 'error',
