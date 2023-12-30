@@ -3,6 +3,7 @@ local settings = require 'core.settings'
 local git = require 'git'
 local toggles = require 'core.toggles'
 local diagnostics = require 'project.diagnostics'
+local icons = require 'ui.icons'
 
 -- apply colorscheme first
 vim.cmd.colorscheme 'tokyonight'
@@ -38,7 +39,7 @@ vim.keymap.set('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
 vim.keymap.set('n', '<leader><leader>', function()
     ---@diagnostic disable-next-line: param-type-mismatch
     pcall(vim.cmd, 'e #')
-end, { desc = 'Switch buffer', silent = true })
+end, { desc = icons.UI.Switch .. ' Switch buffer', silent = true })
 vim.keymap.set('n', '<leader>bw', '<cmd>w<cr>', { desc = 'Save buffer' })
 
 vim.keymap.set('n', '[b', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })

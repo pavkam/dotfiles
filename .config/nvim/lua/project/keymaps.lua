@@ -1,4 +1,5 @@
 local lsp = require 'project.lsp'
+local icons = require 'ui.icons'
 
 ---@class languages.keymaps
 local M = {}
@@ -40,7 +41,7 @@ local keymaps = {
         desc = 'Run CodeLens',
         capability = 'codeLens',
     },
-    { '<leader><cr>', vim.lsp.buf.code_action, desc = 'Code actions', mode = { 'n', 'v' }, capability = 'codeAction' },
+    { '<leader><cr>', vim.lsp.buf.code_action, desc = icons.UI.Action .. ' Code actions', mode = { 'n', 'v' }, capability = 'codeAction' },
     {
         '<C-r>',
         function()
@@ -96,7 +97,7 @@ local function attach_keymaps(client, buffer)
             vim.treesitter.stop()
             vim.cmd.edit()
             vim.treesitter.start()
-        end, { buffer = buffer, desc = 'Nuke buffer state!' })
+        end, { buffer = buffer, desc = icons.UI.Nuke .. ' Nuke buffer state' })
     end
 end
 

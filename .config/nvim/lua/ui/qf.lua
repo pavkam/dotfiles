@@ -57,17 +57,13 @@ function M.delete_item(qf_type, index)
 end
 
 -- quick-fix and locations list
-vim.keymap.set('n', '<leader>qm', function()
-    vim.diagnostic.setqflist { open = true }
-end, { desc = 'Diagnostics to quck-fix list' })
-vim.keymap.set('n', '<leader>qm', function()
-    vim.diagnostic.setloclist { open = true }
-end, { desc = 'Diagnostics to locations list' })
 vim.keymap.set('n', '<leader>qc', function()
     vim.fn.setqflist({}, 'r')
+    vim.cmd 'cclose'
 end, { desc = 'Clear quick-fix list' })
 vim.keymap.set('n', '<leader>qC', function()
     vim.fn.setloclist(0, {})
+    vim.cmd 'lclose'
 end, { desc = 'Clear locations list' })
 vim.keymap.set('n', '<leader>qq', '<cmd>copen<cr>', { desc = 'Show quick-fix list' })
 vim.keymap.set('n', '<leader>ql', '<cmd>lopen<cr>', { desc = 'Show locations list' })

@@ -45,13 +45,6 @@ return {
                     desc = 'Show buffers',
                 },
                 {
-                    '<leader>bb',
-                    function()
-                        require('telescope.builtin').buffers()
-                    end,
-                    desc = 'Show buffers',
-                },
-                {
                     '<leader>gb',
                     function()
                         require('telescope.builtin').git_branches()

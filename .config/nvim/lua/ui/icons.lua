@@ -110,7 +110,7 @@ local M = {
         Git = '󰊢',
         Debugger = '',
         ConsoleLog = '',
-        Test = '󰙨',
+        Test = '󱐦',
         UI = '󰏖',
         Help = '󰋖',
         Buffers = '󱂬',
@@ -131,6 +131,9 @@ local M = {
         IgnoreHidden = '󰛑',
         ShowHidden = '󰛐',
         TMux = '',
+        Switch = '',
+        Action = '󰜎',
+        Nuke = '󰔒',
     },
     Progress = {
         '⣾',
