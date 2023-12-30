@@ -106,6 +106,22 @@ return {
                 },
                 lualine_x = {
                     {
+                        function()
+                            -- HACK: This is a workaround for a bug in lualine where the status is not updated
+                            local pi_status = require 'package-info.ui.generic.loading-status'
+
+                            vim.defer_fn(function()
+                                utils.trigger_status_update_event()
+                            end, 100)
+
+                            return pi_status.state.current_spinner .. ' ' .. pi_status.get()
+                        end,
+                        cond = function()
+                            return require('package-info').get_status() ~= ''
+                        end,
+                        color = color 'ShellProgressStatus',
+                    },
+                    {
                         settings.transient(function()
                             local prefix, tasks = shell.progress()
 

@@ -71,8 +71,7 @@ end
 
 if feature_level(2) then
     vim.keymap.set('n', '<leader>n', function()
-        local s = require 'ui.select'
-        s.command {
+        require('ui.select').command {
             {
                 name = 'Show global notes',
                 hl = 'SpecialMenuItem',

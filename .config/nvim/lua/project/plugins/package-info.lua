@@ -8,17 +8,34 @@ return {
     opts = {},
     config = function(_, opts)
         local pi = require 'package-info'
+        local icons = require 'ui.icons'
+
         pi.setup(opts)
 
         local utils = require 'core.utils'
         utils.on_event('BufReadPre', function(args)
-            vim.keymap.set('n', '<leader>Pu', pi.update, { buffer = args.buf, desc = 'Update package version' })
+            vim.keymap.set('n', '<leader>p', function()
+                require('ui.select').command {
+                    {
+                        name = 'Update',
+                        command = 'PackageInfoUpdate',
+                    },
+                    {
+                        name = 'Delete',
+                        command = 'PackageInfoDelete',
+                    },
 
-            vim.keymap.set('n', '<leader>Pr', pi.delete, { buffer = args.buf, desc = 'Remove package' })
+                    {
+                        name = 'Install',
+                        command = 'PackageInfoInstall',
+                    },
 
-            vim.keymap.set('n', '<leader>Pa', pi.install, { buffer = args.buf, desc = 'Add package' })
-
-            vim.keymap.set('n', '<leader>Pv', pi.change_version, { buffer = args.buf, desc = 'Change package version' })
+                    {
+                        name = 'Change version',
+                        command = 'PackageInfoChangeVersion',
+                    },
+                }
+            end, { buffer = args.buf, desc = icons.UI.Action .. ' package.json' })
         end, 'package\\.json')
     end,
 }
