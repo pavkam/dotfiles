@@ -95,7 +95,9 @@ function M.toggle_auto_linting(opts)
     local lsp = require 'project.lsp'
 
     opts = opts or {}
-    opts.buffer = opts.buffer == nil and nil or opts.buffer or vim.api.nvim_get_current_buf()
+    if opts.buffer ~= nil then
+        opts.buffer = opts.buffer or vim.api.nvim_get_current_buf()
+    end
 
     local enabled = toggle('auto_linting_enabled', { buffer = opts.buffer, description = 'auto-linting', default = true })
 
@@ -115,5 +117,108 @@ function M.toggle_auto_linting(opts)
         end
     end
 end
+
+---@alias core.toggles.Scope 'buffer' | 'global'
+
+---@class core.toggles.RegistryItem
+---@field name string
+---@field value_fn fun(buffer?: integer): boolean
+---@field toggle_fn fun(buffer?: integer)
+---@field scope core.toggles.Scope
+
+---@type core.toggles.RegistryItem[]
+local registry = {}
+
+--- Registers a toggle
+---@param name string # the name of the toggle
+---@param value_fn fun(buffer?: integer): boolean # the function to call to get the current value of the toggle
+---@param toggle_fn fun(buffer?: integer) # the function to call when the toggle is triggered
+---@param opts? { scope: core.toggles.Scope|core.toggles.Scope[] } # optional modifiers
+local function register(name, value_fn, toggle_fn, opts)
+    assert(type(name) == 'string' and name ~= '')
+    assert(type(toggle_fn) == 'function')
+    assert(type(value_fn) == 'function')
+
+    opts = opts or {}
+    local scopes = opts.scope and utils.to_list(opts.scope) or utils.to_list 'global'
+
+    assert(vim.tbl_islist(scopes))
+
+    for _, scope in ipairs(scopes) do
+        assert(scope == 'buffer' or scope == 'global')
+
+        registry[#registry + 1] = {
+            name = name,
+            toggle_fn = toggle_fn,
+            value_fn = value_fn,
+            scope = scope,
+        }
+    end
+end
+
+--- Shows a list of toggles
+---@param buffer? integer # the buffer to show toggles for, or 0 or nil for current buffer
+function M.show(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    ---@type (string|integer)[][]
+    local items = {}
+    for _, item in ipairs(registry) do
+        ---@type string[]
+        local entry = {}
+
+        table.insert(entry, item.name)
+        table.insert(entry, ' ' .. item.scope .. ' ')
+
+        local value = item.value_fn(item.scope == 'buffer' and buffer or nil)
+        table.insert(entry, value and 'on' or 'off')
+
+        table.insert(items, entry)
+    end
+
+    require('ui.select').advanced(items, {
+        prompt = 'Toggle option',
+        highlighter = function(_, index, col_index)
+            local item = registry[index]
+            if col_index < 3 then
+                if item.scope == 'buffer' then
+                    return 'NormalMenuItem'
+                else
+                    return 'SpecialMenuItem'
+                end
+            else
+                local value = item.value_fn(item.scope == 'buffer' and buffer or nil)
+                if value then
+                    return 'DiagnosticOk'
+                else
+                    return 'DiagnosticError'
+                end
+            end
+        end,
+        callback = function(_, index)
+            local fn = registry[index].toggle_fn
+            if registry[index].scope == 'buffer' then
+                fn(vim.api.nvim_get_current_buf())
+            else
+                fn()
+            end
+        end,
+        index_fields = { 1, 2 },
+    })
+end
+
+local icons = require 'ui.icons'
+
+register(icons.UI.Lint .. ' Auto-linting', function(buffer)
+    if buffer then
+        return settings.buf[buffer].auto_linting_enabled
+    else
+        return settings.global.auto_linting_enabled
+    end
+end, function(buffer)
+    M.toggle_auto_linting { buffer = buffer }
+end, { scope = { 'buffer', 'global' } })
+
+vim.keymap.set('n', '<leader>uu', M.show, { desc = 'Toggle options' })
 
 return M
