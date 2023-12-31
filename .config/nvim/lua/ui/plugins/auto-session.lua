@@ -2,7 +2,7 @@ return {
     -- TODO: maybe use resession? It allows for much more custom stuff than this
     'rmagatti/auto-session',
     cond = feature_level(2),
-    lazy = false,
+    --    event = 'User LazyDone',
     opts = {
         log_level = 'error',
         auto_session_suppress_dirs = { '~/', '/' },
@@ -14,5 +14,11 @@ return {
         auto_restore_enabled = true,
         auto_session_use_git_branch = true,
         bypass_session_save_file_types = { 'gitcommit', 'gitrebase', 'svn', 'hgcommit' },
+        save_extra_cmds = {
+            function()
+                local opts = require('core.toggles').serialize()
+                return ":lua require('core.toggles').deserialize([[" .. opts .. ']])'
+            end,
+        },
     },
 }

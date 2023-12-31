@@ -192,7 +192,7 @@ function M.roots(target)
     end)
 
     -- cache the roots for buffer
-    settings.set(setting_name, roots, { buffer = buffer, transient = true })
+    settings.set(setting_name, roots, { buffer = buffer, scope = 'transient' })
     return roots
 end
 

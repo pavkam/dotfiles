@@ -184,7 +184,7 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
 
     -- do not retrigger these events if the file name is set
     if current_file ~= '' then
-        settings.set('custom_events_triggered', true, { buffer = evt.buf })
+        settings.set('custom_events_triggered', true, { buffer = evt.buf, scope = 'instance' })
     end
 end)
 

@@ -178,7 +178,7 @@ utils.on_event('BufWinEnter', function(evt)
         local ignore_filetypes = { 'gitcommit', 'gitrebase', 'svg', 'hgcommit' }
 
         if buftype == '' and filetype and filetype ~= '' and not vim.tbl_contains(ignore_filetypes, filetype) then
-            settings.set('view_activated', true, { buffer = evt.buf })
+            settings.set('view_activated', true, { buffer = evt.buf, scope = 'instance' })
             vim.cmd.loadview { mods = { emsg_silent = true } }
         end
     end
