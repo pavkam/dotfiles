@@ -1,8 +1,7 @@
 return {
-    -- TODO: maybe use resession? It allows for much more custom stuff than this
     'rmagatti/auto-session',
     cond = feature_level(2),
-    --    event = 'User LazyDone',
+    event = 'User LazyDone',
     opts = {
         log_level = 'error',
         auto_session_suppress_dirs = { '~/', '/' },

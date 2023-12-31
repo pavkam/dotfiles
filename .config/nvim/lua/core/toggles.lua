@@ -15,7 +15,8 @@ function M.toggle(option, opts)
     opts.description = opts.description or option
     assert(type(opts.description) == 'string' and opts.description ~= '')
 
-    local enabled = settings.get(option, { buffer = opts.buffer, default = opts.default })
+    local scope = opts.buffer and 'permanent' or 'global'
+    local enabled = settings.get(option, { buffer = opts.buffer, scope = scope, default = opts.default })
 
     if opts.buffer ~= nil then
         local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(opts.buffer), ':t')
@@ -24,7 +25,7 @@ function M.toggle(option, opts)
         utils.info(string.format('Turning **%s** %s *globally*.', enabled and 'off' or 'on', opts.description))
     end
 
-    settings.set(option, not enabled, { buffer = opts.buffer, scope = 'permanent' })
+    settings.set(option, not enabled, { buffer = opts.buffer, scope = scope })
 
     return not enabled
 end
@@ -145,7 +146,7 @@ function M.show(buffer)
         end,
         callback = function(_, index)
             local fn = sorted[index].toggle_fn
-            if registry[index].scope == 'buffer' then
+            if sorted[index].scope == 'buffer' then
                 fn(vim.api.nvim_get_current_buf())
             else
                 fn()
