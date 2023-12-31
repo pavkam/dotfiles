@@ -69,26 +69,6 @@ vim.keymap.set('n', '[w', function()
     diagnostics.jump(false, 'WARN')
 end, { desc = 'Previous Warning' })
 
-vim.keymap.set('n', '<leader>uM', function()
-    toggles.toggle_diagnostics()
-end, { desc = 'Toggle global diagnostics' })
-
-vim.keymap.set('n', '<leader>um', function()
-    toggles.toggle_diagnostics { buffer = vim.api.nvim_get_current_buf() }
-end, { desc = 'Toggle buffer diagnostics' })
-
--- Treesitter
-vim.keymap.set('n', '<leader>ut', function()
-    toggles.toggle_treesitter { buffer = vim.api.nvim_get_current_buf() }
-end, { desc = 'Toggle buffer treesitter' })
-
--- show hidden
-if feature_level(1) then
-    vim.keymap.set('n', '<leader>uh', function()
-        toggles.toggle_ignore_hidden_files()
-    end, { desc = 'Toggle show hidden' })
-end
-
 -- Command mode remaps to make my life easier using the keyboard
 vim.keymap.set('c', '<Down>', function()
     if vim.fn.wildmenumode() then
@@ -214,3 +194,41 @@ utils.on_event('VimResized', function()
     vim.cmd 'tabdo wincmd ='
     vim.cmd('tabnext ' .. current_tab)
 end)
+
+local M = {}
+
+--- Toggles ignoring of hidden files on or off
+---@param ignore boolean # whether to ignore hidden files
+local function set_ignore_hidden_files(ignore)
+    -- Update Neo-Tree state
+    local mgr = require 'neo-tree.sources.manager'
+    mgr.get_state('filesystem').filtered_items.visible = not ignore
+end
+
+--- Toggles ignoring of hidden files on or off
+function M.toggle_ignore_hidden_files()
+    local ignore = toggles.toggle('ignore_hidden_files', { description = 'hiding ignored files', default = true })
+    set_ignore_hidden_files(ignore)
+end
+
+toggles.register_setting(icons.UI.ShowHidden .. ' Ignore hidden files', 'ignore_hidden_files', 'global', function(enabled)
+    set_ignore_hidden_files(enabled)
+end, { description = 'hiding ignored files', default = true })
+
+toggles.register_setting(icons.UI.SyntaxTree .. ' Treesitter', 'treesitter_enabled', { 'global', 'buffer' }, function(enabled, buffer)
+    if not enabled then
+        vim.treesitter.stop(buffer)
+    else
+        vim.treesitter.start(buffer)
+    end
+end, { description = 'tree-sitter', default = true })
+
+toggles.register_setting(icons.Diagnostics.Prefix .. ' Diagnostics', 'diagnostics_enabled', { 'global', 'buffer' }, function(enabled, buffer)
+    if not enabled then
+        vim.diagnostic.disable(buffer)
+    else
+        vim.diagnostic.enable(buffer)
+    end
+end, { description = 'diagnostics', default = true })
+
+return M

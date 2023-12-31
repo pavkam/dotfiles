@@ -13,7 +13,7 @@ return {
         local lint = require 'linting'
         local shell = require 'core.shell'
         local settings = require 'core.settings'
-        local toggles = require 'core.toggles'
+        local ui = require 'ui'
 
         --- Extracts the color and attributes from a highlight group.
         ---@param name string
@@ -250,7 +250,7 @@ return {
                         end,
                         color = color 'Comment',
                         on_click = function()
-                            toggles.toggle_ignore_hidden_files()
+                            ui.toggle_ignore_hidden_files()
                         end,
                         separator = false,
                     },

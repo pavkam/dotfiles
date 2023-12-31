@@ -21,22 +21,6 @@ return {
             mode = { 'n', 'v' },
             desc = 'Format buffer',
         },
-        {
-            '<leader>uf',
-            function()
-                require('core.toggles').toggle_auto_formatting { buffer = vim.api.nvim_get_current_buf() }
-            end,
-            mode = { 'n' },
-            desc = 'Toggle buffer auto-formatting',
-        },
-        {
-            '<leader>uF',
-            function()
-                require('core.toggles').toggle_auto_formatting()
-            end,
-            mode = { 'n' },
-            desc = 'Toggle global auto-formatting',
-        },
     },
     init = function()
         vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"

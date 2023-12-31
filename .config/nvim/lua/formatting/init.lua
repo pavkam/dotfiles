@@ -1,5 +1,7 @@
 local utils = require 'core.utils'
 local progress = require 'ui.progress'
+local toggles = require 'core.toggles'
+local icons = require 'ui.icons'
 
 ---@class formatting
 local M = {}
@@ -91,5 +93,13 @@ function M.apply(buffer, injected)
         progress.register_task_for_buffer(buffer, progress_class, { prv = true, fn = formatting_status, ctx = names })
     end
 end
+
+toggles.register_setting(icons.UI.Format .. ' Auto-formatting', 'auto_formatting_enabled', { 'buffer', 'global' }, function(enabled, buffer)
+    local format = require 'formatting'
+
+    if enabled then
+        format.apply(buffer)
+    end
+end, { description = 'auto-formatting', default = true })
 
 return M

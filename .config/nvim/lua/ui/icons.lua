@@ -130,6 +130,7 @@ local M = {
         Notes = '󰠮',
         IgnoreHidden = '󰛑',
         ShowHidden = '󰛐',
+        SyntaxTree = '󱘎',
         TMux = '',
         Switch = '',
         Action = '󰜎',

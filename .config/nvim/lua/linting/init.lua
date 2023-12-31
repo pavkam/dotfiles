@@ -1,6 +1,8 @@
 local utils = require 'core.utils'
 local project = require 'project'
 local progress = require 'ui.progress'
+local toggles = require 'core.toggles'
+local icons = require 'ui.icons'
 
 ---@class linting
 local M = {}
@@ -110,5 +112,15 @@ function M.apply(buffer)
         end
     end, 100)
 end
+
+toggles.register_setting(icons.UI.Lint .. ' Auto-linting', 'auto_linting_enabled', { 'buffer', 'global' }, function(enabled, buffer)
+    local lint = require 'linting'
+
+    if not enabled then
+        lint.apply(buffer)
+    else
+        require('project.lsp').clear_diagnostics(lint.active_names_for_buffer(buffer), buffer)
+    end
+end, { description = 'auto-linting', default = true })
 
 return M

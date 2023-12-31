@@ -2,24 +2,6 @@ return {
     'mfussenegger/nvim-lint',
     cond = feature_level(3),
     event = 'User NormalFile',
-    keys = {
-        {
-            '<leader>ul',
-            function()
-                require('core.toggles').toggle_auto_linting { buffer = vim.api.nvim_get_current_buf() }
-            end,
-            mode = { 'n' },
-            desc = 'Toggle buffer auto-linting',
-        },
-        {
-            '<leader>uL',
-            function()
-                require('core.toggles').toggle_auto_linting()
-            end,
-            mode = { 'n' },
-            desc = 'Toggle global auto-linting',
-        },
-    },
     opts = function()
         local project = require 'project'
 
