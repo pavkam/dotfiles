@@ -2,6 +2,7 @@ return {
     -- TODO: maybe use resession? It allows for much more custom stuff than this
     'rmagatti/auto-session',
     cond = feature_level(2),
+    lazy = false,
     opts = {
         log_level = 'error',
         auto_session_suppress_dirs = { '~/', '/' },
