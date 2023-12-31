@@ -24,7 +24,7 @@ function M.toggle(option, opts)
         utils.info(string.format('Turning **%s** %s *globally*.', enabled and 'off' or 'on', opts.description))
     end
 
-    settings.set(option, not enabled, { buffer = opts.buffer })
+    settings.set(option, not enabled, { buffer = opts.buffer, scope = 'permanent' })
 
     return not enabled
 end
@@ -127,7 +127,7 @@ function M.show(buffer)
         prompt = 'Toggle option',
         separator = ' | ',
         highlighter = function(_, index, col_index)
-            local item = registry[index]
+            local item = sorted[index]
             if col_index < 3 then
                 if item.scope == 'buffer' then
                     return 'NormalMenuItem'
@@ -144,7 +144,7 @@ function M.show(buffer)
             end
         end,
         callback = function(_, index)
-            local fn = registry[index].toggle_fn
+            local fn = sorted[index].toggle_fn
             if registry[index].scope == 'buffer' then
                 fn(vim.api.nvim_get_current_buf())
             else
@@ -153,6 +153,18 @@ function M.show(buffer)
         end,
         index_fields = { 1, 2 },
     })
+end
+
+--- Serializes the current toggles to a string
+---@return string # the serialized options
+function M.serialize()
+    return vim.json.encode(settings.snapshot()) or '{}'
+end
+
+--- Restores toggles from a serialized string
+---@param opts string # the serialized options
+function M.deserialize(opts)
+    utils.info(vim.inspect(vim.json.decode(opts)))
 end
 
 vim.keymap.set('n', '<leader>uu', M.show, { desc = 'Toggle options' })
