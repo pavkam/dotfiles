@@ -1,6 +1,5 @@
 local icons = require 'ui.icons'
 local utils = require 'core.utils'
-local settings = require 'core.settings'
 
 return {
     'nvim-neo-tree/neo-tree.nvim',
@@ -137,7 +136,11 @@ return {
                 event = 'neo_tree_buffer_leave',
                 handler = function()
                     local state = require('neo-tree.sources.manager').get_state 'filesystem'
-                    settings.global.ignore_hidden_files = not state.filtered_items.visible
+
+                    local ui = require 'ui'
+                    if ui.hidden_files_ignored() ~= not state.filtered_items.visible then
+                        ui.toggle_ignore_hidden_files()
+                    end
                 end,
             },
         },

@@ -2,26 +2,6 @@ return {
     'stevearc/conform.nvim',
     cond = feature_level(3),
     cmd = 'ConformInfo',
-    keys = {
-        {
-            'g=',
-            function()
-                require('formatting').apply(nil, true)
-                require('core.utils').info(string.format('Formatted buffer *%s* (**injected**)', vim.fn.expand '%:t'))
-            end,
-            mode = { 'n', 'v' },
-            desc = 'Format buffer injected',
-        },
-        {
-            '=',
-            function()
-                require('formatting').apply()
-                require('core.utils').info(string.format('Formatted buffer *%s*', vim.fn.expand '%:t'))
-            end,
-            mode = { 'n', 'v' },
-            desc = 'Format buffer',
-        },
-    },
     init = function()
         vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
     end,
@@ -88,18 +68,5 @@ return {
                 },
             },
         }
-    end,
-    config = function(_, opts)
-        local conform = require 'conform'
-        local settings = require 'core.settings'
-        local utils = require 'core.utils'
-
-        conform.setup(opts)
-
-        utils.on_event('BufWritePre', function(evt)
-            if settings.global.auto_formatting_enabled and settings.buf[evt.buf].auto_formatting_enabled then
-                require('formatting').apply(evt.buf)
-            end
-        end, '*')
     end,
 }

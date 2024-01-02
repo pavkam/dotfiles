@@ -15,8 +15,8 @@ return {
         bypass_session_save_file_types = { 'gitcommit', 'gitrebase', 'svn', 'hgcommit' },
         save_extra_cmds = {
             function()
-                local opts = require('core.toggles').serialize()
-                return ":lua require('core.toggles').deserialize([[" .. opts .. ']])'
+                local opts = require('core.settings').serialize_to_json()
+                return ":lua require('core.settings').deserialize_from_json([[" .. opts .. ']])'
             end,
         },
     },

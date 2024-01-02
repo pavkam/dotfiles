@@ -1,6 +1,6 @@
 local utils = require 'core.utils'
 local progress = require 'ui.progress'
-local toggles = require 'core.toggles'
+local settings = require 'core.settings'
 local icons = require 'ui.icons'
 
 ---@class formatting
@@ -94,12 +94,40 @@ function M.apply(buffer, injected)
     end
 end
 
-toggles.register_setting(icons.UI.Format .. ' Auto-formatting', 'auto_formatting_enabled', { 'buffer', 'global' }, function(enabled, buffer)
+local setting_name = 'auto_formatting_enabled'
+
+--- Checks whether formatting is enabled for a buffer
+---@param buffer integer|nil # the buffer to check the formatting for or 0 or nil for current
+---@return boolean # whether formatting is enabled
+function M.enabled(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    return settings.get(setting_name, { default = true }) and settings.get(setting_name, { buffer = buffer, default = true })
+end
+
+settings.register_setting(icons.UI.Format .. ' Auto-formatting', setting_name, function(enabled, buffer)
     local format = require 'formatting'
 
     if enabled then
         format.apply(buffer)
     end
-end, { description = 'auto-formatting', default = true })
+end, { description = 'auto-formatting', scope = { 'buffer', 'global' } })
+
+if utils.has_plugin 'conform.nvim' then
+    vim.keymap.set({ 'n', 'v' }, 'g=', function()
+        require('formatting').apply(nil, true)
+        require('core.utils').info(string.format('Formatted buffer *%s* (**injected**)', vim.fn.expand '%:t'))
+    end, { desc = 'Format buffer injected' })
+
+    vim.keymap.set({ 'n', 'v' }, '=', function()
+        require('formatting').apply()
+        require('core.utils').info(string.format('Formatted buffer *%s*', vim.fn.expand '%:t'))
+    end, { desc = 'Format buffer' })
+
+    utils.on_event('BufWritePre', function(evt)
+        if settings.get(setting_name) and settings.get(setting_name, { buffer = evt.buf }) then
+            require('formatting').apply(evt.buf)
+        end
+    end, '*')
+end
 
 return M

@@ -1,7 +1,6 @@
 local utils = require 'core.utils'
 local settings = require 'core.settings'
 local git = require 'git'
-local toggles = require 'core.toggles'
 local diagnostics = require 'project.diagnostics'
 local icons = require 'ui.icons'
 
@@ -168,7 +167,7 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     local current_file = vim.api.nvim_buf_get_name(evt.buf)
 
     -- if custom events have been triggered, bail
-    if settings.get('custom_events_triggered', { buffer = evt.buf }) then
+    if settings.get('custom_events_triggered', { buffer = evt.buf, scope = 'instance' }) then
         return
     end
 
@@ -197,6 +196,12 @@ end)
 
 local M = {}
 
+local ignore_hidden_files_setting_name = 'ignore_hidden_files'
+
+function M.hidden_files_ignored()
+    return settings.get(ignore_hidden_files_setting_name, { default = true })
+end
+
 --- Toggles ignoring of hidden files on or off
 ---@param ignore boolean # whether to ignore hidden files
 local function set_ignore_hidden_files(ignore)
@@ -207,28 +212,28 @@ end
 
 --- Toggles ignoring of hidden files on or off
 function M.toggle_ignore_hidden_files()
-    local ignore = toggles.toggle('ignore_hidden_files', { description = 'hiding ignored files', default = true })
+    local ignore = settings.toggle(ignore_hidden_files_setting_name, { description = 'hiding ignored files', default = true })
     set_ignore_hidden_files(ignore)
 end
 
-toggles.register_setting(icons.UI.ShowHidden .. ' Ignore hidden files', 'ignore_hidden_files', 'global', function(enabled)
+settings.register_setting(icons.UI.ShowHidden .. ' Ignore hidden files', ignore_hidden_files_setting_name, function(enabled)
     set_ignore_hidden_files(enabled)
-end, { description = 'hiding ignored files', default = true })
+end, { description = 'hiding ignored files', scope = 'global' })
 
-toggles.register_setting(icons.UI.SyntaxTree .. ' Treesitter', 'treesitter_enabled', { 'global', 'buffer' }, function(enabled, buffer)
+settings.register_setting(icons.UI.SyntaxTree .. ' Treesitter', 'treesitter_enabled', function(enabled, buffer)
     if not enabled then
         vim.treesitter.stop(buffer)
     else
         vim.treesitter.start(buffer)
     end
-end, { description = 'tree-sitter', default = true })
+end, { description = 'tree-sitter', scope = { 'global', 'buffer' } })
 
-toggles.register_setting(icons.Diagnostics.Prefix .. ' Diagnostics', 'diagnostics_enabled', { 'global', 'buffer' }, function(enabled, buffer)
+settings.register_setting(icons.Diagnostics.Prefix .. ' Diagnostics', 'diagnostics_enabled', function(enabled, buffer)
     if not enabled then
         vim.diagnostic.disable(buffer)
     else
         vim.diagnostic.enable(buffer)
     end
-end, { description = 'diagnostics', default = true })
+end, { description = 'diagnostics', scope = { 'global', 'buffer' } })
 
 return M

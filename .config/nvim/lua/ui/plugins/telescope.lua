@@ -15,14 +15,14 @@ return {
         cmd = 'Telescope',
         version = false, -- telescope did only one release, so use HEAD for now
         keys = function()
-            local settings = require 'core.settings'
-            local utils = require 'core.utils'
-
             --- Wraps the options for telescope to add some defaults
             --- @param opts table|nil
             --- @return table
             local function wrap(opts)
-                local show_hidden = not settings.global.ignore_hidden_files
+                local utils = require 'core.utils'
+                local ui = require 'ui'
+
+                local show_hidden = not ui.hidden_files_ignored()
                 local add = {
                     additional_args = show_hidden and function(args)
                         return vim.list_extend(args, { '--hidden', '--no-ignore' })

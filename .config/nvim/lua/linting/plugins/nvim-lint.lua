@@ -87,7 +87,6 @@ return {
     end,
     config = function(_, opts)
         local utils = require 'core.utils'
-        local settings = require 'core.settings'
         local lint = require 'lint'
 
         -- apply user options to the default config
@@ -114,12 +113,5 @@ return {
 
         -- setup my linters
         lint.linters_by_ft = opts.linters_by_ft
-
-        -- setup auto-commands
-        utils.on_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(evt)
-            if settings.global.auto_linting_enabled and settings.buf[evt.buf].auto_linting_enabled then
-                require('linting').apply(evt.buf)
-            end
-        end, '*')
     end,
 }

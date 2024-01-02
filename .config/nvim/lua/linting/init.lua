@@ -1,7 +1,7 @@
 local utils = require 'core.utils'
 local project = require 'project'
 local progress = require 'ui.progress'
-local toggles = require 'core.toggles'
+local settings = require 'core.settings'
 local icons = require 'ui.icons'
 
 ---@class linting
@@ -113,7 +113,17 @@ function M.apply(buffer)
     end, 100)
 end
 
-toggles.register_setting(icons.UI.Lint .. ' Auto-linting', 'auto_linting_enabled', { 'buffer', 'global' }, function(enabled, buffer)
+local setting_name = 'auto_linting_enabled'
+
+--- Checks whether auto-linting is enabled for a buffer
+---@param buffer integer|nil # the buffer to check the auto-linting for or 0 or nil for current
+---@return boolean # whether auto-linting is enabled
+function M.enabled(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    return settings.get(setting_name, { default = true }) and settings.get(setting_name, { buffer = buffer, default = true })
+end
+
+settings.register_setting(icons.UI.Lint .. ' Auto-linting', setting_name, function(enabled, buffer)
     local lint = require 'linting'
 
     if not enabled then
@@ -121,6 +131,15 @@ toggles.register_setting(icons.UI.Lint .. ' Auto-linting', 'auto_linting_enabled
     else
         require('project.lsp').clear_diagnostics(lint.active_names_for_buffer(buffer), buffer)
     end
-end, { description = 'auto-linting', default = true })
+end, { description = 'auto-linting', default = true, scope = { 'buffer', 'global' } })
+
+if utils.has_plugin 'nvim-lint' then
+    -- setup auto-commands
+    utils.on_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(evt)
+        if settings.get(setting_name) and settings.get(setting_name, { buffer = evt.buf }) then
+            require('linting').apply(evt.buf)
+        end
+    end, '*')
+end
 
 return M

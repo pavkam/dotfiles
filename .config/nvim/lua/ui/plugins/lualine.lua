@@ -145,7 +145,7 @@ return {
                     {
                         settings.transient(function(buffer)
                             local prefix = icons.UI.Disabled
-                            if settings.global.auto_linting_enabled and settings.buf[buffer].auto_linting_enabled then
+                            if lint.enabled(buffer) then
                                 prefix = lint.progress(buffer) or icons.UI.Format
                             end
 
@@ -155,7 +155,7 @@ return {
                             return lint.active_for_buffer(buffer)
                         end),
                         color = settings.transient(function(buffer)
-                            if not settings.global.auto_linting_enabled and settings.buf[buffer].auto_linting_enabled then
+                            if not lint.enabled(buffer) then
                                 return color 'DisabledLintersStatus'
                             else
                                 return color 'ActiveLintersStatus'
@@ -166,7 +166,7 @@ return {
                     {
                         settings.transient(function(buffer)
                             local prefix = icons.UI.Disabled
-                            if settings.global.auto_formatting_enabled and settings.buf[buffer].auto_formatting_enabled then
+                            if format.enabled(buffer) then
                                 prefix = format.progress(buffer) or icons.UI.Lint
                             end
 
@@ -176,7 +176,7 @@ return {
                             return format.active_for_buffer(buffer)
                         end),
                         color = settings.transient(function(buffer)
-                            if not settings.global.auto_formatting_enabled and settings.buf[buffer].auto_formatting_enabled then
+                            if not format.enabled(buffer) then
                                 return color 'DisabledFormattersStatus'
                             else
                                 return color 'ActiveFormattersStatus'
@@ -246,7 +246,7 @@ return {
                 lualine_z = {
                     {
                         function()
-                            return settings.global.ignore_hidden_files and icons.UI.IgnoreHidden or icons.UI.ShowHidden
+                            return ui.hidden_files_ignored() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
                         end,
                         color = color 'Comment',
                         on_click = function()

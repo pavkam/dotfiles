@@ -148,7 +148,7 @@ function M.roots(target)
     local setting_name = 'root_paths'
 
     -- check for cached roots
-    local roots = settings.get(setting_name, { buffer = buffer, transient = true })
+    local roots = settings.get(setting_name, { buffer = buffer, scope = 'transient' })
     ---@cast roots string[]
     if roots then
         return roots

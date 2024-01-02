@@ -166,13 +166,13 @@ end)
 
 -- mkview and loadview for real files
 utils.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
-    if settings.get('view_activated', { buffer = evt.buf }) then
+    if settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
         vim.cmd.mkview { mods = { emsg_silent = true } }
     end
 end)
 
 utils.on_event('BufWinEnter', function(evt)
-    if not settings.get('view_activated', { buffer = evt.buf }) then
+    if not settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
         local filetype = vim.api.nvim_get_option_value('filetype', { buf = evt.buf })
         local buftype = vim.api.nvim_get_option_value('buftype', { buf = evt.buf })
         local ignore_filetypes = { 'gitcommit', 'gitrebase', 'svg', 'hgcommit' }
