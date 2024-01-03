@@ -4,12 +4,15 @@ local utils = require 'core.utils'
 local global_permanent_settings = {}
 ---@type table<integer, any>
 local global_instance_settings = {}
----@type table<integer, any>
+---@type table<integer, table<string, any>>
 local buffer_permanent_settings = {}
----@type table<integer, any>
+---@type table<integer, table<string, any>>
 local buffer_instance_settings = {}
----@type table<integer, any>
+---@type table<integer, table<string, any>>
 local buffer_transient_settings = {}
+
+---@type table<string, table<string, any>>
+local file_permament_settings = {}
 
 -- Clear the options for a buffer
 utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost', 'BufEnter', 'VimResized' }, function()
@@ -61,7 +64,7 @@ function M.transient(func, option)
     end
 end
 
----@alias core.settings.Scope 'transient' | 'permanent' | 'instance' | 'global'
+---@alias core.settings.Scope 'transient' | 'permanent' | 'instance'
 
 --- Changes the value of an option
 ---@param option string # the name of the option
@@ -71,9 +74,9 @@ function M.set(option, value, opts)
     assert(type(option) == 'string' and option ~= '')
     assert(type(opts) == 'table')
 
-    assert(opts.scope == 'transient' or opts.scope == 'permanent' or opts.scope == 'instance' or opts.scope == 'global')
+    assert(opts.scope == 'transient' or opts.scope == 'permanent' or opts.scope == 'instance')
 
-    if opts.scope == 'global' then
+    if opts.scope == 'permanent' and opts.buffer == nil then
         if global_permanent_settings[option] ~= value then
             global_permanent_settings[option] = value
         end
@@ -98,6 +101,7 @@ function M.set(option, value, opts)
                 buffer_permanent_settings[opts.buffer] = {}
             end
             buffer_permanent_settings[opts.buffer][option] = value
+            file_permament_settings[vim.api.nvim_buf_get_name(opts.buffer)] = buffer_permanent_settings[opts.buffer]
         end
     end
     --
@@ -114,10 +118,10 @@ function M.get(option, opts)
     assert(type(option) == 'string' and option ~= '')
     assert(type(opts) == 'table')
 
-    assert(opts.scope == 'transient' or opts.scope == 'permanent' or opts.scope == 'instance' or opts.scope == 'global')
+    assert(opts.scope == 'transient' or opts.scope == 'permanent' or opts.scope == 'instance')
 
     local val
-    if opts.scope == 'global' then
+    if opts.scope == 'permanent' and opts.buffer == nil then
         val = global_permanent_settings[option]
     elseif opts.scope == 'instance' and opts.buffer == nil then
         val = global_instance_settings[option]
@@ -207,13 +211,13 @@ function M.register_toggle(option, toggle_fn, opts)
     for _, scope in ipairs(scopes) do
         assert(scope == 'buffer' or scope == 'global')
 
-        local get_value = function(buffer)
-            if buffer then
-                return M.get(option, { buffer = buffer, default = opts.default, scope = 'permanent' })
-            else
+        local get_value = scope == 'buffer'
+                and function(buffer)
+                    return M.get(option, { buffer = buffer, default = opts.default, scope = 'permanent' })
+                end
+            or function()
                 return M.get(option, { default = opts.default, scope = 'permanent' })
             end
-        end
 
         local toggle_value = function(buffer)
             local enabled = get_value(buffer)
@@ -366,14 +370,9 @@ end
 --- Serializes the relevant settings to a JSON string
 ---@return string # the serialized settings
 function M.serialize_to_json()
-    local buf_opts = {}
-    for buffer, settings in pairs(buffer_permanent_settings) do
-        buf_opts[vim.api.nvim_buf_get_name(buffer)] = settings
-    end
-
     local settings = {
         global = global_permanent_settings,
-        files = buf_opts,
+        files = file_permament_settings,
     }
 
     return vim.json.encode(settings) or '{}'
@@ -382,7 +381,10 @@ end
 --- Restores settings from a serialized JSON string
 ---@param opts string # the serialized settings
 function M.deserialize_from_json(opts)
-    utils.info(vim.inspect(vim.json.decode(opts)))
+    local settings = vim.json.decode(opts)
+    ---@cast settings { global: table<string, any>, files: table<string, table<string, any>> }
+
+    utils.info(vim.inspect(settings))
 end
 
 vim.keymap.set('n', '<leader>uu', M.show_settings_ui, { desc = 'Toggle options' })
