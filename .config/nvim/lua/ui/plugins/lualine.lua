@@ -246,11 +246,11 @@ return {
                 lualine_z = {
                     {
                         function()
-                            return ui.hidden_files_ignored() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
+                            return ui.hidden_files.ignored() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
                         end,
                         color = color 'Comment',
                         on_click = function()
-                            ui.toggle_ignore_hidden_files()
+                            ui.hidden_files.toggle()
                         end,
                         separator = false,
                     },

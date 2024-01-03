@@ -1,13 +1,15 @@
 local utils = require 'core.utils'
 
 ---@type table<string, any>
-local global_settings = {}
+local global_permanent_settings = {}
 ---@type table<integer, any>
-local permanent_settings = {}
+local global_instance_settings = {}
 ---@type table<integer, any>
-local instance_settings = {}
+local buffer_permanent_settings = {}
 ---@type table<integer, any>
-local transient_settings = {}
+local buffer_instance_settings = {}
+---@type table<integer, any>
+local buffer_transient_settings = {}
 
 -- Clear the options for a buffer
 utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost', 'BufEnter', 'VimResized' }, function()
@@ -15,13 +17,13 @@ utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost', 'BufEnter', 'VimResiz
 end)
 
 utils.on_event('BufDelete', function(evt)
-    transient_settings[evt.buf] = nil
-    instance_settings[evt.buf] = nil
-    permanent_settings[evt.buf] = nil
+    buffer_transient_settings[evt.buf] = nil
+    buffer_instance_settings[evt.buf] = nil
+    buffer_permanent_settings[evt.buf] = nil
 end)
 
 utils.on_status_update_event(function(evt)
-    transient_settings[evt.buf] = nil
+    buffer_transient_settings[evt.buf] = nil
 
     -- refresh the status showing components
     if package.loaded['lualine'] then
@@ -64,38 +66,38 @@ end
 --- Changes the value of an option
 ---@param option string # the name of the option
 ---@param value any|nil # the value of the option
----@param opts? { buffer?: integer, scope?: core.settings.Scope } # optional options
+---@param opts? { buffer?: integer, scope: core.settings.Scope } # optional options
 function M.set(option, value, opts)
     assert(type(option) == 'string' and option ~= '')
-    opts = opts or {}
-
-    if not opts.scope then
-        opts.scope = opts.buffer and 'permanent' or 'global'
-    end
+    assert(type(opts) == 'table')
 
     assert(opts.scope == 'transient' or opts.scope == 'permanent' or opts.scope == 'instance' or opts.scope == 'global')
 
     if opts.scope == 'global' then
-        if global_settings[option] ~= value then
-            global_settings[option] = value
+        if global_permanent_settings[option] ~= value then
+            global_permanent_settings[option] = value
+        end
+    elseif opts.scope == 'instance' and opts.buffer == nil then
+        if global_instance_settings[option] ~= value then
+            global_instance_settings[option] = value
         end
     else
         opts.buffer = opts.buffer or vim.api.nvim_get_current_buf()
         if opts.scope == 'instance' then
-            if not instance_settings[opts.buffer] then
-                instance_settings[opts.buffer] = {}
+            if not buffer_instance_settings[opts.buffer] then
+                buffer_instance_settings[opts.buffer] = {}
             end
-            instance_settings[opts.buffer][option] = value
+            buffer_instance_settings[opts.buffer][option] = value
         elseif opts.scope == 'transient' then
-            if not transient_settings[opts.buffer] then
-                transient_settings[opts.buffer] = {}
+            if not buffer_transient_settings[opts.buffer] then
+                buffer_transient_settings[opts.buffer] = {}
             end
-            transient_settings[opts.buffer][option] = value
+            buffer_transient_settings[opts.buffer][option] = value
         elseif opts.scope == 'permanent' then
-            if not permanent_settings[opts.buffer] then
-                permanent_settings[opts.buffer] = {}
+            if not buffer_permanent_settings[opts.buffer] then
+                buffer_permanent_settings[opts.buffer] = {}
             end
-            permanent_settings[opts.buffer][option] = value
+            buffer_permanent_settings[opts.buffer][option] = value
         end
     end
     --
@@ -106,30 +108,27 @@ end
 
 --- Gets a global option
 ---@param option string # the name of the option
----@param opts? { buffer?: integer, default?: any, scope?: core.settings.Scope } # optional options
+---@param opts { buffer?: integer, default?: any, scope: core.settings.Scope } # optional options
 ---@return any|nil # the value of the option
 function M.get(option, opts)
     assert(type(option) == 'string' and option ~= '')
-
-    opts = opts or {}
-
-    if not opts.scope then
-        opts.scope = opts.buffer and 'permanent' or 'global'
-    end
+    assert(type(opts) == 'table')
 
     assert(opts.scope == 'transient' or opts.scope == 'permanent' or opts.scope == 'instance' or opts.scope == 'global')
 
     local val
     if opts.scope == 'global' then
-        val = global_settings[option]
+        val = global_permanent_settings[option]
+    elseif opts.scope == 'instance' and opts.buffer == nil then
+        val = global_instance_settings[option]
     else
         local buffer = opts.buffer or vim.api.nvim_get_current_buf()
         if opts.scope == 'transient' then
-            val = transient_settings[buffer] and transient_settings[buffer][option]
+            val = buffer_transient_settings[buffer] and buffer_transient_settings[buffer][option]
         elseif opts.scope == 'instance' then
-            val = instance_settings[buffer] and instance_settings[buffer][option]
+            val = buffer_instance_settings[buffer] and buffer_instance_settings[buffer][option]
         elseif opts.scope == 'permanent' then
-            val = permanent_settings[buffer] and permanent_settings[buffer][option]
+            val = buffer_permanent_settings[buffer] and buffer_permanent_settings[buffer][option]
         end
     end
 
@@ -147,10 +146,11 @@ function M.snapshot_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local settings = {
-        transient = transient_settings[buffer],
-        permanent = permanent_settings[buffer],
-        instance = instance_settings[buffer],
-        global = global_settings,
+        buffer_transient = buffer_transient_settings[buffer],
+        buffer_permanent = buffer_permanent_settings[buffer],
+        buffer_instance = buffer_instance_settings[buffer],
+        global_permanent = global_permanent_settings,
+        global_instance = global_instance_settings,
     }
 
     return settings
@@ -160,120 +160,155 @@ end
 ---@return { global: table<string, any>, files: table<string, any> } # the settings tables
 function M.snapshot()
     local buf_opts = {}
-    for buffer, settings in pairs(permanent_settings) do
+    for buffer, settings in pairs(buffer_permanent_settings) do
         buf_opts[vim.api.nvim_buf_get_name(buffer)] = settings
     end
 
     local settings = {
-        global = global_settings,
+        global = global_permanent_settings,
         files = buf_opts,
     }
 
     return settings
 end
 
---- Toggles a permanent buffer or global boolean option
----@param option string # the name of the option
----@param opts? { buffer?: integer, description?: string, default?: boolean } # optional modifiers
----@return boolean # whether the option is enabled
-function M.toggle(option, opts)
-    assert(type(option) == 'string' and option ~= '')
-
-    opts = opts or {}
-    opts.description = opts.description or option
-    assert(type(opts.description) == 'string' and opts.description ~= '')
-
-    local enabled = M.get(option, { buffer = opts.buffer, default = opts.default })
-
-    if opts.buffer ~= nil then
-        local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(opts.buffer), ':t')
-        utils.info(string.format('Turning **%s** %s for *%s*.', enabled and 'off' or 'on', opts.description, file_name))
-    else
-        utils.info(string.format('Turning **%s** %s *globally*.', enabled and 'off' or 'on', opts.description))
-    end
-
-    M.set(option, not enabled, { buffer = opts.buffer })
-
-    return not enabled
-end
-
 ---@alias core.settings.ToggleScope 'buffer' | 'global'
 
 ---@class core.settings.RegistryItem
 ---@field name string
+---@field option string
 ---@field value_fn fun(buffer?: integer): boolean
 ---@field toggle_fn fun(buffer?: integer)
 ---@field scope core.settings.ToggleScope
 
 ---@type core.settings.RegistryItem[]
-local registry = {}
+local managed_toggles = {}
 
---- Registers a toggle
----@param name string # the name of the toggle
----@param scopes core.settings.ToggleScope[] # the scope(s) of the toggle
----@param value_fn fun(buffer?: integer): boolean # the function to call to get the current value of the toggle
----@param toggle_fn fun(buffer?: integer) # the function to call when the toggle is triggered
-local function register(name, scopes, value_fn, toggle_fn)
-    assert(type(name) == 'string' and name ~= '')
-    assert(type(toggle_fn) == 'function')
-    assert(type(value_fn) == 'function')
-
-    assert(vim.tbl_islist(scopes))
-
-    for _, scope in ipairs(scopes) do
-        assert(scope == 'buffer' or scope == 'global')
-
-        registry[#registry + 1] = {
-            name = name,
-            toggle_fn = toggle_fn,
-            value_fn = value_fn,
-            scope = scope,
-        }
-    end
-end
-
---- Registers a toggle for a setting
----@param name string # the name of the toggle
+--- Registers a managed toggle setting
 ---@param option string # the name of the option
 ---@param toggle_fn fun(enabled: boolean, buffer: integer) # the function to call when the toggle is triggered
----@param opts? { description?: string, scope?: core.settings.ToggleScope|core.settings.ToggleScope[], default?: boolean } # optional modifiers
-function M.register_setting(name, option, toggle_fn, opts)
+---@param opts? { name?: string, description?: string, scope?: core.settings.ToggleScope|core.settings.ToggleScope[], default?: boolean } # optional modifiers
+function M.register_toggle(option, toggle_fn, opts)
     opts = opts or {}
+    opts.name = opts.name or option
     opts.description = opts.description or option
+    opts.scope = opts.scope or 'global'
 
     if opts.default == nil then
         opts.default = true
     end
 
     assert(type(opts.description) == 'string' and opts.description ~= '')
+    assert(type(opts.name) == 'string' and opts.name ~= '')
+    assert(type(toggle_fn) == 'function')
 
-    local scopes = opts.scope and utils.to_list(opts.scope) or utils.to_list 'global'
-    assert(vim.tbl_islist(scopes))
+    local scopes = assert(utils.to_list(opts.scope))
 
-    register(name, scopes, function(buffer)
-        if buffer then
-            return M.get(option, { buffer = buffer, default = opts.default })
-        else
-            return M.get(option, { default = opts.default })
+    for _, scope in ipairs(scopes) do
+        assert(scope == 'buffer' or scope == 'global')
+
+        local get_value = function(buffer)
+            if buffer then
+                return M.get(option, { buffer = buffer, default = opts.default, scope = 'permanent' })
+            else
+                return M.get(option, { default = opts.default, scope = 'permanent' })
+            end
         end
-    end, function(buffer)
-        local enabled = M.toggle(option, { buffer = buffer, description = opts.description, default = opts.default })
-        local buffers = buffer ~= nil and { buffer } or utils.get_listed_buffers()
 
-        for _, b in ipairs(buffers) do
-            toggle_fn(enabled and M.get(option, { buffer = b }), b)
+        local toggle_value = function(buffer)
+            local enabled = get_value(buffer)
+
+            if buffer ~= nil then
+                local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
+                utils.info(string.format('Turning **%s** %s for *%s*.', enabled and 'off' or 'on', opts.description, file_name))
+            else
+                utils.info(string.format('Turning **%s** %s *globally*.', enabled and 'off' or 'on', opts.description))
+            end
+
+            enabled = not enabled
+            M.set(option, enabled, { buffer = buffer, scope = 'permanent' })
+
+            local buffers = buffer ~= nil and { buffer } or utils.get_listed_buffers()
+
+            for _, b in ipairs(buffers) do
+                toggle_fn(enabled and M.get(option, { buffer = b, default = opts.default, scope = 'permanent' }), b)
+            end
         end
-    end)
+
+        table.insert(managed_toggles, {
+            name = opts.name,
+            option = option,
+            toggle_fn = toggle_value,
+            value_fn = get_value,
+            scope = scope,
+        })
+    end
 end
 
---- Shows a list of toggles
+--- Gets the value of a managed toggle
+---@param option string # the name of the option
+---@param buffer? integer # the buffer to get the option for combined with the global (if available)
+---@return boolean # the value of the option
+function M.get_toggle(option, buffer)
+    assert(type(option) == 'string' and option ~= '')
+    if buffer == 0 then
+        buffer = vim.api.nvim_get_current_buf()
+    end
+
+    local toggles = vim.tbl_filter(function(toggle)
+        return toggle.option == option
+    end, managed_toggles)
+
+    assert(#toggles > 0)
+
+    local global_toggle = vim.tbl_filter(function(toggle)
+        return toggle.scope == 'global'
+    end, toggles)[1]
+
+    local buffer_toggle = vim.tbl_filter(function(toggle)
+        return toggle.scope == 'buffer'
+    end, toggles)[1]
+
+    if global_toggle and buffer_toggle then
+        return global_toggle.value_fn() and buffer_toggle.value_fn(buffer)
+    elseif global_toggle then
+        return global_toggle.value_fn()
+    elseif buffer_toggle then
+        return buffer_toggle.value_fn(buffer)
+    else
+        return false
+    end
+end
+
+--- Toggles a managed option
+---@param option string # the name of the option
+---@param buffer? integer # the buffer to toggle the option for. if nil, toggle globally
+---@param value boolean|nil # if nil, it will toggle the current value, otherwise it will set the value
+function M.set_toggle(option, buffer, value)
+    assert(type(option) == 'string' and option ~= '')
+    if buffer == 0 then
+        buffer = vim.api.nvim_get_current_buf()
+    end
+
+    local scope = buffer and 'buffer' or 'global'
+
+    local managed_toggle = assert(vim.tbl_filter(function(toggle)
+        return toggle.option == option and toggle.scope == scope
+    end, managed_toggles)[1])
+
+    if value == nil or managed_toggle.value_fn(buffer) ~= value then
+        managed_toggle.toggle_fn(buffer)
+    end
+end
+
+--- Shows the list of managed toggles
 ---@param buffer? integer # the buffer to show toggles for, or 0 or nil for current buffer
-function M.show(buffer)
+function M.show_settings_ui(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     ---@type (string|integer)[][]
     local items = {}
-    local sorted = vim.tbl_deep_extend('force', {}, registry)
+    local sorted = vim.tbl_deep_extend('force', {}, managed_toggles)
 
     table.sort(sorted, function(a, b)
         if a.name == b.name then
@@ -332,12 +367,12 @@ end
 ---@return string # the serialized settings
 function M.serialize_to_json()
     local buf_opts = {}
-    for buffer, settings in pairs(permanent_settings) do
+    for buffer, settings in pairs(buffer_permanent_settings) do
         buf_opts[vim.api.nvim_buf_get_name(buffer)] = settings
     end
 
     local settings = {
-        global = global_settings,
+        global = global_permanent_settings,
         files = buf_opts,
     }
 
@@ -350,6 +385,6 @@ function M.deserialize_from_json(opts)
     utils.info(vim.inspect(vim.json.decode(opts)))
 end
 
-vim.keymap.set('n', '<leader>uu', M.show, { desc = 'Toggle options' })
+vim.keymap.set('n', '<leader>uu', M.show_settings_ui, { desc = 'Toggle options' })
 
 return M

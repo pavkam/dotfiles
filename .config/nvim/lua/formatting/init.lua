@@ -100,17 +100,16 @@ local setting_name = 'auto_formatting_enabled'
 ---@param buffer integer|nil # the buffer to check the formatting for or 0 or nil for current
 ---@return boolean # whether formatting is enabled
 function M.enabled(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-    return settings.get(setting_name, { default = true }) and settings.get(setting_name, { buffer = buffer, default = true })
+    return settings.get_toggle(setting_name, buffer or vim.api.nvim_get_current_buf())
 end
 
-settings.register_setting(icons.UI.Format .. ' Auto-formatting', setting_name, function(enabled, buffer)
+settings.register_toggle(setting_name, function(enabled, buffer)
     local format = require 'formatting'
 
     if enabled then
         format.apply(buffer)
     end
-end, { description = 'auto-formatting', scope = { 'buffer', 'global' } })
+end, { name = icons.UI.Format .. ' Auto-formatting', description = 'auto-formatting', scope = { 'buffer', 'global' } })
 
 if utils.has_plugin 'conform.nvim' then
     vim.keymap.set({ 'n', 'v' }, 'g=', function()
@@ -124,7 +123,7 @@ if utils.has_plugin 'conform.nvim' then
     end, { desc = 'Format buffer' })
 
     utils.on_event('BufWritePre', function(evt)
-        if settings.get(setting_name) and settings.get(setting_name, { buffer = evt.buf }) then
+        if M.enabled(evt.buf) then
             require('formatting').apply(evt.buf)
         end
     end, '*')

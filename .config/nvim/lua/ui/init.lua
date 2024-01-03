@@ -194,46 +194,46 @@ utils.on_event('VimResized', function()
     vim.cmd('tabnext ' .. current_tab)
 end)
 
+---@class ui
 local M = {}
 
 local ignore_hidden_files_setting_name = 'ignore_hidden_files'
 
-function M.hidden_files_ignored()
-    return settings.get(ignore_hidden_files_setting_name, { default = true })
+---@class ui.hidden_files
+M.hidden_files = {}
+
+--- Returns whether hidden files are ignored or not
+---@return boolean # true if hidden files are ignored, false otherwise
+function M.hidden_files.ignored()
+    return settings.get_toggle(ignore_hidden_files_setting_name)
 end
 
 --- Toggles ignoring of hidden files on or off
----@param ignore boolean # whether to ignore hidden files
-local function set_ignore_hidden_files(ignore)
+---@param value? boolean # if nil, it will toggle the current value, otherwise it will set the value
+function M.hidden_files.toggle(value)
+    settings.set_toggle(ignore_hidden_files_setting_name, nil, value)
+end
+
+settings.register_toggle(ignore_hidden_files_setting_name, function(enabled)
     -- Update Neo-Tree state
     local mgr = require 'neo-tree.sources.manager'
-    mgr.get_state('filesystem').filtered_items.visible = not ignore
-end
+    mgr.get_state('filesystem').filtered_items.visible = enabled
+end, { name = icons.UI.ShowHidden .. ' Ignore hidden files', description = 'hiding ignored files', scope = 'global' })
 
---- Toggles ignoring of hidden files on or off
-function M.toggle_ignore_hidden_files()
-    local ignore = settings.toggle(ignore_hidden_files_setting_name, { description = 'hiding ignored files', default = true })
-    set_ignore_hidden_files(ignore)
-end
-
-settings.register_setting(icons.UI.ShowHidden .. ' Ignore hidden files', ignore_hidden_files_setting_name, function(enabled)
-    set_ignore_hidden_files(enabled)
-end, { description = 'hiding ignored files', scope = 'global' })
-
-settings.register_setting(icons.UI.SyntaxTree .. ' Treesitter', 'treesitter_enabled', function(enabled, buffer)
+settings.register_toggle('treesitter_enabled', function(enabled, buffer)
     if not enabled then
         vim.treesitter.stop(buffer)
     else
         vim.treesitter.start(buffer)
     end
-end, { description = 'tree-sitter', scope = { 'global', 'buffer' } })
+end, { name = icons.UI.SyntaxTree .. ' Treesitter', description = 'tree-sitter', scope = { 'global', 'buffer' } })
 
-settings.register_setting(icons.Diagnostics.Prefix .. ' Diagnostics', 'diagnostics_enabled', function(enabled, buffer)
+settings.register_toggle('diagnostics_enabled', function(enabled, buffer)
     if not enabled then
         vim.diagnostic.disable(buffer)
     else
         vim.diagnostic.enable(buffer)
     end
-end, { description = 'diagnostics', scope = { 'global', 'buffer' } })
+end, { name = icons.Diagnostics.Prefix .. ' Diagnostics', description = 'diagnostics', scope = { 'global', 'buffer' } })
 
 return M
