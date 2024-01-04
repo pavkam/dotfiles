@@ -12,30 +12,7 @@ local buffer_instance_settings = {}
 local buffer_transient_settings = {}
 
 ---@type table<string, table<string, any>>
-local file_permament_settings = {}
-
--- Clear the options for a buffer
-utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost', 'BufEnter', 'VimResized' }, function()
-    vim.defer_fn(utils.trigger_status_update_event, 100)
-end)
-
-utils.on_event('BufDelete', function(evt)
-    buffer_transient_settings[evt.buf] = nil
-    buffer_instance_settings[evt.buf] = nil
-    buffer_permanent_settings[evt.buf] = nil
-end)
-
-utils.on_status_update_event(function(evt)
-    buffer_transient_settings[evt.buf] = nil
-
-    -- refresh the status showing components
-    if package.loaded['lualine'] then
-        local refresh = require('lualine').refresh
-
-        ---@diagnostic disable-next-line: param-type-mismatch
-        pcall(refresh)
-    end
-end)
+local file_permanent_settings = {}
 
 ---@class core.settings
 local M = {}
@@ -101,7 +78,7 @@ function M.set(option, value, opts)
                 buffer_permanent_settings[opts.buffer] = {}
             end
             buffer_permanent_settings[opts.buffer][option] = value
-            file_permament_settings[vim.api.nvim_buf_get_name(opts.buffer)] = buffer_permanent_settings[opts.buffer]
+            file_permanent_settings[vim.api.nvim_buf_get_name(opts.buffer)] = buffer_permanent_settings[opts.buffer]
         end
     end
     --
@@ -178,14 +155,14 @@ end
 
 ---@alias core.settings.ToggleScope 'buffer' | 'global'
 
----@class core.settings.RegistryItem
+---@class core.settings.ManagedToggle
 ---@field name string
 ---@field option string
 ---@field value_fn fun(buffer?: integer): boolean
 ---@field toggle_fn fun(buffer?: integer)
 ---@field scope core.settings.ToggleScope
 
----@type core.settings.RegistryItem[]
+---@type core.settings.ManagedToggle[]
 local managed_toggles = {}
 
 --- Registers a managed toggle setting
@@ -249,6 +226,16 @@ function M.register_toggle(option, toggle_fn, opts)
     end
 end
 
+--- Gets a managed toggle
+---@param option string # the name of the option
+---@param scope core.settings.ToggleScope # the scope of the option
+---@return core.settings.ManagedToggle|nil # the toggle
+local function find_toggle(option, scope)
+    return vim.tbl_filter(function(toggle)
+        return toggle.option == option and toggle.scope == scope
+    end, managed_toggles)[1]
+end
+
 --- Gets the value of a managed toggle
 ---@param option string # the name of the option
 ---@param buffer? integer # the buffer to get the option for combined with the global (if available)
@@ -259,19 +246,8 @@ function M.get_toggle(option, buffer)
         buffer = vim.api.nvim_get_current_buf()
     end
 
-    local toggles = vim.tbl_filter(function(toggle)
-        return toggle.option == option
-    end, managed_toggles)
-
-    assert(#toggles > 0)
-
-    local global_toggle = vim.tbl_filter(function(toggle)
-        return toggle.scope == 'global'
-    end, toggles)[1]
-
-    local buffer_toggle = vim.tbl_filter(function(toggle)
-        return toggle.scope == 'buffer'
-    end, toggles)[1]
+    local global_toggle = find_toggle(option, 'global')
+    local buffer_toggle = find_toggle(option, 'buffer')
 
     if global_toggle and buffer_toggle then
         return global_toggle.value_fn() and buffer_toggle.value_fn(buffer)
@@ -294,14 +270,10 @@ function M.set_toggle(option, buffer, value)
         buffer = vim.api.nvim_get_current_buf()
     end
 
-    local scope = buffer and 'buffer' or 'global'
+    local toggle = assert(find_toggle(option, buffer and 'buffer' or 'global'))
 
-    local managed_toggle = assert(vim.tbl_filter(function(toggle)
-        return toggle.option == option and toggle.scope == scope
-    end, managed_toggles)[1])
-
-    if value == nil or managed_toggle.value_fn(buffer) ~= value then
-        managed_toggle.toggle_fn(buffer)
+    if value == nil or toggle.value_fn(buffer) ~= value then
+        toggle.toggle_fn(buffer)
     end
 end
 
@@ -372,7 +344,7 @@ end
 function M.serialize_to_json()
     local settings = {
         global = global_permanent_settings,
-        files = file_permament_settings,
+        files = file_permanent_settings,
     }
 
     return vim.json.encode(settings) or '{}'
@@ -381,11 +353,86 @@ end
 --- Restores settings from a serialized JSON string
 ---@param opts string # the serialized settings
 function M.deserialize_from_json(opts)
-    local settings = vim.json.decode(opts)
-    ---@cast settings { global: table<string, any>, files: table<string, table<string, any>> }
+    ---@type { global: table<string, any>, files: table<string, table<string, any>> }
+    local settings = assert(vim.json.decode(opts))
 
-    utils.info(vim.inspect(settings))
+    -- retsore global toggles
+    for option, value in pairs(settings.global) do
+        local toggle = find_toggle(option, 'global')
+
+        if toggle and type(value) == 'boolean' then
+            -- restore the toggle
+            M.set_toggle(toggle.option, nil, value)
+        else
+            -- save the value for later
+            M.set(option, value, { scope = 'permanent' })
+        end
+    end
+
+    -- restore file toggles
+    for file_name, file_settings in pairs(settings.files) do
+        local buffer = vim.fn.bufnr(file_name --[[@as integer]])
+
+        if buffer == -1 or vim.fn.bufloaded(buffer) == 0 then
+            -- save the settings for later
+            file_permanent_settings[file_name] = file_settings
+        else
+            for option, value in pairs(file_settings) do
+                local toggle = find_toggle(option, 'buffer')
+                if toggle and type(value) == 'boolean' then
+                    -- restore the toggle
+                    M.set_toggle(toggle.option, buffer, value)
+                else
+                    -- save the value for later
+                    M.set(option, value, { buffer = buffer, scope = 'permanent' })
+                end
+            end
+        end
+    end
 end
+
+-- Clear the options for a buffer
+utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost', 'BufEnter', 'VimResized' }, function()
+    vim.defer_fn(utils.trigger_status_update_event, 100)
+end)
+
+utils.on_event('BufReadPost', function(evt)
+    -- copy the settings from the file to the buffer
+    local settings = file_permanent_settings[vim.api.nvim_buf_get_name(evt.buf)]
+
+    -- reset buffer's settings on re-read
+    buffer_permanent_settings[evt.buf] = nil
+
+    -- restore file toggles
+    if settings then
+        for option, value in pairs(settings) do
+            local toggle = find_toggle(option, 'buffer')
+            if toggle and type(value) == 'boolean' then
+                -- restore the toggle
+                M.set_toggle(toggle.option, evt.buf, value)
+            end
+        end
+    end
+end)
+
+utils.on_event('BufDelete', function(evt)
+    -- clear the settings for the buffer
+    buffer_transient_settings[evt.buf] = nil
+    buffer_instance_settings[evt.buf] = nil
+    buffer_permanent_settings[evt.buf] = nil
+end)
+
+utils.on_status_update_event(function(evt)
+    buffer_transient_settings[evt.buf] = nil
+
+    -- refresh the status showing components
+    if package.loaded['lualine'] then
+        local refresh = require('lualine').refresh
+
+        ---@diagnostic disable-next-line: param-type-mismatch
+        pcall(refresh)
+    end
+end)
 
 vim.keymap.set('n', '<leader>uu', M.show_settings_ui, { desc = 'Toggle options' })
 
