@@ -200,24 +200,24 @@ local M = {}
 local ignore_hidden_files_setting_name = 'ignore_hidden_files'
 
 ---@class ui.hidden_files
-M.hidden_files = {}
+M.ignore_hidden_files = {}
 
 --- Returns whether hidden files are ignored or not
 ---@return boolean # true if hidden files are ignored, false otherwise
-function M.hidden_files.ignored()
+function M.ignore_hidden_files.active()
     return settings.get_toggle(ignore_hidden_files_setting_name)
 end
 
 --- Toggles ignoring of hidden files on or off
 ---@param value? boolean # if nil, it will toggle the current value, otherwise it will set the value
-function M.hidden_files.toggle(value)
+function M.ignore_hidden_files.toggle(value)
     settings.set_toggle(ignore_hidden_files_setting_name, nil, value)
 end
 
 settings.register_toggle(ignore_hidden_files_setting_name, function(enabled)
     -- Update Neo-Tree state
     local mgr = require 'neo-tree.sources.manager'
-    mgr.get_state('filesystem').filtered_items.visible = enabled
+    mgr.get_state('filesystem').filtered_items.visible = not enabled
 end, { name = icons.UI.ShowHidden .. ' Ignore hidden files', description = 'hiding ignored files', scope = 'global' })
 
 settings.register_toggle('treesitter_enabled', function(enabled, buffer)

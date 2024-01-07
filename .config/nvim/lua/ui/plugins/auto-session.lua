@@ -16,7 +16,16 @@ return {
         save_extra_cmds = {
             function()
                 local opts = require('core.settings').serialize_to_json()
-                return ":lua require('core.settings').deserialize_from_json([[" .. opts .. ']])'
+                local marks = require('ui.marks').serialize_to_json()
+
+                print(opts)
+
+                local code = table.concat({
+                    ":lua require('core.settings').deserialize_from_json([[" .. opts .. ']])',
+                    "require('ui.marks').deserialize_from_json([[" .. marks .. ']])',
+                }, ';')
+
+                return code
             end,
         },
     },

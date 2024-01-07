@@ -22,7 +22,7 @@ return {
                 local utils = require 'core.utils'
                 local ui = require 'ui'
 
-                local show_hidden = not ui.hidden_files.ignored()
+                local show_hidden = not ui.ignore_hidden_files.active()
                 local add = {
                     additional_args = show_hidden and function(args)
                         return vim.list_extend(args, { '--hidden', '--no-ignore' })
