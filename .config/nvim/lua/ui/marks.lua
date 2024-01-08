@@ -161,7 +161,7 @@ end, ':')
 
 --- Forget all global marks references for a file
 ---@param file string # the file to forget
-function M.forget_global(file)
+function M.forget(file)
     assert(type(file) == 'string' and file ~= '')
 
     ---@type ui.marks.Mark[]
@@ -211,6 +211,8 @@ end
 --- Deserialize marks from JSON
 ---@param json string # the JSON string
 function M.deserialize_from_json(json)
+    assert(type(json) == 'string' and json ~= '')
+
     local obj = vim.fn.json_decode(json) --[[@as ui.marks.SerializedMarks]]
     for file, marks in pairs(obj) do
         local ok, buffer = pcall(vim.fn.bufload, file --[[@as integer]])

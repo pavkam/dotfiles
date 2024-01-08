@@ -36,3 +36,7 @@ utils.on_event('BufReadPost', function(evt)
         end
     end
 end)
+
+vim.keymap.set('n', '<leader>L', function()
+    utils.info(vim.inspect(require('core.old_files').all()))
+end, { desc = 'pula@' })

@@ -1,5 +1,6 @@
 local utils = require 'core.utils'
 local marks = require 'ui.marks'
+local old_files = require 'core.old_files'
 
 --- Gets all windows in Vim
 ---@return integer[] # a list of window handles
@@ -12,17 +13,6 @@ local function all_windows()
     return vim.tbl_filter(function(win)
         return vim.api.nvim_win_is_valid(win)
     end, windows)
-end
-
---- Forget all oldfiles references
----@param file string # the file to forget
-local function forget_old_files(file)
-    for i, old_file in ipairs(vim.v.oldfiles) do
-        if old_file == file then
-            vim.cmd('call remove(v:oldfiles, ' .. (i - 1) .. ')')
-            break
-        end
-    end
 end
 
 ---@class utils.forget.QuickFixEntry
@@ -74,8 +64,8 @@ end
 local function forget_file(file)
     assert(type(file) == 'string' and file ~= '')
 
-    forget_old_files(file)
-    marks.forget_global(file)
+    old_files.forget(file)
+    marks.forget(file)
     forget_qf_list(file)
     forget_loc_list(file)
 end

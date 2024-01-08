@@ -17,12 +17,12 @@ return {
             function()
                 local opts = require('core.settings').serialize_to_json()
                 local marks = require('ui.marks').serialize_to_json()
-
-                print(opts)
+                local old_files = require('core.old_files').serialize_to_json()
 
                 local code = table.concat({
-                    ":lua require('core.settings').deserialize_from_json([[" .. opts .. ']])',
-                    "require('ui.marks').deserialize_from_json([[" .. marks .. ']])',
+                    ":lua require('core.settings').deserialize_from_json([[ " .. opts .. ' ]])',
+                    "require('ui.marks').deserialize_from_json([[ " .. marks .. ' ]])',
+                    "require('core.old_files').deserialize_from_json([[ " .. old_files .. ' ]])',
                 }, ';')
 
                 return code
