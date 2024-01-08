@@ -58,6 +58,8 @@ local get_marks = function(buffer)
     end, marks)
 end
 
+--- Updates the signs for a buffer
+---@param buffer? integer # the buffer number, or 0 or nil for the current buffer
 local function update_signs(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -132,7 +134,8 @@ utils.on_event('BufDelete', function(evt)
         return
     end
 
-    local file = vim.api.nvim_buf_get_name(evt.buf)
+    local file = vim.fn.expand(vim.api.nvim_buf_get_name(evt.buf))
+
     if not file or file == '' then
         return
     end
@@ -185,24 +188,24 @@ function M.serialize_to_json()
     ---@type ui.marks.SerializedMarks
     local marks_by_file = {}
     for _, mark in ipairs(marks) do
-        local file = mark.file or vim.api.nvim_buf_get_name(mark.pos[1])
-        if not marks_by_file[file] then
-            marks_by_file[file] = {}
-        end
+        local file = vim.fn.expand(mark.file or vim.api.nvim_buf_get_name(mark.pos[1]))
+        if file and file ~= '' and is_user_mark(mark) then
+            if not marks_by_file[file] then
+                marks_by_file[file] = {}
+            end
 
-        table.insert(marks_by_file[file], {
-            mark = mark_key(mark),
-            lnum = mark.pos[2],
-            col = mark.pos[3],
-        })
+            table.insert(marks_by_file[file], {
+                mark = mark_key(mark),
+                lnum = mark.pos[2],
+                col = mark.pos[3],
+            })
+        end
     end
 
     for file, m in pairs(file_mark_history) do
         if not marks_by_file[file] then
-            marks_by_file[file] = {}
+            marks_by_file[file] = m
         end
-
-        vim.list_extend(marks_by_file[file], m)
     end
 
     return vim.fn.json_encode(marks_by_file)
@@ -214,15 +217,22 @@ function M.deserialize_from_json(json)
     assert(type(json) == 'string' and json ~= '')
 
     local obj = vim.fn.json_decode(json) --[[@as ui.marks.SerializedMarks]]
+
     for file, marks in pairs(obj) do
-        local ok, buffer = pcall(vim.fn.bufload, file --[[@as integer]])
-        if ok and buffer ~= -1 then
-            for _, mark in ipairs(marks) do
+        local act_file = file
+        local act_marks = marks
+
+        vim.defer_fn(function()
+            local buffer = vim.fn.bufadd(act_file)
+            vim.fn.bufload(buffer)
+
+            for _, mark in ipairs(act_marks) do
                 if mark.mark ~= '.' and mark.mark ~= '^' then
-                    pcall(vim.api.nvim_buf_set_mark, buffer, mark.mark, mark.lnum, mark.col, {})
+                    vim.api.nvim_buf_set_mark(buffer, mark.mark, mark.lnum, mark.col - 1, {})
                 end
             end
-        end
+            update_signs(buffer)
+        end, 100)
     end
 end
 

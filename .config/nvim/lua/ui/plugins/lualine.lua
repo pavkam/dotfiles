@@ -117,7 +117,7 @@ return {
                             return pi_status.state.current_spinner .. ' ' .. pi_status.get()
                         end,
                         cond = function()
-                            return require('package-info').get_status() ~= ''
+                            return package.loaded['package-info'] and require('package-info').get_status() ~= ''
                         end,
                         color = color 'ShellProgressStatus',
                     },

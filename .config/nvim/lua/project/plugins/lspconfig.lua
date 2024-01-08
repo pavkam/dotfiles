@@ -327,7 +327,9 @@ return {
             'neovim/nvim-lspconfig',
         },
         opts = {
-            --on_attach = keymaps.attach,
+            handlers = {
+                ['textDocument/rename'] = require 'project.rename',
+            },
             settings = {
                 tsserver_file_preferences = {
                     includeInlayParameterNameHints = 'all',

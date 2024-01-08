@@ -96,7 +96,7 @@ o.autoread = true
 o.undofile = true
 o.undolevels = 10000
 o.updatetime = 200
-o.shada = { "'1000", '<50', 's10', 'h' }
+o.shada = ''
 
 -- tabs
 o.smartindent = true

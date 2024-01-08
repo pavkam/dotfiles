@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local qf = require 'ui.qf'
 
 --- Handles the result of a rename request
 ---@param result any # the result of the request
@@ -24,15 +25,10 @@ local function handle_post_rename(result)
         vim.fn.bufload(buffer)
 
         for _, edit in ipairs(edits) do
-            local start_line = edit.range.start.line + 1
-            local line = vim.api.nvim_buf_get_lines(buffer, start_line - 1, start_line, false)[1]
-
             table.insert(entries, {
-                filename = file_name,
                 buffer = buffer,
-                lnum = start_line,
+                lnum = edit.range.start.line + 1,
                 col = edit.range.start.character + 1,
-                text = line,
             })
         end
     end
@@ -52,10 +48,8 @@ local function handle_post_rename(result)
 
     -- notify and fill QF
     utils.info(notification)
-
     if #entries > 0 then
-        vim.fn.setqflist(entries, 'a')
-        vim.cmd 'copen'
+        qf.add_items('c', entries)
     end
 end
 
@@ -66,5 +60,6 @@ return function(...)
     local ctx = select(3, ...)
 
     handle_post_rename(result)
+
     vim.lsp.handlers[ctx.method](...)
 end
