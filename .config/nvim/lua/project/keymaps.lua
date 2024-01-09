@@ -45,7 +45,7 @@ local keymaps = {
     {
         '<C-r>',
         function()
-            local is_identifier = require('editor.syntax').node_under_cursor():type() == 'identifier'
+            local is_identifier = vim.tbl_contains({ 'identifier', 'property_identifier' }, require('editor.syntax').node_type_under_cursor())
             if is_identifier then
                 vim.lsp.buf.rename()
                 return ':<nop><cr>'

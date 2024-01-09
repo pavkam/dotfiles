@@ -78,9 +78,9 @@ function M.delete_item(handle, index)
         end
 
         if not list.window then
-            vim.fn.setqflist(list.items, 'r')
+            vim.fn.setqflist({}, 'r', { id = list.id, items = list.items })
         else
-            vim.fn.setloclist(list.window, list.items, 'r')
+            vim.fn.setloclist(list.window, {}, 'r', { id = list.id, items = list.items })
         end
     end
 
@@ -115,9 +115,9 @@ function M.clear(handle)
     local list = assert(list_details(handle))
 
     if not list.window then
-        vim.fn.setqflist({}, 'r', { id = list.id })
+        vim.fn.setqflist({}, 'r', { id = list.id, items = {} })
     else
-        vim.fn.setloclist(list.window, {}, 'r', { id = list.id })
+        vim.fn.setloclist(list.window, {}, 'r', { id = list.id, items = {} })
     end
 end
 
@@ -145,18 +145,11 @@ function M.add_items(handle, items, replace)
         })
     end
 
-    if replace then
-        if list.window then
-            vim.fn.setloclist(list.window, entries, 'r', { id = list.id })
-        else
-            vim.fn.setqflist(entries, 'r', { id = list.id })
-        end
+    local op = replace and 'r' or 'a'
+    if list.window then
+        vim.fn.setloclist(list.window, {}, op, { id = list.id, items = entries })
     else
-        if list.window then
-            vim.fn.setloclist(list.window, entries, 'a')
-        else
-            vim.fn.setqflist(entries, 'a')
-        end
+        vim.fn.setqflist({}, op, { id = list.id, items = entries })
     end
 
     M.toggle(handle, true)
@@ -209,12 +202,12 @@ vim.keymap.set('n', ']l', '<cmd>lnext<cr>', { desc = 'Next location item' })
 vim.keymap.set('n', '[l', '<cmd>lprev<cr>', { desc = 'Previous location item' })
 
 utils.attach_keymaps('qf', function(set)
-    set('n', 'dd', function()
-        local qf_type = assert(focused_list())
+    set('n', 'x', function()
+        local handle = assert(focused_list())
         local window = vim.api.nvim_get_current_win()
 
         local r, c = unpack(vim.api.nvim_win_get_cursor(window))
-        local remaining = M.delete_item(qf_type, r)
+        local remaining = M.delete_item(handle, r)
 
         r = math.min(r, remaining)
         if r > 0 then
@@ -222,12 +215,19 @@ utils.attach_keymaps('qf', function(set)
         end
 
         if remaining == 0 then
-            M.toggle(qf_type, false)
+            M.toggle(handle, false)
         end
     end, { desc = 'Remove item' })
 
-    set('n', '<del>', 'dd', { desc = 'Remove item', remap = true })
-    set('n', '<bs>', 'dd', { desc = 'Remove item', remap = true })
+    set('n', '<del>', 'x', { desc = 'Remove item', remap = true })
+    set('n', '<bs>', 'x', { desc = 'Remove item', remap = true })
+
+    set('n', 'X', function()
+        local handle = assert(focused_list())
+
+        M.clear(handle)
+        M.toggle(handle, false)
+    end, { desc = 'Clear all' })
 end, true)
 
 utils.attach_keymaps(nil, function(set)

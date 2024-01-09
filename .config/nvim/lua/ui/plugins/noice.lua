@@ -33,6 +33,8 @@ return {
                         { find = '%d+ lines >ed %d+ time' },
                         { find = '%d+ substitutions on %d+ lines' },
                         { find = 'E486' },
+                        { find = 'E42' },
+                        { find = 'E776' },
                     },
                 },
                 view = 'mini',

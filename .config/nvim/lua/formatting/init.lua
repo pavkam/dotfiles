@@ -112,15 +112,13 @@ settings.register_toggle(setting_name, function(enabled, buffer)
 end, { name = icons.UI.Format .. ' Auto-formatting', description = 'auto-formatting', scope = { 'buffer', 'global' } })
 
 if utils.has_plugin 'conform.nvim' then
-    vim.keymap.set({ 'n', 'v' }, 'g=', function()
+    vim.keymap.set({ 'n', 'x' }, 'g=', function()
         require('formatting').apply(nil, true)
-        require('core.utils').info(string.format('Formatted buffer *%s* (**injected**)', vim.fn.expand '%:t'))
-    end, { desc = 'Format buffer injected' })
+    end, { desc = 'Format buffer/selection (injected)' })
 
-    vim.keymap.set({ 'n', 'v' }, '=', function()
+    vim.keymap.set({ 'n', 'x' }, '=', function()
         require('formatting').apply()
-        require('core.utils').info(string.format('Formatted buffer *%s*', vim.fn.expand '%:t'))
-    end, { desc = 'Format buffer' })
+    end, { desc = 'Format buffer/selection' })
 
     utils.on_event('BufWritePre', function(evt)
         if M.enabled(evt.buf) then

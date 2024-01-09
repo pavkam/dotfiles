@@ -7,7 +7,7 @@ local M = {}
 local function get_tree(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local ok, parser = pcall(vim.treesitter.get_parser, buffer, vim.bo.filetype)
+    local ok, parser = pcall(vim.treesitter.get_parser, buffer)
     if ok and parser then
         return parser:parse()[1]:root()
     end
@@ -44,6 +44,14 @@ end
 function M.node_under_cursor(window)
     local node = get_node_at_cursor(window)
     return node
+end
+
+--- Get the type of the node under the cursor.
+---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
+---@return string|nil # The type of the node under the cursor.
+function M.node_type_under_cursor(window)
+    local node = get_node_at_cursor(window)
+    return node and node:type()
 end
 
 return M
