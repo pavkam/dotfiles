@@ -206,3 +206,19 @@ end, {
     '*/shm/*',
     '/private/var/*',
 })
+
+-- forget files that have been deleted
+utils.on_event({ 'BufDelete', 'BufEnter' }, function(evt)
+    if utils.is_special_buffer(evt.buf) then
+        return
+    end
+
+    local file = vim.api.nvim_buf_get_name(evt.buf)
+    if not file or file == '' or utils.file_exists(file) then
+        return
+    end
+
+    require('ui.marks').forget(file)
+    require('core.old_files').forget(file)
+    require('ui.qf').forget(file)
+end)

@@ -67,7 +67,7 @@ end
 ---@param handle ui.qf.Handle # the list handle
 ---@param index integer # the index of the item to delete
 ---@return integer # the number of items remaining in the list
-function M.delete_item(handle, index)
+function M.delete_at(handle, index)
     local list = assert(list_details(handle, { 'items' }))
 
     if #list.items >= index then
@@ -85,6 +85,24 @@ function M.delete_item(handle, index)
     end
 
     return #list.items
+end
+
+--- Remove file from a given list
+---@param handle ui.qf.Handle # the list handle
+---@param file string # the file to remove
+function M.delete_file(handle, file)
+    assert(type(file) == 'string' and file ~= '')
+
+    local list = assert(list_details(handle, { 'items' }))
+    list.items = vim.tbl_filter(function(item)
+        return item.filename ~= file
+    end, list.items)
+
+    if not list.window then
+        vim.fn.setqflist({}, 'r', { id = list.id, items = list.items })
+    else
+        vim.fn.setloclist(list.window, {}, 'r', { id = list.id, items = list.items })
+    end
 end
 
 --- Toggles the quick-fix or locations list
@@ -176,6 +194,60 @@ function M.add_at_cursor(handle, window, replace)
     }, replace)
 end
 
+--- Gets the handles of all quick-fix lists
+---@return ui.qf.HandleRef[]
+function M.lists()
+    local last = vim.fn.getqflist { idx = '$' }
+
+    ---@type ui.qf.HandleRef[]
+    local lists = {}
+    for i = 1, last.idx do
+        local list = vim.fn.getqflist { idx = i, id = 0 }
+        table.insert(lists, { id = list.id })
+    end
+
+    return lists
+end
+
+--- Gets the handles of all locations lists
+---@param window integer|nil # the window to check, or 0 or nil for the current window
+---@return ui.qf.HandleRef[]
+function M.loc_lists(window)
+    window = window or vim.api.nvim_get_current_win()
+    local last = vim.fn.getloclist(window, { idx = '$' })
+
+    ---@type ui.qf.HandleRef[]
+    local lists = {}
+    for i = 1, last.idx do
+        local list = vim.fn.getloclist(window, { idx = i, id = 0 })
+        table.insert(lists, { id = list.id, window = window })
+    end
+
+    return lists
+end
+
+--- Forget file from all lists
+---@param file string # the file to forget
+function M.forget(file)
+    assert(type(file) == 'string' and file ~= '')
+
+    --- remove the file from the quickfix lists
+    for _, handle in ipairs(M.lists()) do
+        M.delete_file(handle, file)
+    end
+
+    --- remove the file from the location lists of all the windows
+    for _, tab_page in ipairs(vim.api.nvim_list_tabpages()) do
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab_page)) do
+            if vim.api.nvim_win_is_valid(win) then
+                for _, handle in ipairs(M.loc_lists(win)) do
+                    M.delete_file(handle, file)
+                end
+            end
+        end
+    end
+end
+
 -- quick-fix and locations list
 vim.keymap.set('n', '<leader>qc', function()
     M.clear 'c'
@@ -207,7 +279,7 @@ utils.attach_keymaps('qf', function(set)
         local window = vim.api.nvim_get_current_win()
 
         local r, c = unpack(vim.api.nvim_win_get_cursor(window))
-        local remaining = M.delete_item(handle, r)
+        local remaining = M.delete_at(handle, r)
 
         r = math.min(r, remaining)
         if r > 0 then

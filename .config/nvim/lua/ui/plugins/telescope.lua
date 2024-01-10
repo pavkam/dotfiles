@@ -80,7 +80,7 @@ return {
                     desc = 'Resume search',
                 },
                 {
-                    '<leader>f/',
+                    '<C-_>',
                     function()
                         require('telescope.builtin').current_buffer_fuzzy_find()
                     end,
