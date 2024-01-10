@@ -16,9 +16,6 @@ local M = {}
 
 ---@alias ui.marks.SerializedMarks table<string, ui.marks.SerializedMark[]>
 
----@type ui.marks.SerializedMarks
-local file_mark_history = {}
-
 --- Gets the name of a mark
 ---@param mark ui.marks.Mark # the mark
 ---@return string # the name of the mark
@@ -129,30 +126,6 @@ utils.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
     end
 end)
 
-utils.on_event('BufDelete', function(evt)
-    if utils.is_special_buffer(evt.buf) then
-        return
-    end
-
-    local file = vim.fn.expand(vim.api.nvim_buf_get_name(evt.buf))
-
-    if not file or file == '' then
-        return
-    end
-
-    ---@type ui.marks.SerializedMarks
-    local buffer_marks = {}
-    for _, mark in ipairs(vim.fn.getmarklist(evt.buf)) do
-        table.insert(buffer_marks, {
-            mark = mark_key(mark),
-            lnum = mark.pos[2],
-            col = mark.pos[3],
-        })
-    end
-
-    file_mark_history[file] = buffer_marks
-end)
-
 utils.on_event('CmdlineLeave', function(evt)
     vim.defer_fn(function()
         local last_cmd = vim.fn.getreg ':'
@@ -174,65 +147,6 @@ function M.forget(file)
         if mark.file == file then
             vim.api.nvim_del_mark(mark_key(mark))
         end
-    end
-end
-
---- Serialize all marks to JSON
----@return string # the JSON string
-function M.serialize_to_json()
-    local marks = vim.fn.getmarklist()
-    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        vim.list_extend(marks, vim.fn.getmarklist(buf))
-    end
-
-    ---@type ui.marks.SerializedMarks
-    local marks_by_file = {}
-    for _, mark in ipairs(marks) do
-        local file = vim.fn.expand(mark.file or vim.api.nvim_buf_get_name(mark.pos[1]))
-        if file and file ~= '' and is_user_mark(mark) then
-            if not marks_by_file[file] then
-                marks_by_file[file] = {}
-            end
-
-            table.insert(marks_by_file[file], {
-                mark = mark_key(mark),
-                lnum = mark.pos[2],
-                col = mark.pos[3],
-            })
-        end
-    end
-
-    for file, m in pairs(file_mark_history) do
-        if not marks_by_file[file] then
-            marks_by_file[file] = m
-        end
-    end
-
-    return vim.fn.json_encode(marks_by_file)
-end
-
---- Deserialize marks from JSON
----@param json string # the JSON string
-function M.deserialize_from_json(json)
-    assert(type(json) == 'string' and json ~= '')
-
-    local obj = vim.fn.json_decode(json) --[[@as ui.marks.SerializedMarks]]
-
-    for file, marks in pairs(obj) do
-        local act_file = file
-        local act_marks = marks
-
-        vim.defer_fn(function()
-            local buffer = vim.fn.bufadd(act_file)
-            vim.fn.bufload(buffer)
-
-            for _, mark in ipairs(act_marks) do
-                if mark.mark ~= '.' and mark.mark ~= '^' then
-                    vim.api.nvim_buf_set_mark(buffer, mark.mark, mark.lnum, mark.col - 1, {})
-                end
-            end
-            update_signs(buffer)
-        end, 100)
     end
 end
 

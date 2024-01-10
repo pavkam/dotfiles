@@ -391,6 +391,47 @@ function M.deserialize_from_json(opts)
     end
 end
 
+--- Serializes the shada to a base64 string
+---@return string # the serialized shada
+function M.serialize_shada_to_base64()
+    local shada_name = vim.fn.tempname()
+    local ok = pcall(vim.cmd.wshada, shada_name)
+
+    if ok then
+        local content
+        ok, content = pcall(vim.fn.system, string.format('base64 -i "%s"', shada_name))
+        pcall(vim.fn.delete, shada_name)
+
+        if ok then
+            if content:sub(-1) == '\n' then
+                content = content:sub(1, -2)
+            end
+
+            return content
+        end
+    end
+
+    error 'Failed to save and serialize shada to base64.'
+end
+
+--- Restores the shada from a base64 string
+---@param content string # the serialized shada
+function M.deserialize_shada_from_base64(content)
+    local shada_name = vim.fn.tempname()
+
+    local ok = pcall(vim.fn.system, string.format('base64 -d -o "%s"', shada_name), content)
+    if ok then
+        ok = pcall(vim.cmd.rshada, shada_name)
+        pcall(vim.fn.delete, shada_name)
+
+        if ok then
+            return
+        end
+    end
+
+    error 'Failed to restore shada from base64.'
+end
+
 -- Clear the options for a buffer
 utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost', 'BufEnter', 'VimResized' }, function()
     vim.defer_fn(utils.trigger_status_update_event, 100)

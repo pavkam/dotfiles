@@ -15,15 +15,15 @@ return {
         bypass_session_save_file_types = { 'gitcommit', 'gitrebase', 'svn', 'hgcommit' },
         save_extra_cmds = {
             function()
-                local opts = require('core.settings').serialize_to_json()
-                local marks = require('ui.marks').serialize_to_json()
-                local old_files = require('core.old_files').serialize_to_json()
+                local settings = require 'core.settings'
+                local opts = settings.serialize_to_json()
+                local shada_content = settings.serialize_shada_to_base64()
 
-                local code = table.concat({
-                    ":lua require('core.settings').deserialize_from_json([[ " .. opts .. ' ]])',
-                    "require('ui.marks').deserialize_from_json([[ " .. marks .. ' ]])',
-                    "require('core.old_files').deserialize_from_json([[ " .. old_files .. ' ]])',
-                }, ';')
+                local code = string.format(
+                    ":lua require('core.settings').deserialize_shada_from_base64([[%s]]); require('core.settings').deserialize_from_json([[ %s ]])",
+                    shada_content,
+                    opts
+                )
 
                 return code
             end,

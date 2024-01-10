@@ -25,21 +25,4 @@ function M.clear()
     ]]
 end
 
---- Serialize all files in the oldfiles list to JSON
----@return string # the JSON string
-function M.serialize_to_json()
-    return vim.fn.json_encode(M.all())
-end
-
---- Deserialize files from JSON
----@param json string # the JSON string
-function M.deserialize_from_json(json)
-    assert(type(json) == 'string' and json ~= '')
-
-    M.clear()
-    for _, file in ipairs(vim.fn.json_decode(json) or {}) do
-        vim.cmd('call add(v:oldfiles, "' .. file .. '")')
-    end
-end
-
 return M
