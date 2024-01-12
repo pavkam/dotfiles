@@ -135,6 +135,8 @@ local M = {
         Switch = '',
         Action = '󰜎',
         Nuke = '󰔒',
+        SpellCheck = '󰓆',
+        TypoCheck = '',
     },
     Progress = {
         '⣾',

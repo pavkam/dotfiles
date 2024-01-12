@@ -200,8 +200,9 @@ return {
             'rafamadriz/friendly-snippets',
         },
         opts = {
-            history = true,
-            delete_check_events = 'TextChanged',
+            history = false,
+            update_events = 'TextChanged,TextChangedI',
+            delete_check_events = 'InsertLeave',
             region_check_events = 'CursorMoved',
         },
         config = function(_, opts)

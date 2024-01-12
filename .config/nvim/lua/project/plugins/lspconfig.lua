@@ -75,6 +75,11 @@ return {
                 },
             },
             servers = {
+                typos_lsp = {
+                    init_options = {
+                        diagnosticSeverity = 'Hint',
+                    },
+                },
                 bashls = {
                     bashIde = {
                         globPattern = '*@(.sh|.inc|.bash|.command)',
@@ -94,7 +99,7 @@ return {
                 taplo = {},
                 yamlls = {
                     on_new_config = function(new_config)
-                        -- add schemastore schemas
+                        -- add schema-store schemas
                         new_config.settings.yaml.schemas = new_config.settings.yaml.schemas or {}
                         vim.list_extend(new_config.settings.yaml.schemas, require('schemastore').yaml.schemas())
                     end,
@@ -114,7 +119,7 @@ return {
                 ruff_lsp = {},
                 jsonls = {
                     on_new_config = function(new_config)
-                        -- add schemastore schemas
+                        -- add schema-store schemas
                         new_config.settings.json.schemas = new_config.settings.json.schemas or {}
                         vim.list_extend(new_config.settings.json.schemas, require('schemastore').json.schemas())
                     end,

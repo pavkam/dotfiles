@@ -17,6 +17,10 @@ return {
             vim.keymap.set('n', '<leader>p', function()
                 require('ui.select').command {
                     {
+                        name = 'Change',
+                        command = 'PackageInfoChangeVersion',
+                    },
+                    {
                         name = 'Update',
                         command = 'PackageInfoUpdate',
                     },
@@ -24,18 +28,54 @@ return {
                         name = 'Delete',
                         command = 'PackageInfoDelete',
                     },
-
                     {
                         name = 'Install',
                         command = 'PackageInfoInstall',
                     },
+                }
+            end, { buffer = args.buf, desc = icons.UI.Action .. ' package.json' })
 
+            vim.keymap.set('n', '<leader>pi', function()
+                require('ui.select').command {
                     {
-                        name = 'Change version',
+                        name = 'Change',
                         command = 'PackageInfoChangeVersion',
+                    },
+                    {
+                        name = 'Update',
+                        command = 'PackageInfoUpdate',
+                    },
+                    {
+                        name = 'Delete',
+                        command = 'PackageInfoDelete',
+                    },
+                    {
+                        name = 'Install',
+                        command = 'PackageInfoInstall',
                     },
                 }
             end, { buffer = args.buf, desc = icons.UI.Action .. ' package.json' })
         end, 'package\\.json')
+
+        -- HACK: plug into the package-info plugin to make it work with my progress indicator
+        local ls = require 'package-info.ui.generic.loading-status'
+        local progress = require 'ui.progress'
+
+        local old_start = ls.start
+
+        ---@diagnostic disable-next-line: duplicate-set-field
+        ls['start'] = function(id)
+            local idx = #ls.queue
+            local msg = idx > 0 and ls.queue[idx].message or nil --[[@as string]]
+            msg = msg and msg:sub(3) or 'Processing'
+
+            progress.register_task('package-info', {
+                fn = function()
+                    return ls.get() ~= ''
+                end,
+                ctx = msg,
+            })
+            old_start(id)
+        end
     end,
 }

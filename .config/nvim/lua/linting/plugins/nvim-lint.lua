@@ -22,6 +22,8 @@ return {
                 proto = { 'buf_lint' },
                 dockerfile = { 'hadolint' },
                 markdown = { 'markdownlint' },
+                python = { 'flake8' },
+                csharp = { 'csharpier' },
             },
             linters = {
                 golangcilint = {

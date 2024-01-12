@@ -199,6 +199,10 @@ end
 function M.lists()
     local last = vim.fn.getqflist { idx = '$' }
 
+    if not last.idx or last.idx == 0 then
+        return {}
+    end
+
     ---@type ui.qf.HandleRef[]
     local lists = {}
     for i = 1, last.idx do
@@ -215,6 +219,10 @@ end
 function M.loc_lists(window)
     window = window or vim.api.nvim_get_current_win()
     local last = vim.fn.getloclist(window, { idx = '$' })
+
+    if not last.idx or last.idx == 0 then
+        return {}
+    end
 
     ---@type ui.qf.HandleRef[]
     local lists = {}

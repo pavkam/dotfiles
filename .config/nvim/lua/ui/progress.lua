@@ -190,6 +190,10 @@ function M.unregister_task(class)
     unregister_task(nil, class)
 end
 
+--- Gets the status for a given task class for a buffer
+---@param buffer integer|nil # the buffer to get the status for, or nil or 0 for current buffer
+---@param class string # the class of the task
+---@return string|nil, any|nil # the icon and the context of the task, or nil if there is no task with the given class
 function M.status_for_buffer(buffer, class)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -201,6 +205,9 @@ function M.status_for_buffer(buffer, class)
     return nil, nil
 end
 
+--- Gets the status for a given task class
+---@param class string # the class of the task
+---@return string|nil, any|nil # the icon and the context of the task, or nil if there is no task with the given class
 function M.status(class)
     local task = M.tasks['global'] and M.tasks['global'][class]
     if task then

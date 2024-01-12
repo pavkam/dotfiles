@@ -16,9 +16,9 @@ local progress_class = 'lsp'
 ---@class utils.lsp
 local M = {}
 
--- emit a warning when an LSP is dettached!
+-- emit a warning when an LSP is detached!
 
---- Gets the name of the setting for dettaching a client
+--- Gets the name of the setting for detaching a client
 ---@param client LspClient # the client to get the setting name for
 ---@return string # the name of the setting
 local function detach_processed_setting_name(client)
@@ -102,7 +102,7 @@ end
 function M.is_special(client)
     assert(client and client.name)
 
-    return client.name == 'copilot'
+    return client.name == 'copilot' or client.name == 'typos_lsp'
 end
 
 --- Checks whether a client has a capability

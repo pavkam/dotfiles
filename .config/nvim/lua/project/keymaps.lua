@@ -34,6 +34,7 @@ local keymaps = {
         desc = 'Goto Type Definition',
         capability = 'typeDefinition',
     },
+    { '<C-k>', vim.lsp.buf.hover, desc = 'Inspect symbol', capability = 'hover' },
     { 'gK', vim.lsp.buf.signature_help, desc = 'Signature help', capability = 'signatureHelp' },
     {
         'gl',

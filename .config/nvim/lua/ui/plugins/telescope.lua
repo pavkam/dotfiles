@@ -94,7 +94,7 @@ return {
                     desc = 'Find selected word',
                 },
                 {
-                    '<leader>fg',
+                    '<M-/>',
                     function()
                         require('telescope.builtin').live_grep(wrap())
                     end,

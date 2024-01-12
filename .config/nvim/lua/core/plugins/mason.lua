@@ -58,6 +58,8 @@ return {
             'netcoredbg',
             -- markdown
             'markdownlint',
+            -- general
+            'typos-lsp',
         },
     },
     config = function(_, opts)

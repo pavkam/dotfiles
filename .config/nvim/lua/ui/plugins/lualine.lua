@@ -14,6 +14,7 @@ return {
         local shell = require 'core.shell'
         local settings = require 'core.settings'
         local ui = require 'ui'
+        local progress = require 'ui.progress'
 
         --- Extracts the color and attributes from a highlight group.
         ---@param name string
@@ -107,17 +108,11 @@ return {
                 lualine_x = {
                     {
                         function()
-                            -- HACK: This is a workaround for a bug in lualine where the status is not updated
-                            local pi_status = require 'package-info.ui.generic.loading-status'
-
-                            vim.defer_fn(function()
-                                utils.trigger_status_update_event()
-                            end, 100)
-
-                            return pi_status.state.current_spinner .. ' ' .. pi_status.get()
+                            local spinner, msg = progress.status 'package-info'
+                            return spinner and sexify(spinner, msg)
                         end,
                         cond = function()
-                            return package.loaded['package-info'] and require('package-info').get_status() ~= ''
+                            return progress.status 'package-info' ~= nil
                         end,
                         color = color 'ShellProgressStatus',
                     },
@@ -266,13 +261,22 @@ return {
                     },
                     {
                         function()
-                            return '󰓆'
+                            return icons.UI.SpellCheck
                         end,
                         color = color 'Comment',
                         cond = function()
                             return vim.o.spell
                         end,
                         separator = false,
+                    },
+                    {
+                        function()
+                            return icons.UI.TypoCheck
+                        end,
+                        cond = settings.transient(function(buffer)
+                            return lsp.is_active_for_buffer(buffer, 'typos_lsp')
+                        end),
+                        color = color 'Comment',
                     },
                     {
                         require('lazy.status').updates,
