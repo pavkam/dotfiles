@@ -6,3 +6,5 @@ params
 param
 Unregisters
 unregister
+linter
+linters

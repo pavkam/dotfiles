@@ -15,7 +15,8 @@ local M = {}
 ---@field timeout number|nil # the timeout of the task in milliseconds
 ---@field prv boolean|nil # whether the task is private (not reported globally)
 ---@field fn nil|fun(buffer: integer|nil): boolean # the function to check whether the task is still active
-
+---@field buffer integer|nil # the buffer to register the task for, or nil for global
+--
 ---@type table<integer|"global", nil|table<string, utils.progress.Task>>
 M.tasks = {}
 
@@ -44,7 +45,7 @@ local function register_task(buffer, class, opts)
     else
         task = {
             ctx = opts.ctx,
-            ttl = opts.timeout or 10000,
+            ttl = opts.timeout or 30000,
             prv = opts.prv,
             fn = opts.fn,
         }
@@ -159,57 +160,46 @@ local function spinner_icon(index)
 end
 
 --- Registers a task for progress tracking
----@param buffer integer|nil # the buffer to register the task for, or nil or 0 for current buffer
----@param class string # the class of the task
----@param opts utils.progress.TaskOptions|nil # the options for the task
-function M.register_task_for_buffer(buffer, class, opts)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-    register_task(buffer, class, opts)
-    ensure_polling()
-end
-
---- Registers a task for progress tracking
 ---@param class string # the class of the task
 ---@param opts utils.progress.TaskOptions|nil # the options for the task
 function M.register_task(class, opts)
-    register_task(nil, class, opts)
+    opts = opts or {}
+
+    if opts.buffer ~= nil then
+        opts.buffer = opts.buffer or vim.api.nvim_get_current_buf()
+    end
+
+    register_task(opts.buffer, class, opts)
     ensure_polling()
 end
 
 --- Unregisters a task for progress tracking
----@param buffer integer|nil # the buffer to unregister the task for, or nil or 0 for current buffer
+---@param opts? { buffer?: integer } # optional modifiers
 ---@param class string # the class of the task
-function M.unregister_task_for_buffer(buffer, class)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-    unregister_task(buffer, class)
-end
+function M.unregister_task(class, opts)
+    opts = opts or {}
 
---- Unregisters a task for progress tracking
----@param class string # the class of the task
-function M.unregister_task(class)
-    unregister_task(nil, class)
-end
-
---- Gets the status for a given task class for a buffer
----@param buffer integer|nil # the buffer to get the status for, or nil or 0 for current buffer
----@param class string # the class of the task
----@return string|nil, any|nil # the icon and the context of the task, or nil if there is no task with the given class
-function M.status_for_buffer(buffer, class)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local task = M.tasks[buffer] and M.tasks[buffer][class]
-    if task then
-        return spinner_icon(spinner_index or 0), task.ctx
+    if opts.buffer ~= nil then
+        opts.buffer = opts.buffer or vim.api.nvim_get_current_buf()
     end
 
-    return nil, nil
+    unregister_task(opts.buffer, class)
 end
 
 --- Gets the status for a given task class
 ---@param class string # the class of the task
+---@param opts? { buffer?: integer } # optional modifiers
 ---@return string|nil, any|nil # the icon and the context of the task, or nil if there is no task with the given class
-function M.status(class)
-    local task = M.tasks['global'] and M.tasks['global'][class]
+function M.status(class, opts)
+    opts = opts or {}
+
+    if opts.buffer ~= nil then
+        opts.buffer = opts.buffer or vim.api.nvim_get_current_buf()
+    end
+
+    local key = opts.buffer or 'global'
+
+    local task = M.tasks[key] and M.tasks[key][class]
     if task then
         return spinner_icon(spinner_index or 0), task.ctx
     end
