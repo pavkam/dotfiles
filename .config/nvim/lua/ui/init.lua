@@ -39,7 +39,8 @@ vim.keymap.set('n', '<leader><leader>', function()
     ---@diagnostic disable-next-line: param-type-mismatch
     pcall(vim.cmd, 'e #')
 end, { desc = icons.UI.Switch .. ' Switch buffer', silent = true })
-vim.keymap.set('n', '<leader>bw', '<cmd>w<cr>', { desc = 'Save buffer' })
+vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = icons.UI.Save .. ' Save buffer' })
+vim.keymap.set('n', '<leader>W', '<cmd>wa<cr>', { desc = icons.UI.SaveAll .. ' Save all buffers' })
 
 vim.keymap.set('n', '[b', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })
 vim.keymap.set('n', ']b', '<cmd>bnext<cr>', { desc = 'Next buffer' })

@@ -3,7 +3,6 @@ local icons = require 'ui.icons'
 return {
     {
         'nvim-telescope/telescope.nvim',
-        cond = feature_level(1),
         dependencies = {
             {
                 'nvim-telescope/telescope-fzf-native.nvim',
@@ -38,42 +37,14 @@ return {
 
             return {
                 {
-                    '<leader>bb',
+                    '<leader>b',
                     function()
                         require('telescope.builtin').buffers()
                     end,
-                    desc = 'Show buffers',
+                    desc = icons.UI.Buffers .. ' Show buffers',
                 },
                 {
-                    '<leader>gb',
-                    function()
-                        require('telescope.builtin').git_branches()
-                    end,
-                    desc = 'Git branches',
-                },
-                {
-                    '<leader>gc',
-                    function()
-                        require('telescope.builtin').git_bcommits()
-                    end,
-                    desc = 'Git commits',
-                },
-                {
-                    '<leader>gC',
-                    function()
-                        require('telescope.builtin').git_commits()
-                    end,
-                    desc = 'Git commits (all)',
-                },
-                {
-                    '<leader>gt',
-                    function()
-                        require('telescope.builtin').git_status()
-                    end,
-                    desc = 'Git status',
-                },
-                {
-                    '<leader>f<cr>',
+                    '<M-?>',
                     function()
                         require('telescope.builtin').resume()
                     end,
@@ -87,32 +58,32 @@ return {
                     desc = 'Fuzzy-find in file',
                 },
                 {
-                    '<leader>fc',
+                    '<M-w>',
                     function()
                         require('telescope.builtin').grep_string(wrap())
                     end,
-                    desc = 'Find selected word',
+                    desc = 'Grep current word',
                 },
                 {
                     '<M-/>',
                     function()
                         require('telescope.builtin').live_grep(wrap())
                     end,
-                    desc = 'Find words',
+                    desc = 'Live grep',
                 },
                 {
-                    '<leader>ff',
+                    '<leader>f',
                     function()
                         require('telescope.builtin').find_files(wrap())
                     end,
-                    desc = 'Find files',
+                    desc = icons.UI.Search .. ' Search files',
                 },
                 {
-                    '<leader>fo',
+                    '<leader>o',
                     function()
                         require('telescope.builtin').oldfiles(wrap())
                     end,
-                    desc = 'Find used files',
+                    desc = icons.UI.Search .. ' Search old files',
                 },
                 {
                     '<leader>uk',
@@ -125,46 +96,90 @@ return {
                     desc = 'Show commands',
                 },
                 {
-                    '<leader>fm',
+                    '<leader>m',
                     function()
-                        require('telescope.builtin').diagnostics { bufnr = 0 }
+                        require('ui.select').command {
+                            {
+                                name = 'All',
+                                command = function()
+                                    require('telescope.builtin').diagnostics { bufnr = 0 }
+                                end,
+                                desc = 'Buffer',
+                            },
+                            {
+                                name = 'Errors',
+                                command = function()
+                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'ERROR' }
+                                end,
+                                desc = 'Buffer',
+                                hl = 'DiagnosticError',
+                            },
+                            {
+                                name = 'Warnings',
+                                command = function()
+                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'WARN' }
+                                end,
+                                desc = 'Buffer',
+                                hl = 'DiagnosticWarn',
+                            },
+                            {
+                                name = 'Info',
+                                command = function()
+                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'INFO' }
+                                end,
+                                desc = 'Buffer',
+                                hl = 'DiagnosticInfo',
+                            },
+                            {
+                                name = 'Hints',
+                                command = function()
+                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'HINT' }
+                                end,
+                                desc = 'Buffer',
+                                hl = 'DiagnosticHint',
+                            },
+                            {
+                                name = 'All',
+                                command = function()
+                                    require('telescope.builtin').diagnostics {}
+                                end,
+                                desc = 'Global',
+                            },
+                            {
+                                name = 'Errors',
+                                command = function()
+                                    require('telescope.builtin').diagnostics { severity = 'ERROR' }
+                                end,
+                                desc = 'Global',
+                                hl = 'DiagnosticError',
+                            },
+                            {
+                                name = 'Warnings',
+                                command = function()
+                                    require('telescope.builtin').diagnostics { severity = 'WARN' }
+                                end,
+                                desc = 'Global',
+                                hl = 'DiagnosticWarn',
+                            },
+                            {
+                                name = 'Info',
+                                command = function()
+                                    require('telescope.builtin').diagnostics { severity = 'INFO' }
+                                end,
+                                desc = 'Global',
+                                hl = 'DiagnosticInfo',
+                            },
+                            {
+                                name = 'Hints',
+                                command = function()
+                                    require('telescope.builtin').diagnostics { severity = 'HINT' }
+                                end,
+                                desc = 'Global',
+                                hl = 'DiagnosticHint',
+                            },
+                        }
                     end,
-                    desc = 'Find buffer diagnostics',
-                },
-                {
-                    '<leader>fM',
-                    function()
-                        require('telescope.builtin').diagnostics()
-                    end,
-                    desc = 'Find all diagnostics',
-                },
-                {
-                    '<leader>fe',
-                    function()
-                        require('telescope.builtin').diagnostics { bufnr = 0, severity = 'ERROR' }
-                    end,
-                    desc = 'Find buffer errors',
-                },
-                {
-                    '<leader>fE',
-                    function()
-                        require('telescope.builtin').diagnostics { severity = 'ERROR' }
-                    end,
-                    desc = 'Find all errors',
-                },
-                {
-                    '<leader>fw',
-                    function()
-                        require('telescope.builtin').diagnostics { bufnr = 0, severity = 'WARN' }
-                    end,
-                    desc = 'Find buffer warnings',
-                },
-                {
-                    '<leader>fW',
-                    function()
-                        require('telescope.builtin').diagnostics { severity = 'WARN' }
-                    end,
-                    desc = 'Find all warnings',
+                    desc = icons.Diagnostics.Prefix .. ' Diagnostics',
                 },
                 {
                     '<leader>un',
@@ -298,6 +313,5 @@ return {
     },
     {
         'nvim-telescope/telescope-ui-select.nvim',
-        cond = feature_level(1),
     },
 }

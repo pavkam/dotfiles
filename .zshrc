@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------
 # | pavkam's zsh setup. Nothing interesting to see here, please move along! |
-# | Parts of this file are based on "manjaro-zsh-config" and others parts,  |
+# | Parts of this file are based on "Manjaro-zsh-config" and others parts,  |
 # | are based on many samples found all over the Internet!                  |
 # |                                                                         |
 # | I apologize in advance if I did not mention the sources explicitly      |
@@ -136,7 +136,7 @@ function title {
   esac
 }
 
-ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<..<%~%<<" #15 char left truncated PWD
+ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<..<%~%<<" #15 char left truncated pwd
 ZSH_THEME_TERM_TITLE_IDLE="%n@%m:%~"
 
 # Runs before showing the prompt
@@ -206,7 +206,7 @@ add-zsh-hook chpwd load-nvmrc
 
 load-nvmrc
 
-# FZF-ness
+# fzf stuff
 
 FD_EXE=""
 if command -v fdfind &>/dev/null; then
@@ -303,7 +303,7 @@ if command -v heroku &> /dev/null; then
             return 1
         fi
 
-        # Check heroku session
+        # Check Heroku session
         if ! heroku auth:whoami &> /dev/null; then
             echo " Heroku CLI is not logged in or the authorization has expired. Please log in or renew your authorization." >&2
             return 1
@@ -331,7 +331,7 @@ if command -v heroku &> /dev/null; then
 
         EXPORT_COMMANDS=$(echo "$ENV_VARS" | awk -F '=' '{print "export " $1 "='\''" $2 "'\''"}')
 
-        echo " Running command \"$COMMAND\" with enviroment from app \"$APP_NAME\"..."
+        echo " Running command \"$COMMAND\" with environment from app \"$APP_NAME\"..."
         $SHELL -c "$EXPORT_COMMANDS; $COMMAND"
     }
 fi
@@ -511,7 +511,7 @@ if [ $IS_ARM64_DARWIN -eq 1 ]; then
   fi
 fi
 
-# Kube
+# Kubernetes
 if command -v kubectl &> /dev/null; then
     pods () {
         if [ "$1" != "" ]; then

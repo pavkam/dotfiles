@@ -1,4 +1,5 @@
 local shell = require 'core.shell'
+local icons = require 'ui.icons'
 
 ---@class git
 local M = {}
@@ -31,9 +32,9 @@ if vim.fn.executable 'lazygit' == 1 then
         shell.floating 'lazygit'
     end, { desc = 'Run Lazygit', nargs = 0 })
 
-    vim.keymap.set('n', '<leader>gg', function()
+    vim.keymap.set('n', '<leader>g', function()
         vim.cmd 'Lazygit'
-    end, { desc = 'Lazygit' })
+    end, { desc = icons.UI.Git .. ' Lazygit' })
 end
 
 return M

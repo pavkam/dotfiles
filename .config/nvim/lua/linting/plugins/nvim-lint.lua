@@ -1,6 +1,5 @@
 return {
     'mfussenegger/nvim-lint',
-    cond = feature_level(3),
     event = 'User NormalFile',
     opts = function()
         local project = require 'project'

@@ -1,6 +1,5 @@
 return {
     'kevinhwang91/nvim-ufo',
-    cond = feature_level(2),
     lazy = false,
     dependencies = { 'kevinhwang91/promise-async' },
     keys = {

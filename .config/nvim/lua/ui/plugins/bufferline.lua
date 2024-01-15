@@ -2,18 +2,15 @@ local icons = require 'ui.icons'
 
 return {
     'akinsho/bufferline.nvim',
-    cond = feature_level(2),
     version = '*',
     dependencies = {
         'nvim-tree/nvim-web-devicons',
     },
     event = 'BufEnter',
     keys = {
-        { '<leader>bp', '<Cmd>BufferLineTogglePin<CR>', desc = 'Toggle pin' },
-        { '<leader>bP', '<Cmd>BufferLineGroupClose ungrouped<CR>', desc = 'Delete un-pinned buffers' },
-        { '<leader>bo', '<Cmd>BufferLineCloseOthers<CR>', desc = 'Close other buffers' },
-        { '[b', '<Cmd>BufferLineCyclePrev<CR>', desc = 'Previous buffer' },
-        { ']b', '<Cmd>BufferLineCycleNext<CR>', desc = 'Next buffer' },
+        { '<leader>C', '<Cmd>BufferLineCloseOthers<CR>', desc = icons.UI.CloseAll .. ' Close other buffers' },
+        { '<M-,>', '<Cmd>BufferLineCyclePrev<CR>', desc = 'Previous buffer' },
+        { '<M-.>', '<Cmd>BufferLineCycleNext<CR>', desc = 'Next buffer' },
     },
     opts = {
         options = {
@@ -45,11 +42,13 @@ return {
     config = function(_, opts)
         local utils = require 'core.utils'
         local buffer_line = require 'bufferline'
+
         buffer_line.setup(opts)
 
         -- Fix bufferline when restoring a session
         utils.on_event('BufAdd', function()
             vim.schedule(function()
+                ---@diagnostic disable-next-line: undefined-global
                 pcall(nvim_bufferline)
             end)
         end)

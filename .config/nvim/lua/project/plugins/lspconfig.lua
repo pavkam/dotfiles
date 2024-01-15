@@ -3,7 +3,6 @@ local icons = require 'ui.icons'
 return {
     {
         'neovim/nvim-lspconfig',
-        cond = feature_level(2),
         event = 'User NormalFile',
         dependencies = {
             'williamboman/mason-lspconfig.nvim',
@@ -21,7 +20,7 @@ return {
                         enabled = true,
                         runtime = true,
                         types = true,
-                        plugins = true,
+                        plugins = { 'neotest' },
                     },
                 },
             },
@@ -320,12 +319,10 @@ return {
     },
     {
         'b0o/SchemaStore.nvim',
-        cond = feature_level(2),
         version = false, -- last release is way too old
     },
     {
         'pmizio/typescript-tools.nvim',
-        cond = feature_level(2),
         ft = { 'typescript', 'typescript.jsx', 'typescriptreact', 'javascript', 'javascript.jsx', 'javascriptreact' },
         dependencies = {
             'nvim-lua/plenary.nvim',
@@ -352,7 +349,6 @@ return {
     },
     {
         'Wansmer/symbol-usage.nvim',
-        cond = feature_level(3),
         event = 'BufReadPre', -- need run before LspAttach if you use nvim 0.9. On 0.10 use 'LspAttach'
         opts = {
             kinds = {

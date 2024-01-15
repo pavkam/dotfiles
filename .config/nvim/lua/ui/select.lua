@@ -7,13 +7,14 @@ local entry_display = require 'telescope.pickers.entry_display'
 local strings = require 'plenary.strings'
 local config = require('telescope.config').values
 local utils = require 'core.utils'
+local icons = require 'ui.icons'
 
 local M = {}
 
 ---@alias ui.select.SelectEntry string|number|boolean|(string|number|boolean)[]) # An entry in the list of items to select from
 ---@alias ui.select.SelectCallback fun(entry?: ui.select.SelectEntry, index?: integer) # The callback to call when an item is selected
 ---@alias ui.select.SelectHighlighter fun(entry: ui.select.SelectEntry, index: integer, col_index: number): string|nil # The highlighter to use for the entrygh
----@alias ui.select.SelectOpts { prompt?: string, separator?: string, callback?: ui.select.SelectCallback, highlighter?: ui.select.SelectHighlighter, index_fields?: integer[] }
+---@alias ui.select.SelectOpts { prompt?: string, at_cursor?: boolean, separator?: string, callback?: ui.select.SelectCallback, highlighter?: ui.select.SelectHighlighter, index_fields?: integer[], width?: number, height?: number }
 
 --- Select an item from a list of items
 ---@param items ui.select.SelectEntry[] # The list of items to select from
@@ -26,7 +27,7 @@ function M.advanced(items, opts)
     end
     opts.callback = nil
 
-    local separator = opts.separator or ' '
+    local separator = opts.separator or (' ' .. icons.Symbols.ColumnSeparator .. ' ')
     opts.separator = nil
 
     local highlighter = opts.highlighter or function()
@@ -93,15 +94,19 @@ function M.advanced(items, opts)
         return displayer(mapped)
     end
 
-    local dd = themes.get_dropdown(vim.tbl_extend('force', opts, {
-        layout_config = { width = 0.3, height = 0.4 },
-    }))
+    local dd = opts.at_cursor
+            and themes.get_cursor(vim.tbl_extend('force', opts, {
+                layout_config = { width = opts.width or 0.2, height = opts.height or 0.3 },
+            }))
+        or themes.get_dropdown(vim.tbl_extend('force', opts, {
+            layout_config = { width = opts.width or 0.3, height = opts.height or 0.4 },
+        }))
 
     opts.index_fields = opts.index_fields or { 1 }
     local function make_ordinal(entry)
         local ordinal = ''
         for _, index in ipairs(opts.index_fields) do
-            ordinal = ordinal .. tostring(entry[index])
+            ordinal = ordinal .. icons.Symbols.ColumnSeparator .. tostring(entry[index])
         end
 
         return ordinal
@@ -139,7 +144,8 @@ end
 
 --- Selects and executes a command
 ---@param commands ui.select.CommandItem[] # The list of commands to select from
-function M.command(commands)
+---@param opts? { prompt?: string, at_cursor?: boolean, width?: number, height?: number }
+function M.command(commands, opts)
     assert(vim.tbl_islist(commands))
 
     ---@type (string|integer)[][]
@@ -157,27 +163,30 @@ function M.command(commands)
         table.insert(items, entry)
     end
 
-    M.advanced(items, {
-        prompt = 'Select command:',
-        separator = ' ',
-        highlighter = function(_, index, col_index)
-            if col_index == 2 then
-                return commands[index].hl or 'NormalMenuItem'
-            end
+    M.advanced(
+        items,
+        vim.tbl_extend('force', opts or {}, {
+            prompt = 'Select command:',
+            separator = ' ',
+            highlighter = function(_, index, col_index)
+                if col_index == 2 then
+                    return commands[index].hl or 'NormalMenuItem'
+                end
 
-            return 'Comment'
-        end,
-        callback = function(_, index)
-            local command = commands[index].command
+                return 'Comment'
+            end,
+            callback = function(_, index)
+                local command = commands[index].command
 
-            if type(command) == 'string' then
-                vim.cmd(command)
-            else
-                command()
-            end
-        end,
-        index_fields = { 1, 2 },
-    })
+                if type(command) == 'string' then
+                    vim.cmd(command)
+                else
+                    command()
+                end
+            end,
+            index_fields = { 1, 2 },
+        })
+    )
 end
 
 return M

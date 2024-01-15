@@ -69,54 +69,52 @@ local function edit(global)
     end)
 end
 
-if feature_level(2) then
-    vim.keymap.set('n', '<leader>n', function()
-        require('ui.select').command {
-            {
-                name = 'Show global notes',
-                hl = 'SpecialMenuItem',
-                desc = 'global notes',
-                command = function()
-                    find(true)
-                end,
-            },
-            {
-                name = 'Grep global notes',
-                hl = 'SpecialMenuItem',
-                desc = 'global notes',
-                command = function()
-                    grep(true)
-                end,
-            },
-            {
-                name = 'Open global note',
-                hl = 'SpecialMenuItem',
-                desc = 'global notes',
-                command = function()
-                    edit(true)
-                end,
-            },
-            {
-                name = 'Show project notes',
-                desc = 'project-specific notes',
-                command = function()
-                    find(false)
-                end,
-            },
-            {
-                name = 'Grep project notes',
-                desc = 'project-specific notes',
-                command = function()
-                    grep(false)
-                end,
-            },
-            {
-                name = 'Open project note',
-                desc = 'project-specific notes',
-                command = function()
-                    edit(false)
-                end,
-            },
-        }
-    end, { desc = icons.UI.Notes .. ' Notes' })
-end
+vim.keymap.set('n', '<leader>n', function()
+    require('ui.select').command {
+        {
+            name = 'Show global notes',
+            hl = 'SpecialMenuItem',
+            desc = 'global notes',
+            command = function()
+                find(true)
+            end,
+        },
+        {
+            name = 'Grep global notes',
+            hl = 'SpecialMenuItem',
+            desc = 'global notes',
+            command = function()
+                grep(true)
+            end,
+        },
+        {
+            name = 'Open global note',
+            hl = 'SpecialMenuItem',
+            desc = 'global notes',
+            command = function()
+                edit(true)
+            end,
+        },
+        {
+            name = 'Show project notes',
+            desc = 'project-specific notes',
+            command = function()
+                find(false)
+            end,
+        },
+        {
+            name = 'Grep project notes',
+            desc = 'project-specific notes',
+            command = function()
+                grep(false)
+            end,
+        },
+        {
+            name = 'Open project note',
+            desc = 'project-specific notes',
+            command = function()
+                edit(false)
+            end,
+        },
+    }
+end, { desc = icons.UI.Notes .. ' Notes' })

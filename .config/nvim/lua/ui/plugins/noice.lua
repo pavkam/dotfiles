@@ -2,7 +2,6 @@ local icons = require 'ui.icons'
 
 return {
     'folke/noice.nvim',
-    cond = feature_level(2),
     event = 'VeryLazy',
     dependencies = {
         'MunifTanjim/nui.nvim',

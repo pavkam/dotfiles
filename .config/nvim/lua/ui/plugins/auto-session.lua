@@ -1,6 +1,5 @@
 return {
     'rmagatti/auto-session',
-    cond = feature_level(2),
     event = 'User LazyDone',
     opts = {
         log_level = 'error',

@@ -2,7 +2,6 @@ local icons = require 'ui.icons'
 
 return {
     'williamboman/mason.nvim',
-    cond = feature_level(2),
     cmd = {
         'Mason',
         'MasonInstall',

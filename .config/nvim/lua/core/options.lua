@@ -36,7 +36,6 @@ o.wrap = false
 o.showbreak = icons.TUI.LineContinuation --[[@as vim.opt.showbreak]]
     .. ' '
 o.nrformats = ''
-o.winminwidth = 5
 o.ttyfast = true
 o.termencoding = 'utf-8'
 o.termguicolors = true

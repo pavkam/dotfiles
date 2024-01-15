@@ -1,6 +1,6 @@
 return {
     'alexghergh/nvim-tmux-navigation',
-    cond = feature_level(2) and os.getenv 'TMUX' ~= nil,
+    cond = require('ui.tmux').active(),
     keys = {
         {
             '<M-Tab>',

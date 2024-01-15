@@ -3,7 +3,6 @@ local icons = require 'ui.icons'
 
 return {
     'jackMort/ChatGPT.nvim',
-    cond = feature_level(3),
     dependencies = {
         'MunifTanjim/nui.nvim',
         'nvim-lua/plenary.nvim',

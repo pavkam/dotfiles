@@ -183,7 +183,7 @@ local function async_cmd(cmd, args, input, callback, opts)
     if (stdin and not stdin_write_success) or not stdout_read_success or not stderr_read_success then
         cleanup()
         utils.error(
-            string.format('Failed to read/write fro/tom pipes for command *"%s"*: **%s**!', cmd, stdin_write_error or stdout_read_error or stderr_read_error)
+            string.format('Failed to read/write from/to pipes for command *"%s"*: **%s**!', cmd, stdin_write_error or stdout_read_error or stderr_read_error)
         )
     end
 end
@@ -203,6 +203,13 @@ function M.async_cmd(cmd, args, input, callback, opts)
     async_cmd(cmd, args, input, function(code, stdout, stderr)
         if not opts.no_checktime then
             vim.cmd.checktime()
+        end
+
+        if #stdout > 0 and stdout[#stdout] == '' then
+            table.remove(stdout, #stdout)
+        end
+        if #stderr > 0 and stderr[#stderr] == '' then
+            table.remove(stderr, #stderr)
         end
 
         if not vim.tbl_contains(ignore_codes, code) then

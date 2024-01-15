@@ -117,7 +117,7 @@ end, { desc = 'Paste below' })
 
 vim.keymap.set('n', 'gP', function()
     ins_paste 'O'
-end, { desc = 'Paste below' })
+end, { desc = 'Paste above' })
 
 -- search
 vim.keymap.set({ 'i', 'n' }, '<esc>', '<cmd>nohlsearch<cr><esc>', { desc = 'Escape and clear highlight' })

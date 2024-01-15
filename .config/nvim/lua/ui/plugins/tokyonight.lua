@@ -1,6 +1,5 @@
 return {
     'folke/tokyonight.nvim',
-    cond = feature_level(1),
     opts = {
         style = 'moon',
         on_colors = function(colors)

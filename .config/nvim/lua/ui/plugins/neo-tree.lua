@@ -3,7 +3,6 @@ local utils = require 'core.utils'
 
 return {
     'nvim-neo-tree/neo-tree.nvim',
-    cond = feature_level(1),
     dependencies = {
         'nvim-lua/plenary.nvim',
         'nvim-tree/nvim-web-devicons',

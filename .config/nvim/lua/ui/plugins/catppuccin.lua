@@ -1,6 +1,5 @@
 return {
     'catppuccin/nvim',
-    cond = feature_level(3),
     name = 'catppuccin',
     opts = {
         integrations = {

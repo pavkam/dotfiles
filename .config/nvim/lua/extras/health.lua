@@ -1,3 +1,5 @@
+local M = {}
+
 ---@class extras.health.ShowOpts
 ---@field public height number|nil
 ---@field public width number|nil
@@ -137,7 +139,18 @@ local function show_for_buffer(buffer)
     show_content(content)
 end
 
+function M.check()
+    vim.health.report_start 'Personal configuration'
+    -- make sure setup function parameters are ok
+    vim.health.report_ok 'Setup is correct'
+    vim.health.report_error 'Setup is incorrect'
+    -- do some more checking
+    -- ...
+end
+
 -- Show buffer information
 vim.api.nvim_create_user_command('Buffer', function()
     show_for_buffer()
 end, { desc = 'Show buffer information', nargs = 0 })
+
+return M

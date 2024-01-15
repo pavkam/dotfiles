@@ -1,6 +1,5 @@
 return {
     'nvim-lualine/lualine.nvim',
-    cond = feature_level(2),
     dependencies = {
         'nvim-tree/nvim-web-devicons',
     },
@@ -254,9 +253,7 @@ return {
                             return icons.UI.TMux
                         end,
                         color = color 'Comment',
-                        cond = function()
-                            return os.getenv 'TMUX' ~= nil
-                        end,
+                        cond = require('ui.tmux').active,
                         separator = false,
                     },
                     {

@@ -2,7 +2,6 @@ local icons = require 'ui.icons'
 
 return {
     'folke/which-key.nvim',
-    cond = feature_level(1),
     event = 'VeryLazy',
     opts = {
         plugins = { spelling = true },
@@ -14,12 +13,9 @@ return {
             ['g'] = { name = icons.UI.Next .. ' Go-to' },
             [']'] = { name = icons.UI.Next .. ' Next' },
             ['['] = { name = icons.UI.Prev .. ' Previous' },
-            ['<leader>b'] = { name = icons.UI.Buffers .. ' Buffers' },
             ['<leader>u'] = { name = icons.UI.UI .. ' UX' },
             ['<leader>q'] = { name = icons.UI.Fix .. ' Quick-Fix' },
-            ['<leader>f'] = { name = icons.UI.Search .. ' Search' },
             ['<leader>d'] = { name = icons.UI.Debugger .. ' Debugger' },
-            ['<leader>g'] = { name = icons.UI.Git .. ' Git' },
         },
     },
     config = function(_, opts)

@@ -1,6 +1,5 @@
 return {
     'numToStr/Comment.nvim',
-    cond = feature_level(3),
     dependencies = {
         {
             'JoosepAlviste/nvim-ts-context-commentstring',

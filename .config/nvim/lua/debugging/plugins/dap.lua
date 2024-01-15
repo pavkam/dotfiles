@@ -1,6 +1,5 @@
 return {
     'mfussenegger/nvim-dap',
-    cond = feature_level(3),
     dependencies = {
         'rcarriga/nvim-dap-ui',
         'mxsdev/nvim-dap-vscode-js',

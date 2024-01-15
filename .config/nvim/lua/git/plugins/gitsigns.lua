@@ -2,7 +2,6 @@ local icons = require 'ui.icons'
 
 return {
     'lewis6991/gitsigns.nvim',
-    cond = feature_level(2),
     event = 'User GitFile',
     opts = {
         signs = {
@@ -26,7 +25,7 @@ return {
                 select_hunk = 'Select hunk',
             }
 
-            vim.keymap.set('n', '<leader>gi', function()
+            vim.keymap.set('n', 'gh', function()
                 local actions = gsa.get_actions()
 
                 if actions == nil or not next(actions) then
@@ -53,7 +52,7 @@ return {
                     hl = 'SpecialMenuItem',
                 })
 
-                require('ui.select').command(items)
+                require('ui.select').command(items, { at_cursor = true })
             end, { buffer = buffer, desc = 'Inspect change' })
 
             vim.keymap.set('n', ']h', gs.next_hunk, { buffer = buffer, desc = 'Next hunk' })

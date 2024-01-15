@@ -1,6 +1,5 @@
 return {
     'kevinhwang91/nvim-bqf',
-    cond = feature_level(1),
     ft = 'qf',
     opts = {
         func_map = {

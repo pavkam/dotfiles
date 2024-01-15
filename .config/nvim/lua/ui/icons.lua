@@ -69,6 +69,7 @@ local M = {
         Unit = '',
         Value = '',
         Variable = '',
+        ColumnSeparator = '│',
     },
     Git = {
         Added = '',
@@ -137,6 +138,10 @@ local M = {
         Nuke = '󰔒',
         SpellCheck = '󰓆',
         TypoCheck = '',
+        Save = '󰆓',
+        SaveAll = '󰆔',
+        Close = '',
+        CloseAll = '',
     },
     Progress = {
         '⣾',
