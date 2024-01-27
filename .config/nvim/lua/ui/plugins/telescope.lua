@@ -44,32 +44,27 @@ return {
                     desc = icons.UI.Buffers .. ' Show buffers',
                 },
                 {
-                    '<M-?>',
-                    function()
-                        require('telescope.builtin').resume()
-                    end,
-                    desc = 'Resume search',
-                },
-                {
                     '<C-_>',
                     function()
-                        require('telescope.builtin').current_buffer_fuzzy_find()
+                        require('telescope.builtin').current_buffer_fuzzy_find {}
                     end,
                     desc = 'Fuzzy-find in file',
-                },
-                {
-                    '<M-w>',
-                    function()
-                        require('telescope.builtin').grep_string(wrap())
-                    end,
-                    desc = 'Grep current word',
+                    mode = { 'n', 'v' },
                 },
                 {
                     '<M-/>',
                     function()
-                        require('telescope.builtin').live_grep(wrap())
+                        print('->>', vim.inspect(vim.fn.getpos "'<"))
+
+                        local sel = require('editor.syntax').current_selection(nil, false)
+                        if sel then
+                            require('telescope.builtin').grep_string(wrap { search = sel })
+                        else
+                            require('telescope.builtin').live_grep(wrap())
+                        end
                     end,
                     desc = 'Live grep',
+                    mode = { 'n', 'v' },
                 },
                 {
                     '<leader>f',

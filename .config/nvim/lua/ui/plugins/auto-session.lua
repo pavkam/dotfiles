@@ -11,6 +11,7 @@ return {
         auto_save_enabled = true,
         auto_restore_enabled = true,
         auto_session_use_git_branch = true,
+        -- TODO: can I restore a session on dir/branch change?
         bypass_session_save_file_types = { 'gitcommit', 'gitrebase', 'svn', 'hgcommit' },
         save_extra_cmds = {
             function()

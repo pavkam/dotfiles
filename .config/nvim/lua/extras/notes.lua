@@ -59,15 +59,66 @@ end
 --- Edits a new or existing note
 ---@param global boolean|nil: If true, edit a new note in the global notes directory
 local function edit(global)
-    vim.ui.input({ prompt = 'Note name: ', default = os.date '%Y-%m-%d' }, function(name)
-        if name == nil or name == '' then
-            return
+    local file_name = utils.join_paths(get_notes_root(global), os.date '%Y-%m-%d' .. '.md')
+    vim.api.nvim_command('edit ' .. file_name)
+end
+
+--- Edits a new or existing note
+---@param global boolean|nil: If true, edit a new note in the global notes directory
+local function append(lines, global)
+    print(vim.inspect(lines))
+end
+
+vim.api.nvim_create_user_command('Note', function(args)
+    if args.args == 'list' then
+        find(args.bang)
+        return
+    end
+
+    if args.args == 'grep' then
+        grep(args.bang)
+        return
+    end
+
+    if args.args == 'open' then
+        edit(args.bang)
+        return
+    end
+
+    if args.args == 'append' then
+        ---@type string[] | nil
+        local contents
+        if args.range == 2 then
+            contents = vim.api.nvim_buf_get_lines(0, args.line1 - 1, args.line2, false)
+        elseif args.range == 1 then
+            contents = vim.api.nvim_buf_get_lines(0, args.line1 - 1, args.line1, false)
+        else
+            contents = vim.api.nvim_buf_get_lines(0, vim.fn.line '.' - 1, vim.fn.line '.', false)
         end
 
-        local file_name = utils.join_paths(get_notes_root(global), name .. '.md')
-        vim.api.nvim_command('edit ' .. file_name)
-    end)
-end
+        append(contents, args.bang)
+        return
+    end
+
+    utils.error 'Invalid argument'
+end, {
+    desc = 'Manages notes',
+    complete = function(arg_lead)
+        local completions = { 'list', 'grep', 'open', 'append' }
+        local matches = {}
+
+        for _, value in ipairs(completions) do
+            if value:sub(1, #arg_lead) == arg_lead then
+                table.insert(matches, value)
+            end
+        end
+
+        return matches
+    end,
+    nargs = 1,
+    range = true,
+    bang = true,
+})
 
 vim.keymap.set('n', '<leader>n', function()
     require('ui.select').command {

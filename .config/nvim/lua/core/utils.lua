@@ -212,13 +212,13 @@ function M.error(msg)
 end
 
 ---@type table<integer, uv_timer_t>
-local deffered_buffer_timers = {}
+local differed_buffer_timers = {}
 
 M.on_event('BufDelete', function(evt)
-    local timer = deffered_buffer_timers[evt.buf]
+    local timer = differed_buffer_timers[evt.buf]
     if timer then
         timer:stop()
-        deffered_buffer_timers[evt.buf] = nil
+        differed_buffer_timers[evt.buf] = nil
     end
 end)
 
@@ -229,10 +229,10 @@ end)
 function M.defer_unique(buffer, fn, timeout)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local timer = deffered_buffer_timers[buffer]
+    local timer = differed_buffer_timers[buffer]
     if not timer then
         timer = vim.loop.new_timer()
-        deffered_buffer_timers[buffer] = timer
+        differed_buffer_timers[buffer] = timer
     else
         timer:stop()
     end

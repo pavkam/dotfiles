@@ -13,6 +13,7 @@ return {
         {
             '<leader>x',
             function()
+                -- TODO: this can be done better. using an intermediary command to get the selection
                 utils.run_with_visual_selection(nil, function(restore)
                     require('ui.select').command {
                         {

@@ -164,6 +164,7 @@ utils.on_event('TextYankPost', function()
     vim.highlight.on_yank()
 end)
 
+-- TODO: need to figure out if I need mkview with session support
 -- mkview and loadview for real files
 utils.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
     if settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then

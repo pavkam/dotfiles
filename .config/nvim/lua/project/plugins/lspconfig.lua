@@ -20,7 +20,7 @@ return {
                         enabled = true,
                         runtime = true,
                         types = true,
-                        plugins = { 'neotest' },
+                        plugins = true,
                     },
                 },
             },

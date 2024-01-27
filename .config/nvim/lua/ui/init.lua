@@ -11,6 +11,8 @@ require 'ui.highlights'
 require 'ui.marks'
 require 'ui.qf'
 
+-- TODO: write my own statusline
+
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('n', '<BS>', '<Nop>', { silent = true })
@@ -36,8 +38,7 @@ vim.keymap.set('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
 
 -- buffer management
 vim.keymap.set('n', '<leader><leader>', function()
-    ---@diagnostic disable-next-line: param-type-mismatch
-    pcall(vim.cmd, 'e #')
+    pcall(vim.cmd.edit, '#')
 end, { desc = icons.UI.Switch .. ' Switch buffer', silent = true })
 vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = icons.UI.Save .. ' Save buffer' })
 vim.keymap.set('n', '<leader>W', '<cmd>wa<cr>', { desc = icons.UI.SaveAll .. ' Save all buffers' })
