@@ -21,6 +21,7 @@ return {
                 local utils = require 'core.utils'
                 local ui = require 'ui'
 
+                -- TODO: a special key map that enabled hidden files
                 local show_hidden = not ui.ignore_hidden_files.active()
                 local add = {
                     additional_args = show_hidden and function(args)
@@ -54,8 +55,6 @@ return {
                 {
                     '<M-/>',
                     function()
-                        print('->>', vim.inspect(vim.fn.getpos "'<"))
-
                         local sel = require('editor.syntax').current_selection(nil, false)
                         if sel then
                             require('telescope.builtin').grep_string(wrap { search = sel })

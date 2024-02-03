@@ -157,5 +157,4 @@ o.fillchars = {
 o.list = false
 o.shortmess:append { W = true, I = true, c = true, C = true }
 o.formatoptions = 'jcroqlnt'
--- TODO: what do I need to drop out of here?
 o.sessionoptions = { 'buffers', 'curdir', 'tabpages', 'winsize', 'help', 'globals', 'skiprtp', 'folds', 'resize', 'help', 'globals' }

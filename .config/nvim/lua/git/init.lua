@@ -10,6 +10,11 @@ local M = {}
 function M.check_tracked(file_name, callback)
     assert(type(file_name) == 'string' and file_name ~= '')
 
+    if vim.fn.filereadable(file_name) == 0 then
+        callback(false)
+        return
+    end
+
     shell.async_cmd('git', { 'ls-files', '--error-unmatch', file_name }, nil, function(_, code)
         callback(code == 0)
     end, { ignore_codes = { 0, 1, 128 }, cwd = vim.fn.fnamemodify(file_name, ':h') })

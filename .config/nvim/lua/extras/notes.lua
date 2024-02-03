@@ -1,5 +1,5 @@
 local utils = require 'core.utils'
-local icons = require 'ui.icons'
+local syntax = require 'editor.syntax'
 
 --- Get the notes root directory
 ---@param global boolean|nil: If true, return the global notes root
@@ -64,9 +64,23 @@ local function edit(global)
 end
 
 --- Edits a new or existing note
+---@param title string|nil: The title of the note
+---@param lines string[]: The lines to append to the note
 ---@param global boolean|nil: If true, edit a new note in the global notes directory
-local function append(lines, global)
-    print(vim.inspect(lines))
+local function append(title, lines, global)
+    local ft = vim.bo.filetype
+    edit(global)
+
+    if #lines > 0 then
+        table.insert(lines, 1, string.format('```%s', ft))
+        table.insert(lines, '```')
+    end
+
+    if title then
+        table.insert(lines, 1, string.format('### %s', title))
+    end
+
+    vim.api.nvim_put(lines, 'l', true, true)
 end
 
 vim.api.nvim_create_user_command('Note', function(args)
@@ -85,18 +99,16 @@ vim.api.nvim_create_user_command('Note', function(args)
         return
     end
 
-    if args.args == 'append' then
-        ---@type string[] | nil
-        local contents
-        if args.range == 2 then
-            contents = vim.api.nvim_buf_get_lines(0, args.line1 - 1, args.line2, false)
-        elseif args.range == 1 then
-            contents = vim.api.nvim_buf_get_lines(0, args.line1 - 1, args.line1, false)
+    if args.args == 'append' or args.args == '' then
+        local lines = syntax.lines(nil, args.line1, args.line2)
+
+        if #lines == 0 then
+            utils.error 'No lines selected'
         else
-            contents = vim.api.nvim_buf_get_lines(0, vim.fn.line '.' - 1, vim.fn.line '.', false)
+            local title = string.format('Lines %d-%d from %s:', args.line1, args.line2, vim.fn.expand '%')
+            append(title, lines, args.bang)
         end
 
-        append(contents, args.bang)
         return
     end
 
@@ -115,57 +127,7 @@ end, {
 
         return matches
     end,
-    nargs = 1,
+    nargs = '?',
     range = true,
     bang = true,
 })
-
-vim.keymap.set('n', '<leader>n', function()
-    require('ui.select').command {
-        {
-            name = 'Show global notes',
-            hl = 'SpecialMenuItem',
-            desc = 'global notes',
-            command = function()
-                find(true)
-            end,
-        },
-        {
-            name = 'Grep global notes',
-            hl = 'SpecialMenuItem',
-            desc = 'global notes',
-            command = function()
-                grep(true)
-            end,
-        },
-        {
-            name = 'Open global note',
-            hl = 'SpecialMenuItem',
-            desc = 'global notes',
-            command = function()
-                edit(true)
-            end,
-        },
-        {
-            name = 'Show project notes',
-            desc = 'project-specific notes',
-            command = function()
-                find(false)
-            end,
-        },
-        {
-            name = 'Grep project notes',
-            desc = 'project-specific notes',
-            command = function()
-                grep(false)
-            end,
-        },
-        {
-            name = 'Open project note',
-            desc = 'project-specific notes',
-            command = function()
-                edit(false)
-            end,
-        },
-    }
-end, { desc = icons.UI.Notes .. ' Notes' })

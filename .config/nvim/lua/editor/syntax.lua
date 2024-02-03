@@ -60,7 +60,7 @@ end
 ---@param end_row integer # The end row of the range.
 ---@param end_col integer # The end column of the range.
 ---@return string # The text in the range.
-function M.get_text(window, start_row, start_col, end_row, end_col)
+function M.text(window, start_row, start_col, end_row, end_col)
     window = window or vim.api.nvim_get_current_win()
 
     if start_row > end_row then
@@ -75,12 +75,32 @@ function M.get_text(window, start_row, start_col, end_row, end_col)
     return table.concat(lines, '\n')
 end
 
+--- Gets the lines in the given range.
+---@param window integer|nil # the window to get the lines from. 0 or nil for the current window
+---@param start_row integer|nil # the start row of the range. 0 or nil for the current row
+---@param end_row integer|nil # the end row of the range. 0 or nil for the current row
+---@return string[] # the lines in the range
+function M.lines(window, start_row, end_row)
+    window = window or vim.api.nvim_get_current_win()
+    start_row = start_row or vim.api.nvim_win_get_cursor(window)[1]
+    end_row = end_row or start_row
+
+    if start_row > end_row then
+        start_row, end_row = end_row, start_row
+    end
+
+    local buffer = vim.api.nvim_win_get_buf(window)
+    local lines = vim.api.nvim_buf_get_lines(buffer, start_row - 1, end_row or start_row, false)
+
+    return lines
+end
+
 --- Gets the current selection or the current word if there is no selection
 ---@param window integer|nil # the window to get the selection from. 0 or nil for the current window
 ---@param smart boolean|nil # whether to use the current word if there is no selection
 ---@return string|nil # the current selection or the current word
 function M.current_selection(window, smart)
-    smart = smart or true
+    smart = smart == nil and true or false
 
     local mode = vim.fn.mode()
     local res
@@ -89,13 +109,13 @@ function M.current_selection(window, smart)
         local _, v_row, v_col = unpack(vim.fn.getpos 'v')
         local _, c_row, c_col = unpack(vim.fn.getpos '.')
 
-        res = M.get_text(window, v_row, v_col, c_row, c_col)
+        res = M.text(window, v_row, v_col, c_row, c_col)
     else
         local _, s_row, s_col = vim.fn.getpos "'<"
         local _, e_row, e_col = vim.fn.getpos "'>"
 
         if s_row and s_col and e_row and e_col then
-            res = M.get_text(window, s_row, s_col, e_row, e_col)
+            res = M.text(window, s_row, s_col, e_row, e_col)
         elseif smart then
             res = vim.fn.expand '<cword>'
         end

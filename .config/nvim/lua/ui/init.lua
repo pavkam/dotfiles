@@ -121,7 +121,7 @@ vim.keymap.set('n', '<C-[>', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })
 vim.keymap.set('n', '<C-]>', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 
 -- Exit insert mode when switching buffers
-utils.on_event('BufEnter', function(evt)
+utils.on_event({ 'BufWinEnter' }, function(evt)
     local ignored_fts = { 'TelescopePrompt' }
 
     if vim.fn.mode() == 'i' and vim.tbl_contains(ignored_fts, vim.api.nvim_buf_get_option(evt.buf, 'filetype')) then

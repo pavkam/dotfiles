@@ -7,8 +7,6 @@ local icons = require 'ui.icons'
 ---@class linting
 local M = {}
 
--- TODO: linting times out for Go files
-
 local progress_class = 'linting'
 
 --- Gets the names of all active linters for a buffer
