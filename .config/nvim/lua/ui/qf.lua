@@ -47,7 +47,7 @@ local function focused_list(window)
         return nil
     end
 
-    local details = info.loclist == 0 and vim.fn.getqflist { id = 0, idx = 0 } or vim.fn.getloclist(0, { id = 0, idx = 0 })
+    local details = info.loclist == 0 and vim.fn.getqflist { id = 0, idx = 0 } or vim.fn.getloclist(window, { id = 0, idx = 0 })
 
     return {
         id = details.id,

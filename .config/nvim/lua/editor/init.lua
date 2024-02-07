@@ -88,7 +88,7 @@ vim.keymap.set({ 'x' }, '<S-PageDown>', function()
     page_expr 'j'
 end, { desc = 'Page down' })
 
--- Disable the annoying yank on chnage
+-- Disable the annoying yank on change
 vim.keymap.set({ 'n', 'x' }, 'c', [["_c]], { desc = 'Change' })
 vim.keymap.set({ 'n', 'x' }, 'C', [["_C]], { desc = 'Change' })
 vim.keymap.set('x', 'p', 'P', { desc = 'Paste' })
