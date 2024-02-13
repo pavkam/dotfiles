@@ -157,4 +157,4 @@ o.fillchars = {
 o.list = false
 o.shortmess:append { W = true, I = true, c = true, C = true }
 o.formatoptions = 'jcroqlnt'
-o.sessionoptions = { 'buffers', 'curdir', 'tabpages', 'winsize', 'help', 'globals', 'skiprtp', 'resize', 'help', 'globals' }
+o.sessionoptions = { 'buffers', 'curdir', 'tabpages', 'winsize', 'help', 'globals', 'skiprtp', 'resize', 'help' }
