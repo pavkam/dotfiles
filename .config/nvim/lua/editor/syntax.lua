@@ -15,6 +15,8 @@ local function get_tree(buffer)
     return nil
 end
 
+-- TODO: type not detected as identifier is TS
+
 --- Get the node at the cursor.
 ---@param window number|nil # The window to get the cursor position from. 0 or nil for the current window.
 ---@return TSNode|nil # The node at the cursor.

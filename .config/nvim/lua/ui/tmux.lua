@@ -15,6 +15,8 @@ end
 local projects_root = os.getenv 'PROJECTS_ROOT'
 local user_home = os.getenv 'HOME'
 
+-- TODO: the path is not charnged in TMUX on new session
+
 --- Simplifies a directory name to be more readable
 ---@param dir string # the directory to simplify
 ---@return string # the simplified directory

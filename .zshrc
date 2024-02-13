@@ -291,15 +291,12 @@ alias ts='date -d @1639018800 "+%F %T"'
 alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu | tail -10
 alias vi=nvim
 alias vim=nvim
-alias nvim-0='NVIM_FEATURE_LEVEL=0 nvim'
-alias nvim-1='NVIM_FEATURE_LEVEL=1 nvim'
-alias nvim-2='NVIM_FEATURE_LEVEL=2 nvim'
 
 if command -v heroku &> /dev/null; then
     heroku-env() {
         # Check for correct number of arguments
         if [ "$#" -lt 2 ]; then
-            echo " Usage: heroku-env <Heroku App Name> \"<Command to Run>\" [Exlude Var Regex]"
+            echo " Usage: heroku-env <Heroku App Name> \"<Command to Run>\" [Exclude Var Regex]"
             return 1
         fi
 
@@ -316,7 +313,7 @@ if command -v heroku &> /dev/null; then
         echo " Retrieving environment variables from app \"$APP_NAME\"..."
 
         # Get the environment variables from Heroku
-        ENV_VARS=$(heroku config -s -a "$APP_NAME" 2>&1)
+        ENV_VARS=$(heroku config -s -a "$APP_NAME" 2>&1 | grep -vE "heroku update available")
 
         # Check if heroku config command was successful
         if [ $? -ne 0 ]; then
@@ -329,7 +326,9 @@ if command -v heroku &> /dev/null; then
             ENV_VARS=$(echo "$ENV_VARS" | grep -vE "^($EXCLUDE)=")
         fi
 
+        echo "$ENV_VARS" | awk -F '=' '{print "export " $1 "='\''" $2 "'\''"}'
         EXPORT_COMMANDS=$(echo "$ENV_VARS" | awk -F '=' '{print "export " $1 "='\''" $2 "'\''"}')
+
 
         echo " Running command \"$COMMAND\" with environment from app \"$APP_NAME\"..."
         $SHELL -c "$EXPORT_COMMANDS; $COMMAND"
