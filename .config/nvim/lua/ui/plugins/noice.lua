@@ -34,6 +34,7 @@ return {
                         { find = 'E486' },
                         { find = 'E42' },
                         { find = 'E776' },
+                        { find = 'E348' },
                     },
                 },
                 view = 'mini',

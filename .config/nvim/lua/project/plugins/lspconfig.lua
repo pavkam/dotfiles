@@ -43,6 +43,14 @@ return {
                     header = '',
                     prefix = '',
                 },
+                signs = {
+                    text = {
+                        [vim.diagnostic.severity.ERROR] = icons.Diagnostics.Error,
+                        [vim.diagnostic.severity.WARN] = icons.Diagnostics.Warn,
+                        [vim.diagnostic.severity.HINT] = icons.Diagnostics.Hint,
+                        [vim.diagnostic.severity.INFO] = icons.Diagnostics.Info,
+                    },
+                },
             },
             capabilities = {
                 textDocument = {

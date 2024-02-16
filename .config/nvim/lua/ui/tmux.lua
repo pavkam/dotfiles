@@ -15,8 +15,6 @@ end
 local projects_root = os.getenv 'PROJECTS_ROOT'
 local user_home = os.getenv 'HOME'
 
--- TODO: the path is not charnged in TMUX on new session
-
 --- Simplifies a directory name to be more readable
 ---@param dir string # the directory to simplify
 ---@return string # the simplified directory
@@ -91,7 +89,8 @@ end
 --- Switches to a session
 ---@param session string|nil # the session to switch to
 ---@param create boolean # whether to create the session if it doesn't exist
-local function create_or_switch_to_session(session, create)
+---@param dir string|nil # the directory to switch to
+local function create_or_switch_to_session(session, create, dir)
     if create then
         if session == nil then
             session = vim.fn.input 'Session name: '
@@ -102,7 +101,15 @@ local function create_or_switch_to_session(session, create)
             session = session:gsub('%.', '_')
         end
 
-        shell.async_cmd('tmux', { 'new', '-d', '-s', session }, nil, function(_, _)
+        local args = { 'new', '-d', '-s', session }
+        if dir then
+            table.insert(args, '-c')
+            table.insert(args, dir)
+        end
+
+        utils.info(vim.inspect(args))
+
+        shell.async_cmd('tmux', args, nil, function(_, _)
             switch_to_session(session)
         end)
     else
@@ -129,10 +136,13 @@ local function display(items)
         prompt = 'Select a session',
         index_fields = { 2, 1, 3 },
         callback = function(item)
+            local i = items[item[1]]
+            local dir = i.root or i.cwd
+
             if item[2] == '' then
-                create_or_switch_to_session(item[1] ~= new_session_label and item[1] or nil --[[@as string|nil]], true)
+                create_or_switch_to_session(item[1] ~= new_session_label and item[1] or nil --[[@as string|nil]], true, dir)
             else
-                create_or_switch_to_session(item[1] --[[@as string]], false)
+                create_or_switch_to_session(item[1] --[[@as string]], false, dir)
             end
         end,
         highlighter = function(item)

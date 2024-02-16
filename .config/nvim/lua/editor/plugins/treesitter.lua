@@ -1,12 +1,13 @@
 return {
     {
         'nvim-treesitter/nvim-treesitter',
+        version = '0.9.1', -- HACK: monitor https://github.com/nvim-neotest/neotest-jest/issues/99 for updates
         dependencies = {
             {
                 'nvim-treesitter/nvim-treesitter-textobjects',
+                commit = '19a91a38b02c1c28c14e0ba468d20ae1423c39b2',
             },
         },
-        version = false,
         build = ':TSUpdate',
         event = { 'BufReadPost', 'BufNewFile' },
         cmd = {
@@ -139,13 +140,11 @@ return {
         end,
     },
     {
-        -- HACK: remove when https://github.com/windwp/nvim-ts-autotag/issues/125 closed.
         'windwp/nvim-ts-autotag',
         event = 'User NormalFile',
         opts = {
-            autotag = {
-                enable_close_on_slash = false,
-            },
+            -- HACK: remove when https://github.com/windwp/nvim-ts-autotag/issues/125 closed.
+            enable_close_on_slash = false,
         },
     },
 }

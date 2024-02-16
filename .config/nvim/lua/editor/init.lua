@@ -97,6 +97,14 @@ vim.keymap.set('n', 'x', [["_x]], { desc = 'Delete character' })
 vim.keymap.set('n', '<Del>', [["_x]], { desc = 'Delete character' })
 vim.keymap.set('x', '<BS>', 'd', { desc = 'Delete selection' })
 
+vim.keymap.set('n', 'dd', function()
+    if vim.api.nvim_get_current_line():match '^%s*$' then
+        return '"_dd'
+    else
+        return 'dd'
+    end
+end, { desc = 'Delete line', expr = true })
+
 --- Inserts a new line and pastes
 ---@param op "o"|"O" # the operation to perform
 local function ins_paste(op)
@@ -138,6 +146,9 @@ vim.keymap.set('n', '<M-x>', 'dd', { desc = 'Delete line' })
 vim.keymap.set('x', '<M-x>', 'd', { desc = 'Delete selection' })
 vim.keymap.set('n', '<M-a>', 'ggVG', { desc = 'Select all', remap = true })
 
+vim.keymap.set('x', '.', ':norm .<CR>', { desc = 'Repeat edit' })
+vim.keymap.set('x', '@', ':norm @q<CR>', { desc = 'Repeat macro' })
+
 -- better search
 vim.on_key(function(char)
     if vim.fn.mode() == 'n' then
@@ -164,26 +175,27 @@ utils.on_event('TextYankPost', function()
     vim.highlight.on_yank()
 end)
 
--- TODO: need to figure out if I need mkview with session support
--- mkview and loadview for real files
-utils.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
-    if settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
-        vim.cmd.mkview { mods = { emsg_silent = true } }
-    end
-end)
-
-utils.on_event('BufWinEnter', function(evt)
-    if not settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
-        local filetype = vim.api.nvim_get_option_value('filetype', { buf = evt.buf })
-        local buftype = vim.api.nvim_get_option_value('buftype', { buf = evt.buf })
-        local ignore_filetypes = { 'gitcommit', 'gitrebase', 'svg', 'hgcommit' }
-
-        if buftype == '' and filetype and filetype ~= '' and not vim.tbl_contains(ignore_filetypes, filetype) then
-            settings.set('view_activated', true, { buffer = evt.buf, scope = 'instance' })
-            vim.cmd.loadview { mods = { emsg_silent = true } }
+if not utils.has_plugin 'auto-session' then
+    -- Turn on view generation and loading only if session management is not enabled
+    utils.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
+        if settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
+            vim.cmd.mkview { mods = { emsg_silent = true } }
         end
-    end
-end)
+    end)
+
+    utils.on_event('BufWinEnter', function(evt)
+        if not settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
+            local filetype = vim.api.nvim_get_option_value('filetype', { buf = evt.buf })
+            local buftype = vim.api.nvim_get_option_value('buftype', { buf = evt.buf })
+            local ignore_filetypes = { 'gitcommit', 'gitrebase', 'svg', 'hgcommit' }
+
+            if buftype == '' and filetype and filetype ~= '' and not vim.tbl_contains(ignore_filetypes, filetype) then
+                settings.set('view_activated', true, { buffer = evt.buf, scope = 'instance' })
+                vim.cmd.loadview { mods = { emsg_silent = true } }
+            end
+        end
+    end)
+end
 
 -- disable swap/undo files for certain filetypes
 utils.on_event('BufWritePre', function(evt)

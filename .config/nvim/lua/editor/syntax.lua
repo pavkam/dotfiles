@@ -15,8 +15,6 @@ local function get_tree(buffer)
     return nil
 end
 
--- TODO: type not detected as identifier is TS
-
 --- Get the node at the cursor.
 ---@param window number|nil # The window to get the cursor position from. 0 or nil for the current window.
 ---@return TSNode|nil # The node at the cursor.
@@ -54,6 +52,26 @@ end
 function M.node_type_under_cursor(window)
     local node = get_node_at_cursor(window)
     return node and node:type()
+end
+
+function M.node_text_under_cursor(window)
+    window = window or vim.api.nvim_get_current_win()
+    local node = get_node_at_cursor(window)
+    if node then
+        if node:type() == 'string_fragment' then
+            node = node:parent()
+        end
+
+        if node:type() == 'string' then
+            local start_row, start_col, end_row, end_col = node:range()
+            local lines = vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(window), start_row, end_row + 1, false)
+            local text = table.concat(lines, '\n'):sub(start_col + 1, end_col)
+
+            return text
+        end
+    end
+
+    return vim.fn.expand '<cword>'
 end
 
 --- Get the text from a range in the current buffer.
@@ -102,7 +120,9 @@ end
 ---@param smart boolean|nil # whether to use the current word if there is no selection
 ---@return string|nil # the current selection or the current word
 function M.current_selection(window, smart)
-    smart = smart == nil and true or false
+    if smart ~= false then
+        smart = true
+    end
 
     local mode = vim.fn.mode()
     local res
@@ -119,7 +139,7 @@ function M.current_selection(window, smart)
         if s_row and s_col and e_row and e_col then
             res = M.text(window, s_row, s_col, e_row, e_col)
         elseif smart then
-            res = vim.fn.expand '<cword>'
+            res = M.node_text_under_cursor(window)
         end
     end
 

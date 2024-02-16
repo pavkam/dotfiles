@@ -21,7 +21,6 @@ return {
                 local utils = require 'core.utils'
                 local ui = require 'ui'
 
-                -- TODO: a special key map that enabled hidden files
                 local show_hidden = not ui.ignore_hidden_files.active()
                 local add = {
                     additional_args = show_hidden and function(args)
@@ -33,7 +32,28 @@ return {
                     no_ignore = show_hidden,
                 }
 
+                if opts and opts.restart_picker then
+                    add.attach_mappings = function(_, map)
+                        map('i', '<C-h>', function(prompt_bufnr)
+                            -- toggle the hidden files
+                            require('telescope.actions').close(prompt_bufnr)
+                            ui.ignore_hidden_files.toggle()
+                            require('telescope.builtin')[opts.restart_picker](wrap(opts))
+                        end)
+
+                        return true
+                    end
+                end
+
                 return utils.tbl_merge(add, opts)
+            end
+
+            --- Creates a wrapper around a picker and returns a function that can be called to invoke the picker
+            --- @param picker string # the picker to invoke
+            local function blanket(picker)
+                return function(opts)
+                    require('telescope.builtin')[picker](wrap(vim.tbl_extend('force', opts or {}, { restart_picker = picker })))
+                end
             end
 
             return {
@@ -47,7 +67,8 @@ return {
                 {
                     '<C-_>',
                     function()
-                        require('telescope.builtin').current_buffer_fuzzy_find {}
+                        local sel = require('editor.syntax').current_selection(nil, true)
+                        require('telescope.builtin').current_buffer_fuzzy_find { default_text = sel }
                     end,
                     desc = 'Fuzzy-find in file',
                     mode = { 'n', 'v' },
@@ -57,9 +78,9 @@ return {
                     function()
                         local sel = require('editor.syntax').current_selection(nil, false)
                         if sel then
-                            require('telescope.builtin').grep_string(wrap { search = sel })
+                            blanket 'grep_string' { search = sel }
                         else
-                            require('telescope.builtin').live_grep(wrap())
+                            blanket 'live_grep'()
                         end
                     end,
                     desc = 'Live grep',
@@ -67,16 +88,12 @@ return {
                 },
                 {
                     '<leader>f',
-                    function()
-                        require('telescope.builtin').find_files(wrap())
-                    end,
+                    blanket 'find_files',
                     desc = icons.UI.Search .. ' Search files',
                 },
                 {
                     '<leader>o',
-                    function()
-                        require('telescope.builtin').oldfiles(wrap())
-                    end,
+                    blanket 'oldfiles',
                     desc = icons.UI.Search .. ' Search old files',
                 },
                 {

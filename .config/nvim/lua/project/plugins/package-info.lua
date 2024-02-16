@@ -14,45 +14,28 @@ return {
         local utils = require 'core.utils'
         utils.on_event('BufReadPre', function(args)
             vim.keymap.set('n', '<leader>p', function()
-                require('ui.select').command {
+                require('ui.select').command({
                     {
                         name = 'Change',
                         command = 'PackageInfoChangeVersion',
+                        desc = 'Change the package version',
                     },
                     {
                         name = 'Update',
                         command = 'PackageInfoUpdate',
+                        desc = 'Update the package',
                     },
                     {
                         name = 'Delete',
                         command = 'PackageInfoDelete',
+                        desc = 'Delete the package',
                     },
                     {
                         name = 'Install',
                         command = 'PackageInfoInstall',
+                        desc = 'Install the package',
                     },
-                }
-            end, { buffer = args.buf, desc = icons.UI.Action .. ' package.json' })
-
-            vim.keymap.set('n', '<leader>pi', function()
-                require('ui.select').command {
-                    {
-                        name = 'Change',
-                        command = 'PackageInfoChangeVersion',
-                    },
-                    {
-                        name = 'Update',
-                        command = 'PackageInfoUpdate',
-                    },
-                    {
-                        name = 'Delete',
-                        command = 'PackageInfoDelete',
-                    },
-                    {
-                        name = 'Install',
-                        command = 'PackageInfoInstall',
-                    },
-                }
+                }, { at_cursor = true })
             end, { buffer = args.buf, desc = icons.UI.Action .. ' package.json' })
         end, 'package\\.json')
 
