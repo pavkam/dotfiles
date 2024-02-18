@@ -1,6 +1,7 @@
 return {
     'rmagatti/auto-session',
     event = 'User LazyDone',
+    dependencies = { 'kevinhwang91/nvim-ufo' },
     opts = {
         log_level = 'error',
         auto_session_suppress_dirs = { '~/', '/' },

@@ -54,8 +54,25 @@ function M.node_type_under_cursor(window)
     return node and node:type()
 end
 
-function M.node_text_under_cursor(window)
+--- Get the node text under the cursor respecting syntactic boundaries.
+---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
+---@param replacement string|nil # The text to replace the node with.
+function M.replace_node_under_cursor(window, replacement)
     window = window or vim.api.nvim_get_current_win()
+    local node = get_node_at_cursor(window)
+
+    if node then
+        local start_row, start_col, end_row, end_col = node:range()
+        local buffer = vim.api.nvim_win_get_buf(window)
+
+        vim.api.nvim_buf_set_text(buffer, start_row, start_col, end_row, end_col, { replacement })
+    end
+end
+
+--- Get the node text under the cursor respecting syntactic boundaries.
+---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
+---@return string # The text under the cursor.
+function M.node_text_under_cursor(window)
     local node = get_node_at_cursor(window)
     if node then
         if node:type() == 'string_fragment' then
@@ -64,10 +81,7 @@ function M.node_text_under_cursor(window)
 
         if node:type() == 'string' then
             local start_row, start_col, end_row, end_col = node:range()
-            local lines = vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(window), start_row, end_row + 1, false)
-            local text = table.concat(lines, '\n'):sub(start_col + 1, end_col)
-
-            return text
+            return M.text(window, start_row + 1, start_col + 1, end_row + 1, end_col)
         end
     end
 

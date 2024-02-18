@@ -76,12 +76,8 @@ return {
                 {
                     '<M-/>',
                     function()
-                        local sel = require('editor.syntax').current_selection(nil, false)
-                        if sel then
-                            blanket 'grep_string' { search = sel }
-                        else
-                            blanket 'live_grep'()
-                        end
+                        local sel = require('editor.syntax').current_selection(nil, true)
+                        blanket 'live_grep' { default_text = sel }
                     end,
                     desc = 'Live grep',
                     mode = { 'n', 'v' },

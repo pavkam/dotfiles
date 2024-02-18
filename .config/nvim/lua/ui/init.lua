@@ -117,8 +117,6 @@ end, true)
 -- Specials using "Command/Super" key (when available!)
 vim.keymap.set('n', '<M-]>', '<C-i>', { desc = 'Next location' })
 vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
-vim.keymap.set('n', '<C-[>', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })
-vim.keymap.set('n', '<C-]>', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 
 -- Exit insert mode when switching buffers
 utils.on_event({ 'BufWinEnter' }, function(evt)

@@ -340,7 +340,7 @@ sesh() {
     tmux ls &>/dev/null && TMUX_SESSIONS=$(tmux ls -F "#{session_name}")
 
     local PROJECTS=$(
-        [ "$PROJECTS_ROOT" != "" ] && fd -c never --follow --hidden --relative-path --base-directory $PROJECTS_ROOT .git$ -t directory -E .github | xargs dirname
+        [ "$PROJECTS_ROOT" != "" ] && fd -c never --follow --hidden --no-ignore --relative-path --base-directory $PROJECTS_ROOT .git$ -t directory -E .github | xargs dirname
     )
 
     local OPTIONS=$(
@@ -512,7 +512,7 @@ fi
 
 # Kubernetes
 if command -v kubectl &> /dev/null; then
-    pods () {
+    kpods () {
         if [ "$1" != "" ]; then
             kubectl get pods -n $1
         else
@@ -520,7 +520,7 @@ if command -v kubectl &> /dev/null; then
         fi
     }
 
-    pod () {
+    kpod () {
         if [ "$2" != "" ]; then
             pods $2 | sed -n "s/^\($1[[:alnum:],-]\{1,\}\)[[:space:]]\{1,\}.\{1,\}$/\1/p"
         else

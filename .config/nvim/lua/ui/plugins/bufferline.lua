@@ -20,10 +20,11 @@ return {
             right_mouse_command = function(n)
                 require('mini.bufremove').delete(n, false)
             end,
-
+            numbers = function(opts)
+                return string.format('%s', opts.ordinal)
+            end,
             diagnostics = 'nvim_lsp',
             always_show_bufferline = false,
-
             diagnostics_indicator = function(_, _, diag)
                 local ret = (diag.error and icons.Diagnostics.LSP.Error .. ' ' .. diag.error or '')
                     .. (diag.warning and icons.Diagnostics.LSP.Warn .. ' ' .. diag.warning or '')
