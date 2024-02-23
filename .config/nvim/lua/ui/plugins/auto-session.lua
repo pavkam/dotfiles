@@ -21,7 +21,7 @@ return {
                 local shada_content = settings.serialize_shada_to_base64()
 
                 local code = string.format(
-                    ":lua require('core.settings').deserialize_shada_from_base64([[%s]]); require('core.settings').deserialize_from_json([[ %s ]])",
+                    ":lua vim.defer_fn(function() require('core.settings').deserialize_shada_from_base64([[%s]]); require('core.settings').deserialize_from_json([[ %s ]]) end, 100)",
                     shada_content,
                     opts
                 )

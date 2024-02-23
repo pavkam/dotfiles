@@ -45,11 +45,10 @@
     "type": "chat",
     "opts": {
       "title": "󰙨 Implement Tests",
-      "template": "Implement tests for the following code.\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nTests:\n```{{filetype}}",
+      "template": "Implement tests for the following code. REFRAIN FROM COMMENTARY AND ONLY RESPOND WITH THE COMPLETE CODE SNIPPET. \n\nCode:\n```{{filetype}}\n{{input}}\n```",
       "strategy": "append",
       "params": {
-        "model": "gpt-4-1106-preview",
-        "stop": ["```"]
+        "model": "gpt-4-1106-preview"
       }
     }
   },

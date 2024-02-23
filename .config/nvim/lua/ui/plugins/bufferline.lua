@@ -7,11 +7,19 @@ return {
         'nvim-tree/nvim-web-devicons',
     },
     event = 'BufEnter',
-    keys = {
-        { '<leader>C', '<Cmd>BufferLineCloseOthers<CR>', desc = icons.UI.CloseAll .. ' Close other buffers' },
-        { '<M-,>', '<Cmd>BufferLineCyclePrev<CR>', desc = 'Previous buffer' },
-        { '<M-.>', '<Cmd>BufferLineCycleNext<CR>', desc = 'Next buffer' },
-    },
+    keys = function()
+        local keys = {
+            { '<leader>C', '<Cmd>BufferLineCloseOthers<CR>', desc = icons.UI.CloseAll .. ' Close other buffers' },
+            { '<M-,>', '<Cmd>BufferLineCyclePrev<CR>', desc = 'Previous buffer' },
+            { '<M-.>', '<Cmd>BufferLineCycleNext<CR>', desc = 'Next buffer' },
+        }
+
+        for i = 1, 9 do
+            table.insert(keys, { '<M-' .. i .. '>', '<Cmd>BufferLineGoToBuffer ' .. i .. '<CR>', desc = 'Go to buffer ' .. i })
+        end
+
+        return keys
+    end,
     opts = {
         options = {
             close_command = function(n)
