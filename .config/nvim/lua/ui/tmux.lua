@@ -116,7 +116,7 @@ local function create_or_switch_to_session(session, create, dir)
         switch_to_session(session)
     end
 end
-
+-- TODO: new session not working
 local new_session_label = '<new session>'
 
 --- Displays the UI to select and manage sessions

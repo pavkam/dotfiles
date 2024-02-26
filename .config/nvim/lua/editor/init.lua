@@ -150,6 +150,9 @@ vim.keymap.set('n', '<M-a>', 'ggVG', { desc = 'Select all', remap = true })
 vim.keymap.set('x', '.', ':norm .<CR>', { desc = 'Repeat edit' })
 vim.keymap.set('x', '@', ':norm @q<CR>', { desc = 'Repeat macro' })
 
+vim.keymap.set('i', '<LeftMouse>', '<Esc><LeftMouse>', { desc = 'Exit insert mode and left-click' })
+vim.keymap.set('i', '<RightMouse>', '<Esc><RightMouse>', { desc = 'Exit insert mode and right-click' })
+
 -- better search
 vim.on_key(function(char)
     if vim.fn.mode() == 'n' then

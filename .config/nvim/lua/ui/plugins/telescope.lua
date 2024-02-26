@@ -67,19 +67,27 @@ return {
                 {
                     '<C-_>',
                     function()
-                        local sel = require('editor.syntax').current_selection(nil, true)
-                        require('telescope.builtin').current_buffer_fuzzy_find { default_text = sel }
+                        blanket 'live_grep' {}
                     end,
-                    desc = 'Fuzzy-find in file',
+                    desc = 'Grep in all files',
                     mode = { 'n', 'v' },
                 },
                 {
                     '<M-/>',
                     function()
                         local sel = require('editor.syntax').current_selection(nil, true)
+                        require('telescope.builtin').current_buffer_fuzzy_find { default_text = sel }
+                    end,
+                    desc = 'Grep in file (selection)',
+                    mode = { 'n', 'v' },
+                },
+                {
+                    '<M-?>',
+                    function()
+                        local sel = require('editor.syntax').current_selection(nil, true)
                         blanket 'live_grep' { default_text = sel }
                     end,
-                    desc = 'Live grep',
+                    desc = 'Grep in all files (selection)',
                     mode = { 'n', 'v' },
                 },
                 {
