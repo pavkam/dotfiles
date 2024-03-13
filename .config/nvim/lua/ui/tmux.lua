@@ -116,7 +116,7 @@ local function create_or_switch_to_session(session, create, dir)
         switch_to_session(session)
     end
 end
--- TODO: new session not working
+
 local new_session_label = '<new session>'
 
 --- Displays the UI to select and manage sessions
@@ -136,6 +136,12 @@ local function display(items)
         prompt = 'Select a session',
         index_fields = { 2, 1, 3 },
         callback = function(item)
+            local name = item[1]
+            if name == new_session_label then
+                create_or_switch_to_session(nil, true, item[3] --[[@as string]])
+                return
+            end
+
             local i = items[item[1]]
             local dir = i.root or i.cwd
 

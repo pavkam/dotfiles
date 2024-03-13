@@ -26,8 +26,8 @@ return {
             'TSUpdateSync',
         },
         keys = {
-            { '<C-s>', desc = 'Increment selection' },
-            { '<C-a>', desc = 'Decrement selection', mode = 'x' },
+            { '\\', desc = 'Increment selection' },
+            { '|', desc = 'Decrement selection', mode = 'x' },
         },
         opts = {
             autotag = { enable = true },
@@ -128,10 +128,10 @@ return {
             incremental_selection = {
                 enable = true,
                 keymaps = {
-                    init_selection = '<C-s>',
-                    node_incremental = '<C-s>',
+                    init_selection = '\\',
+                    node_incremental = '\\',
                     scope_incremental = false,
-                    node_decremental = '<C-a>',
+                    node_decremental = '|',
                 },
             },
         },

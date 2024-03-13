@@ -275,6 +275,14 @@ return {
                 progress_capability_handler(_, msg, info)
             end
 
+            -- setup progress
+            local diagnostics_capability_name = 'textDocument/publishDiagnostics'
+            local diagnostics_capability_handler = vim.lsp.handlers[diagnostics_capability_name]
+            vim.lsp.handlers[diagnostics_capability_name] = function(_, result, ctx, config)
+                lsp.notice_diagnostics(result, ctx.client_id)
+                diagnostics_capability_handler(_, result, ctx, config)
+            end
+
             -- register cmp capabilities
             local cmp_nvim_lsp = require 'cmp_nvim_lsp'
             local capabilities = utils.tbl_merge(vim.lsp.protocol.make_client_capabilities(), cmp_nvim_lsp.default_capabilities(), opts.capabilities)
@@ -337,6 +345,7 @@ return {
             'neovim/nvim-lspconfig',
         },
         opts = {
+            separate_diagnostic_server = false,
             handlers = {
                 ['textDocument/rename'] = require 'project.rename',
             },

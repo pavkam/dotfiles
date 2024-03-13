@@ -31,6 +31,7 @@ return {
                         { find = '%d+ lines <ed %d+ time' },
                         { find = '%d+ lines >ed %d+ time' },
                         { find = '%d+ substitutions on %d+ lines' },
+                        { find = 'Hunk %d+ of %d+' },
                         { find = 'E486' },
                         { find = 'E42' },
                         { find = 'E776' },

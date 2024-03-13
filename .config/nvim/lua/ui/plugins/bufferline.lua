@@ -22,6 +22,7 @@ return {
     end,
     opts = {
         options = {
+            -- TODO: add loginc to swtch to open split when switching buffers
             close_command = function(n)
                 require('mini.bufremove').delete(n, false)
             end,

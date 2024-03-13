@@ -12,6 +12,20 @@ if not vim.fn.has 'nvim-9.4' then
     return
 end
 
+--- Global debug function to help me debug (duh)
+---@vararg any anything to debug
+_G.dbg = function(...)
+    local objects = {}
+    for _, v in pairs { ... } do
+        local val = v ~= nil and vim.inspect(v) or 'nil'
+        table.insert(objects, val)
+    end
+
+    local message = table.concat(objects, '\n')
+
+    vim.notify(message)
+end
+
 -- TODO: figure out why LSP diagnostics get borked
 
 local modules = {

@@ -116,7 +116,7 @@ return {
                     end),
                     ['<C-b>'] = cmp.mapping.scroll_docs(-4),
                     ['<C-f>'] = cmp.mapping.scroll_docs(4),
-                    ['<C-a>'] = cmp.mapping.complete(),
+                    ['<M-CR>'] = cmp.mapping.complete(),
                     ['<C-e>'] = cmp.mapping.abort(),
                     ['<CR>'] = cmp.mapping.confirm { select = true },
                     ['<S-CR>'] = cmp.mapping.confirm {

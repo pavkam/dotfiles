@@ -26,8 +26,8 @@ if not utils.has_plugin 'nvim-tmux-navigation' then
     vim.keymap.set('n', '<M-Up>', '<cmd>wincmd k<cr>', { desc = 'Go to window above' })
 end
 
-vim.keymap.set('n', '\\', '<C-W>s', { desc = 'Split window below' })
-vim.keymap.set('n', '|', '<C-W>v', { desc = 'Split window right' })
+vim.keymap.set('n', '<C-s>', '<cmd> wincmd v <CR>', { desc = 'Split window below' })
+vim.keymap.set('n', '<C-h>', '<cmd> wincmd s <CR>', { desc = 'Split window right' })
 
 -- Better jump list navigation
 vim.keymap.set('n', ']]', '<C-i>', { desc = 'Next location' })

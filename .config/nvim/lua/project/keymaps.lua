@@ -42,7 +42,7 @@ local keymaps = {
         desc = 'Run CodeLens',
         capability = 'codeLens',
     },
-    { '<leader><cr>', vim.lsp.buf.code_action, desc = icons.UI.Action .. ' Code actions', mode = { 'n', 'v' }, capability = 'codeAction' },
+    { '<M-CR>', vim.lsp.buf.code_action, desc = icons.UI.Action .. ' Code actions', mode = { 'n', 'v' }, capability = 'codeAction' },
     {
         '<C-r>',
         function()

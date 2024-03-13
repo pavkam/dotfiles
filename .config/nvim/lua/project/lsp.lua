@@ -12,6 +12,9 @@ local progress_class = 'lsp'
 ---@field offset_encoding string
 ---@field config { workspace_folders: { uri: string }[], root_dir: string, capabilities: table }
 ---@field server_capabilities table
+---@field initialized boolean
+---@field is_stopped fun(): boolean
+---@field requests table<integer, { type: string }>
 
 ---@class utils.lsp
 local M = {}
@@ -329,5 +332,78 @@ function M.clear_diagnostics(sources, buffer)
         end
     end
 end
+
+---@class LspDiagnostic
+---@field code number
+---@field message string
+---@field range { start: { line: integer, character: integer }, end: { line: integer, character: integer } }
+---@field severity number
+---@field source string
+---@field tags string[]
+
+---@class LspDiagnostics
+---@field diagnostics LspDiagnostic[]
+---@field uri string
+
+---@type table<integer, table<integer, { message: string, source: string }[]>>
+local noticed_diagnostics = {}
+
+--- Records the diagnostics for a given file for later inspection
+---@param diagnostics LspDiagnostics # the diagnostics to record
+---@param client_id integer # the ID of the client that produced the diagnostics
+function M.notice_diagnostics(diagnostics, client_id)
+    assert(type(client_id) == 'number' and client_id > 0)
+    assert(type(diagnostics) == 'table' and diagnostics.uri)
+
+    local diags = {}
+    for _, d in ipairs(diagnostics.diagnostics) do
+        diags[#diags + 1] = {
+            message = d.message,
+            source = d.source,
+        }
+    end
+
+    local buffer = vim.uri_to_bufnr(diagnostics.uri)
+    noticed_diagnostics[buffer] = noticed_diagnostics[buffer] or {}
+    noticed_diagnostics[buffer][client_id] = diags
+end
+
+function M.monitor_health(buffer)
+    local buffer_diags = noticed_diagnostics[buffer]
+    if buffer_diags and #buffer_diags > 0 then
+        for client_id, diags in pairs(buffer_diags) do
+            local client = vim.lsp.get_client_by_id(client_id)
+            local is_screwed = not client or not client.initialized or client.is_stopped()
+
+            if is_screwed and #diags > 0 then
+                utils.error('Client ' .. client_id .. ' has detached and left a mess behind!')
+            end
+        end
+    end
+
+    local attached_clients = get_active_clients { bufnr = buffer }
+    for _, client in ipairs(attached_clients) do
+        local pending_requests = 0
+        for _, req in pairs(client.requests) do
+            if req.type == 'pending' then
+                pending_requests = pending_requests + 1
+            end
+        end
+
+        if pending_requests > 2 then
+            utils.warn('Client ' .. client.name .. ' has ' .. pending_requests .. ' pending requests!')
+        end
+    end
+end
+
+local timer = vim.loop.new_timer()
+timer:start(
+    5000,
+    5000,
+    vim.schedule_wrap(function()
+        local buffer = vim.api.nvim_get_current_buf()
+        M.monitor_health(buffer)
+    end)
+)
 
 return M
