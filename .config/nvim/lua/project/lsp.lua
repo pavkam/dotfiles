@@ -400,8 +400,8 @@ function M.monitor_health(buffer)
         local key = string.format('lsp_client_pending_requests_%s', client.id)
 
         local prev = settings.get(key, { scope = 'instance', buffer = buffer, default = 0 })
-        if prev < pending_requests then
-            utils.warn(string.format('Client **%s** has `%d` pending requests (increased from %d)!', client.name, pending_requests, prev))
+        if pending_requests > prev and prev > 0 then
+            utils.warn(string.format('Client **%s** has `%d` pending requests (increased from `%d`)!', client.name, pending_requests, prev))
         end
 
         settings.set(key, pending_requests, { scope = 'instance', buffer = buffer })

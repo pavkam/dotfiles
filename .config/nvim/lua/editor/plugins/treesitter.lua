@@ -1,11 +1,9 @@
 return {
     {
         'nvim-treesitter/nvim-treesitter',
-        version = '0.9.1', -- HACK: monitor https://github.com/nvim-neotest/neotest-jest/issues/99 for updates
         dependencies = {
             {
                 'nvim-treesitter/nvim-treesitter-textobjects',
-                commit = '19a91a38b02c1c28c14e0ba468d20ae1423c39b2',
             },
         },
         build = ':TSUpdate',
