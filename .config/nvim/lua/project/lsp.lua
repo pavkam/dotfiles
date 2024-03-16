@@ -6,6 +6,7 @@ local progress_class = 'lsp'
 
 ---@class LspClient
 ---@field name string
+---@field id integer
 ---@field supports_method fun(method: string): boolean
 ---@field request_sync fun(method: string, params: any, timeout: integer): any
 ---@field stop fun()
@@ -333,7 +334,7 @@ function M.clear_diagnostics(sources, buffer)
     end
 end
 
----@class LspDiagnostic
+---@class utils.lsp.LspDiagnostic
 ---@field code number
 ---@field message string
 ---@field range { start: { line: integer, character: integer }, end: { line: integer, character: integer } }
@@ -341,15 +342,14 @@ end
 ---@field source string
 ---@field tags string[]
 
----@class LspDiagnostics
----@field diagnostics LspDiagnostic[]
+---@class utils.lsp.LspDiagnostics
+---@field diagnostics utils.lsp.LspDiagnostic[]
 ---@field uri string
 
----@type table<integer, table<integer, { message: string, source: string }[]>>
-local noticed_diagnostics = {}
+---@alias utils.lsp.LspDiagnosticsPerClient table<integer, { message: string, source: string }[]>
 
 --- Records the diagnostics for a given file for later inspection
----@param diagnostics LspDiagnostics # the diagnostics to record
+---@param diagnostics utils.lsp.LspDiagnostics # the diagnostics to record
 ---@param client_id integer # the ID of the client that produced the diagnostics
 function M.notice_diagnostics(diagnostics, client_id)
     assert(type(client_id) == 'number' and client_id > 0)
@@ -364,23 +364,30 @@ function M.notice_diagnostics(diagnostics, client_id)
     end
 
     local buffer = vim.uri_to_bufnr(diagnostics.uri)
-    noticed_diagnostics[buffer] = noticed_diagnostics[buffer] or {}
-    noticed_diagnostics[buffer][client_id] = diags
+    local n = settings.get('noticed_diagnostics', { scope = 'instance', buffer = buffer, default = {} })
+    ---@cast n utils.lsp.LspDiagnosticsPerClient
+
+    n[client_id] = diags
+    settings.set('lasp_noticed_diagnostics', n, { scope = 'instance', buffer = buffer, default = {} })
 end
 
 function M.monitor_health(buffer)
-    local buffer_diags = noticed_diagnostics[buffer]
-    if buffer_diags and #buffer_diags > 0 then
-        for client_id, diags in pairs(buffer_diags) do
+    -- Check the stuck diagnostics
+    local n = settings.get('lsp_noticed_diagnostics', { scope = 'instance', buffer = buffer })
+    ---@cast n utils.lsp.LspDiagnosticsPerClient
+
+    if n and #n > 0 then
+        for client_id, diags in pairs(n) do
             local client = vim.lsp.get_client_by_id(client_id)
             local is_screwed = not client or not client.initialized or client.is_stopped()
 
             if is_screwed and #diags > 0 then
-                utils.error('Client ' .. client_id .. ' has detached and left a mess behind!')
+                utils.error(string.format('Client `%d` has detached and left a mess behind!', client_id))
             end
         end
     end
 
+    -- Check the pending requests
     local attached_clients = get_active_clients { bufnr = buffer }
     for _, client in ipairs(attached_clients) do
         local pending_requests = 0
@@ -390,16 +397,22 @@ function M.monitor_health(buffer)
             end
         end
 
-        if pending_requests > 2 then
-            utils.warn('Client ' .. client.name .. ' has ' .. pending_requests .. ' pending requests!')
+        local key = string.format('lsp_client_pending_requests_%s', client.id)
+
+        local prev = settings.get(key, { scope = 'instance', buffer = buffer, default = 0 })
+        if prev < pending_requests then
+            utils.warn(string.format('Client **%s** has `%d` pending requests (increased from %d)!', client.name, pending_requests, prev))
         end
+
+        settings.set(key, pending_requests, { scope = 'instance', buffer = buffer })
     end
 end
 
+local check_delay = 5000
 local timer = vim.loop.new_timer()
 timer:start(
-    5000,
-    5000,
+    check_delay,
+    check_delay,
     vim.schedule_wrap(function()
         local buffer = vim.api.nvim_get_current_buf()
         M.monitor_health(buffer)

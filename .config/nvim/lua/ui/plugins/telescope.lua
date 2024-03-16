@@ -230,25 +230,6 @@ return {
             local actions = require 'telescope.actions'
             local themes = require 'telescope.themes'
 
-            local function flash(prompt_bufnr)
-                require('flash').jump {
-                    pattern = '^',
-                    label = { after = { 0, 0 } },
-                    search = {
-                        mode = 'search',
-                        exclude = {
-                            function(win)
-                                return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= 'TelescopeResults'
-                            end,
-                        },
-                    },
-                    action = function(match)
-                        local picker = require('telescope.actions.state').get_current_picker(prompt_bufnr)
-                        picker:set_selection(match.pos[1] - 1)
-                    end,
-                }
-            end
-
             local ok, gwt = pcall(vim.api.nvim_get_var, 'git_worktrees')
 
             return {
@@ -273,20 +254,17 @@ return {
                             ['<C-j>'] = actions.move_selection_next,
                             ['<C-k>'] = actions.move_selection_previous,
                             ['<C-x>'] = false,
-                            ['<C-v>'] = false,
-                            ['<C-\\>'] = actions.file_split,
-                            ['<C-|>'] = actions.file_vsplit,
+                            ['<C-s>'] = actions.file_split,
+                            ['<C-v>'] = actions.file_vsplit,
                             ['<C-f>'] = actions.preview_scrolling_down,
                             ['<C-b>'] = actions.preview_scrolling_up,
-                            ['<C-s>'] = flash,
                             ['<C-q>'] = actions.smart_send_to_qflist,
                             ['<C-l>'] = actions.smart_send_to_loclist,
                         },
                         n = {
                             ['q'] = actions.close,
-                            ['s'] = flash,
-                            ['\\>'] = actions.file_split,
-                            ['|'] = actions.file_vsplit,
+                            ['s'] = actions.file_split,
+                            ['v'] = actions.file_vsplit,
                             ['<C-q>'] = actions.smart_send_to_qflist,
                             ['<C-l>'] = actions.smart_send_to_loclist,
                         },
