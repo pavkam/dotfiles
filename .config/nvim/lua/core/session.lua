@@ -46,13 +46,15 @@ end
 --- Restore a session
 ---@param name string # the name of the session
 function M.restore_session(name)
+    if utils.has_plugin 'symbol-usage.nvim' then -- HACK: disable symbol-usage before restoring session
+        pcall((require 'symbol-usage').toggle_globally)
+    end
+
     vim.defer_fn(function()
         -- close all windows, tabs and buffers
         vim.cmd [[silent! tabonly!]]
         vim.cmd [[silent! %bd!]]
         vim.cmd [[silent! %bw!]]
-
-        require('symbol-usage').refresh()
 
         -- restore session and shada files
         local session_file_name = name .. '.vim'
@@ -63,6 +65,10 @@ function M.restore_session(name)
         end
         if vim.fn.filereadable(shada_file_name) == 1 then
             vim.cmd('rshada ' .. shada_file_name)
+        end
+
+        if utils.has_plugin 'symbol-usage.nvim' then
+            pcall((require 'symbol-usage').toggle_globally)
         end
     end, 0)
 end
