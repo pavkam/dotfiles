@@ -1,6 +1,7 @@
 return {
     'rmagatti/auto-session',
     event = 'User LazyDone',
+    cond = false,
     dependencies = { 'kevinhwang91/nvim-ufo' },
     opts = {
         log_level = 'error',

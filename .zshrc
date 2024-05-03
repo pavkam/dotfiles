@@ -221,8 +221,12 @@ alias map='xargs -n1'
 alias reload='exec ${SHELL} -l'
 alias ts='date -d @1639018800 "+%F %T"'
 alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu | tail -10
+
+# VIM stuff
 alias vi=nvim
 alias vim=nvim
+alias :qa=exit
+alias :q=exit
 
 # fzf stuff
 if command -v fzf &>/dev/null; then

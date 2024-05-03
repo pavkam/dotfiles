@@ -2,6 +2,7 @@ local utils = require 'core.utils'
 
 require 'core.options'
 require 'core.shell'
+require 'core.session'
 
 -- common misspellings
 vim.cmd.cnoreabbrev('qw', 'wq')

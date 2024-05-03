@@ -399,7 +399,14 @@ function M.serialize_shada_to_base64()
 
     if ok then
         local content
+
+        -- use either the macOS or linux base64 command
+        -- TODO: remove when moving to nvim 0.10
         ok, content = pcall(vim.fn.system, string.format('base64 -i "%s"', shada_name))
+        if not ok then
+            ok, content = pcall(vim.fn.system, string.format('base64 "%s"', shada_name))
+        end
+
         pcall(vim.fn.delete, shada_name)
 
         if ok then
@@ -418,8 +425,13 @@ end
 ---@param content string # the serialized shada
 function M.deserialize_shada_from_base64(content)
     local shada_name = vim.fn.tempname()
-
+    -- use either the macOS or linux base64 command
+    -- TODO: remove when moving to nvim 0.10
     local ok = pcall(vim.fn.system, string.format('base64 -d -o "%s"', shada_name), content)
+    if not ok then
+        ok = pcall(vim.fn.system, string.format('base64 -d > "%s"', shada_name), content)
+    end
+
     if ok then
         ok = pcall(vim.cmd.rshada, shada_name)
         pcall(vim.fn.delete, shada_name)
