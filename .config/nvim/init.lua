@@ -26,8 +26,6 @@ _G.dbg = function(...)
     vim.notify(message)
 end
 
--- TODO: figure out why LSP diagnostics get borked
-
 local modules = {
     'core',
     'ui',
