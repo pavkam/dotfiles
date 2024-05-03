@@ -7,8 +7,6 @@
 # | I apologize in advance if I did not mention the sources explicitly.     |
 # ---------------------------------------------------------------------------
 
-echo ".zshenv"
-
 # Force locale
 export LANG='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
@@ -134,30 +132,35 @@ function declutter_path() {
     local -a COMPONENTS
     local COMPONENT
     local RESULT=""
+    local USER_PATHS=""
+    local BREW_PATHS=""
 
     # Split PATH into individual components
-    IFS=":" read -A COMPONENTS <<< $PATH
+    IFS=":" read -A COMPONENTS <<< "$PATH"
 
     # Use an associative array to remove duplicates
     local -A UNIQUE_COMPONENTS
     for COMPONENT in "${COMPONENTS[@]}"; do
-        if [ "$COMPONENT" = "" ] || [ "$UNIQUE_COMPONENTS[$COMPONENT]" = "1" ]; then
+        if [ -z "$COMPONENT" ] || [ "$UNIQUE_COMPONENTS[$COMPONENT]" = "1" ]; then
             continue
         fi
-        echo $COMPONENT
 
-        if [ "$RESULT" = "" ]; then
-            RESULT="$COMPONENT"
+        if [[ "$COMPONENT" == $HOME* ]]; then
+            USER_PATHS="$USER_PATHS:$COMPONENT"
+        elif [[ "$COMPONENT" == $HOMEBREW_PREFIX* ]]; then
+            BREW_PATHS="$BREW_PATHS:$COMPONENT"
         else
             RESULT="$RESULT:$COMPONENT"
         fi
 
-        UNIQUE_COMPONENTS[$COMPONENT]="1"
+        UNIQUE_COMPONENTS["$COMPONENT"]="1"
     done
 
+    # Construct the final path
+    RESULT="$USER_PATHS$BREW_PATHS$RESULT"
+
     # Set PATH variable with unique components
-    PATH=$RESULT
-    echo "---------"
+    PATH="${RESULT:1}"
 }
 
 # Set a marker that the configuration was loaded. Used in .zprofile to avoid
