@@ -91,6 +91,7 @@ end
 ---@param create boolean # whether to create the session if it doesn't exist
 ---@param dir string|nil # the directory to switch to
 local function create_or_switch_to_session(session, create, dir)
+    -- TODO: this fails when we switch to a session that has escape chars
     if create then
         if session == nil then
             session = vim.fn.input 'Session name: '

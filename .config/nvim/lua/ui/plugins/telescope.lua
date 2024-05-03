@@ -65,7 +65,7 @@ return {
                     desc = icons.UI.Buffers .. ' Show buffers',
                 },
                 {
-                    '<C-_>',
+                    '<M-f>',
                     function()
                         blanket 'live_grep' {}
                     end,
@@ -73,16 +73,7 @@ return {
                     mode = { 'n', 'v' },
                 },
                 {
-                    '<M-/>',
-                    function()
-                        local sel = require('editor.syntax').current_selection(nil, true)
-                        require('telescope.builtin').current_buffer_fuzzy_find { default_text = sel }
-                    end,
-                    desc = 'Grep in file (selection)',
-                    mode = { 'n', 'v' },
-                },
-                {
-                    '<M-?>',
+                    '<M-S-f>',
                     function()
                         local sel = require('editor.syntax').current_selection(nil, true)
                         blanket 'live_grep' { default_text = sel }

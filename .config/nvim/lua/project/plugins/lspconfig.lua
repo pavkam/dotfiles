@@ -152,6 +152,33 @@ return {
                         },
                     },
                 },
+                tsserver = {
+                    single_file_support = false,
+                    settings = {
+                        typescript = {
+                            inlayHints = {
+                                includeInlayParameterNameHints = 'literal',
+                                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                                includeInlayFunctionParameterTypeHints = true,
+                                includeInlayVariableTypeHints = false,
+                                includeInlayPropertyDeclarationTypeHints = true,
+                                includeInlayFunctionLikeReturnTypeHints = true,
+                                includeInlayEnumMemberValueHints = true,
+                            },
+                        },
+                        javascript = {
+                            inlayHints = {
+                                includeInlayParameterNameHints = 'all',
+                                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                                includeInlayFunctionParameterTypeHints = true,
+                                includeInlayVariableTypeHints = true,
+                                includeInlayPropertyDeclarationTypeHints = true,
+                                includeInlayFunctionLikeReturnTypeHints = true,
+                                includeInlayEnumMemberValueHints = true,
+                            },
+                        },
+                    },
+                },
                 gopls = {
                     settings = {
                         gopls = {
@@ -344,6 +371,7 @@ return {
             'nvim-lua/plenary.nvim',
             'neovim/nvim-lspconfig',
         },
+        cond = false, -- TODO: this plugin is not working well
         opts = {
             separate_diagnostic_server = false,
             handlers = {

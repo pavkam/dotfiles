@@ -7,6 +7,8 @@
 # | I apologize in advance if I did not mention the sources explicitly.     |
 # ---------------------------------------------------------------------------
 
+echo ".zprofile"
+
 if [ "$PAVKAM_ZSH_CONFIG_SETUP" != "1" ]; then
   . "$HOME/.zshenv"
 fi

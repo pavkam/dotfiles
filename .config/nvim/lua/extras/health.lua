@@ -87,8 +87,6 @@ local function show_for_buffer(buffer)
     end
 
     -- get windows in which buffer is shown:
-
-    print(vim.inspect(buffer))
     local buffer_details = {
         id = buffer,
         windows = vim.fn.win_findbuf(buffer),

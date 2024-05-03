@@ -179,6 +179,8 @@ function mzc_termsupport_preexec {
   title '$CMD' '%100>...>$LINE%<<'
 }
 
+autoload -U add-zsh-hook
+
 load-nvmrc() {
   local nvmrc_path
   nvmrc_path="$(nvm_find_nvmrc)"
@@ -198,83 +200,13 @@ load-nvmrc() {
   fi
 }
 
-autoload -U add-zsh-hook
-
 add-zsh-hook precmd mzc_termsupport_precmd
 add-zsh-hook preexec mzc_termsupport_preexec
 add-zsh-hook chpwd load-nvmrc
 
 load-nvmrc
 
-# fzf stuff
-
-FD_EXE=""
-if command -v fdfind &>/dev/null; then
-  FD_EXE=fdfind
-else command -v fd &>/dev/null then
-  FD_EXE=fd
-fi
-
-if [ "$FD_EXE" != "" ]; then
-  FD_OPTIONS="--follow --hidden --exclude .git --exclude node_modules"
-  export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | $FD_EXE --type f --type l $FD_OPTIONS"
-  export FZF_CTRL_T_COMMAND="$FD_EXE $FD_OPTIONS"
-  export FZF_ALT_C_COMMAND="$FD_EXE --type d $FD_OPTIONS"
-else
-  export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | find"
-  export FZF_CTRL_T_COMMAND="find"
-  export FZF_ALT_C_COMMAND="find"
-fi
-
-export FZF_COMPLETION_TRIGGER='**'
-export BAT_PAGER="less -R"
-
-PREVIEW_CAT="cat"
-if command -v bat &>/dev/null; then
-  PREVIEW_CAT="bat --style=numbers --color=always"
-elif command -v batcat &>/dev/null; then
-  PREVIEW_CAT="batcat --style=numbers --color=always"
-fi
-
-export FZF_DEFAULT_OPTS="
---layout=reverse
---info=inline
---height=80%
---preview '([[ -f {} ]] && (bat --style=numbers --color=always {} || cat {})) || ([[ -d {} ]] && (tree -C {} | less)) || echo {} 2> /dev/null | head -200'
---color=dark
---color=fg:-1,bg:-1,hl:#5fff87,fg+:-1,bg+:-1,hl+:#ffaf5f
---color=info:#af87ff,prompt:#5fff87,pointer:#ff87d7,marker:#ff87d7,spinner:#ff87d7
---prompt='∼ ' --pointer='▶' --marker='✓'
---bind '?:toggle-preview'
---bind 'ctrl-y:execute-silent(echo {+} | xclip -selection clipboard)'
---bind 'alt-enter:execute(clear && open {+})'
-"
-
-fzf_compgen_path() {
-    fd . "$1"
-}
-
-_fzf_compgen_dir() {
-    fd --type d . "$1"
-}
-
-fif() {
-  if [ ! "$#" -gt 0 ]; then
-    echo " Need a string to search for!";
-    return 1;
-  fi
-
-  rg --files-with-matches --no-messages "$1" | fzf $FZF_PREVIEW_WINDOW --preview "rg --ignore-case --pretty --context 10 '$1' {}"
-}
-
-unalias z 2> /dev/null
-z() {
-    [ $# -gt 0 ] && _z "$*" && return
-    cd "$(_z -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
-}
-
-# Helper aliases and functions
-
+# aliases
 alias ls='ls --color'
 alias cp='cp -iv'
 alias mkdir='mkdir -pv'
@@ -292,7 +224,82 @@ alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu 
 alias vi=nvim
 alias vim=nvim
 
+# fzf stuff
+if command -v fzf &>/dev/null; then
+    eval "$(fzf --zsh)"
+
+    FD_EXE=""
+    if command -v fdfind &>/dev/null; then
+        FD_EXE=fdfind
+    else command -v fd &>/dev/null then
+        FD_EXE=fd
+    fi
+
+    export BAT_PAGER="less -R"
+
+    PREVIEW_CAT="cat"
+    if command -v bat &>/dev/null; then
+        PREVIEW_CAT="bat --style=numbers --color=always"
+    elif command -v batcat &>/dev/null; then
+        PREVIEW_CAT="batcat --style=numbers --color=always"
+    fi
+
+    if [ "$FD_EXE" != "" ]; then
+        FD_OPTIONS="--follow --hidden --exclude .git --exclude node_modules"
+        export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | $FD_EXE --type f --type l $FD_OPTIONS"
+        export FZF_CTRL_T_COMMAND="$FD_EXE $FD_OPTIONS"
+        export FZF_ALT_C_COMMAND="$FD_EXE --type d $FD_OPTIONS"
+    else
+        export FZF_DEFAULT_COMMAND="git ls-files --cached --others --exclude-standard | find"
+        export FZF_CTRL_T_COMMAND="find"
+        export FZF_ALT_C_COMMAND="find"
+    fi
+
+    export FZF_COMPLETION_TRIGGER='**'
+
+    export FZF_DEFAULT_OPTS="
+        --layout=reverse
+        --info=inline
+        --height=80%
+        --preview '([[ -f {} ]] && (bat --style=numbers --color=always {} || cat {})) || ([[ -d {} ]] && (tree -C {} | less)) || echo {} 2> /dev/null | head -200'
+        --color=dark
+        --color=fg:-1,bg:-1,hl:#5fff87,fg+:-1,bg+:-1,hl+:#ffaf5f
+        --color=info:#af87ff,prompt:#5fff87,pointer:#ff87d7,marker:#ff87d7,spinner:#ff87d7
+        --prompt='∼ ' --pointer='▶' --marker='✓'
+        --bind '?:toggle-preview'
+        --bind 'ctrl-y:execute-silent(echo {+} | xclip -selection clipboard)'
+        --bind 'alt-enter:execute(clear && open {+})'
+    "
+
+    function fzf_compgen_path() {
+        fd . "$1"
+    }
+
+    function _fzf_compgen_dir() {
+        fd --type d . "$1"
+    }
+
+    function fif() {
+        if [ ! "$#" -gt 0 ]; then
+            echo " Need a string to search for!";
+            return 1;
+        fi
+
+        rg --files-with-matches --no-messages "$1" | fzf $FZF_PREVIEW_WINDOW --preview "rg --ignore-case --pretty --context 10 '$1' {}"
+    }
+
+    unalias z &> /dev/null
+    function z() {
+        [ $# -gt 0 ] && zshz "$*" && return
+        cd "$(zshz -l 2>&1 | fzf --height 40% --nth 2.. --reverse --inline-info +s --tac --query "${*##-* }" | sed 's/^[0-9,.]* *//')"
+    }
+fi
+
+# Helper aliases and functions
+
 if command -v heroku &> /dev/null; then
+    eval $(heroku autocomplete:script zsh)
+
     heroku-env() {
         # Check for correct number of arguments
         if [ "$#" -lt 2 ]; then
