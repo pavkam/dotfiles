@@ -33,6 +33,7 @@ local function get_node_at_cursor(window)
 
     local cursor = vim.api.nvim_win_get_cursor(window)
     local row, col = cursor[1] - 1, cursor[2]
+
     local node = tree:named_descendant_for_range(row, col, row, col)
 
     return node
@@ -185,11 +186,18 @@ function M.increment_node_under_cursor(window, value)
     if type(v) == 'boolean' then
         local vv = (v and 1 or 0) + value
 
-        dbg(v, vv)
         if vv > 0 then
-            M.replace_node_under_cursor(window, 'true')
+            if vim.bo.filetype == 'python' then
+                M.replace_node_under_cursor(window, 'True')
+            else
+                M.replace_node_under_cursor(window, 'true')
+            end
         else
-            M.replace_node_under_cursor(window, 'false')
+            if vim.bo.filetype == 'python' then
+                M.replace_node_under_cursor(window, 'False')
+            else
+                M.replace_node_under_cursor(window, 'false')
+            end
         end
 
         return true
