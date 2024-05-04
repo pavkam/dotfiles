@@ -107,23 +107,24 @@ end
 
 --- Toggles the quick-fix or locations list
 ---@param handle ui.qf.Handle # the list handle
-function M.toggle(handle, value)
+---@param open boolean # whether to open the list window
+function M.toggle(handle, open)
     local list = assert(list_details(handle))
 
     if not list.window then
-        vim.cmd('silent! ' .. (value and 'copen' or 'cclose'))
+        vim.cmd('silent! ' .. (open and 'copen' or 'cclose'))
     else
         vim.api.nvim_win_call(list.window, function()
-            vim.cmd('silent! ' .. (value and 'lopen' or 'lclose'))
+            vim.cmd('silent! ' .. (open and 'lopen' or 'lclose'))
         end)
     end
 
-    if package.loaded['bqf'] and not value then
+    if package.loaded['bqf'] and not open then
         require('bqf').hidePreviewWindow()
     end
 
-    if value then
-        vim.cmd 'silent! wincmd p'
+    if not open then
+        vim.wincmd 'p'
     end
 end
 
