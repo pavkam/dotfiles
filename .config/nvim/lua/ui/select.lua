@@ -16,6 +16,9 @@ local M = {}
 ---@alias ui.select.SelectHighlighter fun(entry: ui.select.SelectEntry, index: integer, col_index: number): string|nil # The highlighter to use for the entrygh
 ---@alias ui.select.SelectOpts { prompt?: string, at_cursor?: boolean, separator?: string, callback?: ui.select.SelectCallback, highlighter?: ui.select.SelectHighlighter, index_fields?: integer[], width?: number, height?: number }
 
+local h_padding = 8
+local v_padding = 4
+
 --- Select an item from a list of items
 ---@param items ui.select.SelectEntry[] # The list of items to select from
 ---@param opts? ui.select.SelectOpts # The options for the select
@@ -61,10 +64,13 @@ function M.advanced(items, opts)
 
     -- validate items and obtain the max lengths of all columns
     local item_length = #proc_items[1]
+    local max_width = strings.strdisplaywidth(prompt) + h_padding
 
     ---@type number[]
     local max_lengths = vim.tbl_map(function(item)
-        return strings.strdisplaywidth(tostring(item))
+        local l = strings.strdisplaywidth(tostring(item))
+        max_width = math.max(max_width, l)
+        return l
     end, proc_items[1])
 
     for _, item in ipairs(proc_items) do
@@ -73,9 +79,14 @@ function M.advanced(items, opts)
         end
 
         for i, field in ipairs(item) do
-            max_lengths[i] = math.max(max_lengths[i], strings.strdisplaywidth(field))
+            max_lengths[i] = math.max(max_lengths[i], strings.strdisplaywidth(tostring(field)))
         end
+
+        local line_width = strings.strdisplaywidth(table.concat(item, separator)) + h_padding
+        max_width = math.max(max_width, line_width)
     end
+
+    local max_height = math.min(vim.o.pumheight, #proc_items) + v_padding
 
     -- build the display function
     local displayer = entry_display.create {
@@ -96,10 +107,10 @@ function M.advanced(items, opts)
 
     local dd = opts.at_cursor
             and themes.get_cursor(vim.tbl_extend('force', opts, {
-                layout_config = { width = opts.width or 0.2, height = opts.height or 0.3 },
+                layout_config = { width = opts.width or max_width, height = opts.height or max_height },
             }))
         or themes.get_dropdown(vim.tbl_extend('force', opts, {
-            layout_config = { width = opts.width or 0.3, height = opts.height or 0.4 },
+            layout_config = { width = opts.width or max_width, height = opts.height or max_height },
         }))
 
     opts.index_fields = opts.index_fields or { 1 }
@@ -165,7 +176,7 @@ function M.command(commands, opts)
 
     M.advanced(
         items,
-        vim.tbl_extend('force', opts or {}, {
+        vim.tbl_extend('keep', opts or {}, {
             prompt = 'Select command:',
             separator = ' ',
             highlighter = function(_, index, col_index)

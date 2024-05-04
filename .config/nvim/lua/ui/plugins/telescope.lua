@@ -104,20 +104,18 @@ return {
                 {
                     '<leader>m',
                     function()
-                        require('ui.select').command {
+                        require('ui.select').command({
                             {
                                 name = 'All',
                                 command = function()
                                     require('telescope.builtin').diagnostics { bufnr = 0 }
                                 end,
-                                desc = 'Buffer',
                             },
                             {
                                 name = 'Errors',
                                 command = function()
                                     require('telescope.builtin').diagnostics { bufnr = 0, severity = 'ERROR' }
                                 end,
-                                desc = 'Buffer',
                                 hl = 'DiagnosticError',
                             },
                             {
@@ -125,7 +123,6 @@ return {
                                 command = function()
                                     require('telescope.builtin').diagnostics { bufnr = 0, severity = 'WARN' }
                                 end,
-                                desc = 'Buffer',
                                 hl = 'DiagnosticWarn',
                             },
                             {
@@ -133,7 +130,6 @@ return {
                                 command = function()
                                     require('telescope.builtin').diagnostics { bufnr = 0, severity = 'INFO' }
                                 end,
-                                desc = 'Buffer',
                                 hl = 'DiagnosticInfo',
                             },
                             {
@@ -141,49 +137,51 @@ return {
                                 command = function()
                                     require('telescope.builtin').diagnostics { bufnr = 0, severity = 'HINT' }
                                 end,
-                                desc = 'Buffer',
                                 hl = 'DiagnosticHint',
                             },
+                        }, { prompt = 'Level', at_cursor = true })
+                    end,
+                    desc = icons.Diagnostics.Prefix .. ' Diagnostics (buffer)',
+                },
+                {
+                    '<leader>M',
+                    function()
+                        require('ui.select').command({
                             {
                                 name = 'All',
                                 command = function()
-                                    require('telescope.builtin').diagnostics {}
+                                    require('telescope.builtin').diagnostics { bufnr = 0 }
                                 end,
-                                desc = 'Global',
                             },
                             {
                                 name = 'Errors',
                                 command = function()
-                                    require('telescope.builtin').diagnostics { severity = 'ERROR' }
+                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'ERROR' }
                                 end,
-                                desc = 'Global',
                                 hl = 'DiagnosticError',
                             },
                             {
                                 name = 'Warnings',
                                 command = function()
-                                    require('telescope.builtin').diagnostics { severity = 'WARN' }
+                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'WARN' }
                                 end,
-                                desc = 'Global',
                                 hl = 'DiagnosticWarn',
                             },
                             {
                                 name = 'Info',
                                 command = function()
-                                    require('telescope.builtin').diagnostics { severity = 'INFO' }
+                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'INFO' }
                                 end,
-                                desc = 'Global',
                                 hl = 'DiagnosticInfo',
                             },
                             {
                                 name = 'Hints',
                                 command = function()
-                                    require('telescope.builtin').diagnostics { severity = 'HINT' }
+                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'HINT' }
                                 end,
-                                desc = 'Global',
                                 hl = 'DiagnosticHint',
                             },
-                        }
+                        }, { prompt = 'Level', at_cursor = true })
                     end,
                     desc = icons.Diagnostics.Prefix .. ' Diagnostics',
                 },
