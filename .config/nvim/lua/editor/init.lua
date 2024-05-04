@@ -153,6 +153,18 @@ vim.keymap.set('x', '@', ':norm @q<CR>', { desc = 'Repeat macro' })
 vim.keymap.set('i', '<LeftMouse>', '<Esc><LeftMouse>', { desc = 'Exit insert mode and left-click' })
 vim.keymap.set('i', '<RightMouse>', '<Esc><RightMouse>', { desc = 'Exit insert mode and right-click' })
 
+vim.keymap.set('n', '<C-a>', function()
+    if not syntax.increment_node_under_cursor(nil, 1) then
+        vim.cmd 'norm! <C-a>'
+    end
+end, { desc = 'Increment/Toggle value' })
+
+vim.keymap.set('n', '<C-x>', function()
+    if not syntax.increment_node_under_cursor(nil, -1) then
+        vim.cmd 'norm! <C-x>'
+    end
+end, { desc = 'Decrement/Toggle value' })
+
 -- better search
 vim.on_key(function(char)
     if vim.fn.mode() == 'n' then

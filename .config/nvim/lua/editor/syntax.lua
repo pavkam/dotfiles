@@ -160,4 +160,45 @@ function M.current_selection(window, smart)
     return res ~= '' and res or nil
 end
 
+--- Increment the number or boolean under the cursor.
+---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
+---@param value number # The value to increment by.
+---@return boolean # Whether the value was modified
+function M.increment_node_under_cursor(window, value)
+    local node = get_node_at_cursor(window)
+
+    ---@type number|boolean|nil
+    local v
+    if node then
+        local start_row, start_col, end_row, end_col = node:range()
+        local str = M.text(window, start_row + 1, start_col + 1, end_row + 1, end_col)
+
+        if node:type() == 'number' then
+            v = tonumber(str)
+        elseif node:type() == 'true' then
+            v = true
+        elseif node:type() == 'false' then
+            v = false
+        end
+    end
+
+    if type(v) == 'boolean' then
+        local vv = (v and 1 or 0) + value
+
+        dbg(v, vv)
+        if vv > 0 then
+            M.replace_node_under_cursor(window, 'true')
+        else
+            M.replace_node_under_cursor(window, 'false')
+        end
+
+        return true
+    elseif type(v) == 'number' then
+        M.replace_node_under_cursor(window, tostring(v + value))
+        return true
+    end
+
+    return false
+end
+
 return M
