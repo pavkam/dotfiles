@@ -124,7 +124,7 @@ function M.toggle(handle, open)
     end
 
     if not open then
-        vim.wincmd 'p'
+        vim.cmd.wincmd 'p'
     end
 end
 

@@ -36,8 +36,11 @@ vim.keymap.set('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
 
 -- buffer management
 vim.keymap.set('n', '<leader><leader>', function()
-    pcall(vim.cmd.edit, '#')
+    if not utils.is_special_buffer() then
+        pcall(vim.cmd.edit, '#')
+    end
 end, { desc = icons.UI.Switch .. ' Switch buffer', silent = true })
+
 vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = icons.UI.Save .. ' Save buffer' })
 vim.keymap.set('n', '<leader>W', '<cmd>wa<cr>', { desc = icons.UI.SaveAll .. ' Save all buffers' })
 
