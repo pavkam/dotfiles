@@ -11,8 +11,6 @@ require 'ui.highlights'
 require 'ui.marks'
 require 'ui.qf'
 
--- TODO: write my own statusline
-
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('n', '<BS>', '<Nop>', { silent = true })
@@ -26,7 +24,7 @@ if not utils.has_plugin 'nvim-tmux-navigation' then
     vim.keymap.set('n', '<M-Up>', '<cmd>wincmd k<cr>', { desc = 'Go to window above' })
 end
 
-vim.keymap.set('n', '<C-s>', '<cmd> wincmd v <CR>', { desc = 'Split window below' })
+vim.keymap.set('n', '<C-v>', '<cmd> wincmd v <CR>', { desc = 'Split window below' })
 vim.keymap.set('n', '<C-h>', '<cmd> wincmd s <CR>', { desc = 'Split window right' })
 
 -- Better jump list navigation

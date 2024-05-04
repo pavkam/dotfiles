@@ -35,12 +35,10 @@ end
 --- Save the current session
 ---@param name string # the name of the session
 function M.save_session(name)
-    vim.defer_fn(function()
-        vim.fn.mkdir(session_dir, 'p')
+    vim.fn.mkdir(session_dir, 'p')
 
-        vim.cmd('mks! ' .. name .. '.vim')
-        vim.cmd('wshada! ' .. name .. '.shada')
-    end, 0)
+    vim.cmd('mks! ' .. name .. '.vim')
+    vim.cmd('wshada! ' .. name .. '.shada')
 end
 
 --- Restore a session

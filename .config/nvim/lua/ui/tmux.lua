@@ -91,24 +91,21 @@ end
 ---@param create boolean # whether to create the session if it doesn't exist
 ---@param dir string|nil # the directory to switch to
 local function create_or_switch_to_session(session, create, dir)
-    -- TODO: this fails when we switch to a session that has escape chars
     if create then
         if session == nil then
             session = vim.fn.input 'Session name: '
             if not session or session == '' then
                 return
             end
-
-            session = session:gsub('%.', '_')
         end
+
+        session = session:gsub('%.', '_')
 
         local args = { 'new', '-d', '-s', session }
         if dir then
             table.insert(args, '-c')
             table.insert(args, dir)
         end
-
-        utils.info(vim.inspect(args))
 
         shell.async_cmd('tmux', args, nil, function(_, _)
             switch_to_session(session)

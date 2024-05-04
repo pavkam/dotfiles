@@ -245,7 +245,7 @@ return {
                             ['<C-j>'] = actions.move_selection_next,
                             ['<C-k>'] = actions.move_selection_previous,
                             ['<C-x>'] = false,
-                            ['<C-s>'] = actions.file_split,
+                            ['<C-h>'] = actions.file_split,
                             ['<C-v>'] = actions.file_vsplit,
                             ['<C-f>'] = actions.preview_scrolling_down,
                             ['<C-b>'] = actions.preview_scrolling_up,
