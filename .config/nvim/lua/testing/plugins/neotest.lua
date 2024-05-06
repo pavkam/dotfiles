@@ -38,6 +38,10 @@ return {
             jest,
         }
 
+        opts.consumers = vim.tbl_extend('force', opts.consumers or {}, {
+            progress = require 'testing.neotest_progress_consumer',
+        })
+
         return opts
     end,
     config = function(spec, opts)
@@ -105,6 +109,7 @@ return {
             }, { buffer = args.buf })
         end, spec.ft)
 
-        require('neotest').setup(opts)
+        local neotest = require 'neotest'
+        neotest.setup(opts)
     end,
 }

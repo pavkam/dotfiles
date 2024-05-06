@@ -16,7 +16,7 @@ hl('CopilotFetching', utils.hl 'DiagnosticWarn')
 hl('CopilotWarning', utils.hl 'DiagnosticError')
 
 -- other highlights
-hl('ShellProgressStatus', comment_hl)
+hl('AuxiliaryProgressStatus', comment_hl)
 
 hl('ActiveLintersStatus', utils.hl 'Statement', { italic = true })
 hl('DisabledLintersStatus', utils.hl 'ActiveLintersStatus', { strikethrough = true })

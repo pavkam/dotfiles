@@ -107,13 +107,23 @@ return {
                 lualine_x = {
                     {
                         function()
+                            local spinner, msg = progress.status 'neotest'
+                            return spinner and sexify(spinner, msg)
+                        end,
+                        cond = function()
+                            return progress.status 'neotest' ~= nil
+                        end,
+                        color = color 'AuxiliaryProgressStatus',
+                    },
+                    {
+                        function()
                             local spinner, msg = progress.status 'package-info'
                             return spinner and sexify(spinner, msg)
                         end,
                         cond = function()
                             return progress.status 'package-info' ~= nil
                         end,
-                        color = color 'ShellProgressStatus',
+                        color = color 'AuxiliaryProgressStatus',
                     },
                     {
                         settings.transient(function()
@@ -134,7 +144,7 @@ return {
                         cond = settings.transient(function()
                             return shell.progress() ~= nil
                         end),
-                        color = color 'ShellProgressStatus',
+                        color = color 'AuxiliaryProgressStatus',
                     },
                     {
                         settings.transient(function(buffer)
