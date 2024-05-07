@@ -6,8 +6,6 @@ local function init(client)
     local running_adapters = {}
 
     client.listeners.run = function(adapter_id, _, _)
-        dbg(adapter_id)
-
         ---@cast adapter_id string
 
         running_adapters[adapter_id] = true
