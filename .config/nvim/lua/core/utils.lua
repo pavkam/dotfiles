@@ -26,7 +26,7 @@ end
 function M.to_list(value)
     if value == nil then
         return {}
-    elseif vim.tbl_islist(value) then
+    elseif vim.islist(value) then
         return value
     elseif type(value) == 'table' then
         local list = {}
@@ -45,7 +45,7 @@ end
 ---@param separator string|nil # the separator to use between items
 ---@return string|nil # the joined string
 function M.tbl_join(items, separator)
-    if not vim.tbl_islist(items) then
+    if not vim.islist(items) then
         return stringify(items)
     end
 
@@ -57,6 +57,28 @@ function M.tbl_join(items, separator)
         end
 
         result = result .. stringify(item)
+    end
+
+    return result
+end
+
+--- Flattens a table
+--- @param tbl table # the table to flatten
+--- @param key string|nil # the inifial prefix to use for the flattened table. All keys are concatenated with a dot.
+--- @return table<string, any> # the flattened table
+function M.flatten(tbl, key)
+    if type(tbl) ~= 'table' then
+        return { [key] = tbl }
+    end
+
+    ---@type table<string, any>
+    local result = {}
+
+    for p, v in pairs(tbl) do
+        for pr, pv in pairs(M.flatten(v, p)) do
+            local k = key and key .. '.' .. pr or pr
+            result[k] = pv
+        end
     end
 
     return result
@@ -186,8 +208,6 @@ end
 ---@param type integer # the type of the notification
 ---@param opts? table # the options to pass to the notification
 local function notify(msg, type, opts)
-    assert(msg ~= nil)
-
     vim.schedule(function()
         vim.notify(stringify(msg) or '', type, M.tbl_merge({ title = 'NeoVim' }, opts))
     end)
@@ -209,6 +229,31 @@ end
 ---@param msg any # the message to show
 function M.error(msg)
     notify(msg, vim.log.levels.ERROR)
+end
+
+--- Shows a notification with the HINT type
+---@param msg any # the message to show
+function M.hint(msg)
+    msg = stringify(msg) or ''
+
+    if not M.has_plugin 'noice.nvim' then
+        notify(msg, vim.log.levels.DEBUG)
+    else
+        require('noice').redirect(function()
+            vim.print(msg)
+        end, {
+            {
+                view = 'mini',
+                opts = {
+                    timeout = 5000,
+                    title = 'Hint',
+                    level = 'hint',
+                    format = 'default',
+                },
+                filter = {},
+            },
+        })
+    end
 end
 
 ---@type table<integer, uv_timer_t>

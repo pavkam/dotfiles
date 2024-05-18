@@ -2,7 +2,7 @@ local icons = require 'ui.icons'
 
 return {
     'folke/noice.nvim',
-    event = 'VeryLazy',
+    lazy = false,
     dependencies = {
         'MunifTanjim/nui.nvim',
         'rcarriga/nvim-notify',
@@ -36,9 +36,20 @@ return {
                         { find = 'E42' },
                         { find = 'E776' },
                         { find = 'E348' },
+                        { find = 'W325' },
                     },
                 },
                 view = 'mini',
+            },
+            {
+                filter = {
+                    event = 'msg_show',
+                    any = {
+                        { find = '?%a+' },
+                        { find = '/%a+' },
+                    },
+                },
+                opts = { skip = true },
             },
         },
         cmdline = {
@@ -53,7 +64,6 @@ return {
             long_message_to_split = true,
             lsp_doc_border = true,
         },
-        -- :~/.local/share/nvim/lazy/noice.nvim/lua/noice/ui/msg.lua
     },
     keys = {
         {

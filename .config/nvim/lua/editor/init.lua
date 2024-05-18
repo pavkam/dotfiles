@@ -191,7 +191,7 @@ end, { desc = 'Decrement/Toggle value' })
 vim.on_key(function(char)
     if vim.fn.mode() == 'n' then
         local new_hlsearch = vim.tbl_contains({ '<CR>', 'n', 'N', '*', '#', '?', '/' }, vim.fn.keytrans(char))
-        if vim.opt.hlsearch:get() ~= new_hlsearch then
+        if vim.opt.hlsearch ~= new_hlsearch then
             vim.opt.hlsearch = new_hlsearch
         end
     end
@@ -213,7 +213,8 @@ utils.on_event('TextYankPost', function()
     vim.highlight.on_yank()
 end)
 
-if not utils.has_plugin 'auto-session' then
+local folds_in_session = vim.list_contains(vim.opt.sessionoptions:get(), 'folds')
+if folds_in_session then
     -- Turn on view generation and loading only if session management is not enabled
     utils.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
         if settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then

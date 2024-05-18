@@ -123,7 +123,7 @@ vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
 utils.on_event({ 'BufWinEnter' }, function(evt)
     local ignored_fts = { 'TelescopePrompt' }
 
-    if vim.fn.mode() == 'i' and vim.tbl_contains(ignored_fts, vim.api.nvim_buf_get_option(evt.buf, 'filetype')) then
+    if vim.fn.mode() == 'i' and vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf })) then
         vim.cmd 'stopinsert'
     end
 end)
@@ -229,9 +229,9 @@ end, { name = icons.UI.SyntaxTree .. ' Treesitter', description = 'tree-sitter',
 
 settings.register_toggle('diagnostics_enabled', function(enabled, buffer)
     if not enabled then
-        vim.diagnostic.disable(buffer)
+        vim.diagnostic.enable(false, { bufnr = buffer })
     else
-        vim.diagnostic.enable(buffer)
+        vim.diagnostic.enable(false, { bufnr = buffer })
     end
 end, { name = icons.Diagnostics.Prefix .. ' Diagnostics', description = 'diagnostics', scope = { 'global', 'buffer' } })
 

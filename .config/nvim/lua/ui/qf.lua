@@ -15,7 +15,7 @@ local M = {}
 ---@param what? ui.qf.Property[] # the details to get
 ---@return { window?: integer, id: integer }|table|nil # the list details, or nil if there is no list
 local function list_details(handle, what)
-    assert(not what or vim.tbl_islist(what))
+    assert(not what or vim.islist(what))
 
     if handle == 'c' then
         handle = { id = 0 }
@@ -145,7 +145,7 @@ end
 ---@param items { lnum: integer, col: integer, buffer: integer }[] # the items
 ---@param replace? boolean # whether to replace the current list
 function M.add_items(handle, items, replace)
-    assert(vim.tbl_islist(items))
+    assert(vim.islist(items))
     local list = assert(list_details(handle))
 
     local entries = {}

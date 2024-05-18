@@ -1,0 +1,5 @@
+[default.extend-words]
+noice = "noice"
+
+[default.extend-identifiers]
+noice = "noice"

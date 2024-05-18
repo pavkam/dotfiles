@@ -62,7 +62,7 @@ local keymaps = {
 }
 
 --- Attaches keymaps to a client
----@param client LspClient # the client to attach the keymaps to
+---@param client vim.lsp.Client # the client to attach the keymaps to
 ---@param buffer integer # the buffer to attach the keymaps to
 local function attach_keymaps(client, buffer)
     assert(type(client) == 'table' and client)
@@ -104,20 +104,16 @@ local function attach_keymaps(client, buffer)
 end
 
 --- Attaches keymaps to a client
----@param client LspClient # the client to attach the keymaps to
+---@param client vim.lsp.Client # the client to attach the keymaps to
 ---@param buffer integer|nil # the buffer to attach the keymaps to or nil for current
 function M.attach(client, buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     attach_keymaps(client, buffer)
 
-    if lsp.client_has_capability(client, 'codeLens') then
-        vim.lsp.codelens.refresh()
-    end
-
     lsp.on_capability_event({ 'InsertLeave', 'BufEnter' }, 'codeLens', buffer, function()
-        vim.lsp.codelens.refresh()
-    end)
+        vim.lsp.codelens.refresh { bufnr = buffer }
+    end, true)
 
     lsp.on_capability_event({ 'CursorHold', 'CursorHoldI' }, 'documentHighlight', buffer, function()
         vim.lsp.buf.document_highlight()
@@ -127,9 +123,9 @@ function M.attach(client, buffer)
         vim.lsp.buf.clear_references()
     end)
 
-    if lsp.client_has_capability(client, 'inlayHint') then
+    lsp.on_capability_event({ 'BufRead', 'BufNew' }, 'inlayHints', buffer, function()
         vim.lsp.inlay_hint.enable(true, { bufnr = buffer })
-    end
+    end, true)
 end
 
 return M

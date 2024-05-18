@@ -1,3 +1,4 @@
+local utils = require 'core.utils'
 local M = {}
 
 ---@class extras.health.ShowOpts
@@ -62,28 +63,37 @@ local function show_for_buffer(buffer)
 
     local content = {}
 
-    ---@param name string
-    ---@param items string[]|table<string, any>
-    local function list(name, items)
-        if vim.tbl_isempty(items) then
-            return
+    --- Escapes markdown in a string
+    --- @param str string -- the string to escape
+    --- @return string -- the escaped string
+    local escapeMarkdown = function(str)
+        str = tostring(str) or 'nil'
+
+        str = str:gsub('\n', [[\n]])
+        str = str:gsub('`', [[']])
+
+        return string.format('`%s`', str)
+    end
+
+    --- Formats a value for display
+    ---@param name string -- the name of the value
+    ---@param value any -- the value to format
+    ---@param depth? integer -- the depth of the object
+    local function list(name, value, depth)
+        if not depth then
+            depth = 1
         end
 
-        table.insert(content, '# ' .. name)
-
-        if vim.islist(items) then
-            for _, item in ipairs(items) do
-                item = string.gsub(vim.inspect(item) or '', '\n', ' ')
-                table.insert(content, string.format(' - `%s`', item))
-            end
+        if type(value) ~= 'table' then
+            table.insert(content, string.format(' - **%s** = %s', name, escapeMarkdown(value)))
         else
-            for k, v in pairs(items) do
-                v = string.gsub(vim.inspect(v) or '', '\n', ' ')
-                table.insert(content, string.format(' - **%s** = `%s`', k, v))
+            local prefix = string.rep('#', depth)
+            table.insert(content, prefix .. ' ' .. name)
+
+            for i, item in pairs(value) do
+                list(tostring(i), item, depth + 1)
             end
         end
-
-        table.insert(content, '')
     end
 
     -- get windows in which buffer is shown:
@@ -132,6 +142,19 @@ local function show_for_buffer(buffer)
         for _, cfg in ipairs(debugging.configurations(buffer)) do
             list(string.format('DAP (%s)', cfg.name), cfg)
         end
+    end
+
+    for _, client in ipairs(vim.lsp.get_clients { bufnr = buffer }) do
+        local props = {
+            id = client.id,
+            name = client.name,
+            root = client.root_dir,
+            client_capabilities = utils.flatten(client.capabilities),
+            server_capabilities = utils.flatten(client.server_capabilities),
+            dynamic_capabilities = utils.flatten(client.dynamic_capabilities),
+            requests = client.requests,
+        }
+        list(string.format('LSP (%s)', client.name), props)
     end
 
     show_content(content)

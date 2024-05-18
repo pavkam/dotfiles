@@ -229,14 +229,16 @@ return {
                         if client.name == 'gopls' then
                             if not client.server_capabilities.semanticTokensProvider then
                                 local semantic = client.config.capabilities.textDocument.semanticTokens
-                                client.server_capabilities.semanticTokensProvider = {
-                                    full = true,
-                                    legend = {
-                                        tokenTypes = semantic.tokenTypes,
-                                        tokenModifiers = semantic.tokenModifiers,
-                                    },
-                                    range = true,
-                                }
+                                if semantic then
+                                    client.server_capabilities.semanticTokensProvider = {
+                                        full = true,
+                                        legend = {
+                                            tokenTypes = semantic.tokenTypes,
+                                            tokenModifiers = semantic.tokenModifiers,
+                                        },
+                                        range = true,
+                                    }
+                                end
                             end
                         end
                     end)
@@ -286,7 +288,7 @@ return {
             vim.lsp.handlers[register_capability_name] = function(err, res, ctx)
                 local ret = register_capability_handler(err, res, ctx)
 
-                ---@type vim.lsp.LspClient
+                ---@type vim.lsp.Client
                 local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
 
                 if client.supports_method ~= nil then
@@ -396,6 +398,7 @@ return {
     },
     {
         'Wansmer/symbol-usage.nvim',
+        cond = false,
         event = 'BufReadPre', -- need run before LspAttach if you use nvim 0.9. On 0.10 use 'LspAttach'
         opts = {
             kinds = {

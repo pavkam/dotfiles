@@ -51,7 +51,7 @@ function M.advanced(items, opts)
     for _, item in ipairs(items) do
         if type(item) == 'string' or type(item) == 'number' or type(item) == 'boolean' then
             table.insert(proc_items, { item })
-        elseif vim.tbl_islist(item) and #item > 0 then
+        elseif vim.islist(item) and #item > 0 then
             table.insert(proc_items, item)
         else
             error(string.format('Invalid or unsupported entry: %s', vim.inspect(item)))
@@ -157,7 +157,7 @@ end
 ---@param commands ui.select.CommandItem[] # The list of commands to select from
 ---@param opts? { prompt?: string, at_cursor?: boolean, width?: number, height?: number }
 function M.command(commands, opts)
-    assert(vim.tbl_islist(commands))
+    assert(vim.islist(commands))
 
     ---@type (string|integer)[][]
     local items = {}

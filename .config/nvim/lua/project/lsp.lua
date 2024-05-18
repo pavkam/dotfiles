@@ -4,26 +4,13 @@ local progress = require 'ui.progress'
 
 local progress_class = 'lsp'
 
----@class LspClient
----@field name string
----@field id integer
----@field supports_method fun(method: string): boolean
----@field request_sync fun(method: string, params: any, timeout: integer): any
----@field stop fun()
----@field offset_encoding string
----@field config { workspace_folders: { uri: string }[], root_dir: string, capabilities: table }
----@field server_capabilities table
----@field initialized boolean
----@field is_stopped fun(): boolean
----@field requests table<integer, { type: string }>
-
 ---@class utils.lsp
 local M = {}
 
 -- emit a warning when an LSP is detached!
 
 --- Gets the name of the setting for detaching a client
----@param client LspClient # the client to get the setting name for
+---@param client vim.lsp.Client # the client to get the setting name for
 ---@return string # the name of the setting
 local function detach_processed_setting_name(client)
     return string.format('%s_dettach_processed', client.name)
@@ -33,7 +20,6 @@ end
 local lsp_tasks = {}
 
 utils.on_event('LspDetach', function(evt)
-    ---@type LspClient
     local client = vim.lsp.get_client_by_id(evt.data.client_id)
     if not client or M.is_special(client) then
         return
@@ -50,7 +36,6 @@ utils.on_event('LspDetach', function(evt)
 end)
 
 utils.on_event('LspAttach', function(evt)
-    ---@type LspClient
     local client = vim.lsp.get_client_by_id(evt.data.client_id)
     if not client or M.is_special(client) then
         return
@@ -93,16 +78,8 @@ local function normalize_capability(capability)
     return capability
 end
 
---- Gets all active clients
----@param opts? vim.lsp.get_active_clients.filter # the options to get the clients with
----@return LspClient[] # the active clients
-local function get_active_clients(opts)
-    local call = vim.lsp.get_active_clients or vim.lsp.get_clients
-    return call(opts)
-end
-
 --- Checks whether a client is a special client
----@param client LspClient # the client to check
+---@param client vim.lsp.Client # the client to check
 function M.is_special(client)
     assert(client and client.name)
 
@@ -110,7 +87,7 @@ function M.is_special(client)
 end
 
 --- Checks whether a client has a capability
----@param client LspClient # the client to check
+---@param client vim.lsp.Client # the client to check
 ---@param capability string # the name of the capability
 ---@return boolean # whether the client has the capability
 function M.client_has_capability(client, capability)
@@ -126,13 +103,9 @@ end
 function M.buffer_has_capability(buffer, method)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    for _, client in ipairs(get_active_clients { bufnr = buffer }) do
-        if M.client_has_capability(client, method) then
-            return true
-        end
-    end
+    local clients = vim.lsp.get_clients { bufnr = buffer, method = method }
 
-    return false
+    return clients and #clients > 0
 end
 
 --- Notifies all clients that a file has been renamed
@@ -142,34 +115,34 @@ function M.notify_file_renamed(from, to)
     assert(type(from) == 'string' and from ~= '')
     assert(type(to) == 'string' and to ~= '')
 
-    local cap = 'workspace/willRenameFiles'
-    for _, client in ipairs(get_active_clients()) do
-        if M.client_has_capability(client, cap) then
-            local resp = client.request_sync(cap, {
-                files = {
-                    {
-                        oldUri = vim.uri_from_fname(from),
-                        newUri = vim.uri_from_fname(to),
-                    },
+    local method = 'workspace/willRenameFiles'
+    for _, client in ipairs(vim.lsp.get_clients { method = method }) do
+        local resp = client.request_sync(method, {
+            files = {
+                {
+                    oldUri = vim.uri_from_fname(from),
+                    newUri = vim.uri_from_fname(to),
                 },
-            }, 1000)
+            },
+        }, 1000, 0)
 
-            if resp and resp.result ~= nil then
-                vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
-            end
+        if resp and resp.result ~= nil then
+            vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
         end
     end
 end
 
 --- Registers a callback for a client attach event
----@param callback fun(client: LspClient, buffer: integer) # the callback to register
+---@param callback fun(client: vim.lsp.Client, buffer: integer) # the callback to register
 ---@param target string|integer|any[]|nil # the target to register the callback for
 function M.on_attach(callback, target)
     assert(type(callback) == 'function' and callback)
 
     return utils.on_event('LspAttach', function(evt)
         local client = vim.lsp.get_client_by_id(evt.data.client_id)
-        callback(client, evt.buf)
+        if client then
+            callback(client, evt.buf)
+        end
     end, target)
 end
 
@@ -178,8 +151,9 @@ end
 ---@param capability string # the name of the capability
 ---@param buffer integer|nil # the buffer to register the callback for or 0 or nil for current
 ---@param callback function # the callback to register
----@return integer|nil # the ID of the auto group
-function M.on_capability_event(events, capability, buffer, callback)
+---@param run_on_register boolean|nil # whether to run the callback on register
+---@return string|nil # the name of the auto group
+function M.on_capability_event(events, capability, buffer, callback, run_on_register)
     assert(type(callback) == 'function')
 
     buffer = buffer or vim.api.nvim_get_current_buf()
@@ -194,28 +168,37 @@ function M.on_capability_event(events, capability, buffer, callback)
     local auto_group_name = utils.tbl_join({ 'pavkam', 'buf', 'cap', buffer, unpack(events), capability }, '_')
     ---@cast auto_group_name string
 
-    local group = vim.api.nvim_create_augroup(auto_group_name, { clear = true })
+    if vim.fn.exists('#' .. auto_group_name) == 1 then
+        return
+    end
+
+    if run_on_register then
+        callback(buffer)
+    end
+
+    vim.api.nvim_create_augroup(auto_group_name, { clear = true })
 
     vim.api.nvim_create_autocmd(events, {
         callback = function()
             if not M.buffer_has_capability(buffer, capability) then
+                utils.warn('Buffer lost capability `' .. capability .. '`')
                 vim.api.nvim_del_augroup_by_name(auto_group_name)
                 return
             end
             callback(buffer)
         end,
-        group = group,
+        group = auto_group_name,
         buffer = buffer,
     })
     vim.api.nvim_create_autocmd('BufDelete', {
         callback = function()
             vim.api.nvim_del_augroup_by_name(auto_group_name)
         end,
-        group = group,
+        group = auto_group_name,
         buffer = buffer,
     })
 
-    return group
+    return auto_group_name
 end
 
 --- Gets the names of all active clients for a buffer
@@ -226,7 +209,7 @@ function M.active_names_for_buffer(buffer)
 
     local buf_client_names = {}
 
-    for _, client in ipairs(get_active_clients { bufnr = buffer }) do
+    for _, client in ipairs(vim.lsp.get_clients { bufnr = buffer }) do
         if not M.is_special(client) then
             buf_client_names[#buf_client_names + 1] = client.name
         end
@@ -240,7 +223,7 @@ end
 ---@return boolean # whether there are any active clients
 function M.any_active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
-    local clients = get_active_clients { bufnr = buffer }
+    local clients = vim.lsp.get_clients { bufnr = buffer }
 
     return #clients > 1 or (#clients == 1 and not M.is_special(clients[1]))
 end
@@ -254,8 +237,8 @@ function M.is_active_for_buffer(buffer, name)
 
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local ok, clients = pcall(get_active_clients, { name = name, bufnr = buffer })
-    return ok and #clients > 0
+    local clients = vim.lsp.get_clients { name = name, bufnr = buffer }
+    return #clients > 0
 end
 
 --- Restarts all active, not-special clients
@@ -264,7 +247,7 @@ function M.restart_all_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     local clients = vim.tbl_filter(function(client)
         return not M.is_special(client)
-    end, get_active_clients { bufnr = buffer })
+    end, vim.lsp.get_clients { bufnr = buffer })
 
     if #clients == 0 then
         utils.warn 'No active clients to restart. Starting all.'
@@ -287,7 +270,7 @@ function M.roots(target, sort)
 
     local roots = {}
     if path then
-        for _, client in ipairs(get_active_clients { bufnr = buffer }) do
+        for _, client in ipairs(vim.lsp.get_clients { bufnr = buffer }) do
             local workspace = client.config.workspace_folders
             local paths = workspace and vim.tbl_map(function(ws)
                 return vim.uri_to_fname(ws.uri)
@@ -334,16 +317,8 @@ function M.clear_diagnostics(sources, buffer)
     end
 end
 
----@class utils.lsp.LspDiagnostic
----@field code number
----@field message string
----@field range { start: { line: integer, character: integer }, end: { line: integer, character: integer } }
----@field severity number
----@field source string
----@field tags string[]
-
 ---@class utils.lsp.LspDiagnostics
----@field diagnostics utils.lsp.LspDiagnostic[]
+---@field diagnostics vim.Diagnostic[]
 ---@field uri string
 
 ---@alias utils.lsp.LspDiagnosticsPerClient table<integer, { message: string, source: string }[]>
@@ -368,7 +343,7 @@ function M.notice_diagnostics(diagnostics, client_id)
     ---@cast n utils.lsp.LspDiagnosticsPerClient
 
     n[client_id] = diags
-    settings.set('lasp_noticed_diagnostics', n, { scope = 'instance', buffer = buffer, default = {} })
+    settings.set('lsp_noticed_diagnostics', n, { scope = 'instance', buffer = buffer, default = {} })
 end
 
 function M.monitor_health(buffer)
@@ -388,7 +363,7 @@ function M.monitor_health(buffer)
     end
 
     -- Check the pending requests
-    local attached_clients = get_active_clients { bufnr = buffer }
+    local attached_clients = vim.lsp.get_clients { bufnr = buffer }
     for _, client in ipairs(attached_clients) do
         local pending_requests = 0
         for _, req in pairs(client.requests) do
