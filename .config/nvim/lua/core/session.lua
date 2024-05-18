@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local icons = require 'ui.icons'
 
 ---@class core.session
 local M = {}
@@ -35,7 +36,7 @@ end
 --- Save the current session
 ---@param name string # the name of the session
 function M.save_session(name)
-    utils.info(string.format('Saving current session', current_session_name))
+    utils.info(icons.UI.SessionSave .. ' Saving current session')
 
     vim.fn.mkdir(session_dir, 'p')
 
@@ -46,29 +47,25 @@ end
 --- Restore a session
 ---@param name string # the name of the session
 function M.restore_session(name)
-    vim.defer_fn(function()
-        -- close all windows, tabs and buffers
-        vim.cmd [[silent! tabonly!]]
-        vim.cmd [[silent! %bd!]]
-        vim.cmd [[silent! %bw!]]
+    -- restore session and shada files
+    local session_file_name = name .. '.vim'
+    local shada_file_name = name .. '.shada'
 
-        -- restore session and shada files
-        local session_file_name = name .. '.vim'
-        local shada_file_name = name .. '.shada'
-
-        if vim.fn.filereadable(session_file_name) == 1 and vim.fn.filereadable(shada_file_name) == 1 then
-            utils.info(string.format('Restoring previous session', current_session_name))
+    if vim.fn.filereadable(session_file_name) == 1 and vim.fn.filereadable(shada_file_name) == 1 then
+        vim.schedule(function()
+            -- close all windows, tabs and buffers
+            vim.cmd [[silent! tabonly!]]
+            vim.cmd [[silent! %bd!]]
+            vim.cmd [[silent! %bw!]]
 
             vim.cmd('source ' .. session_file_name)
             vim.cmd('rshada ' .. shada_file_name)
 
-            -- resize
-            vim.cmd.resize()
-            local current_tab = vim.fn.tabpagenr()
-            vim.cmd 'tabdo wincmd ='
-            vim.cmd('tabnext ' .. current_tab)
-        end
-    end, 0)
+            utils.refresh_ui()
+
+            utils.info(string.format(icons.UI.SessionRestore .. ' Restored session', current_session_name))
+        end)
+    end
 end
 
 utils.on_event('VimLeavePre', function()
@@ -85,7 +82,7 @@ utils.on_event('User', function()
     M.restore_session(current_session_name)
 end, 'LazyDone')
 
-utils.on_event({ 'FocusGained', 'TermClose', 'TermLeave' }, function()
+utils.on_event({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, function()
     local new_session_name = get_session_name()
     if current_session_name ~= new_session_name then
         M.save_session(current_session_name)
@@ -108,5 +105,10 @@ vim.api.nvim_create_user_command('SessionRestore', function()
 end, {
     desc = 'Restore session',
 })
+
+-- save session on a timer
+vim.defer_fn(function()
+    M.save_session(current_session_name)
+end, 60000)
 
 return M

@@ -3,7 +3,6 @@ local icons = require 'ui.icons'
 return {
     'folke/noice.nvim',
     event = 'VeryLazy',
-    cond = false, --TODO: fix this
     dependencies = {
         'MunifTanjim/nui.nvim',
         'rcarriga/nvim-notify',
@@ -54,6 +53,7 @@ return {
             long_message_to_split = true,
             lsp_doc_border = true,
         },
+        -- :~/.local/share/nvim/lazy/noice.nvim/lua/noice/ui/msg.lua
     },
     keys = {
         {

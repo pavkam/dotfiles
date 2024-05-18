@@ -1,7 +1,6 @@
 return {
     'zbirenbaum/copilot.lua',
     cmd = 'Copilot',
-    commit = '38a41d0d78f8823cc144c99784528b9a68bdd608',
     build = ':Copilot auth',
     opts = {
         suggestion = {

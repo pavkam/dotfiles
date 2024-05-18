@@ -142,6 +142,8 @@ local M = {
         SaveAll = '󰆔',
         Close = '',
         CloseAll = '',
+        SessionSave = '󰆓',
+        SessionRestore = '󰆔',
     },
     Progress = {
         '⣾',

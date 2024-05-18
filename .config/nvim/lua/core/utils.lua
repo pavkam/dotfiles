@@ -523,7 +523,7 @@ function M.run_with_visual_selection(buffer, callback)
     buffer = buffer or vim.api.nvim_get_current_buf()
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes([[<esc>]], true, false, true), 'n', false)
 
-    vim.defer_fn(function()
+    vim.schedule(function()
         local sel_start = vim.api.nvim_buf_get_mark(buffer, '<')
         local sel_end = vim.api.nvim_buf_get_mark(buffer, '>')
 
@@ -539,7 +539,16 @@ function M.run_with_visual_selection(buffer, callback)
         end
 
         callback(restore_callback)
-    end, 0)
+    end)
+end
+
+--- Refreshes the UI
+function M.refresh_ui()
+    vim.cmd.resize()
+    local current_tab = vim.fn.tabpagenr()
+    vim.cmd 'tabdo wincmd ='
+    vim.cmd('tabnext ' .. current_tab)
+    vim.cmd 'redraw!'
 end
 
 return M

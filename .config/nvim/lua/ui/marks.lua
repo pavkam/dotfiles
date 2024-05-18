@@ -108,9 +108,9 @@ utils.on_event('BufEnter', function(evt)
         return
     end
 
-    vim.defer_fn(function()
+    vim.schedule(function()
         update_signs(evt.buf)
-    end, 0)
+    end)
 end)
 
 -- restore marks after reloading a file
@@ -127,12 +127,12 @@ utils.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
 end)
 
 utils.on_event('CmdlineLeave', function(evt)
-    vim.defer_fn(function()
+    vim.schedule(function()
         local last_cmd = vim.fn.getreg ':'
         if last_cmd:match '^delm' then
             update_signs(evt.buf)
         end
-    end, 0)
+    end)
 end, ':')
 
 --- Forget all global marks references for a file

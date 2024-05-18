@@ -190,9 +190,7 @@ end)
 
 -- resize splits if window got resized
 utils.on_event('VimResized', function()
-    local current_tab = vim.fn.tabpagenr()
-    vim.cmd 'tabdo wincmd ='
-    vim.cmd('tabnext ' .. current_tab)
+    utils.refresh_ui()
 end)
 
 ---@class ui
