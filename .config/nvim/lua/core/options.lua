@@ -33,11 +33,9 @@ o.modeline = false
 o.ruler = false
 o.showcmd = true
 o.wrap = false
-o.showbreak = icons.TUI.LineContinuation --[[@as vim.opt.showbreak]]
-    .. ' '
+o.showbreak = icons.TUI.LineContinuation .. ' '
 o.nrformats = ''
 o.ttyfast = true
-o.termencoding = 'utf-8'
 o.termguicolors = true
 o.encoding = 'utf-8'
 o.lazyredraw = false
@@ -82,7 +80,6 @@ else
     o.foldmethod = 'indent'
 end
 
----@diagnostic disable-next-line: undefined-field
 if vim.treesitter.foldtext then
     o.foldtext = [[v:lua.require'core.utils'.fold_text()]]
 end
@@ -124,9 +121,7 @@ o.backspace = 'indent,eol,start'
 o.whichwrap:append '<,>,[,]'
 o.formatoptions = o.formatoptions - 'a' - 't' + 'c' + 'q' - 'o' + 'r' + 'n' + 'j' - '2'
 
-if vim.fn.has 'nvim-0.10' == 1 then
-    o.smoothscroll = true
-end
+o.smoothscroll = true
 
 -- search & replace
 o.hlsearch = true
@@ -157,4 +152,4 @@ o.fillchars = {
 o.list = false
 o.shortmess:append { W = true, I = true, c = true, C = true }
 o.formatoptions = 'jcroqlnt'
-o.sessionoptions = { 'buffers', 'curdir', 'tabpages', 'winsize', 'help', 'globals', 'skiprtp', 'resize', 'help', 'folds' }
+o.sessionoptions = { 'buffers', 'curdir', 'tabpages', 'winsize', 'help', 'globals', 'skiprtp', 'help', 'folds' }

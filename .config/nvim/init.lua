@@ -5,8 +5,8 @@ if not vim.fn.executable 'git' then
     return
 end
 
-if not vim.fn.has 'nvim-9.4' then
-    error 'fatal: minimum required Neovim version is 0.9.4'
+if not vim.fn.has 'nvim-0.10' then
+    error 'fatal: minimum required Neovim version is 0.10'
     vim.api.nvim_command 'cq1'
 
     return
@@ -54,6 +54,7 @@ if not vim.loop.fs_stat(lazypath) then
     }
 end
 
+---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
 require('lazy').setup {

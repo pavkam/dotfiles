@@ -9,7 +9,7 @@ local function stringify(value)
         return nil
     elseif type(value) == 'string' then
         return value
-    elseif vim.tbl_islist(value) then
+    elseif vim.islist(value) then
         return M.tbl_join(value, ', ')
     elseif type(value) == 'table' then
         return vim.inspect(value)
@@ -428,8 +428,7 @@ end
 function M.hl(name)
     assert(type(name) == 'string' and name ~= '')
 
-    ---@diagnostic disable-next-line: undefined-field
-    return vim.api.nvim_get_hl and vim.api.nvim_get_hl(0, { name = name, link = false }) or vim.api.nvim_get_hl_by_name(name, true)
+    return vim.api.nvim_get_hl(0, { name = name, link = false })
 end
 
 --- Gets the foreground color of a highlight group

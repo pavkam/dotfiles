@@ -2,7 +2,7 @@ local utils = require 'core.utils'
 
 ---@class core.session
 local M = {}
-local session_dir = utils.join_paths(vim.fn.stdpath 'data', 'sessions')
+local session_dir = utils.join_paths(vim.fn.stdpath 'data' --[[@as string]], 'sessions') --[[@as string]]
 local current_session_name
 
 --- Get the current session name
@@ -35,6 +35,8 @@ end
 --- Save the current session
 ---@param name string # the name of the session
 function M.save_session(name)
+    utils.info(string.format('Saving current session', current_session_name))
+
     vim.fn.mkdir(session_dir, 'p')
 
     vim.cmd('mks! ' .. name .. '.vim')
@@ -44,10 +46,6 @@ end
 --- Restore a session
 ---@param name string # the name of the session
 function M.restore_session(name)
-    if utils.has_plugin 'symbol-usage.nvim' then -- HACK: disable symbol-usage before restoring session
-        pcall((require 'symbol-usage').toggle_globally)
-    end
-
     vim.defer_fn(function()
         -- close all windows, tabs and buffers
         vim.cmd [[silent! tabonly!]]
@@ -58,15 +56,17 @@ function M.restore_session(name)
         local session_file_name = name .. '.vim'
         local shada_file_name = name .. '.shada'
 
-        if vim.fn.filereadable(session_file_name) == 1 then
-            vim.cmd('source ' .. session_file_name)
-        end
-        if vim.fn.filereadable(shada_file_name) == 1 then
-            vim.cmd('rshada ' .. shada_file_name)
-        end
+        if vim.fn.filereadable(session_file_name) == 1 and vim.fn.filereadable(shada_file_name) == 1 then
+            utils.info(string.format('Restoring previous session', current_session_name))
 
-        if utils.has_plugin 'symbol-usage.nvim' then
-            pcall((require 'symbol-usage').toggle_globally)
+            vim.cmd('source ' .. session_file_name)
+            vim.cmd('rshada ' .. shada_file_name)
+
+            -- resize
+            vim.cmd.resize()
+            local current_tab = vim.fn.tabpagenr()
+            vim.cmd 'tabdo wincmd ='
+            vim.cmd('tabnext ' .. current_tab)
         end
     end, 0)
 end
@@ -76,6 +76,11 @@ utils.on_event('VimLeavePre', function()
 end)
 
 utils.on_event('User', function()
+    -- do not restore session if there is a file to open
+    if vim.fn.argc() == 1 then
+        return
+    end
+
     current_session_name = get_session_name()
     M.restore_session(current_session_name)
 end, 'LazyDone')

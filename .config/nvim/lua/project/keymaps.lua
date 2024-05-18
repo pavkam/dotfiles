@@ -128,17 +128,7 @@ function M.attach(client, buffer)
     end)
 
     if lsp.client_has_capability(client, 'inlayHint') then
-        local inlay_hint = vim.lsp.buf.inlay_hint or vim.lsp.inlay_hint
-        if inlay_hint then
-            inlay_hint.enable(buffer, true)
-        else
-            local file_type = vim.api.nvim_buf_get_option(buffer, 'filetype')
-
-            -- go has support for inlay hints through `ray-x/go.nvim` plugin
-            if file_type ~= 'go' then
-                require('lsp-inlayhints').on_attach(client, buffer)
-            end
-        end
+        vim.lsp.inlay_hint.enable(true, { bufnr = buffer })
     end
 end
 

@@ -2,7 +2,6 @@ local icons = require 'ui.icons'
 
 return {
     'akinsho/bufferline.nvim',
-    version = '*',
     dependencies = {
         'nvim-tree/nvim-web-devicons',
     },
@@ -22,7 +21,7 @@ return {
     end,
     opts = {
         options = {
-            -- TODO: add loginc to swtch to open split when switching buffers
+            -- TODO: add logic to swtch to open split when switching buffers
             close_command = function(n)
                 require('mini.bufremove').delete(n, false)
             end,
@@ -54,9 +53,8 @@ return {
         local buffer_line = require 'bufferline'
 
         buffer_line.setup(opts)
-
         -- Fix bufferline when restoring a session
-        utils.on_event('BufAdd', function()
+        utils.on_event({ 'BufAdd', 'BufDelete' }, function()
             vim.schedule(function()
                 ---@diagnostic disable-next-line: undefined-global
                 pcall(nvim_bufferline)

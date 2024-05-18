@@ -71,7 +71,7 @@ local function show_for_buffer(buffer)
 
         table.insert(content, '# ' .. name)
 
-        if vim.tbl_islist(items) then
+        if vim.islist(items) then
             for _, item in ipairs(items) do
                 item = string.gsub(vim.inspect(item) or '', '\n', ' ')
                 table.insert(content, string.format(' - `%s`', item))
@@ -91,11 +91,11 @@ local function show_for_buffer(buffer)
         id = buffer,
         windows = vim.fn.win_findbuf(buffer),
         name = vim.api.nvim_buf_get_name(buffer),
-        filetype = vim.api.nvim_buf_get_option(buffer, 'filetype'),
-        buftype = vim.api.nvim_buf_get_option(buffer, 'buftype'),
-        modifiable = vim.api.nvim_buf_get_option(buffer, 'modifiable'),
-        modified = vim.api.nvim_buf_get_option(buffer, 'modified'),
-        readonly = vim.api.nvim_buf_get_option(buffer, 'readonly'),
+        filetype = vim.api.nvim_get_option_value('filetype', { buf = buffer }),
+        buftype = vim.api.nvim_get_option_value('buftype', { buf = buffer }),
+        modifiable = vim.api.nvim_get_option_value('modifiable', { buf = buffer }),
+        modified = vim.api.nvim_get_option_value('modified', { buf = buffer }),
+        readonly = vim.api.nvim_get_option_value('readonly', { buf = buffer }),
     }
     list('Buffer', buffer_details)
 
@@ -138,12 +138,13 @@ local function show_for_buffer(buffer)
 end
 
 function M.check()
-    vim.health.report_start 'Personal configuration'
+    vim.health.start 'Personal configuration'
     -- make sure setup function parameters are ok
-    vim.health.report_ok 'Setup is correct'
-    vim.health.report_error 'Setup is incorrect'
+    vim.health.ok 'Setup is correct'
+    vim.health.error 'Setup is incorrect'
     -- do some more checking
     -- ...
+    vim.health._complete()
 end
 
 -- Show buffer information

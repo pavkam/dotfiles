@@ -11,6 +11,8 @@ return {
         },
         scope = {
             enabled = true,
+            show_start = true,
+            show_end = true,
         },
         exclude = {
             buftypes = utils.special_buffer_types,
@@ -18,4 +20,7 @@ return {
         },
     },
     main = 'ibl',
+    config = function(_, opts)
+        require('ibl').setup(opts)
+    end,
 }

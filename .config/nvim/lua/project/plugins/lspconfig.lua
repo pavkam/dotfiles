@@ -8,6 +8,7 @@ return {
             'williamboman/mason-lspconfig.nvim',
             {
                 'lvimuser/lsp-inlayhints.nvim',
+                cond = false,
                 opts = {},
             },
             {
@@ -266,14 +267,15 @@ return {
             end
 
             if type(opts.diagnostics.virtual_text) == 'table' and opts.diagnostics.virtual_text.prefix == 'icons' then
-                opts.diagnostics.virtual_text.prefix = vim.fn.has 'nvim-0.10.0' == 0 and icons.Diagnostics.Prefix
-                    or function(diagnostic)
-                        for d, icon in pairs(icons.Diagnostics) do
-                            if diagnostic.severity == vim.diagnostic.severity[d:upper()] then
-                                return icon
-                            end
+                opts.diagnostics.virtual_text.prefix = function(diagnostic)
+                    for d, icon in pairs(icons.Diagnostics.LSP) do
+                        if diagnostic.severity == vim.diagnostic.severity[d:upper()] then
+                            return icon
+                        else
+                            return icons.Diagnostics.Prefix
                         end
                     end
+                end
             end
 
             vim.diagnostic.config(vim.deepcopy(opts.diagnostics))
@@ -284,8 +286,8 @@ return {
             vim.lsp.handlers[register_capability_name] = function(err, res, ctx)
                 local ret = register_capability_handler(err, res, ctx)
 
-                ---@type LspClient
-                local client = vim.lsp.get_client_by_id(ctx.client_id)
+                ---@type vim.lsp.LspClient
+                local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
 
                 if client.supports_method ~= nil then
                     keymaps.attach(client, vim.api.nvim_get_current_buf())

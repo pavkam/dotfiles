@@ -3,6 +3,7 @@ local icons = require 'ui.icons'
 return {
     'folke/noice.nvim',
     event = 'VeryLazy',
+    cond = false, --TODO: fix this
     dependencies = {
         'MunifTanjim/nui.nvim',
         'rcarriga/nvim-notify',
@@ -47,7 +48,6 @@ return {
                 replace_global = { kind = 'search', pattern = [[^:g/]], icon = icons.UI.Replace, lang = 'regex' },
             },
         },
-
         presets = {
             bottom_search = true,
             command_palette = true,

@@ -33,7 +33,7 @@ return {
             }
 
             local get_menu_height = settings.transient(function()
-                local height = vim.api.nvim_get_option 'pumheight'
+                local height = vim.api.nvim_get_option_value('pumheight', {})
                 local total_item_count = #cmp.get_entries()
 
                 height = height ~= 0 and height or total_item_count
