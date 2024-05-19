@@ -144,6 +144,7 @@ local M = {
         CloseAll = '',
         SessionSave = '󰆓',
         SessionRestore = '󰆔',
+        Toggle = '',
     },
     Progress = {
         '⣾',

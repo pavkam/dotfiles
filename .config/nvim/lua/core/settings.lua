@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local icons = require 'ui.icons'
 
 ---@type table<string, any>
 local global_permanent_settings = {}
@@ -167,7 +168,7 @@ local managed_toggles = {}
 
 --- Registers a managed toggle setting
 ---@param option string # the name of the option
----@param toggle_fn fun(enabled: boolean, buffer: integer) # the function to call when the toggle is triggered
+---@param toggle_fn fun(enabled: boolean, buffer?: integer) # the function to call when the toggle is triggered
 ---@param opts? { name?: string, description?: string, scope?: core.settings.ToggleScope|core.settings.ToggleScope[], default?: boolean } # optional modifiers
 function M.register_toggle(option, toggle_fn, opts)
     opts = opts or {}
@@ -201,18 +202,21 @@ function M.register_toggle(option, toggle_fn, opts)
 
             if buffer ~= nil then
                 local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
-                utils.info(string.format('Turning **%s** %s for *%s*.', enabled and 'off' or 'on', opts.description, file_name))
+                utils.hint(string.format(icons.UI.Toggle .. '  Turning `%s` `%s` for `%s`.', enabled and 'off' or 'on', opts.description, file_name))
             else
-                utils.info(string.format('Turning **%s** %s *globally*.', enabled and 'off' or 'on', opts.description))
+                utils.hint(string.format(icons.UI.Toggle .. '  Turning `%s` `%s` globally.', enabled and 'off' or 'on', opts.description))
             end
 
             enabled = not enabled
             M.set(option, enabled, { buffer = buffer, scope = 'permanent' })
 
-            local buffers = buffer ~= nil and { buffer } or utils.get_listed_buffers()
-
-            for _, b in ipairs(buffers) do
-                toggle_fn(enabled and M.get(option, { buffer = b, default = opts.default, scope = 'permanent' }), b)
+            if scope == 'global' and vim.tbl_contains(scopes, 'buffer') or scope == 'buffer' then
+                local buffers = buffer ~= nil and { buffer } or utils.get_listed_buffers()
+                for _, b in ipairs(buffers) do
+                    toggle_fn(enabled and M.get(option, { buffer = b, default = opts.default, scope = 'permanent' }), b)
+                end
+            else
+                toggle_fn(enabled, nil)
             end
         end
 

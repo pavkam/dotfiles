@@ -240,15 +240,12 @@ function M.hint(msg)
         notify(msg, vim.log.levels.DEBUG)
     else
         require('noice').redirect(function()
-            vim.print(msg)
+            print(msg)
         end, {
             {
                 view = 'mini',
                 opts = {
                     timeout = 5000,
-                    title = 'Hint',
-                    level = 'hint',
-                    format = 'default',
                 },
                 filter = {},
             },

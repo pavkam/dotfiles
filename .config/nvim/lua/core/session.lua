@@ -63,21 +63,33 @@ function M.restore_session(name)
     local session_file, shada_file, settings_file = encode_session_name(name)
 
     if vim.fn.filereadable(session_file) == 1 and vim.fn.filereadable(shada_file) == 1 and vim.fn.filereadable(settings_file) == 1 then
-        vim.schedule(function()
-            -- close all windows, tabs and buffers
-            vim.cmd [[silent! tabonly!]]
-            vim.cmd [[silent! %bd!]]
-            vim.cmd [[silent! %bw!]]
+        -- close all windows, tabs and buffers
+        vim.cmd [[silent! tabonly!]]
+        vim.cmd [[silent! %bd!]]
+        vim.cmd [[silent! %bw!]]
 
-            local data = vim.fn.readfile(settings_file, 'b')
+        vim.schedule(function()
+            local ok, data = pcall(vim.fn.readfile, settings_file, 'b')
+            if not ok then
+                utils.error(string.format('%s Failed to restore settings for session `%s`', icons.UI.SessionSave, name))
+            end
+
             settings.deserialize_from_json(data[1])
 
-            vim.cmd('source ' .. session_file)
-            vim.cmd('rshada ' .. shada_file)
+            ok = pcall(vim.cmd.source, session_file)
+            if not ok then
+                utils.error(string.format('%s Failed to restore vim session `%s`', icons.UI.SessionSave, name))
+            end
 
-            utils.refresh_ui()
+            ok = pcall(vim.cmd.rshada, shada_file)
+            if not ok then
+                utils.error(string.format('%s Failed to restore shada for session `%s`', icons.UI.SessionSave, name))
+            end
 
-            utils.hint(string.format('%s Restored session `%s`', icons.UI.SessionSave, name))
+            vim.schedule(function()
+                utils.refresh_ui()
+                utils.hint(string.format('%s Restored session `%s`', icons.UI.SessionSave, name))
+            end)
         end)
     end
 end
@@ -87,13 +99,10 @@ utils.on_event('VimLeavePre', function()
 end)
 
 utils.on_event('User', function()
-    -- do not restore session if there is a file to open
-    if vim.fn.argc() == 1 then
-        return
+    if vim.fn.argc() == 0 then
+        current_session_name = get_session_name()
+        M.restore_session(current_session_name)
     end
-
-    current_session_name = get_session_name()
-    M.restore_session(current_session_name)
 end, 'LazyDone')
 
 utils.on_event({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, function()

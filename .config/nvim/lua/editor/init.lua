@@ -274,3 +274,20 @@ utils.on_event({ 'BufDelete', 'BufEnter' }, function(evt)
     require('core.old_files').forget(file)
     require('ui.qf').forget(file)
 end)
+
+settings.register_toggle('spelling', function(enabled)
+    ---@diagnostic disable-next-line: undefined-field
+    vim.opt.spell = enabled
+
+    local all = vim.lsp.get_clients { name = 'typos_lsp' }
+    if #all == 1 then
+        local client = all[1]
+        if enabled then
+            vim.lsp.buf_attach_client(0, client.id)
+        else
+            vim.lsp.stop_client(client.id, true)
+        end
+    end
+
+    ---@diagnostic disable-next-line: undefined-field
+end, { name = 'Spell checking', default = vim.opt.spell:get(), scope = 'global' })

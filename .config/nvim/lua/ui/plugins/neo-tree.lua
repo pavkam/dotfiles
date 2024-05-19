@@ -118,6 +118,8 @@ return {
                 ['s'] = false,
                 ['\\'] = 'open_split',
                 ['|'] = 'open_vsplit',
+                ['<C-h>'] = 'toggle_hidden',
+                ['H'] = false,
             },
             fuzzy_finder_mappings = { -- define keymaps for filter popup window in fuzzy_finder_mode
                 ['<C-j>'] = 'move_cursor_down',

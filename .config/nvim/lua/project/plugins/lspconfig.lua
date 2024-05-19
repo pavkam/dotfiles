@@ -1,4 +1,5 @@
 local icons = require 'ui.icons'
+local settings = require 'core.settings'
 
 return {
     {
@@ -6,11 +7,6 @@ return {
         event = 'User NormalFile',
         dependencies = {
             'williamboman/mason-lspconfig.nvim',
-            {
-                'lvimuser/lsp-inlayhints.nvim',
-                cond = false,
-                opts = {},
-            },
             {
                 'Hoffs/omnisharp-extended-lsp.nvim',
             },
@@ -367,58 +363,5 @@ return {
     {
         'b0o/SchemaStore.nvim',
         version = false, -- last release is way too old
-    },
-    {
-        'pmizio/typescript-tools.nvim',
-        ft = { 'typescript', 'typescript.jsx', 'typescriptreact', 'javascript', 'javascript.jsx', 'javascriptreact' },
-        dependencies = {
-            'nvim-lua/plenary.nvim',
-            'neovim/nvim-lspconfig',
-        },
-        cond = false, -- TODO: this plugin is not working well
-        opts = {
-            separate_diagnostic_server = false,
-            handlers = {
-                ['textDocument/rename'] = require 'project.rename',
-            },
-            settings = {
-                tsserver_file_preferences = {
-                    includeInlayParameterNameHints = 'all',
-                    includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-                    includeInlayFunctionParameterTypeHints = true,
-                    includeInlayVariableTypeHints = true,
-                    includeInlayVariableTypeHintsWhenTypeMatchesName = false,
-                    includeInlayPropertyDeclarationTypeHints = true,
-                    includeInlayFunctionLikeReturnTypeHints = true,
-                    includeInlayEnumMemberValueHints = true,
-                },
-                expose_as_code_action = { 'organize_imports', 'add_missing_imports' },
-            },
-        },
-    },
-    {
-        'Wansmer/symbol-usage.nvim',
-        cond = false,
-        event = 'BufReadPre', -- need run before LspAttach if you use nvim 0.9. On 0.10 use 'LspAttach'
-        opts = {
-            kinds = {
-                vim.lsp.protocol.SymbolKind.Function,
-                vim.lsp.protocol.SymbolKind.Method,
-                vim.lsp.protocol.SymbolKind.Property,
-                vim.lsp.protocol.SymbolKind.Interface,
-                vim.lsp.protocol.SymbolKind.Class,
-                vim.lsp.protocol.SymbolKind.Struct,
-                vim.lsp.protocol.SymbolKind.Event,
-                vim.lsp.protocol.SymbolKind.Constructor,
-                vim.lsp.protocol.SymbolKind.Constant,
-            },
-            request_pending_text = icons.TUI.Ellipsis,
-            vt_position = 'end_of_line',
-            references = {
-                enabled = true,
-                include_declaration = false,
-            },
-            disable = { lsp = { 'lua_ls' } },
-        },
     },
 }
