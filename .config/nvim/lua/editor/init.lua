@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local icons = require 'ui.icons'
 local settings = require 'core.settings'
 local syntax = require 'editor.syntax'
 
@@ -290,4 +291,4 @@ settings.register_toggle('spelling', function(enabled)
     end
 
     ---@diagnostic disable-next-line: undefined-field
-end, { name = 'Spell checking', default = vim.opt.spell:get(), scope = 'global' })
+end, { name = icons.UI.SpellCheck .. ' Spell checking', default = vim.opt.spell:get(), scope = 'global' })
