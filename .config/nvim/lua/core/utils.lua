@@ -593,4 +593,12 @@ function M.refresh_ui()
     vim.cmd 'redraw!'
 end
 
+--- Feed keys to neovim
+---@param keys string # the keys to feed
+function M.feed_keys(keys)
+    assert(type(keys) == 'string')
+
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'n', false)
+end
+
 return M

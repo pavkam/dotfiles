@@ -91,7 +91,7 @@ return {
                 },
                 omnisharp = {
                     handlers = {
-                        ['textDocument/definition'] = function(...)
+                        [vim.lsp.protocol.Methods.textDocument_definition] = function(...)
                             return require('omnisharp_extended').handler(...)
                         end,
                     },
@@ -252,6 +252,7 @@ return {
             -- keymaps
             lsp.on_attach(keymaps.attach)
 
+            -- TODO: diagnostic icons are broken
             -- diagnostics
             local signs = {
                 { name = 'DiagnosticSignError', text = icons.Diagnostics.LSP.Error .. ' ', texthl = 'DiagnosticSignError' },
@@ -279,12 +280,10 @@ return {
             vim.diagnostic.config(vim.deepcopy(opts.diagnostics))
 
             -- setup register capability
-            local register_capability_name = 'client/registerCapability'
-            local register_capability_handler = vim.lsp.handlers[register_capability_name]
-            vim.lsp.handlers[register_capability_name] = function(err, res, ctx)
+            local register_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.client_registerCapability]
+            vim.lsp.handlers[vim.lsp.protocol.Methods.client_registerCapability] = function(err, res, ctx)
                 local ret = register_capability_handler(err, res, ctx)
 
-                ---@type vim.lsp.Client
                 local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
 
                 if client.supports_method ~= nil then
@@ -295,17 +294,15 @@ return {
             end
 
             -- setup progress
-            local progress_capability_name = '$/progress'
-            local progress_capability_handler = vim.lsp.handlers[progress_capability_name]
-            vim.lsp.handlers[progress_capability_name] = function(_, msg, info)
+            local progress_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress]
+            vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress] = function(_, msg, info)
                 utils.trigger_user_event('LspProgress', utils.tbl_merge(msg, { client_id = info.client_id }))
                 progress_capability_handler(_, msg, info)
             end
 
             -- setup progress
-            local diagnostics_capability_name = 'textDocument/publishDiagnostics'
-            local diagnostics_capability_handler = vim.lsp.handlers[diagnostics_capability_name]
-            vim.lsp.handlers[diagnostics_capability_name] = function(_, result, ctx, config)
+            local diagnostics_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics]
+            vim.lsp.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function(_, result, ctx, config)
                 lsp.notice_diagnostics(result, ctx.client_id)
                 diagnostics_capability_handler(_, result, ctx, config)
             end
@@ -320,7 +317,7 @@ return {
                 local server_opts = utils.tbl_merge({
                     capabilities = vim.deepcopy(capabilities),
                     handlers = {
-                        ['textDocument/rename'] = require 'project.rename',
+                        [vim.lsp.protocol.Methods.textDocument_rename] = require 'project.rename',
                     },
                 }, servers[server] or {})
 

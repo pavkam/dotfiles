@@ -35,10 +35,16 @@ return {
                 if opts and opts.restart_picker then
                     add.attach_mappings = function(_, map)
                         map('i', '<C-h>', function(prompt_bufnr)
+                            -- get current text in
+                            local action_state = require 'telescope.actions.state'
+                            -- TODO: this should return the current text in the prompt
+                            local line = action_state.get_current_line()
+
                             -- toggle the hidden files
                             require('telescope.actions').close(prompt_bufnr)
                             ui.ignore_hidden_files.toggle()
-                            require('telescope.builtin')[opts.restart_picker](wrap(opts))
+
+                            require('telescope.builtin')[opts.restart_picker](wrap(vim.tbl_extend('force', opts, { default_text = line })))
                         end)
 
                         return true

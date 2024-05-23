@@ -1,3 +1,5 @@
+local utils = require 'core.utils'
+local syntax = require 'editor.syntax'
 local lsp = require 'project.lsp'
 local icons = require 'ui.icons'
 
@@ -14,17 +16,17 @@ local keymaps = {
             end
         end,
         desc = 'Goto definition',
-        capability = 'definition',
+        capability = vim.lsp.protocol.Methods.textDocument_definition,
     },
-    { 'gr', '<cmd>Telescope lsp_references<cr>', desc = 'Show references', capability = 'references' },
-    { 'gD', vim.lsp.buf.declaration, desc = 'Goto declaration', capability = 'declaration' },
+    { 'gr', '<cmd>Telescope lsp_references<cr>', desc = 'Show references', capability = vim.lsp.protocol.Methods.textDocument_references },
+    { 'gD', vim.lsp.buf.declaration, desc = 'Goto declaration', capability = vim.lsp.protocol.Methods.textDocument_declaration },
     {
         'gI',
         function()
             require('telescope.builtin').lsp_implementations { reuse_win = true }
         end,
         desc = 'Goto Implementation',
-        capability = 'implementation',
+        capability = vim.lsp.protocol.Methods.textDocument_implementation,
     },
     {
         'gy',
@@ -32,32 +34,38 @@ local keymaps = {
             require('telescope.builtin').lsp_type_definitions { reuse_win = true }
         end,
         desc = 'Goto Type Definition',
-        capability = 'typeDefinition',
+        capability = vim.lsp.protocol.Methods.textDocument_typeDefinition,
     },
-    { '<C-k>', vim.lsp.buf.hover, desc = 'Inspect symbol', capability = 'hover' },
-    { 'gK', vim.lsp.buf.signature_help, desc = 'Signature help', capability = 'signatureHelp' },
+    { '<C-k>', vim.lsp.buf.hover, desc = 'Inspect symbol', capability = vim.lsp.protocol.Methods.textDocument_hover },
+    { 'gK', vim.lsp.buf.signature_help, desc = 'Signature help', capability = vim.lsp.protocol.Methods.textDocument_signatureHelp },
     {
         'gl',
         vim.lsp.codelens.run,
         desc = 'Run CodeLens',
-        capability = 'codeLens',
+        capability = vim.lsp.protocol.Methods.textDocument_codeLens,
     },
-    { '<M-CR>', vim.lsp.buf.code_action, desc = icons.UI.Action .. ' Code actions', mode = { 'n', 'v' }, capability = 'codeAction' },
+    {
+        '<M-CR>',
+        vim.lsp.buf.code_action,
+        desc = icons.UI.Action .. ' Code actions',
+        mode = { 'n', 'v' },
+        capability = vim.lsp.protocol.Methods.textDocument_codeAction,
+    },
     {
         '<C-r>',
         function()
             local is_identifier =
                 vim.tbl_contains({ 'identifier', 'property_identifier', 'type_identifier' }, require('editor.syntax').node_type_under_cursor())
+
             if is_identifier then
                 vim.lsp.buf.rename()
                 return ':<nop><cr>'
             else
-                local command = [[:%s/\<<C-r><C-w>\>//gI<Left><Left><Left><C-r><C-w>]]
-                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(command, true, false, true), 'n', false)
+                utils.feed_keys(syntax.create_rename_expression())
             end
         end,
         desc = 'Rename',
-        capability = 'rename',
+        capability = vim.lsp.protocol.Methods.textDocument_rename,
     },
 }
 
@@ -77,7 +85,7 @@ local function attach_keymaps(client, buffer)
     end
 
     for _, mapping in pairs(resolved_keymaps) do
-        if not mapping.capability or lsp.client_has_capability(client, mapping.capability) then
+        if not mapping.capability or client.supports_method(mapping.capability) then
             vim.keymap.set(mapping.mode or 'n', mapping.lhs, mapping.rhs, {
                 desc = mapping.desc,
                 buffer = buffer,
@@ -111,19 +119,19 @@ function M.attach(client, buffer)
 
     attach_keymaps(client, buffer)
 
-    lsp.on_capability_event({ 'InsertLeave', 'BufEnter' }, 'codeLens', buffer, function()
+    lsp.on_capability_event({ 'InsertLeave', 'BufEnter' }, vim.lsp.protocol.Methods.textDocument_codeLens, buffer, function()
         vim.lsp.codelens.refresh { bufnr = buffer }
     end, true)
 
-    lsp.on_capability_event({ 'CursorHold', 'CursorHoldI' }, 'documentHighlight', buffer, function()
+    lsp.on_capability_event({ 'CursorHold', 'CursorHoldI' }, vim.lsp.protocol.Methods.textDocument_documentHighlight, buffer, function()
         vim.lsp.buf.document_highlight()
     end)
 
-    lsp.on_capability_event({ 'CursorMoved', 'CursorMovedI', 'BufLeave' }, 'documentHighlight', buffer, function()
+    lsp.on_capability_event({ 'CursorMoved', 'CursorMovedI', 'BufLeave' }, vim.lsp.protocol.Methods.textDocument_documentHighlight, buffer, function()
         vim.lsp.buf.clear_references()
     end)
 
-    lsp.on_capability_event({ 'BufRead', 'BufNew' }, 'inlayHints', buffer, function()
+    lsp.on_capability_event({ 'BufRead', 'BufNew' }, vim.lsp.protocol.Methods.textDocument_inlayHint, buffer, function()
         vim.lsp.inlay_hint.enable(true, { bufnr = buffer })
     end, true)
 end

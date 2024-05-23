@@ -9,6 +9,7 @@ return {
         vim.schedule(function()
             local get_option = vim.filetype.get_option
 
+            --- TODO: use my own implementation
             ---@diagnostic disable-next-line: duplicate-set-field
             vim.filetype.get_option = function(filetype, option)
                 return option == 'commentstring' and require('ts_context_commentstring.internal').calculate_commentstring() or get_option(filetype, option)

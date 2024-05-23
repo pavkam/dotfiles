@@ -80,7 +80,7 @@ function M.node_text_under_cursor(window)
             node = node:parent()
         end
 
-        if node:type() == 'string' then
+        if node and node:type() == 'string' then
             local start_row, start_col, end_row, end_col = node:range()
             return M.text(window, start_row + 1, start_col + 1, end_row + 1, end_col)
         end
@@ -207,6 +207,30 @@ function M.increment_node_under_cursor(window, value)
     end
 
     return false
+end
+
+---@class editor.syntax.RenameOpts
+---@field whole_word? boolean # Whether to match the whole word or not.
+---@field orig? string # The original text to replace if not supplied, uses the '<C-r><C-w>' command keys.
+---@field new? string # The new text to replace with (if not supplied, uses the orig).
+
+--- Creates a rename expression that can be fed to vim.
+---@param opts? editor.syntax.RenameOpts # The options for the rename expression.
+function M.create_rename_expression(opts)
+    opts = opts or {}
+    assert(type(opts) == 'table')
+
+    local orig = opts.orig or '<C-r><C-w>'
+    local new = opts.new or orig
+
+    assert(type(orig) == 'string')
+    assert(type(new) == 'string')
+
+    if opts.whole_word then
+        orig = '\\<' .. orig .. '\\>'
+    end
+
+    return ':<C-u>%s/\\V' .. orig .. '/' .. new .. '/gI<Left><Left><Left>'
 end
 
 return M

@@ -97,7 +97,7 @@ end
 utils.on_event('VimLeavePre', function()
     M.save_session(get_session_name())
 end)
-
+-- TODO: do not save session if was launched with args
 utils.on_event('User', function()
     if vim.fn.argc() == 0 then
         current_session_name = get_session_name()

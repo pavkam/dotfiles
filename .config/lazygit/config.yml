@@ -11,14 +11,22 @@ gui:
         - blue
     selectedLineBgColor:
         - white
-    selectedRangeBgColor:
-        - blue
     cherryPickedCommitBgColor:
         - cyan
     cherryPickedCommitFgColor:
         - blue
     unstagedChangesColor:
         - red
+    searchingActiveBorderColor:
+      - cyan
+      - bold
+    markedBaseCommitFgColor:
+      - blue
+    markedBaseCommitBgColor:
+      - yellow
+    defaultFgColor:
+      - default
+
   commitLength:
     show: true
   showListFooter: true
@@ -27,5 +35,21 @@ gui:
 os:
   editPreset: 'nvim'
   openLinkCommand: open {{link}}
+
+customCommands:
+  - key: '<c-o>'
+    description: 'Use ours'
+    context: 'files'
+    command: 'git checkout --ours {{.SelectedPath}}'
+    after:
+      checkForConflicts: true
+
+  - key: '<c-t>'
+    description: 'Use theirs'
+    context: 'files'
+    command: 'git checkout --theirs {{.SelectedPath}}'
+    after:
+      checkForConflicts: true
+
 notARepository: skip
 promptToReturnFromSubprocess: true

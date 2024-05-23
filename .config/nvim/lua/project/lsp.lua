@@ -67,33 +67,12 @@ function M.progress()
     return progress.status(progress_class)
 end
 
---- Normalizes the name of a capability
----@param capability string # the name of the capability
----@return string # the normalized name of the capability
-local function normalize_capability(capability)
-    assert(type(capability) == 'string' and capability ~= '')
-
-    capability = capability:find '/' and capability or 'textDocument/' .. capability
-
-    return capability
-end
-
 --- Checks whether a client is a special client
 ---@param client vim.lsp.Client # the client to check
 function M.is_special(client)
     assert(client and client.name)
 
     return client.name == 'copilot' or client.name == 'typos_lsp'
-end
-
---- Checks whether a client has a capability
----@param client vim.lsp.Client # the client to check
----@param capability string # the name of the capability
----@return boolean # whether the client has the capability
-function M.client_has_capability(client, capability)
-    assert(client and client.supports_method)
-
-    return client.supports_method(normalize_capability(capability))
 end
 
 --- Checks whether a buffer has a capability
@@ -155,10 +134,10 @@ end
 ---@return string|nil # the name of the auto group
 function M.on_capability_event(events, capability, buffer, callback, run_on_register)
     assert(type(callback) == 'function')
+    assert(type(capability) == 'string' and capability ~= '')
 
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    capability = normalize_capability(capability)
     events = utils.to_list(events)
 
     if not M.buffer_has_capability(buffer, capability) then

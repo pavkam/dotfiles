@@ -163,6 +163,7 @@ utils.on_event('FileType', function(evt)
     end
 end)
 
+-- TODO : Error detected while processing BufWritePost Autocommands for "<buffer=171>": (for non LSP files)
 -- file detection commands
 utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     local current_file = vim.api.nvim_buf_get_name(evt.buf)
@@ -187,7 +188,7 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
         settings.set('custom_events_triggered', true, { buffer = evt.buf, scope = 'instance' })
     end
 end)
-
+-- TODO: the qa command does not exit for whatebver reason until I click one more enter
 -- resize splits if window got resized
 utils.on_event('VimResized', function()
     utils.refresh_ui()

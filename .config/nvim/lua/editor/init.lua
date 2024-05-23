@@ -148,21 +148,23 @@ local function replace_all(orig, new, whole_word)
     if whole_word then
         orig = '\\<' .. orig .. '\\>'
     end
+
     local command = ':<C-u>%s/' .. orig .. '/' .. new .. '/gI<Left><Left><Left>'
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(command, true, false, true), 'n', false)
 end
 
-vim.keymap.set('x', '<C-S-r>', function()
-    local text = utils.get_selected_text()
-    replace_all(text, text, false)
-end, { desc = 'Replace selection' })
-
 vim.keymap.set('x', '<C-r>', function()
     local text = utils.get_selected_text()
-    replace_all(text, text, true)
+    utils.feed_keys(syntax.create_rename_expression { orig = text })
+end, { desc = 'Replace selection' })
+
+vim.keymap.set('x', '<C-S-r>', function()
+    local text = utils.get_selected_text()
+    utils.feed_keys(syntax.create_rename_expression { orig = text, whole_word = true })
 end, { desc = 'Replace selection (whole word)' })
 
-vim.keymap.set('n', '<C-r>', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = 'Replace word under cursor' })
+vim.keymap.set('n', '<C-r>', syntax.create_rename_expression(), { desc = 'Replace word under cursor' })
+vim.keymap.set('n', '<C-S-r>', syntax.create_rename_expression { whole_word = true }, { desc = 'Replace word under cursor (whole word)' })
 
 -- special keys
 vim.keymap.set('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
@@ -292,3 +294,8 @@ settings.register_toggle('spelling', function(enabled)
 
     ---@diagnostic disable-next-line: undefined-field
 end, { name = icons.UI.SpellCheck .. ' Spell checking', default = vim.opt.spell:get(), scope = 'global' })
+
+--- Rregister custom filetypes
+utils.on_event({ 'BufRead', 'BufNew' }, function(evt)
+    vim.bo[evt.buf].filetype = 'javascript'
+end, '*.snap')
