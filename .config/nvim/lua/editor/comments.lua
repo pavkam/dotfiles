@@ -2,26 +2,38 @@ local syntax = require 'editor.syntax'
 
 ---@class editor.comments
 local M = {}
-M.langs = {}
 
-M.langs.xml = '<!-- %s -->'
-M.langs.xaml = M.langs.xml
-M.langs.cs_project = M.langs.xml
-M.langs.fsharp_project = M.langs.xml
-M.langs.html = M.langs.xml
-M.langs.c = { '// %s', '/* %s */' }
-M.langs.c_sharp = M.langs.c
-M.langs.cpp = M.langs.c
-M.langs.fsharp = M.langs.c
-M.langs.css = '/* %s */'
-M.langs.ini = '; %s'
-M.langs.javascript = vim.tbl_extend('keep', M.langs.c, {
-    call_expression = '// %s',
-    jsx_attribute = '// %s',
-    jsx_element = '{/* %s */}',
-    jsx_fragment = '{/* %s */}',
-    spread_element = '// %s',
-    statement_block = '// %s',
+---@alias editor.comments.CommentSpec { prefix: string, suffix?: string }
+
+---@type editor.comments.CommentSpec
+local markup_spec = { prefix = '<!--', suffix = '-->' }
+---@type editor.comments.CommentSpec
+local c_line_spec = { prefix = '//' }
+---@type editor.comments.CommentSpec
+local c_block_spec = { prefix = '/*', suffix = '*/' }
+---@type editor.comments.CommentSpec[]
+local c_spec = { c_line_spec, c_block_spec }
+
+---@type table<string, editor.comments.CommentSpec|editor.comments.CommentSpec[]|table<string, editor.comments.CommentSpec[]>>
+M.langs = {}
+M.langs.xml = markup_spec
+M.langs.xaml = markup_spec
+M.langs.cs_project = markup_spec
+M.langs.fsharp_project = markup_spec
+M.langs.html = markup_spec
+M.langs.c = c_spec
+M.langs.c_sharp = c_spec
+M.langs.cpp = c_spec
+M.langs.fsharp = c_spec
+M.langs.css = c_block_spec
+M.langs.ini = { prefix = ';' }
+M.langs.javascript = vim.tbl_extend('keep', M.langs.c --[[@as table]], {
+    call_expression = c_line_spec,
+    jsx_attribute = c_line_spec,
+    jsx_element = c_block_spec,
+    jsx_fragment = c_block_spec,
+    spread_element = c_line_spec,
+    statement_block = c_line_spec,
 })
 M.langs.jsx = M.langs.javascript
 M.langs.javascriptreact = M.langs.jsx
@@ -30,9 +42,8 @@ M.langs.typescript = M.langs.javascript
 M.langs.tsx = M.langs.typescript
 M.langs.typescriptreact = M.langs.tsx
 M.langs['typescript.tsx'] = M.langs.tsx
-
-M.langs.vim = '" %s'
-M.langs.lua = { '-- %s', '--- %s' }
+M.langs.vim = { prefix = '"' }
+M.langs.lua = { { prefix = '--' }, { prefix = '---' } }
 
 -- backup the original get_option function
 M.original_get_option = vim.filetype.get_option
@@ -42,8 +53,8 @@ local option_name = 'commentstring'
 -- Resolve the commentstring for the current buffer
 ---@param window? integer # The window to resolve the commentstring for
 ---@param file_type string # The filetype to resolve the commentstring for
----@return string[] # The resolved commentstrings
-local function resolve(window, file_type)
+---@return editor.comments.CommentSpec[] # The resolved commentstrings
+function M.resolve(window, file_type)
     assert(type(file_type) == 'string')
 
     -- find the correct commentstring for the current language
@@ -53,7 +64,7 @@ local function resolve(window, file_type)
     ---@type string[]
     local result = {}
 
-    if type(spec) == 'string' then
+    if spec.prefix then
         table.insert(result, spec)
     elseif vim.islist(spec) then
         for _, v in ipairs(spec) do
@@ -70,13 +81,45 @@ local function resolve(window, file_type)
         end
     end
 
-    -- add the original commentstring
-    local original = M.original_get_option(file_type, option_name)
-    if type(original) == 'string' then
-        table.insert(result, original)
+    return result
+end
+
+--- Get the comment options for the given window.
+---@param window? integer # The window to get the comment options for.
+---@return { single_line: string, multi_line_start: string, multi_line_end: string }|nil # The comment options for the given window.
+function M.comment_options(window)
+    window = window or vim.api.nvim_get_current_win()
+
+    local buffer = vim.api.nvim_win_get_buf(window)
+    local file_type
+    if vim.api.nvim_buf_is_valid(buffer) then
+        file_type = vim.api.nvim_buf_get_option_value('filetype', { bufnr = buffer })
+        local comments = M.resolve(window, file_type)
+
+        ---@type string|nil
+        local single_line
+        ---@type string|nil
+        local multi_line_start
+        ---@type string|nil
+        local multi_line_end
+
+        for _, comment in ipairs(comments) do
+            if comment.prefix and not comment.suffix then
+                single_line = comment.prefix
+            else
+                multi_line_start = comment.prefix
+                multi_line_end = comment.suffix
+            end
+        end
+
+        return {
+            single_line = single_line,
+            multi_line_start = multi_line_start,
+            multi_line_end = multi_line_end,
+        }
     end
 
-    return result
+    return nil
 end
 
 --- Get the commentstring for the given file type.
@@ -84,7 +127,15 @@ end
 ---@param file_type string # The filetype to get the commentstring for.
 ---@return string|nil # The commentstring for the given file type.
 function M.select_matching(window, file_type)
-    local patterns = resolve(window, file_type)
+    local patterns = vim.tbl_map(function(item)
+        return string.format('%s%%s%s', item.prefix, item.suffix or '')
+    end, M.resolve(window, file_type))
+
+    -- add the original commentstring
+    local original = M.original_get_option(file_type, option_name)
+    if type(original) == 'string' then
+        table.insert(patterns, original)
+    end
 
     ---@type string|nil
     local best_option
@@ -92,7 +143,7 @@ function M.select_matching(window, file_type)
 
     local line = syntax.current_line(window)
     for _, pattern in ipairs(patterns) do
-        local left, right = pattern:match '^%s*(.-)%s*%%s%s*(.-)%s*$'
+        local left, right = pattern.pattern:match '^%s*(.-)%s*%%s%s*(.-)%s*$'
 
         if left and right then
             local l, m, r = line:match('^%s*' .. vim.pesc(left) .. '(%s*)(.-)(%s*)' .. vim.pesc(right) .. '%s*$')

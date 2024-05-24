@@ -18,6 +18,7 @@ return {
             local defaults = require 'cmp.config.default'()
             local copilot = require 'copilot.suggestion'
             local settings = require 'core.settings'
+            require 'editor.snippets'
 
             local border_opts = {
                 border = 'rounded',
@@ -147,6 +148,7 @@ return {
                     end, { 'i', 's' }),
                 },
                 sources = cmp.config.sources {
+                    { name = 'snippets' },
                     { name = 'nvim_lsp' },
                     { name = 'luasnip' },
                     { name = 'buffer' },

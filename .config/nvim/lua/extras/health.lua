@@ -63,18 +63,6 @@ local function show_for_buffer(buffer)
 
     local content = {}
 
-    --- Escapes markdown in a string
-    --- @param str string -- the string to escape
-    --- @return string -- the escaped string
-    local escapeMarkdown = function(str)
-        str = tostring(str) or 'nil'
-
-        str = str:gsub('\n', [[\n]])
-        str = str:gsub('`', [[']])
-
-        return string.format('`%s`', str)
-    end
-
     --- Formats a value for display
     ---@param name string -- the name of the value
     ---@param value any -- the value to format
@@ -85,7 +73,7 @@ local function show_for_buffer(buffer)
         end
 
         if type(value) ~= 'table' then
-            table.insert(content, string.format(' - **%s** = %s', name, escapeMarkdown(value)))
+            table.insert(content, string.format(' - **%s** = `%s`', name, utils.escape_markdown(value)))
         else
             local prefix = string.rep('#', depth)
             table.insert(content, prefix .. ' ' .. name)

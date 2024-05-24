@@ -1,6 +1,8 @@
 ---@class core.utils
 local M = {}
 
+math.randomseed(os.time())
+
 ---Converts a value to a string
 ---@param value any # any value that will be converted to a string
 ---@return string|nil # the tringified version of the value
@@ -606,6 +608,67 @@ function M.feed_keys(keys)
     assert(type(keys) == 'string')
 
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'n', false)
+end
+
+---@type table<string, string>
+local markdown_substitutions = {
+    { '%*', '\\*' },
+    { '#', '\\#' },
+    { '/', '\\/' },
+    { '%(', '\\(' },
+    { '%)', '\\)' },
+    { '%[', '\\[' },
+    { '%]', '\\]' },
+    { '<', '&lt;' },
+    { '>', '&gt;' },
+    { '_', '\\_' },
+    { '`', '\\`' },
+}
+
+--- Escapes a value for markdown
+---@param str any # the value to escape
+---@return string # the escaped value
+function M.escape_markdown(str)
+    str = stringify(str)
+    if not str then
+        return '*nil*'
+    end
+
+    for _, replacement in ipairs(markdown_substitutions) do
+        str = str:gsub(replacement[1], replacement[2])
+    end
+
+    return str
+end
+
+---@type string
+local uuid_template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+
+function M.uuid()
+    ---@param c string
+    local function subs(c)
+        local v = (((c == 'x') and math.random(0, 15)) or math.random(8, 11))
+        return string.format('%x', v)
+    end
+
+    return uuid_template:gsub('[xy]', subs)
+end
+
+--- Gets the timezone offset for a given timestamp
+---@param timestamp integer # the timestamp to get the offset for
+---@return integer # the timezone offset
+function M.get_timezone_offset(timestamp)
+    assert(type(timestamp) == 'number')
+
+    local utc_date = os.date('!*t', timestamp)
+    local local_date = os.date('*t', timestamp)
+
+    local_date.isdst = false
+
+    local diff = os.difftime(os.time(local_date --[[@as osdateparam]]), os.time(utc_date --[[@as osdateparam]]))
+    local h, m = math.modf(diff / 3600)
+
+    return 100 * h + 60 * m
 end
 
 return M

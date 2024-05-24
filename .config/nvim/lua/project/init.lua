@@ -5,7 +5,7 @@ local hover = require 'project.hover'
 
 vim.keymap.set('n', 'K', hover)
 
----@class languages
+---@class project
 local M = {}
 
 --- Checks if a parsed package.json has a dependency
@@ -212,6 +212,22 @@ function M.root(target, deepest)
     else
         return roots[#roots]
     end
+end
+
+--- Returns the path components for a given target
+---@param target string|integer|nil # the target to get the path components for
+---@return { work_space_path: string, file_path: string, work_space_name: string } # the path components
+function M.path_components(target)
+    local root = M.root(target)
+    if not root then
+        _, root = utils.expand_target(target)
+    end
+
+    local head = vim.fn.fnamemodify(root, ':p:h')
+    local ws = vim.fn.fnamemodify(head, ':p:h')
+    local tail = vim.fn.fnamemodify(root, ':p:t')
+
+    return { work_space_path = head, file_path = tail, work_space_name = ws }
 end
 
 --- Returns the path to the launch.json file for a given target
