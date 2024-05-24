@@ -7,13 +7,6 @@ return {
             'hrsh7th/cmp-nvim-lsp',
             'hrsh7th/cmp-buffer',
             'hrsh7th/cmp-path',
-            -- TODO: use my own snippets
-            {
-                'saadparwaiz1/cmp_luasnip',
-                dependencies = {
-                    'L3MON4D3/LuaSnip',
-                },
-            },
             {
                 'onsails/lspkind.nvim',
             },
@@ -24,7 +17,6 @@ return {
             local cmp = require 'cmp'
             local icons = require 'ui.icons'
             local defaults = require 'cmp.config.default'()
-            local luasnip = require 'luasnip'
             local copilot = require 'copilot.suggestion'
             local settings = require 'core.settings'
 
@@ -64,7 +56,7 @@ return {
                 },
                 duplicates = {
                     nvim_lsp = 1,
-                    luasnip = 1,
+                    -- luasnip = 1,
                     buffer = 1,
                     path = 1,
                 },
@@ -74,7 +66,7 @@ return {
                 },
                 snippet = {
                     expand = function(args)
-                        luasnip.lsp_expand(args.body)
+                        vim.snippet.expand(args.body)
                     end,
                 },
                 view = {
@@ -134,8 +126,10 @@ return {
                             else
                                 cmp.confirm()
                             end
-                        elseif luasnip.expand_or_jumpable() then
-                            luasnip.expand_or_jump()
+                        elseif vim.snippet.active { direction = 1 } then
+                            vim.schedule(function()
+                                vim.snippet.jump(1)
+                            end)
                         else
                             fallback()
                         end
@@ -145,8 +139,10 @@ return {
                             copilot.next()
                         elseif cmp.visible() then
                             cmp.select_prev_item()
-                        elseif luasnip.jumpable(-1) then
-                            luasnip.jump(-1)
+                        elseif vim.snippet.active { direction = -1 } then
+                            vim.schedule(function()
+                                vim.snippet.jump(-1)
+                            end)
                         else
                             fallback()
                         end
@@ -169,9 +165,9 @@ return {
                     },
                 },
                 experimental = {
-                    -- ghost_text = {
-                    --     hl_group = 'CmpGhostText',
-                    -- },
+                    ghost_text = {
+                        hl_group = 'CmpGhostText',
+                    },
                 },
                 sorting = defaults.sorting,
             }
@@ -190,25 +186,6 @@ return {
                     },
                 })
             end
-        end,
-    },
-    {
-        'L3MON4D3/LuaSnip',
-        build = vim.fn.has 'win32' == 0 and "echo 'NOTE: jsregexp is optional, so not a big deal if it fails to build\n'; make install_jsregexp" or nil,
-        dependencies = {
-            'rafamadriz/friendly-snippets',
-        },
-        opts = {
-            history = false,
-            update_events = 'TextChanged,TextChangedI',
-            delete_check_events = 'InsertLeave',
-            region_check_events = 'CursorMoved',
-        },
-        config = function(_, opts)
-            require('luasnip').config.setup(opts)
-            vim.tbl_map(function(type)
-                require('luasnip.loaders.from_' .. type).lazy_load()
-            end, { 'vscode', 'snipmate', 'lua' })
         end,
     },
 }

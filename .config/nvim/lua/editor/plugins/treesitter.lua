@@ -124,7 +124,7 @@ return {
             incremental_selection = {
                 enable = true,
                 keymaps = {
-                    init_selection = '\\', -- TODO: if treesitter is not active in a file use simply the `vaw` command.
+                    init_selection = '\\',
                     node_incremental = '\\',
                     scope_incremental = false,
                     node_decremental = '|',

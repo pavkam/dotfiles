@@ -70,8 +70,6 @@ local function resolve(window, file_type)
         end
     end
 
-    dbg(result)
-
     -- add the original commentstring
     local original = M.original_get_option(file_type, option_name)
     if type(original) == 'string' then
@@ -123,7 +121,6 @@ function M.get_option(file_type, option)
     end
 
     local c = M.select_matching(nil, file_type) or M.original_get_option(file_type, option)
-    dbg(file_type, c)
     return c
 end
 
