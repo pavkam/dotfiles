@@ -3,6 +3,8 @@ local icons = require 'ui.icons'
 local settings = require 'core.settings'
 local syntax = require 'editor.syntax'
 
+require 'editor.comments'
+
 -- Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
@@ -136,22 +138,7 @@ vim.keymap.set({ 'x', 'o' }, 'n', "'Nn'[v:searchforward]", { expr = true, desc =
 vim.keymap.set('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Previous search result' })
 vim.keymap.set({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Previous search result' })
 
---- Replace all occurrences of a word
----@param orig string # the original word
----@param new string # the new word
----@param whole_word boolean # whether to match whole word
-local function replace_all(orig, new, whole_word)
-    assert(type(orig) == 'string')
-    assert(type(new) == 'string')
-    assert(type(whole_word) == 'boolean')
-
-    if whole_word then
-        orig = '\\<' .. orig .. '\\>'
-    end
-
-    local command = ':<C-u>%s/' .. orig .. '/' .. new .. '/gI<Left><Left><Left>'
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(command, true, false, true), 'n', false)
-end
+vim.keymap.set('n', '\\', 'viw', { desc = 'Select word' })
 
 vim.keymap.set('x', '<C-r>', function()
     local text = utils.get_selected_text()
@@ -295,7 +282,9 @@ settings.register_toggle('spelling', function(enabled)
     ---@diagnostic disable-next-line: undefined-field
 end, { name = icons.UI.SpellCheck .. ' Spell checking', default = vim.opt.spell:get(), scope = 'global' })
 
---- Rregister custom filetypes
-utils.on_event({ 'BufRead', 'BufNew' }, function(evt)
-    vim.bo[evt.buf].filetype = 'javascript'
-end, '*.snap')
+-- additional filetypes
+vim.filetype.add {
+    extension = {
+        snap = 'javascript',
+    },
+}

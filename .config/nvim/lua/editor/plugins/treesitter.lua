@@ -28,8 +28,6 @@ return {
             { '|', desc = 'Decrement selection', mode = 'x' },
         },
         opts = {
-            autotag = { enable = true },
-            context_commentstring = { enable = true, enable_autocmd = false },
             highlight = {
                 enable = true,
             },
@@ -139,10 +137,19 @@ return {
     },
     {
         'windwp/nvim-ts-autotag',
-        event = 'User NormalFile',
+        lazy = false,
         opts = {
-            -- HACK: remove when https://github.com/windwp/nvim-ts-autotag/issues/125 closed.
+            enable_close = true,
+            enable_rename = true,
             enable_close_on_slash = false,
         },
+        per_filetype = {
+            ['html'] = {
+                enable_close = false,
+            },
+        },
+        config = function(_, opts)
+            require('nvim-ts-autotag').setup(opts)
+        end,
     },
 }

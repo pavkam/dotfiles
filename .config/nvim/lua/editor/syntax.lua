@@ -1,24 +1,16 @@
 ---@class editor.syntax
 local M = {}
 
---- Get the tree for the given buffer.
----@param buffer number|nil # The buffer to get the tree for. 0 or nil for the current buffer.
----@return TSNode|nil # The root node of the tree.
-local function get_tree(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local ok, parser = pcall(vim.treesitter.get_parser, buffer)
-    if ok and parser then
-        return parser:parse()[1]:root()
-    end
-
-    return nil
-end
+---@class editor.syntax.GetNodeAtCursorOpts
+---@field ignore_injections? boolean # Whether to include injected languages or not.
+---@field ignore_indent? boolean # Whether to ignore the indentation or not.
+---@field lang? string # The language to get the node at the cursor for.
 
 --- Get the node at the cursor.
 ---@param window number|nil # The window to get the cursor position from. 0 or nil for the current window.
+---@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node at the cursor.
 ---@return TSNode|nil # The node at the cursor.
-local function get_node_at_cursor(window)
+local function get_node_at_cursor(window, opts)
     window = window or vim.api.nvim_get_current_win()
 
     local buffer = vim.api.nvim_win_get_buf(window)
@@ -26,41 +18,55 @@ local function get_node_at_cursor(window)
         return nil
     end
 
-    local tree = get_tree()
-    if not tree then
-        return nil
+    local cursor = vim.api.nvim_win_get_cursor(window)
+
+    if opts and opts.ignore_indent then
+        local line = M.current_line(window)
+        local indent = line:match '^%s*()'
+
+        -- set position to the first non whitespace character
+        if indent and cursor[2] < indent - 1 then
+            cursor[2] = indent - 1
+        end
+    else
+        cursor[1] = cursor[1] - 1
     end
 
-    local cursor = vim.api.nvim_win_get_cursor(window)
-    local row, col = cursor[1] - 1, cursor[2]
+    local ok, node = pcall(vim.treesitter.get_node, {
+        bufnr = buffer,
+        lang = opts and opts.lang,
+        ignore_injections = opts and opts.ignore_injections, -- include injected languages
+        pos = cursor,
+    })
 
-    local node = tree:named_descendant_for_range(row, col, row, col)
-
-    return node
+    return ok and node or nil
 end
 
 --- Get the node under the cursor.
 ---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
+---@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node under the cursor.
 ---@return TSNode|nil # The node under the cursor.
-function M.node_under_cursor(window)
-    local node = get_node_at_cursor(window)
+function M.node_under_cursor(window, opts)
+    local node = get_node_at_cursor(window, opts)
     return node
 end
 
 --- Get the type of the node under the cursor.
 ---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
+---@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node under the cursor.
 ---@return string|nil # The type of the node under the cursor.
-function M.node_type_under_cursor(window)
-    local node = get_node_at_cursor(window)
+function M.node_type_under_cursor(window, opts)
+    local node = get_node_at_cursor(window, opts)
     return node and node:type()
 end
 
 --- Get the node text under the cursor respecting syntactic boundaries.
 ---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
+---@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node text under the cursor.
 ---@param replacement string|nil # The text to replace the node with.
-function M.replace_node_under_cursor(window, replacement)
+function M.replace_node_under_cursor(window, replacement, opts)
     window = window or vim.api.nvim_get_current_win()
-    local node = get_node_at_cursor(window)
+    local node = get_node_at_cursor(window, opts)
 
     if node then
         local start_row, start_col, end_row, end_col = node:range()
@@ -72,9 +78,10 @@ end
 
 --- Get the node text under the cursor respecting syntactic boundaries.
 ---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
+---@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node text under the cursor.
 ---@return string # The text under the cursor.
-function M.node_text_under_cursor(window)
-    local node = get_node_at_cursor(window)
+function M.node_text_under_cursor(window, opts)
+    local node = get_node_at_cursor(window, opts)
     if node then
         if node:type() == 'string_fragment' then
             node = node:parent()
@@ -128,6 +135,15 @@ function M.lines(window, start_row, end_row)
     local lines = vim.api.nvim_buf_get_lines(buffer, start_row - 1, end_row or start_row, false)
 
     return lines
+end
+
+--- Gets the current line.
+---@param window integer|nil # the window to get the line from. 0 or nil for the current window
+function M.current_line(window)
+    window = window or vim.api.nvim_get_current_win()
+
+    local row = vim.api.nvim_win_get_cursor(window)[1]
+    return M.lines(window, row, row)[1]
 end
 
 --- Gets the current selection or the current word if there is no selection
