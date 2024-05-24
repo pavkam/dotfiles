@@ -24,6 +24,12 @@ return {
     opts = {
         sources = { 'filesystem' },
         open_files_do_not_replace_types = utils.special_file_types,
+        enable_diagnostics = true,
+        enable_git_status = true,
+        enable_modified_markers = true,
+        enable_opened_markers = true,
+        enable_refresh_on_write = true,
+        enable_cursor_hijack = true,
         filesystem = {
             window = {
                 position = 'float',
@@ -46,6 +52,20 @@ return {
         },
         default_component_configs = {
             with_markers = true,
+            diagnostics = {
+                symbols = {
+                    hint = icons.Diagnostics.LSP.Hint,
+                    info = icons.Diagnostics.LSP.Info,
+                    warn = icons.Diagnostics.LSP.Warn,
+                    error = icons.Diagnostics.LSP.Error,
+                },
+                highlights = {
+                    hint = 'DiagnosticSignHint',
+                    info = 'DiagnosticSignInfo',
+                    warn = 'DiagnosticSignWarn',
+                    error = 'DiagnosticSignError',
+                },
+            },
             indent = {
                 with_expanders = true,
                 expander_collapsed = icons.TUI.CollapsedGroup,
@@ -160,7 +180,7 @@ return {
 
         require('neo-tree').setup(opts)
 
-        utils.on_event('TermClose', function()
+        utils.on_focus_gained(function()
             local ok, manager = pcall(require, 'neo-tree.sources.manager')
             if ok then
                 for _, source in ipairs { 'filesystem', 'git_status', 'document_symbols' } do
@@ -170,6 +190,6 @@ return {
                     end
                 end
             end
-        end, '*lazygit*')
+        end)
     end,
 }

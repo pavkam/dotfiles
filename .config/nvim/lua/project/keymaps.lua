@@ -119,7 +119,7 @@ function M.attach(client, buffer)
 
     attach_keymaps(client, buffer)
 
-    lsp.on_capability_event({ 'InsertLeave', 'BufEnter' }, vim.lsp.protocol.Methods.textDocument_codeLens, buffer, function()
+    lsp.on_capability_event({ 'BufEnter', 'CursorHold', 'InsertLeave' }, vim.lsp.protocol.Methods.textDocument_codeLens, buffer, function()
         vim.lsp.codelens.refresh { bufnr = buffer }
     end, true)
 

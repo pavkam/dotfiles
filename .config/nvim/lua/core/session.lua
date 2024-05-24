@@ -6,8 +6,14 @@ local settings = require 'core.settings'
 local M = {}
 local session_dir = utils.join_paths(vim.fn.stdpath 'data' --[[@as string]], 'sessions') --[[@as string]]
 
----@type string|nil
-local current_session_name
+---@type string
+local setting_name = 'current_session_name'
+
+--- Check if the session support is enabled
+--- @return boolean # true if enabled, false otherwise
+local function enabled()
+    return vim.fn.argc() == 0
+end
 
 --- Get the current session name
 ---@return string
@@ -94,51 +100,50 @@ function M.restore_session(name)
     end
 end
 
-utils.on_event('VimLeavePre', function()
-    M.save_session(get_session_name())
-end)
--- TODO: do not save session if was launched with args
-utils.on_event('User', function()
-    if vim.fn.argc() == 0 then
-        current_session_name = get_session_name()
-        M.restore_session(current_session_name)
-    end
-end, 'LazyDone')
+local function swap_sessions(old_name, new_name)
+    if enabled() then
+        if old_name ~= new_name then
+            if old_name then
+                M.save_session(old_name)
+            end
 
-utils.on_event({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, function()
-    local new_session_name = get_session_name()
-    if current_session_name ~= new_session_name then
-        if current_session_name then
-            M.save_session(current_session_name)
+            if new_name then
+                M.restore_session(new_name)
+                settings.set(setting_name, new_name, { scope = 'instance' })
+            end
         end
-
-        M.restore_session(new_session_name)
-
-        current_session_name = new_session_name
     end
+end
+
+utils.on_event('VimLeavePre', function()
+    if enabled() then
+        M.save_session(get_session_name())
+    end
+end)
+
+utils.on_user_event('LazyDone', function()
+    swap_sessions(nil, get_session_name())
+end)
+
+utils.on_focus_gained(function()
+    swap_sessions(settings.get(setting_name, { scope = 'instance' }), get_session_name())
 end)
 
 vim.api.nvim_create_user_command('SessionSave', function()
-    if current_session_name then
-        M.save_session(current_session_name)
-    end
+    swap_sessions(get_session_name(), nil)
 end, {
     desc = 'Save session',
 })
 
 vim.api.nvim_create_user_command('SessionRestore', function()
-    if current_session_name then
-        M.restore_session(current_session_name)
-    end
+    swap_sessions(nil, get_session_name())
 end, {
     desc = 'Restore session',
 })
 
 -- save session on a timer
 vim.defer_fn(function()
-    if current_session_name then
-        M.save_session(current_session_name)
-    end
+    swap_sessions(get_session_name(), nil)
 end, 60000)
 
 return M

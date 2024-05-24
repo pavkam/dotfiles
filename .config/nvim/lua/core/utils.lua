@@ -154,6 +154,13 @@ function M.on_user_event(events, callback)
     end, events)
 end
 
+--- Creates an auto command that triggers on focus gained
+---@param callback function # the callback to call when the event is triggered
+function M.on_focus_gained(callback)
+    assert(type(callback) == 'function')
+    M.on_event({ 'FocusGained', 'TermClose', 'TermLeave' }, callback)
+end
+
 --- Creates an auto command that triggers on global status update event
 ---@param callback function # the callback to call when the event is triggered
 ---@return number # the group id of the created group

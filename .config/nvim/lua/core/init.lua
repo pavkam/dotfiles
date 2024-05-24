@@ -13,7 +13,7 @@ vim.cmd.cnoreabbrev('Bd', 'bd')
 vim.cmd.cnoreabbrev('bD', 'bd')
 
 -- check if the file has been changed outside of neovim
-utils.on_event({ 'FocusGained', 'TermClose', 'TermLeave' }, function()
+utils.on_focus_gained(function()
     vim.cmd.checktime()
 end)
 

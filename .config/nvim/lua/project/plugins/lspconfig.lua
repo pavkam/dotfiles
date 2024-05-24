@@ -23,6 +23,7 @@ return {
             },
         },
         opts = {
+            ---@type vim.diagnostic.Opts
             diagnostics = {
                 underline = true,
                 update_in_insert = true,
@@ -36,9 +37,9 @@ return {
                     focused = false,
                     style = 'minimal',
                     border = 'rounded',
-                    source = 'always',
+                    source = true,
                     header = '',
-                    prefix = '',
+                    prefix = icons.Diagnostics.Prefix .. ' ',
                 },
                 signs = {
                     text = {
@@ -46,6 +47,12 @@ return {
                         [vim.diagnostic.severity.WARN] = icons.Diagnostics.Warn,
                         [vim.diagnostic.severity.HINT] = icons.Diagnostics.Hint,
                         [vim.diagnostic.severity.INFO] = icons.Diagnostics.Info,
+                    },
+                    linehl = {
+                        [vim.diagnostic.severity.ERROR] = 'DiagnosticSignError',
+                        [vim.diagnostic.severity.WARN] = 'DiagnosticSignWarn',
+                        [vim.diagnostic.severity.HINT] = 'DiagnosticSignHint',
+                        [vim.diagnostic.severity.INFO] = 'DiagnosticSignInfo',
                     },
                 },
             },
@@ -143,8 +150,22 @@ return {
                             workspace = {
                                 checkThirdParty = false,
                             },
+                            codeLens = {
+                                enable = true,
+                            },
                             completion = {
                                 callSnippet = 'Replace',
+                            },
+                            doc = {
+                                privateName = { '^_' },
+                            },
+                            hint = {
+                                enable = true,
+                                setType = false,
+                                paramType = true,
+                                paramName = 'Disable',
+                                semicolon = 'Disable',
+                                arrayIndex = 'Disable',
                             },
                         },
                     },
@@ -173,6 +194,9 @@ return {
                                 includeInlayFunctionLikeReturnTypeHints = true,
                                 includeInlayEnumMemberValueHints = true,
                             },
+                        },
+                        completions = {
+                            completeFunctionCalls = true,
                         },
                     },
                 },
@@ -251,31 +275,6 @@ return {
 
             -- keymaps
             lsp.on_attach(keymaps.attach)
-
-            -- TODO: diagnostic icons are broken
-            -- diagnostics
-            local signs = {
-                { name = 'DiagnosticSignError', text = icons.Diagnostics.LSP.Error .. ' ', texthl = 'DiagnosticSignError' },
-                { name = 'DiagnosticSignWarn', text = icons.Diagnostics.LSP.Warn .. ' ', texthl = 'DiagnosticSignWarn' },
-                { name = 'DiagnosticSignHint', text = icons.Diagnostics.LSP.Hint .. ' ', texthl = 'DiagnosticSignHint' },
-                { name = 'DiagnosticSignInfo', text = icons.Diagnostics.LSP.Info .. ' ', texthl = 'DiagnosticSignInfo' },
-            }
-
-            for _, sign in ipairs(signs) do
-                vim.fn.sign_define(sign.name, sign)
-            end
-
-            if type(opts.diagnostics.virtual_text) == 'table' and opts.diagnostics.virtual_text.prefix == 'icons' then
-                opts.diagnostics.virtual_text.prefix = function(diagnostic)
-                    for d, icon in pairs(icons.Diagnostics.LSP) do
-                        if diagnostic.severity == vim.diagnostic.severity[d:upper()] then
-                            return icon
-                        else
-                            return icons.Diagnostics.Prefix
-                        end
-                    end
-                end
-            end
 
             vim.diagnostic.config(vim.deepcopy(opts.diagnostics))
 

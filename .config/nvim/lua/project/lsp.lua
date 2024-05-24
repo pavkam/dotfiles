@@ -164,7 +164,9 @@ function M.on_capability_event(events, capability, buffer, callback, run_on_regi
                 vim.api.nvim_del_augroup_by_name(auto_group_name)
                 return
             end
-            callback(buffer)
+            if vim.api.nvim_buf_is_valid(buffer) and vim.bo[buffer].buftype == '' then
+                callback(buffer)
+            end
         end,
         group = auto_group_name,
         buffer = buffer,
