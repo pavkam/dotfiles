@@ -43,12 +43,12 @@ return {
                 },
                 signs = {
                     text = {
-                        [vim.diagnostic.severity.ERROR] = icons.Diagnostics.Error,
-                        [vim.diagnostic.severity.WARN] = icons.Diagnostics.Warn,
-                        [vim.diagnostic.severity.HINT] = icons.Diagnostics.Hint,
-                        [vim.diagnostic.severity.INFO] = icons.Diagnostics.Info,
+                        [vim.diagnostic.severity.ERROR] = icons.Diagnostics.LSP.Error,
+                        [vim.diagnostic.severity.WARN] = icons.Diagnostics.LSP.Warn,
+                        [vim.diagnostic.severity.HINT] = icons.Diagnostics.LSP.Hint,
+                        [vim.diagnostic.severity.INFO] = icons.Diagnostics.LSP.Info,
                     },
-                    linehl = {
+                    numhl = {
                         [vim.diagnostic.severity.ERROR] = 'DiagnosticSignError',
                         [vim.diagnostic.severity.WARN] = 'DiagnosticSignWarn',
                         [vim.diagnostic.severity.HINT] = 'DiagnosticSignHint',
@@ -276,7 +276,7 @@ return {
             -- keymaps
             lsp.on_attach(keymaps.attach)
 
-            vim.diagnostic.config(vim.deepcopy(opts.diagnostics))
+            vim.diagnostic.config(opts.diagnostics)
 
             -- setup register capability
             local register_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.client_registerCapability]

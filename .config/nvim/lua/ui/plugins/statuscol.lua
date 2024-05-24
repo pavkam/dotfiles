@@ -8,11 +8,19 @@ return {
             segments = {
                 {
                     sign = {
-                        name = { 'Diagnostic', 'mark_', 'Dap', 'neotest' },
+                        namespace = { 'diagnostic' },
                     },
                     colwidth = 1,
                     click = 'v:lua.ScSa',
                 },
+                {
+                    sign = {
+                        name = { 'mark_', 'Dap', 'neotest' },
+                    },
+                    colwidth = 1,
+                    click = 'v:lua.ScSa',
+                },
+
                 {
                     text = { builtin.lnumfunc },
                     click = 'v:lua.ScLa',
