@@ -1,7 +1,6 @@
 return {
     {
         'hrsh7th/nvim-cmp',
-        version = false,
         event = 'InsertEnter',
         dependencies = {
             'hrsh7th/cmp-nvim-lsp',
@@ -56,7 +55,6 @@ return {
                 },
                 duplicates = {
                     nvim_lsp = 1,
-                    -- luasnip = 1,
                     buffer = 1,
                     path = 1,
                 },
