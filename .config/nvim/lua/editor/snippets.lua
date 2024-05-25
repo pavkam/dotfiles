@@ -5,6 +5,7 @@ local project = require 'project'
 local comments = require 'editor.comments'
 
 ---@class editor.snippets
+---@field name string
 local M = {}
 
 local built_in = {
@@ -109,11 +110,14 @@ local built_in = {
     end,
 }
 
-local name = 'snppets'
+M.name = 'snippets'
 
 ---@type table<string, table<string, string>>
 M.snippets = {
     lua = {
+        ['hello'] = 'world',
+    },
+    typescript = {
         ['hello'] = 'world',
     },
 }
@@ -149,13 +153,12 @@ end
 --- Get the name of the source
 ---@return string # The name of the source
 function M:get_debug_name()
-    return name
+    return M.name
 end
 
 --- Get the completion items
 ---@param callback fun(items: lsp.CompletionItem[]) # The callback to execute
 function M:complete(_, callback)
-    dbg 'Completing snippets'
     local snippets = M.snippets[vim.bo.filetype]
     if snippets == nil then
         return
@@ -204,4 +207,4 @@ function M:execute(completion_item, callback)
     callback(completion_item)
 end
 
-cmp.register_source(name, M --[[@as cmp.Source]])
+cmp.register_source(M.name, M --[[@as cmp.Source]])
