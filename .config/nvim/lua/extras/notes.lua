@@ -83,6 +83,7 @@ local function append(title, lines, global)
     vim.api.nvim_put(lines, 'l', true, true)
 end
 
+-- TODO: migrate to new API
 vim.api.nvim_create_user_command('Note', function(args)
     if args.args == 'list' then
         find(args.bang)

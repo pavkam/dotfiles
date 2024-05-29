@@ -1,4 +1,6 @@
 local utils = require 'core.utils'
+local markdown = require 'extras.markdown'
+
 local M = {}
 
 ---@class extras.health.ShowOpts
@@ -73,7 +75,7 @@ local function show_for_buffer(buffer)
         end
 
         if type(value) ~= 'table' then
-            table.insert(content, string.format(' - **%s** = `%s`', name, utils.escape_markdown(value)))
+            table.insert(content, string.format(' - **%s** = `%s`', name, markdown.escape(value)))
         else
             local prefix = string.rep('#', depth)
             table.insert(content, prefix .. ' ' .. name)

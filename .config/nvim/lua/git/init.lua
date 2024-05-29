@@ -1,5 +1,6 @@
 local shell = require 'core.shell'
 local icons = require 'ui.icons'
+local utils = require 'core.utils'
 
 ---@class git
 local M = {}
@@ -18,6 +19,27 @@ function M.check_tracked(file_name, callback)
     shell.async_cmd('git', { 'ls-files', '--error-unmatch', file_name }, nil, function(_, code)
         callback(code == 0)
     end, { ignore_codes = { 0, 1, 128 }, cwd = vim.fn.fnamemodify(file_name, ':h') })
+end
+
+--- Returns the files that are under git
+---@param dir string # the path under which to check the git status
+---@param callback fun(paths: string[]) # the callback to call for each file
+function M.tracked(dir, callback)
+    assert(type(dir) == 'string' and dir ~= '')
+
+    shell.async_cmd('git', { 'ls-files' }, nil, function(res, code)
+        if code == 0 then
+            local paths = {}
+            for _, path in ipairs(res) do
+                path = utils.join_paths(dir, path) --[[@as string]]
+                if vim.fn.filereadable(path) == 1 then
+                    table.insert(paths, path)
+                end
+            end
+
+            callback(paths)
+        end
+    end, { ignore_codes = { 0, 1, 128 }, cwd = dir })
 end
 
 --- Gets the current git branch for a file

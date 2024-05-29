@@ -207,6 +207,36 @@ function M.trigger_user_event(event, data)
     vim.api.nvim_exec_autocmds('User', { pattern = event, modeline = false, data = data })
 end
 
+--- Registers a command that takes a single argument (function)
+---@param name string # the name of the command
+---@param desc string # the description of the command
+---@param funcs table<string, function> # the list of functions to register
+function M.register_function(name, desc, funcs)
+    vim.api.nvim_create_user_command(name, function(args)
+        local func = funcs[args.args]
+        if func then
+            func(args)
+        else
+            M.error(string.format('Unknown function `%s`', args.args))
+        end
+    end, {
+        desc = desc,
+        complete = function(arg_lead)
+            local completions = vim.tbl_keys(funcs)
+            local matches = {}
+
+            for _, value in ipairs(completions) do
+                if value:sub(1, #arg_lead) == arg_lead then
+                    table.insert(matches, value)
+                end
+            end
+
+            return matches
+        end,
+        nargs = 1,
+    })
+end
+
 --- Trigger a status update event
 function M.trigger_status_update_event()
     M.trigger_user_event 'StatusUpdate'
@@ -500,6 +530,42 @@ function M.read_text_file(path)
     return content
 end
 
+---@type table<string, string>
+local file_to_file_type = {}
+
+--- Gets the file type of a file
+---@param path string # the path to the file to get the type for
+---@return string|nil # the file type or nil if the file type could not be determined
+function M.file_type(path)
+    assert(type(path) == 'string' and path ~= '')
+
+    ---@type string|nil
+    local file_type = file_to_file_type[path]
+    if file_type then
+        return file_type
+    end
+
+    file_type = vim.filetype.match { filename = path }
+    if not file_type then
+        for _, buf in ipairs(vim.fn.getbufinfo()) do
+            if vim.fn.fnamemodify(buf.name, ':p') == path then
+                return vim.filetype.match { buf = buf.bufnr }
+            end
+        end
+
+        local bufn = vim.fn.bufadd(path)
+        vim.fn.bufload(bufn)
+
+        file_type = vim.filetype.match { buf = bufn }
+
+        vim.api.nvim_buf_delete(bufn, { force = true })
+    end
+
+    file_to_file_type[path] = file_type
+
+    return file_type
+end
+
 --- Get the highlight group for a name
 ---@param name string # the name of the highlight group
 ---@return table<string, string>|nil # the foreground color of the highlight group
@@ -635,37 +701,6 @@ function M.feed_keys(keys)
     assert(type(keys) == 'string')
 
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'n', false)
-end
-
----@type table<string, string>
-local markdown_substitutions = {
-    { '%*', '\\*' },
-    { '#', '\\#' },
-    { '/', '\\/' },
-    { '%(', '\\(' },
-    { '%)', '\\)' },
-    { '%[', '\\[' },
-    { '%]', '\\]' },
-    { '<', '&lt;' },
-    { '>', '&gt;' },
-    { '_', '\\_' },
-    { '`', '\\`' },
-}
-
---- Escapes a value for markdown
----@param str any # the value to escape
----@return string # the escaped value
-function M.escape_markdown(str)
-    str = stringify(str)
-    if not str then
-        return '*nil*'
-    end
-
-    for _, replacement in ipairs(markdown_substitutions) do
-        str = str:gsub(replacement[1], replacement[2])
-    end
-
-    return str
 end
 
 ---@type string

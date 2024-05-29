@@ -129,16 +129,25 @@ utils.on_focus_gained(function()
     swap_sessions(settings.get(setting_name, { scope = 'instance' }), get_session_name())
 end)
 
-vim.api.nvim_create_user_command('SessionSave', function()
-    swap_sessions(get_session_name(), nil)
-end, {
-    desc = 'Save session',
-})
+utils.register_function('Session', 'Manage session', {
+    restore = function()
+        swap_sessions(nil, get_session_name())
+    end,
+    save = function()
+        swap_sessions(get_session_name(), nil)
+    end,
+    delete = function()
+        local name = get_session_name()
+        local session_file, shada_file, settings_file = encode_session_name(name)
 
-vim.api.nvim_create_user_command('SessionRestore', function()
-    swap_sessions(nil, get_session_name())
-end, {
-    desc = 'Restore session',
+        local deleted = vim.fn.delete(session_file) - vim.fn.delete(shada_file) - vim.fn.delete(settings_file)
+
+        if deleted == 0 then
+            utils.warn(string.format('%s Deleted session `%s`', icons.UI.SessionSave, name))
+        else
+            utils.error(string.format('%s Error(s) occurred while deleting session `%s`', icons.UI.SessionSave, name))
+        end
+    end,
 })
 
 -- save session on a timer

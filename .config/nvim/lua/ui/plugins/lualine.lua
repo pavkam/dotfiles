@@ -58,7 +58,7 @@ return {
         local function sexify(prefix, list, len_max, collapse_max)
             collapse_max = collapse_max or 150
 
-            local col = vim.api.nvim_get_option 'columns'
+            local col = vim.api.nvim_get_option_value('columns', {})
             if col < collapse_max then
                 return prefix
             end
@@ -192,6 +192,16 @@ return {
                         separator = false,
                     },
                     {
+                        function()
+                            local spinner, msg = progress.status 'workspace'
+                            return spinner and sexify(spinner, msg)
+                        end,
+                        cond = function()
+                            return progress.status 'workspace' ~= nil
+                        end,
+                        color = color 'ActiveLSPsStatus',
+                    },
+                    {
                         settings.transient(function(buffer)
                             local prefix = lsp.progress() or icons.UI.LSP
                             return sexify(prefix, lsp.active_names_for_buffer(buffer))
@@ -204,7 +214,7 @@ return {
                             vim.cmd 'LspInfo'
                         end,
                     },
-                    package.loaded["copilot.nvim"] and {
+                    package.loaded['copilot.nvim'] and {
                         settings.transient(function()
                             return sexify(icons.Symbols.Copilot, require('copilot.api').status.data.message or '')
                         end),

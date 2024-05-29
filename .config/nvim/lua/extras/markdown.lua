@@ -1,16 +1,34 @@
+local utils = require 'core.utils'
+
 ---@class extra.markdown
 local M = {}
 
-local markdown_special_chars = { '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|' }
+---@type table<string, string>
+local markdown_substitutions = {
+    { '%*', '\\*' },
+    { '#', '\\#' },
+    { '/', '\\/' },
+    { '%(', '\\(' },
+    { '%)', '\\)' },
+    { '%[', '\\[' },
+    { '%]', '\\]' },
+    { '<', '&lt;' },
+    { '>', '&gt;' },
+    { '_', '\\_' },
+    { '`', '\\`' },
+}
 
--- Escapes a string for Markdown
----@param str string # The string to escape
----@return string # The escaped string
+--- Escapes a value for markdown
+---@param str any # the value to escape
+---@return string # the escaped value
 local function escape_markdown(str)
-    assert(type(str) == 'string')
+    str = type(str) == 'string' and str or vim.inspect(str)
+    if not str then
+        return '*nil*'
+    end
 
-    for _, char in ipairs(markdown_special_chars) do
-        str = str:gsub('%' .. char, '\\' .. char)
+    for _, replacement in ipairs(markdown_substitutions) do
+        str = str:gsub(replacement[1], replacement[2])
     end
 
     return str

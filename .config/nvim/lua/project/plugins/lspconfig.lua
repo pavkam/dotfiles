@@ -1,5 +1,4 @@
 local icons = require 'ui.icons'
-local settings = require 'core.settings'
 
 return {
     {
@@ -334,7 +333,7 @@ return {
             end
 
             -- get all the servers that are available through mason-LSP-config
-            local through_mason = utils.has_plugin('mason.nvim')
+            local through_mason = utils.has_plugin 'mason.nvim'
             local mlsp = through_mason and require 'mason-lspconfig' or nil
             local all_mslp_servers = through_mason and vim.tbl_keys(require('mason-lspconfig.mappings.server').lspconfig_to_package) or {}
 

@@ -141,11 +141,7 @@ utils.on_event('FileType', function(evt)
     if utils.is_special_buffer(evt.buf) then
         vim.bo[evt.buf].buflisted = false
         vim.opt_local.spell = false
-
-        -- TODO: figure out telescope spelling disable
-    end
-
-    if utils.is_transient_buffer(evt.buf) or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown' then
+    elseif utils.is_transient_buffer(evt.buf) or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown' then
         vim.opt_local.wrap = true
         vim.opt_local.spell = true
     end
