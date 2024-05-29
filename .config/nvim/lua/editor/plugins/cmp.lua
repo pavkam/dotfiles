@@ -7,6 +7,12 @@ return {
             'hrsh7th/cmp-buffer',
             'hrsh7th/cmp-path',
             {
+                'saadparwaiz1/cmp_luasnip',
+                dependencies = {
+                    'L3MON4D3/LuaSnip',
+                },
+            },
+            {
                 'onsails/lspkind.nvim',
             },
         },
@@ -17,9 +23,9 @@ return {
             local cmp = require 'cmp'
             local icons = require 'ui.icons'
             local defaults = require 'cmp.config.default'()
-
             local copilot = utils.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
             local settings = require 'core.settings'
+            local luasnip = require 'luasnip'
 
             local border_opts = {
                 border = 'rounded',
@@ -36,6 +42,23 @@ return {
                 return height
             end)
 
+            ---@param opts? {select: boolean, behavior: cmp.ConfirmBehavior}
+            local function confirm(opts)
+                opts = vim.tbl_extend('force', {
+                    select = true,
+                    behavior = cmp.ConfirmBehavior.Insert,
+                }, opts or {})
+
+                return function(fallback)
+                    if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
+                        utils.create_undo_point()
+                        if cmp.confirm(opts) then
+                            return
+                        end
+                    end
+                    return fallback()
+                end
+            end
             return {
                 enabled = function()
                     local dap_prompt = vim.tbl_contains({ 'dap-repl', 'dapui_watches', 'dapui_hover' }, vim.api.nvim_get_option_value('filetype', { buf = 0 }))
@@ -57,6 +80,7 @@ return {
                 },
                 duplicates = {
                     nvim_lsp = 1,
+                    luasnip = 1,
                     buffer = 1,
                     path = 1,
                 },
@@ -66,7 +90,7 @@ return {
                 },
                 snippet = {
                     expand = function(args)
-                        vim.snippet.expand(args.body)
+                        luasnip.lsp_expand(args.body)
                     end,
                 },
                 view = {
@@ -111,8 +135,8 @@ return {
                     ['<C-f>'] = cmp.mapping.scroll_docs(4),
                     ['<M-CR>'] = cmp.mapping.complete(),
                     ['<C-e>'] = cmp.mapping.abort(),
-                    ['<CR>'] = cmp.mapping.confirm { select = true },
-                    ['<S-CR>'] = cmp.mapping.confirm {
+                    ['<CR>'] = confirm { select = true },
+                    ['<S-CR>'] = confirm {
                         behavior = cmp.ConfirmBehavior.Replace,
                         select = true,
                     },
@@ -124,12 +148,10 @@ return {
                             if not entry then
                                 cmp.select_next_item { behavior = cmp.SelectBehavior.Select }
                             else
-                                cmp.confirm()
+                                confirm()
                             end
-                        elseif vim.snippet.active { direction = 1 } then
-                            vim.schedule(function()
-                                vim.snippet.jump(1)
-                            end)
+                        elseif luasnip.expand_or_jumpable() then
+                            luasnip.expand_or_jump()
                         else
                             fallback()
                         end
@@ -139,17 +161,16 @@ return {
                             copilot.next()
                         elseif cmp.visible() then
                             cmp.select_prev_item()
-                        elseif vim.snippet.active { direction = -1 } then
-                            vim.schedule(function()
-                                vim.snippet.jump(-1)
-                            end)
+                        elseif luasnip.jumpable(-1) then
+                            luasnip.jump(-1)
                         else
                             fallback()
                         end
                     end, { 'i', 's' }),
                 },
                 sources = cmp.config.sources {
-                    --   { name = 'snippets' },
+                    { name = 'snippets' },
+                    { name = 'luasnip' },
                     { name = 'nvim_lsp' },
                     { name = 'buffer' },
                     { name = 'path' },
@@ -164,11 +185,11 @@ return {
                         ellipsis_char = icons.TUI.Ellipsis,
                     },
                 },
-                -- experimental = {
-                --     ghost_text = {
-                --         hl_group = 'CmpGhostText',
-                --     },
-                -- },
+                experimental = {
+                    ghost_text = {
+                        hl_group = 'CmpGhostText',
+                    },
+                },
                 sorting = defaults.sorting,
             }
         end,
@@ -186,6 +207,25 @@ return {
                     },
                 })
             end
+        end,
+    },
+    {
+        'L3MON4D3/LuaSnip',
+        build = vim.fn.has 'win32' == 0 and "echo 'NOTE: jsregexp is optional, so not a big deal if it fails to build\n'; make install_jsregexp" or nil,
+        dependencies = {
+            'rafamadriz/friendly-snippets',
+        },
+        opts = {
+            history = false,
+            update_events = 'TextChanged,TextChangedI',
+            delete_check_events = 'InsertLeave',
+            region_check_events = 'CursorMoved',
+        },
+        config = function(_, opts)
+            require('luasnip').config.setup(opts)
+            vim.tbl_map(function(type)
+                require('luasnip.loaders.from_' .. type).lazy_load()
+            end, { 'vscode', 'snipmate', 'lua' })
         end,
     },
 }

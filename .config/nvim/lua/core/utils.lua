@@ -698,4 +698,13 @@ function M.get_timezone_offset(timestamp)
     return 100 * h + 60 * m
 end
 
+local undo_command = vim.api.nvim_replace_termcodes('<c-G>u', true, true, true)
+
+--- Creates an undo point if in insert mode
+function M.create_undo_point()
+    assert(vim.api.nvim_get_mode().mode == 'i')
+
+    vim.api.nvim_feedkeys(undo_command, 'n', false)
+end
+
 return M
