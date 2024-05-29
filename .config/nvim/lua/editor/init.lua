@@ -4,6 +4,7 @@ local settings = require 'core.settings'
 local syntax = require 'editor.syntax'
 
 require 'editor.comments'
+require 'editor.snippets'
 
 -- Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })

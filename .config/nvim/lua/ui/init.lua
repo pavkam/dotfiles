@@ -132,7 +132,7 @@ end)
 utils.on_event({ 'BufWinEnter' }, function(evt)
     local win = vim.api.nvim_get_current_win()
     if utils.is_special_buffer(evt.buf) then
-        vim.wo[win].winfixbuf = true
+        --   vim.wo[win].winfixbuf = true
         vim.wo[win].spell = false
     end
 end)

@@ -13,12 +13,13 @@ return {
         opts = function()
             vim.api.nvim_set_hl(0, 'CmpGhostText', { link = 'Comment', default = true })
 
+            local utils = require 'core.utils'
             local cmp = require 'cmp'
             local icons = require 'ui.icons'
             local defaults = require 'cmp.config.default'()
-            local copilot = require 'copilot.suggestion'
+
+            local copilot = utils.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
             local settings = require 'core.settings'
-            require 'editor.snippets'
 
             local border_opts = {
                 border = 'rounded',
@@ -63,11 +64,6 @@ return {
                     behavior = cmp.ConfirmBehavior.Replace,
                     select = false,
                 },
-                snippet = {
-                    expand = function(args)
-                        vim.snippet.expand(args.body)
-                    end,
-                },
                 view = {
                     entries = 'custom',
                 },
@@ -89,7 +85,7 @@ return {
                         end
                     end),
                     ['<C-n>'] = cmp.mapping(function(fallback)
-                        if copilot.is_visible() then
+                        if copilot and copilot.is_visible() then
                             copilot.next()
                         elseif cmp.visible() then
                             cmp.select_next_item { behavior = cmp.SelectBehavior.Insert }
@@ -98,7 +94,7 @@ return {
                         end
                     end),
                     ['<C-p>'] = cmp.mapping(function(fallback)
-                        if copilot.is_visible() then
+                        if copilot and copilot.is_visible() then
                             copilot.prev()
                         elseif cmp.visible() then
                             cmp.select_prev_item { behavior = cmp.SelectBehavior.Insert }
@@ -116,7 +112,7 @@ return {
                         select = true,
                     },
                     ['<Tab>'] = cmp.mapping(function(fallback)
-                        if copilot.is_visible() then
+                        if copilot and copilot.is_visible() then
                             copilot.accept()
                         elseif cmp.visible() then
                             local entry = cmp.get_selected_entry()
@@ -134,7 +130,7 @@ return {
                         end
                     end, { 'i', 's' }),
                     ['<S-Tab>'] = cmp.mapping(function(fallback)
-                        if copilot.is_visible() then
+                        if copilot and copilot.is_visible() then
                             copilot.next()
                         elseif cmp.visible() then
                             cmp.select_prev_item()
@@ -150,7 +146,6 @@ return {
                 sources = cmp.config.sources {
                     { name = 'snippets' },
                     { name = 'nvim_lsp' },
-                    { name = 'luasnip' },
                     { name = 'buffer' },
                     { name = 'path' },
                 },

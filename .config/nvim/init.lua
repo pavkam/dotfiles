@@ -27,16 +27,16 @@ _G.dbg = function(...)
 end
 
 local modules = {
-    --   'core',
+    'core',
     'ui',
-      'editor',
-    -- 'testing',
-    -- 'git',
+    'editor',
+    'testing',
+    'git',
     'project',
-    -- 'debugging',
-    --    'formatting',
-    -- 'linting',
-    -- 'extras',
+    'debugging',
+    'formatting',
+    'linting',
+    'extras',
 }
 
 require 'core'
