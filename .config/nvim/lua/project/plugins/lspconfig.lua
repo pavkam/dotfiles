@@ -266,14 +266,14 @@ return {
             },
         },
         config = function(_, opts)
-            -- set the border for the ui
+            -- set the border for the UI
             require('lspconfig.ui.windows').default_options.border = 'single'
 
             local utils = require 'core.utils'
             local lsp = require 'project.lsp'
             local keymaps = require 'project.keymaps'
 
-            -- keymaps
+            -- key-maps
             lsp.on_attach(keymaps.attach)
 
             vim.diagnostic.config(opts.diagnostics)
@@ -306,7 +306,7 @@ return {
                 diagnostics_capability_handler(_, result, ctx, config)
             end
 
-            -- register cmp capabilities
+            -- register nvim-cmp capabilities
             local cmp_nvim_lsp = require 'cmp_nvim_lsp'
             local capabilities = utils.tbl_merge(vim.lsp.protocol.make_client_capabilities(), cmp_nvim_lsp.default_capabilities(), opts.capabilities)
 
@@ -333,15 +333,16 @@ return {
                 require('lspconfig')[server].setup(server_opts)
             end
 
-            -- get all the servers that are available through mason-lspconfig
-            local mlsp = require 'mason-lspconfig'
-            local all_mslp_servers = vim.tbl_keys(require('mason-lspconfig.mappings.server').lspconfig_to_package)
+            -- get all the servers that are available through mason-LSP-config
+            local through_mason = utils.has_plugin('mason.nvim')
+            local mlsp = through_mason and require 'mason-lspconfig' or nil
+            local all_mslp_servers = through_mason and vim.tbl_keys(require('mason-lspconfig.mappings.server').lspconfig_to_package) or {}
 
             local ensure_installed = {}
             for server, server_opts in pairs(servers) do
                 if server_opts then
                     server_opts = server_opts == true and {} or server_opts
-                    -- run manual setup if mason=false or if this is a server that cannot be installed with mason-lspconfig
+                    -- run manual setup if mason=false or if this is a server that cannot be installed with mason-LSP-config
                     if server_opts.mason == false or not vim.tbl_contains(all_mslp_servers, server) then
                         setup(server)
                     else
@@ -350,9 +351,11 @@ return {
                 end
             end
 
-            mlsp.setup { ensure_installed = ensure_installed, handlers = { setup } }
+            if mlsp then
+                mlsp.setup { ensure_installed = ensure_installed, handlers = { setup } }
+            end
 
-            -- re-trigger FileType autocmds to force LSP to start
+            -- re-trigger FileType auto-cmds to force LSP to start
             vim.api.nvim_exec_autocmds('FileType', {})
         end,
     },

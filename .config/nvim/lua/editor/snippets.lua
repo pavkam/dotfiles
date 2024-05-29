@@ -188,7 +188,7 @@ end
 ---@param completion_item lsp.CompletionItem # The completion item to resolve
 ---@param callback fun(ci: lsp.CompletionItem) # The callback to execute
 function M:resolve(completion_item, callback)
-    local file_type = vim.api.nvim_get_option_value('filetype', { buffer = 0 })
+    local file_type = vim.api.nvim_get_option_value('filetype', { buf = 0 })
 
     completion_item.documentation = {
         kind = cmp.lsp.MarkupKind.Markdown,

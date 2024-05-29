@@ -27,16 +27,16 @@ _G.dbg = function(...)
 end
 
 local modules = {
-    'core',
+    --   'core',
     'ui',
-    'editor',
-    'testing',
-    'git',
+      'editor',
+    -- 'testing',
+    -- 'git',
     'project',
-    'debugging',
-    'formatting',
-    'linting',
-    'extras',
+    -- 'debugging',
+    --    'formatting',
+    -- 'linting',
+    -- 'extras',
 }
 
 require 'core'
@@ -57,10 +57,20 @@ end
 ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
+local config_path = vim.fn.stdpath 'config'
+local plugin_dirs = vim.tbl_filter(
+    function(dir)
+        return vim.fn.isdirectory(config_path .. '/lua/' .. dir) == 1
+    end,
+    vim.tbl_map(function(module)
+        return module .. '/plugins'
+    end, modules)
+)
+
 require('lazy').setup {
-    spec = vim.tbl_map(function(module)
-        return { import = module .. '/plugins' }
-    end, modules),
+    spec = vim.tbl_map(function(dir)
+        return { import = dir }
+    end, plugin_dirs),
     defaults = {
         lazy = true,
         version = false,

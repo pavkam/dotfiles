@@ -128,30 +128,15 @@ utils.on_event({ 'BufWinEnter' }, function(evt)
     end
 end)
 
--- pin special buffers into their windows and prevent accidental
--- replacement of them
-local just_removed = {}
-
-utils.on_event('BufWinLeave', function(evt)
-    local upd = utils.is_special_buffer(evt.buf) and not vim.bo[evt.buf].filetype == 'neo-tree' and evt.buf or nil
-
-    for _, win in ipairs(vim.fn.win_findbuf(evt.buf)) do
-        just_removed[win] = upd
-    end
-end)
-
-utils.on_event({ 'BufWinEnter', 'BufEnter' }, function(evt)
+-- configure special buffers
+utils.on_event({ 'BufWinEnter' }, function(evt)
     local win = vim.api.nvim_get_current_win()
-    local new_buffer = evt.buf
-    local old_buffer = just_removed[win]
-
-    if old_buffer and vim.api.nvim_buf_is_valid(old_buffer) and not utils.is_special_buffer(new_buffer) then
-        just_removed[win] = nil
-        vim.api.nvim_set_current_buf(old_buffer)
+    if utils.is_special_buffer(evt.buf) then
+        vim.wo[win].winfixbuf = true
+        vim.wo[win].spell = false
     end
 end)
 
--- configure some special buffers
 utils.on_event('FileType', function(evt)
     if utils.is_special_buffer(evt.buf) then
         vim.bo[evt.buf].buflisted = false
@@ -163,7 +148,7 @@ utils.on_event('FileType', function(evt)
     end
 end)
 
--- TODO : Error detected while processing BufWritePost Autocommands for "<buffer=171>": (for non LSP files)
+-- TODO : Error detected while processing BufWritePost auto-commands for "<buffer=171>": (for non LSP files)
 -- file detection commands
 utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     local current_file = vim.api.nvim_buf_get_name(evt.buf)
@@ -188,7 +173,7 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
         settings.set('custom_events_triggered', true, { buffer = evt.buf, scope = 'instance' })
     end
 end)
--- TODO: the qa command does not exit for whatebver reason until I click one more enter
+
 -- resize splits if window got resized
 utils.on_event('VimResized', function()
     utils.refresh_ui()

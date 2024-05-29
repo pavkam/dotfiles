@@ -249,6 +249,16 @@ end, {
     '/private/var/*',
 })
 
+-- Auto create dir when saving a file, in case some intermediate directory does not exist
+utils.on_event('BufWritePre', function(evt)
+    if evt.match:match '^%w%w+://' then
+        return
+    end
+
+    local file = vim.loop.fs_realpath(evt.match) or evt.match
+    vim.fn.mkdir(vim.fn.fnamemodify(file, ':p:h'), 'p')
+end)
+
 -- forget files that have been deleted
 utils.on_event({ 'BufDelete', 'BufEnter' }, function(evt)
     if utils.is_special_buffer(evt.buf) then
@@ -282,7 +292,17 @@ settings.register_toggle('spelling', function(enabled)
     ---@diagnostic disable-next-line: undefined-field
 end, { name = icons.UI.SpellCheck .. ' Spell checking', default = vim.opt.spell:get(), scope = 'global' })
 
--- additional filetypes
+-- detect shebangs!
+utils.on_event('BufReadPost', function(evt)
+    if vim.bo[evt.buf].filetype == '' and not utils.is_special_buffer(evt.buf) then
+        local first_line = vim.api.nvim_buf_get_lines(evt.buf, 0, 1, false)[1]
+        if first_line and string.match(first_line, '^#!.*/bin/bash') or string.match(first_line, '^#!.*/bin/env%s+bash') then
+            vim.bo[evt.buf].filetype = 'bash'
+        end
+    end
+end)
+
+-- additional file types
 vim.filetype.add {
     extension = {
         snap = 'javascript',

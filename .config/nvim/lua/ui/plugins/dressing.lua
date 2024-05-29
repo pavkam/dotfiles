@@ -2,6 +2,11 @@ local icons = require 'ui.icons'
 
 return {
     'stevearc/dressing.nvim',
+    dependencies = {
+        'MunifTanjim/nui.nvim',
+        'nvim-lua/plenary.nvim',
+        'nvim-telescope/telescope.nvim',
+    },
     opts = {
         input = { default_prompt = icons.TUI.PromptPrefix },
         select = { backend = { 'telescope', 'builtin' } },

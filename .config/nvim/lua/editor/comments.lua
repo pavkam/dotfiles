@@ -127,8 +127,9 @@ end
 ---@param file_type string # The filetype to get the commentstring for.
 ---@return string|nil # The commentstring for the given file type.
 function M.select_matching(window, file_type)
+    ---@type string[]
     local patterns = vim.tbl_map(function(item)
-        return string.format('%s%%s%s', item.prefix, item.suffix or '')
+        return string.format('%s %%s %s', item.prefix, item.suffix or '')
     end, M.resolve(window, file_type))
 
     -- add the original commentstring
@@ -143,7 +144,7 @@ function M.select_matching(window, file_type)
 
     local line = syntax.current_line(window)
     for _, pattern in ipairs(patterns) do
-        local left, right = pattern.pattern:match '^%s*(.-)%s*%%s%s*(.-)%s*$'
+        local left, right = pattern:match '^%s*(.-)%s*%%s%s*(.-)%s*$'
 
         if left and right then
             local l, m, r = line:match('^%s*' .. vim.pesc(left) .. '(%s*)(.-)(%s*)' .. vim.pesc(right) .. '%s*$')

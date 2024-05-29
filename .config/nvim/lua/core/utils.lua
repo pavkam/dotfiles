@@ -5,7 +5,7 @@ math.randomseed(os.time())
 
 ---Converts a value to a string
 ---@param value any # any value that will be converted to a string
----@return string|nil # the tringified version of the value
+---@return string|nil # the stringified version of the value
 local function stringify(value)
     if value == nil then
         return nil

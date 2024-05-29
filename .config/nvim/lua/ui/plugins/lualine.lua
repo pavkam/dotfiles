@@ -204,7 +204,7 @@ return {
                             vim.cmd 'LspInfo'
                         end,
                     },
-                    {
+                    package.loaded["copilot.nvim"] and {
                         settings.transient(function()
                             return sexify(icons.Symbols.Copilot, require('copilot.api').status.data.message or '')
                         end),
@@ -214,7 +214,7 @@ return {
                         color = settings.transient(function()
                             return color(copilot_colors[require('copilot.api').status.data.status] or copilot_colors['Normal'])
                         end),
-                    },
+                    } or nil,
                 },
                 lualine_y = {
                     {

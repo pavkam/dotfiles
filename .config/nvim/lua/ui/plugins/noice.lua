@@ -37,6 +37,7 @@ return {
                         { find = 'E776' },
                         { find = 'E348' },
                         { find = 'W325' },
+                        { find = 'E1513' },
                     },
                 },
                 view = 'mini',
@@ -45,8 +46,8 @@ return {
                 filter = {
                     event = 'msg_show',
                     any = {
-                        { find = '?%a+' },
-                        { find = '/%a+' },
+                        { find = '^?%a+' },
+                        { find = '^/%a+' },
                     },
                 },
                 opts = { skip = true },
