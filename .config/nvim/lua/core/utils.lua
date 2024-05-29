@@ -384,6 +384,17 @@ M.special_buffer_types = {
     'help',
 }
 
+M.transient_buffer_types = {
+    'nofile',
+    'terminal',
+}
+
+M.transient_file_types = {
+    'gitcommit',
+    'gitrebase',
+    'hgcommit',
+}
+
 --- Checks if a buffer is a special buffer
 ---@param buffer integer|nil # the buffer to check or the current buffer if 0 or nil
 ---@return boolean # true if the buffer is a special buffer, false otherwise
@@ -394,6 +405,22 @@ function M.is_special_buffer(buffer)
     local buftype = vim.api.nvim_get_option_value('buftype', { buf = buffer })
 
     return (vim.tbl_contains(M.special_buffer_types, buftype) or vim.tbl_contains(M.special_file_types, filetype))
+end
+
+--- Checks if a buffer is a transient buffer (a file which we should not deal with)
+---@param buffer integer|nil # the buffer to check or the current buffer if 0 or nil
+---@return boolean # true if the buffer is a transient buffer, false otherwise
+function M.is_transient_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local filetype = vim.api.nvim_get_option_value('filetype', { buf = buffer })
+    local buftype = vim.api.nvim_get_option_value('buftype', { buf = buffer })
+
+    if buftype == '' and filetype == '' then
+        return true
+    end
+
+    return (vim.tbl_contains(M.transient_buffer_types, buftype) or vim.tbl_contains(M.transient_file_types, filetype))
 end
 
 --- Joins two paths

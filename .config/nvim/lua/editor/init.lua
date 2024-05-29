@@ -215,11 +215,7 @@ if folds_in_session then
 
     utils.on_event('BufWinEnter', function(evt)
         if not settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
-            local filetype = vim.api.nvim_get_option_value('filetype', { buf = evt.buf })
-            local buftype = vim.api.nvim_get_option_value('buftype', { buf = evt.buf })
-            local ignore_filetypes = { 'gitcommit', 'gitrebase', 'svg', 'hgcommit' }
-
-            if buftype == '' and filetype and filetype ~= '' and not vim.tbl_contains(ignore_filetypes, filetype) then
+            if not utils.is_transient_buffer(evt.buf) then
                 settings.set('view_activated', true, { buffer = evt.buf, scope = 'instance' })
                 vim.cmd.loadview { mods = { emsg_silent = true } }
             end
@@ -227,7 +223,7 @@ if folds_in_session then
     end)
 end
 
--- disable swap/undo files for certain filetypes
+-- disable swap/undo files for certain file-types
 utils.on_event('BufWritePre', function(evt)
     vim.opt_local.undofile = false
     if evt.file == 'COMMIT_EDITMSG' or evt.file == 'MERGE_MSG' then
@@ -235,7 +231,7 @@ utils.on_event('BufWritePre', function(evt)
     end
 end, { '/tmp/*', '*.tmp', '*.bak', 'COMMIT_EDITMSG', 'MERGE_MSG' })
 
--- disable swap/undo/backup files in temp directories or shm
+-- disable swap/undo/backup files in temp directories or SHM
 utils.on_event({ 'BufNewFile', 'BufReadPre' }, function()
     vim.opt_local.undofile = false
     vim.opt_local.swapfile = false

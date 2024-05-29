@@ -2,6 +2,7 @@ local utils = require 'core.utils'
 local settings = require 'core.settings'
 local lsp = require 'project.lsp'
 local hover = require 'project.hover'
+local icons = require 'ui.icons'
 
 vim.keymap.set('n', 'K', hover)
 
@@ -283,5 +284,29 @@ end
 function M.get_eslint_config_path(target)
     return utils.first_found_file(M.roots(target), { '.eslintrc.json', '.eslintrc.js', 'eslint.config.js', 'eslint.config.json' })
 end
+
+settings.register_toggle('diagnostics_enabled', function(enabled, buffer)
+    if not enabled then
+        vim.diagnostic.enable(false, { bufnr = buffer })
+    else
+        vim.diagnostic.enable(true, { bufnr = buffer })
+    end
+end, { name = icons.Diagnostics.Prefix .. ' Diagnostics', description = 'diagnostics', scope = { 'global', 'buffer' }, default = true })
+
+settings.register_toggle('inlay_hint_enabled', function(enabled, buffer)
+    if not enabled then
+        vim.lsp.inlay_hint.enable(false, { bufnr = buffer })
+    else
+        vim.lsp.inlay_hint.enable(true, { bufnr = buffer })
+    end
+end, { name = icons.Diagnostics.LSP.Hint .. ' Inlay hints', description = 'inlay hints', scope = { 'global', 'buffer' }, default = true })
+
+settings.register_toggle('code_lens_enabled', function(enabled, buffer)
+    if not enabled then
+        vim.lsp.codelens.clear(nil, buffer)
+    else
+        vim.lsp.codelens.refresh { bufnr = buffer }
+    end
+end, { name = icons.UI.CodeLens .. ' Code Lense', description = 'code lens', scope = { 'global', 'buffer' }, default = true })
 
 return M

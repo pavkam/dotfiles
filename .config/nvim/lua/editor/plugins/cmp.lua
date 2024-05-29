@@ -64,6 +64,11 @@ return {
                     behavior = cmp.ConfirmBehavior.Replace,
                     select = false,
                 },
+                snippet = {
+                    expand = function(args)
+                        vim.snippet.expand(args.body)
+                    end,
+                },
                 view = {
                     entries = 'custom',
                 },
@@ -144,7 +149,7 @@ return {
                     end, { 'i', 's' }),
                 },
                 sources = cmp.config.sources {
-                    { name = 'snippets' },
+                    --   { name = 'snippets' },
                     { name = 'nvim_lsp' },
                     { name = 'buffer' },
                     { name = 'path' },
@@ -159,11 +164,11 @@ return {
                         ellipsis_char = icons.TUI.Ellipsis,
                     },
                 },
-                experimental = {
-                    ghost_text = {
-                        hl_group = 'CmpGhostText',
-                    },
-                },
+                -- experimental = {
+                --     ghost_text = {
+                --         hl_group = 'CmpGhostText',
+                --     },
+                -- },
                 sorting = defaults.sorting,
             }
         end,

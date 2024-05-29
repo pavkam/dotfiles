@@ -18,7 +18,6 @@ local M = {
     },
     Diagnostics = {
         Prefix = '●',
-        Action = ' ',
         LSP = {
             Error = '',
             Warn = '',
@@ -145,6 +144,7 @@ local M = {
         SessionSave = '󰆓',
         SessionRestore = '󰆔',
         Toggle = '',
+        CodeLens = '󰧶',
     },
     Progress = {
         '⣾',

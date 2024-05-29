@@ -132,6 +132,7 @@ end)
 utils.on_event({ 'BufWinEnter' }, function(evt)
     local win = vim.api.nvim_get_current_win()
     if utils.is_special_buffer(evt.buf) then
+        -- TODO: figure out which one we can have fixed
         --   vim.wo[win].winfixbuf = true
         vim.wo[win].spell = false
     end
@@ -142,13 +143,12 @@ utils.on_event('FileType', function(evt)
         vim.bo[evt.buf].buflisted = false
     end
 
-    if vim.tbl_contains({ 'gitcommit', 'markdown' }, vim.bo[evt.buf].filetype) then
+    if utils.is_transient_buffer(evt.buf) or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown' then
         vim.opt_local.wrap = true
         vim.opt_local.spell = true
     end
 end)
 
--- TODO : Error detected while processing BufWritePost auto-commands for "<buffer=171>": (for non LSP files)
 -- file detection commands
 utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     local current_file = vim.api.nvim_buf_get_name(evt.buf)
@@ -200,7 +200,7 @@ function M.ignore_hidden_files.toggle(value)
 end
 
 settings.register_toggle(ignore_hidden_files_setting_name, function(enabled)
-    -- Update Neo-Tree state
+    -- Update neo-tree state
     local mgr = require 'neo-tree.sources.manager'
     mgr.get_state('filesystem').filtered_items.visible = not enabled
 end, { name = icons.UI.ShowHidden .. ' Ignore hidden files', description = 'hiding ignored files', scope = 'global' })
@@ -211,14 +211,6 @@ settings.register_toggle('treesitter_enabled', function(enabled, buffer)
     else
         vim.treesitter.start(buffer)
     end
-end, { name = icons.UI.SyntaxTree .. ' Treesitter', description = 'tree-sitter', scope = { 'global', 'buffer' } })
-
-settings.register_toggle('diagnostics_enabled', function(enabled, buffer)
-    if not enabled then
-        vim.diagnostic.enable(false, { bufnr = buffer })
-    else
-        vim.diagnostic.enable(false, { bufnr = buffer })
-    end
-end, { name = icons.Diagnostics.Prefix .. ' Diagnostics', description = 'diagnostics', scope = { 'global', 'buffer' } })
+end, { name = icons.UI.SyntaxTree .. ' Treesitter', description = 'tree-sitter', scope = { 'buffer' } })
 
 return M

@@ -2,6 +2,7 @@ local utils = require 'core.utils'
 local syntax = require 'editor.syntax'
 local lsp = require 'project.lsp'
 local icons = require 'ui.icons'
+local settings = require 'core.settings'
 
 ---@class languages.keymaps
 local M = {}
@@ -120,7 +121,9 @@ function M.attach(client, buffer)
     attach_keymaps(client, buffer)
 
     lsp.on_capability_event({ 'BufEnter', 'CursorHold' }, vim.lsp.protocol.Methods.textDocument_codeLens, buffer, function()
-        vim.lsp.codelens.refresh { bufnr = buffer }
+        if settings.get_toggle('code_lens_enabled', buffer) then
+            vim.lsp.codelens.refresh { bufnr = buffer }
+        end
     end, true)
 
     lsp.on_capability_event({ 'CursorHold', 'CursorHoldI' }, vim.lsp.protocol.Methods.textDocument_documentHighlight, buffer, function()
@@ -132,7 +135,7 @@ function M.attach(client, buffer)
     end)
 
     lsp.on_capability_event({ 'BufRead', 'BufNew' }, vim.lsp.protocol.Methods.textDocument_inlayHint, buffer, function()
-        vim.lsp.inlay_hint.enable(true, { bufnr = buffer })
+        vim.lsp.inlay_hint.enable(settings.get_toggle('inlay_hint_enabled', buffer), { bufnr = buffer })
     end, true)
 end
 

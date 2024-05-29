@@ -210,13 +210,19 @@ function M.register_toggle(option, toggle_fn, opts)
             enabled = not enabled
             M.set(option, enabled, { buffer = buffer, scope = 'permanent' })
 
-            if scope == 'global' and vim.tbl_contains(scopes, 'buffer') or scope == 'buffer' then
-                local buffers = buffer ~= nil and { buffer } or utils.get_listed_buffers()
-                for _, b in ipairs(buffers) do
-                    toggle_fn(enabled and M.get(option, { buffer = b, default = opts.default, scope = 'permanent' }), b)
-                end
-            else
+            if scope == 'global' then
                 toggle_fn(enabled, nil)
+
+                if vim.tbl_contains(scopes, 'buffer') then
+                    local buffers = utils.get_listed_buffers()
+                    for _, b in ipairs(buffers) do
+                        toggle_fn(enabled and M.get(option, { buffer = b, default = opts.default, scope = 'permanent' }), b)
+                    end
+                end
+            elseif scope == 'buffer' then
+                toggle_fn(enabled and M.get(option, { buffer = buffer, default = opts.default, scope = 'permanent' }), buffer)
+            else
+                error 'invalid scope'
             end
         end
 
@@ -360,7 +366,7 @@ function M.deserialize_from_json(opts)
     ---@type { global: table<string, any>, files: table<string, table<string, any>> }
     local settings = assert(vim.json.decode(opts))
 
-    -- retsore global toggles
+    -- restore global toggles
     for option, value in pairs(settings.global) do
         local toggle = find_toggle(option, 'global')
 

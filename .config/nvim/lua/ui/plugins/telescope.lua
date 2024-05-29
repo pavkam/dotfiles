@@ -37,7 +37,6 @@ return {
                         map('i', '<C-h>', function(prompt_bufnr)
                             -- get current text in
                             local action_state = require 'telescope.actions.state'
-                            -- TODO: this should return the current text in the prompt
                             local line = action_state.get_current_line()
 
                             -- toggle the hidden files

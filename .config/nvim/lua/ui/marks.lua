@@ -115,7 +115,7 @@ end)
 
 -- restore marks after reloading a file
 utils.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
-    if utils.is_special_buffer(evt.buf) or vim.tbl_contains({ 'gitcommit' }, vim.bo[evt.buf].filetype) then
+    if utils.is_special_buffer(evt.buf) or utils.is_transient_buffer(evt.buf) then
         return
     end
 
