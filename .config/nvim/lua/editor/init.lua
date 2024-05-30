@@ -133,7 +133,15 @@ vim.keymap.set('n', 'gP', function()
 end, { desc = 'Paste above' })
 
 -- search
-vim.keymap.set({ 'i', 'n' }, '<esc>', '<cmd>nohlsearch<cr><esc>', { desc = 'Escape and clear highlight' })
+vim.keymap.set({ 'i', 'n' }, '<esc>', function()
+    vim.cmd.nohlsearch()
+    if package.loaded['noice'] then
+        vim.cmd.NoiceDismiss()
+    end
+
+    return '<esc>'
+end, { expr = true, desc = 'Escape and clear highlight' })
+
 vim.keymap.set('n', 'n', "'Nn'[v:searchforward].'zv'", { expr = true, desc = 'Next search result' })
 vim.keymap.set({ 'x', 'o' }, 'n', "'Nn'[v:searchforward]", { expr = true, desc = 'Next search result' })
 vim.keymap.set('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Previous search result' })

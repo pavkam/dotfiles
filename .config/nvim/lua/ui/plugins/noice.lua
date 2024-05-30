@@ -18,6 +18,15 @@ return {
         routes = {
             {
                 filter = {
+                    min_height = 10,
+                    ['not'] = {
+                        event = 'lsp',
+                    },
+                },
+                view = 'popup',
+            },
+            {
+                filter = {
                     event = 'msg_show',
                     any = {
                         { find = '%d+L, %d+B' },
@@ -32,13 +41,39 @@ return {
                         { find = '%d+ lines >ed %d+ time' },
                         { find = '%d+ substitutions on %d+ lines' },
                         { find = 'Hunk %d+ of %d+' },
-                        { find = 'E486' },
-                        { find = 'E42' },
-                        { find = 'E776' },
-                        { find = 'E348' },
-                        { find = 'W325' },
-                        { find = 'E1513' },
+                        { find = '%-%-No lines in buffer%-%-' },
+                        { find = '^E486: Pattern not found' },
+                        { find = '^Word .*%.add$' },
+                        { find = '^E486' },
+                        { find = '^E42' },
+                        { find = '^E776' },
+                        { find = '^E348' },
+                        { find = '^W325' },
+                        { find = '^E1513' },
+                        { find = 'E211: File .* no longer available' },
+                        { find = 'No more valid diagnostics to move to' },
                     },
+                },
+                view = 'mini',
+            },
+            {
+                filter = {
+                    event = 'notify',
+                    ---@param msg NoiceMessage
+                    cond = function(msg)
+                        local title = msg.opts and msg.opts.title or ''
+                        return vim.tbl_contains({ 'mason' }, title)
+                    end,
+                },
+                view = 'mini',
+            },
+            {
+                filter = {
+                    event = 'notify',
+                    kind = { 'debug', 'trace' },
+                },
+                opts = {
+                    timeout = 5000,
                 },
                 view = 'mini',
             },
@@ -46,17 +81,39 @@ return {
                 filter = {
                     event = 'msg_show',
                     any = {
-                        { find = '^?%a+' },
-                        { find = '^/%a+' },
+                        { find = '^[/?].' }, -- search patterns
+                        { find = '^%s*at process.processTicksAndRejections' }, -- broken LSP some times
                     },
                 },
                 opts = { skip = true },
             },
         },
-        cmdline = {
-            format = {
-                replace_selection = { kind = 'search', pattern = [[^:s/]], icon = icons.UI.Replace, lang = 'regex' },
-                replace_global = { kind = 'search', pattern = [[^:g/]], icon = icons.UI.Replace, lang = 'regex' },
+        views = {
+            cmdline_popup = {
+                border = { style = vim.g.border_style },
+            },
+            mini = {
+                timeout = 3000,
+                zindex = 10,
+                position = { col = -3 },
+                format = { '{title} ', '{message}' },
+            },
+            hover = {
+                border = { style = vim.g.borde_style },
+                size = { max_width = 80 },
+                win_options = { scrolloff = 4, wrap = true },
+            },
+            popup = {
+                border = { style = vim.g.borde_style },
+                size = { width = 90, height = 25 },
+                win_options = { scrolloff = 8, wrap = true, concealcursor = 'nv' },
+                close = { keys = { 'q' } },
+            },
+            split = {
+                enter = true,
+                size = '50%',
+                win_options = { scrolloff = 6 },
+                close = { keys = { 'q' } },
             },
         },
         presets = {

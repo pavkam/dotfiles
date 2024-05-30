@@ -80,6 +80,7 @@ o.foldexpr = [[v:lua.vim.treesitter.foldexpr()]]
 o.foldtext = [[v:lua.require'core.utils'.fold_text()]]
 
 -- file management
+g.huge_file_lines = 10000
 o.autowrite = true
 o.syntax = 'on'
 o.fileformats = { 'unix', 'dos', 'mac' }

@@ -31,8 +31,22 @@ return {
         opts = {
             highlight = {
                 enable = true,
+                -- disable on large files to prevent lag
+                disable = function(_, buf)
+                    return vim.api.nvim_buf_line_count(buf) > vim.g.huge_file_lines
+                end,
             },
-            indent = { enable = true },
+            indent = {
+                enable = true,
+                disable = {
+                    'gitrebase',
+                    'yaml',
+                },
+            },
+            matchup = {
+                enable = true,
+                enable_quotes = true,
+            },
             textobjects = {
                 select = {
                     enable = true,
@@ -88,6 +102,11 @@ return {
                         ['<F'] = { query = '@function.outer', desc = 'Swap previous function' },
                         ['<A'] = { query = '@parameter.inner', desc = 'Swap previous argument' },
                     },
+                },
+                lsp_interop = {
+                    enable = true,
+                    border = vim.g.border_style,
+                    floating_preview_opts = {},
                 },
             },
             ensure_installed = {

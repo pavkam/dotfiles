@@ -244,11 +244,11 @@ end
 
 --- Shows a notification
 ---@param msg any # the message to show
----@param type integer # the type of the notification
----@param opts? table # the options to pass to the notification
-local function notify(msg, type, opts)
+---@param level integer # the level of the notification
+---@param opts table<string, any>|nil # the options to pass to the notification
+local function notify(msg, level, opts)
     vim.schedule(function()
-        vim.notify(stringify(msg) or '', type, M.tbl_merge({ title = 'NeoVim' }, opts))
+        vim.notify(stringify(msg) or '', level, M.tbl_merge({ title = 'NeoVim' }, opts))
     end)
 end
 
@@ -273,23 +273,7 @@ end
 --- Shows a notification with the HINT type
 ---@param msg any # the message to show
 function M.hint(msg)
-    msg = stringify(msg) or ''
-
-    if not M.has_plugin 'noice.nvim' then
-        notify(msg, vim.log.levels.DEBUG)
-    else
-        require('noice').redirect(function()
-            print(msg)
-        end, {
-            {
-                view = 'mini',
-                opts = {
-                    timeout = 5000,
-                },
-                filter = {},
-            },
-        })
-    end
+    notify(msg, vim.log.levels.DEBUG)
 end
 
 ---@type table<integer, uv_timer_t>
