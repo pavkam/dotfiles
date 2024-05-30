@@ -144,7 +144,7 @@ function M.on_capability_event(events, capability, buffer, callback, run_on_regi
         return
     end
 
-    local auto_group_name = utils.tbl_join({ 'pavkam', 'buf', 'cap', buffer, unpack(events), capability }, '_')
+    local auto_group_name = table.concat({ 'pavkam', 'buf', 'cap', buffer, unpack(events), capability }, '_')
     ---@cast auto_group_name string
 
     if vim.fn.exists('#' .. auto_group_name) == 1 then

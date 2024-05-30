@@ -273,7 +273,15 @@ return {
             local keymaps = require 'project.keymaps'
 
             -- key-maps
-            lsp.on_attach(keymaps.attach)
+            lsp.on_attach(function(client, buffer)
+                if utils.is_special_buffer(buffer) then
+                    vim.schedule(function()
+                        vim.lsp.buf_detach_client(buffer, client.id)
+                    end)
+                else
+                    keymaps.attach(client, buffer)
+                end
+            end)
 
             vim.diagnostic.config(opts.diagnostics)
 
@@ -354,7 +362,7 @@ return {
                 mlsp.setup { ensure_installed = ensure_installed, handlers = { setup } }
             end
 
-            -- re-trigger FileType auto-cmds to force LSP to start
+            -- re-trigger FileType auto-commands to force LSP to start
             vim.api.nvim_exec_autocmds('FileType', {})
         end,
     },

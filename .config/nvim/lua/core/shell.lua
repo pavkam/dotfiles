@@ -133,7 +133,7 @@ local function async_cmd(cmd, args, input, callback, opts)
     if not handle then
         cleanup()
         utils.error(
-            string.format('Failed to spawn command *"%s"* with arguments *"%s"*: **%s**!', esc(cmd), esc(utils.tbl_join(args, ' ')), esc(spawn_error_or_pid))
+            string.format('Failed to spawn command *"%s"* with arguments *"%s"*: **%s**!', esc(cmd), esc(table.concat(args, ' ')), esc(spawn_error_or_pid))
         )
         return
     end
@@ -223,9 +223,9 @@ function M.async_cmd(cmd, args, input, callback, opts)
             ---@type string|nil
             local message
             if #stderr > 0 then
-                message = utils.tbl_join(stderr, '\n') or ''
+                message = table.concat(stderr, '\n') or ''
             elseif #stdout > 0 then
-                message = utils.tbl_join(stdout, '\n') or ''
+                message = table.concat(stdout, '\n') or ''
             end
 
             if message then

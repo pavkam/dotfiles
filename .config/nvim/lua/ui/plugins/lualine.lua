@@ -42,7 +42,7 @@ return {
                 return prefix
             end
 
-            return delongify(prefix .. ' ' .. utils.tbl_join(utils.to_list(list), ' ' .. icons.TUI.ListSeparator .. ' '), len_max)
+            return delongify(prefix .. ' ' .. table.concat(utils.to_list(list), ' ' .. icons.TUI.ListSeparator .. ' '), len_max)
         end
 
         local copilot_colors = {
@@ -63,7 +63,6 @@ return {
             options = {
                 theme = 'auto',
                 globalstatus = true,
-                disabled_filetypes = { statusline = utils.special_file_types },
             },
             sections = {
                 lualine_a = {
@@ -151,7 +150,7 @@ return {
                             local tasks_names = tasks
                                 and vim.tbl_map(function(task)
                                     ---@cast task core.shell.RunningProcess
-                                    return task.cmd .. ' ' .. utils.tbl_join(task.args, ' ')
+                                    return task.cmd .. ' ' .. table.concat(task.args, ' ')
                                 end, tasks)
 
                             if prefix and tasks_names then

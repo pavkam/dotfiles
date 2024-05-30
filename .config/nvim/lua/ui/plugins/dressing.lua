@@ -8,8 +8,22 @@ return {
         'nvim-telescope/telescope.nvim',
     },
     opts = {
-        input = { default_prompt = icons.TUI.PromptPrefix },
-        select = { backend = { 'telescope', 'builtin' } },
+        input = {
+            default_prompt = icons.TUI.PromptPrefix,
+            trim_prompt = true,
+            border = vim.g.border_style,
+            relative = 'editor',
+            title_pos = 'left',
+        },
+        select = {
+            backend = { 'telescope', 'builtin' },
+            trim_prompt = true,
+            builtin = {
+                show_numbers = false,
+                border = vim.g.border_style,
+                relative = 'editor',
+            },
+        },
     },
     init = function()
         local lazy = require 'lazy'

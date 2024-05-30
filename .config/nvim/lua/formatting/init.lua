@@ -18,6 +18,10 @@ local function formatters(buffer)
         return {}
     end
 
+    if not utils.is_regular_buffer(buffer) then
+        return {}
+    end
+
     local conform = require 'conform'
     local ok, clients = pcall(conform.list_formatters, buffer)
 
@@ -77,8 +81,7 @@ function M.apply(buffer, injected)
     local conform = require 'conform'
 
     buffer = buffer or vim.api.nvim_get_current_buf()
-
-    if not vim.api.nvim_buf_is_valid(buffer) then
+    if not utils.is_regular_buffer(buffer) then
         return
     end
 

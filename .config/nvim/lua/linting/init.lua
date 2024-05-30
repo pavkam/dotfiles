@@ -18,9 +18,14 @@ local function linters(buffer)
     end
 
     buffer = buffer or vim.api.nvim_get_current_buf()
+    if not utils.is_regular_buffer(buffer) then
+        return {}
+    end
+
+    local file_type = vim.api.nvim_get_option_value('filetype', { buf = buffer })
 
     local lint = require 'lint'
-    local clients = vim.api.nvim_buf_is_valid(buffer) and lint.linters_by_ft[vim.bo[buffer].filetype] or {}
+    local clients = lint.linters_by_ft[file_type] or {}
 
     local file_name = vim.api.nvim_buf_get_name(buffer)
     local ctx = {
@@ -89,6 +94,9 @@ end
 ---@param buffer integer|nil # the buffer to apply the linters to or 0 or nil for current
 function M.apply(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
+    if not utils.is_regular_buffer(buffer) then
+        return
+    end
 
     -- check if we have any linters for this fie type
     local names = linters(buffer)

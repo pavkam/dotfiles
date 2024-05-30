@@ -12,7 +12,7 @@ local function stringify(value)
     elseif type(value) == 'string' then
         return value
     elseif vim.islist(value) then
-        return M.tbl_join(value, ', ')
+        return table.concat(value, ', ')
     elseif type(value) == 'table' then
         return vim.inspect(value)
     elseif type(value) == 'function' then
@@ -42,31 +42,9 @@ function M.to_list(value)
     end
 end
 
---- Joins all items in a list into a string
----@param items table # the list of items to join
----@param separator string|nil # the separator to use between items
----@return string|nil # the joined string
-function M.tbl_join(items, separator)
-    if not vim.islist(items) then
-        return stringify(items)
-    end
-
-    local result = ''
-
-    for _, item in ipairs(items) do
-        if #result > 0 and separator ~= nil then
-            result = result .. separator
-        end
-
-        result = result .. stringify(item)
-    end
-
-    return result
-end
-
 --- Flattens a table
 --- @param tbl table # the table to flatten
---- @param key string|nil # the inifial prefix to use for the flattened table. All keys are concatenated with a dot.
+--- @param key string|nil # the initial prefix to use for the flattened table. All keys are concatenated with a dot.
 --- @return table<string, any> # the flattened table
 function M.flatten(tbl, key)
     if type(tbl) ~= 'table' then
@@ -81,6 +59,25 @@ function M.flatten(tbl, key)
             local k = key and key .. '.' .. pr or pr
             result[k] = pv
         end
+    end
+
+    return result
+end
+
+--- Inflates a list to a table
+---@generic T: table
+---@param list T[] # the list to inflate
+---@param key_fn fun(value: T): string # the function to get the key from the value
+---@return table<string, T> # the inflated table
+function M.inflate_list(key_fn, list)
+    assert(vim.islist(list) and type(key_fn) == 'function')
+
+    ---@type table<string, table>
+    local result = {}
+
+    for _, value in ipairs(list) do
+        local key = key_fn(value)
+        result[key] = value
     end
 
     return result
@@ -435,6 +432,14 @@ function M.is_transient_buffer(buffer)
     end
 
     return (vim.tbl_contains(M.transient_buffer_types, buftype) or vim.tbl_contains(M.transient_file_types, filetype))
+end
+
+--- Checks whether a buffer is a regular buffer (normal file)
+---@param buffer integer|nil # the buffer to check, or the current buffer if 0 or nil
+---@return boolean # whether the buffer is valid for formatting
+function M.is_regular_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    return vim.api.nvim_buf_is_valid(buffer) and not M.is_special_buffer(buffer) and not M.is_transient_buffer(buffer)
 end
 
 --- Joins two paths

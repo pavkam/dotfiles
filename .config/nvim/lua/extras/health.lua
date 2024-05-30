@@ -1,5 +1,6 @@
 local utils = require 'core.utils'
 local markdown = require 'extras.markdown'
+local sessions = require 'core.sessions'
 
 local M = {}
 
@@ -9,7 +10,7 @@ local M = {}
 
 --- Shows a window with the given content
 ---@param content string[] # the content to show
----@param opts? extras.health.ShowOpts # the options for the window
+---@param opts extras.health.ShowOpts|nil # the options for the window
 local function show_content(content, opts)
     opts = opts or {}
 
@@ -71,96 +72,65 @@ local function show_for_buffer(buffer)
     local project = require 'project'
     local debugging = require 'debugging'
 
-    local content = {}
-
-    --- Formats a value for display
-    ---@param name string -- the name of the value
-    ---@param value any -- the value to format
-    ---@param depth? integer -- the depth of the object
-    local function list(name, value, depth)
-        if not depth then
-            depth = 1
-        end
-
-        if type(value) ~= 'table' then
-            table.insert(content, string.format(' - **%s** = `%s`', name, markdown.escape(value)))
-        else
-            local prefix = string.rep('#', depth)
-            table.insert(content, prefix .. ' ' .. name)
-
-            for i, item in pairs(value) do
-                list(tostring(i), item, depth + 1)
-            end
-        end
-    end
-
-    -- get windows in which buffer is shown:
-    local buffer_details = {
-        id = buffer,
-        windows = vim.fn.win_findbuf(buffer),
-        name = vim.api.nvim_buf_get_name(buffer),
-        filetype = vim.api.nvim_get_option_value('filetype', { buf = buffer }),
-        buftype = vim.api.nvim_get_option_value('buftype', { buf = buffer }),
-        modifiable = vim.api.nvim_get_option_value('modifiable', { buf = buffer }),
-        modified = vim.api.nvim_get_option_value('modified', { buf = buffer }),
-        readonly = vim.api.nvim_get_option_value('readonly', { buf = buffer }),
-    }
-    list('Buffer', buffer_details)
-
-    local project_details = {
-        type = project.type(buffer) or 'unsupported',
-        root = project.root(buffer),
-        roots = project.roots(buffer),
-        lsp_roots = lsp.roots(buffer),
-    }
-
-    local js_project_details = vim.tbl_contains({ 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' }, project.type(buffer))
-            and {
+    local current_session = sessions.current()
+    local details = {
+        Buffer = {
+            id = buffer,
+            windows = vim.fn.win_findbuf(buffer),
+            name = vim.api.nvim_buf_get_name(buffer),
+            filetype = vim.api.nvim_get_option_value('filetype', { buf = buffer }),
+            buftype = vim.api.nvim_get_option_value('buftype', { buf = buffer }),
+            modifiable = vim.api.nvim_get_option_value('modifiable', { buf = buffer }),
+            modified = vim.api.nvim_get_option_value('modified', { buf = buffer }),
+            readonly = vim.api.nvim_get_option_value('readonly', { buf = buffer }),
+        },
+        Session = current_session and {
+            name = current_session,
+            files = { sessions.files(current_session) },
+        },
+        Project = {
+            type = project.type(buffer) or 'unsupported',
+            root = project.root(buffer),
+            roots = project.roots(buffer),
+            lsp_roots = lsp.roots(buffer),
+            JS = vim.tbl_contains({ 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' }, project.type(buffer)) and {
                 eslint_config = project.get_eslint_config_path(buffer),
                 jest = project.get_js_bin_path(buffer, 'jest'),
                 eslint = project.get_js_bin_path(buffer, 'eslint'),
                 prettier = project.get_js_bin_path(buffer, 'prettier'),
                 vitest = project.get_js_bin_path(buffer, 'vitest'),
-            }
-        or {}
+            } or nil,
+            GO = project.type(buffer) == 'go' and {
+                golangci = project.get_golangci_config(buffer),
+            } or nil,
+        },
+        Settings = settings.snapshot_for_buffer(buffer),
+        DAP = package.loaded['dap'] and debugging.configurations(buffer),
+        LSP = utils.inflate_list(
+            function(client)
+                return client.name
+            end,
+            vim.tbl_map(function(client)
+                return {
+                    id = client.id,
+                    name = client.name,
+                    root = client.root_dir,
+                    client_capabilities = client.capabilities,
+                    server_capabilities = client.server_capabilities,
+                    dynamic_capabilities = client.dynamic_capabilities,
+                    requests = client.requests,
+                }
+            end, vim.lsp.get_clients { bufnr = buffer })
+        ),
+    }
 
-    local go_project_details = project.type(buffer) == 'go' and {
-        golangci = project.get_golangci_config(buffer),
-    } or {}
-
-    list('Project', project_details)
-    list('JS', js_project_details)
-    list('GO', go_project_details)
-
-    for name, tb in pairs(settings.snapshot_for_buffer(buffer)) do
-        list(string.format('Settings (%s)', name), tb)
-    end
-
-    if package.loaded['dap'] then
-        for _, cfg in ipairs(debugging.configurations(buffer)) do
-            list(string.format('DAP (%s)', cfg.name), cfg)
-        end
-    end
-
-    for _, client in ipairs(vim.lsp.get_clients { bufnr = buffer }) do
-        local props = {
-            id = client.id,
-            name = client.name,
-            root = client.root_dir,
-            client_capabilities = utils.flatten(client.capabilities),
-            server_capabilities = utils.flatten(client.server_capabilities),
-            dynamic_capabilities = utils.flatten(client.dynamic_capabilities),
-            requests = client.requests,
-        }
-        list(string.format('LSP (%s)', client.name), props)
-    end
-
-    show_content(content)
+    local md = markdown.from_value(details)
+    show_content(vim.fn.split(md, '\n'))
 end
 
 function M.check()
     vim.health.start 'Personal configuration'
-    -- make sure setup function parameters are ok
+    -- make sure setup function parameters are OK
     vim.health.ok 'Setup is correct'
     vim.health.error 'Setup is incorrect'
     -- do some more checking

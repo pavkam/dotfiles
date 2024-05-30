@@ -122,17 +122,17 @@ function M.comment_options(window)
     return nil
 end
 
---- Get the commentstring for the given file type.
----@param window? integer # The window to get the commentstring for.
----@param file_type string # The filetype to get the commentstring for.
----@return string|nil # The commentstring for the given file type.
+--- Get the comment-string for the given file type.
+---@param window integer|nil # The window to get the comment-string for.
+---@param file_type string # The file-type to get the comment-string for.
+---@return string|nil # The comment-string for the given file type.
 function M.select_matching(window, file_type)
     ---@type string[]
     local patterns = vim.tbl_map(function(item)
         return string.format('%s %%s %s', item.prefix, item.suffix or '')
     end, M.resolve(window, file_type))
 
-    -- add the original commentstring
+    -- add the original comment-string
     local original = M.original_get_option(file_type, option_name)
     if type(original) == 'string' then
         table.insert(patterns, original)
@@ -163,10 +163,10 @@ function M.select_matching(window, file_type)
     return best_option
 end
 
---- Override the default commentstring for a filetype
----@param file_type string # The filetype to override the commentstring for
+--- Override the default comment-string for a file-type
+---@param file_type string # The file-type to override the comment-string for
 ---@param option string # The requested option
----@return boolean|integer|string # The commentstring for the filetype or whatever the original get_option function returns
+---@return boolean|integer|string # The comment-string for the file-type or whatever the original get_option function returns
 function M.get_option(file_type, option)
     if option ~= option_name then
         return M.original_get_option(file_type, option)

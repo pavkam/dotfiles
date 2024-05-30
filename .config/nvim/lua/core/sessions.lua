@@ -16,8 +16,12 @@ local function enabled()
 end
 
 --- Get the current session name
----@return string
-local function get_session_name()
+---@return string|nil # the current session name or nil if not enabled
+function M.current()
+    if not enabled() then
+        return nil
+    end
+
     local git_root = vim.trim(vim.fn.system 'git rev-parse --show-toplevel')
     local full_name = vim.v.shell_error == 0 and git_root or vim.fn.getcwd()
 
@@ -30,7 +34,7 @@ end
 --- Encode the session name as file paths
 ---@param name string # the name of the session
 ---@return string, string, string # the session file paths
-local function encode_session_name(name)
+function M.files(name)
     assert(type(name) == 'string')
 
     -- escape special characters in full name (URL encoding)
@@ -50,7 +54,7 @@ end
 function M.save_session(name)
     assert(type(name) == 'string')
 
-    local session_file, shada_file, settings_file = encode_session_name(name)
+    local session_file, shada_file, settings_file = M.files(name)
 
     vim.fn.mkdir(session_dir, 'p')
 
@@ -75,7 +79,7 @@ end
 function M.restore_session(name)
     assert(type(name) == 'string')
 
-    local session_file, shada_file, settings_file = encode_session_name(name)
+    local session_file, shada_file, settings_file = M.files(name)
 
     if vim.fn.filereadable(session_file) == 1 and vim.fn.filereadable(shada_file) == 1 and vim.fn.filereadable(settings_file) == 1 then
         -- close all windows, tabs and buffers
@@ -107,6 +111,9 @@ function M.restore_session(name)
     end
 end
 
+--- Swap sessions
+---@param old_name string|nil # the name of the old session
+---@param new_name string|nil # the name of the new session
 local function swap_sessions(old_name, new_name)
     if enabled() then
         if old_name ~= new_name then
@@ -123,41 +130,63 @@ local function swap_sessions(old_name, new_name)
 end
 
 utils.on_event('VimLeavePre', function()
-    if enabled() then
-        M.save_session(get_session_name())
+    local current = M.current()
+    if current then
+        M.save_session(current)
     end
 end)
 
 utils.on_user_event('LazyDone', function()
-    swap_sessions(nil, get_session_name())
+    swap_sessions(nil, M.current())
 end)
 
 utils.on_focus_gained(function()
-    swap_sessions(settings.get(setting_name, { scope = 'instance' }), get_session_name())
+    swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
 end)
+
+--- Get the current session with a warning if session management is disabled
+---@return string|nil # the current session name or nil if not enabled
+local function current_with_warning()
+    local current = M.current()
+    if not current then
+        utils.warn(string.format('%s Session management is disabled in this instance.', icons.UI.SessionDelete))
+    end
+
+    return current
+end
 
 utils.register_function('Session', 'Manage session', {
     restore = function()
-        swap_sessions(nil, get_session_name())
+        local current = current_with_warning()
+        if current then
+            swap_sessions(nil, current)
+        end
     end,
     save = function()
-        swap_sessions(get_session_name(), nil)
+        local current = current_with_warning()
+        if current then
+            swap_sessions(current, nil)
+        end
     end,
     delete = function()
-        local name = get_session_name()
-        local session_file, shada_file, settings_file = encode_session_name(name)
+        local current = current_with_warning()
+        if not current then
+            return
+        end
+
+        local session_file, shada_file, settings_file = M.files(current)
 
         if not utils.file_exists(session_file) then
-            utils.warn(string.format('%s Session `%s` does not exist.', icons.UI.SessionDelete, name))
+            utils.warn(string.format('%s Session `%s` does not exist.', icons.UI.SessionDelete, current))
             return
         end
 
         local deleted = vim.fn.delete(session_file) - vim.fn.delete(shada_file) - vim.fn.delete(settings_file)
 
         if deleted == 0 then
-            utils.warn(string.format('%s Deleted session `%s`', icons.UI.SessionDelete, name))
+            utils.warn(string.format('%s Deleted session `%s`', icons.UI.SessionDelete, current))
         else
-            utils.error(string.format('%s Error(s) occurred while deleting session `%s`', icons.UI.SessionSave, name))
+            utils.error(string.format('%s Error(s) occurred while deleting session `%s`', icons.UI.SessionSave, current))
         end
 
         reset_ui()
@@ -166,7 +195,7 @@ utils.register_function('Session', 'Manage session', {
 
 -- save session on a timer
 vim.defer_fn(function()
-    swap_sessions(get_session_name(), nil)
+    swap_sessions(M.current(), nil)
 end, 60000)
 
 return M

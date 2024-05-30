@@ -1,5 +1,3 @@
-local icons = require 'ui.icons'
-
 return {
     'folke/noice.nvim',
     lazy = false,
