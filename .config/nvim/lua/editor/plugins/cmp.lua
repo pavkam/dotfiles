@@ -17,8 +17,6 @@ return {
             },
         },
         opts = function()
-            vim.api.nvim_set_hl(0, 'CmpGhostText', { link = 'Comment', default = true })
-
             local utils = require 'core.utils'
             local cmp = require 'cmp'
             local icons = require 'ui.icons'
@@ -183,11 +181,6 @@ return {
                         menu = {},
                         maxwidth = 50,
                         ellipsis_char = icons.TUI.Ellipsis,
-                    },
-                },
-                experimental = {
-                    ghost_text = {
-                        hl_group = 'CmpGhostText',
                     },
                 },
                 sorting = defaults.sorting,

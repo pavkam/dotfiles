@@ -53,7 +53,8 @@ return {
         local buffer_line = require 'bufferline'
 
         buffer_line.setup(opts)
-        -- Fix bufferline when restoring a session
+
+        -- Fix buffer-line when restoring a session
         utils.on_event({ 'BufAdd', 'BufDelete' }, function()
             vim.schedule(function()
                 ---@diagnostic disable-next-line: undefined-global

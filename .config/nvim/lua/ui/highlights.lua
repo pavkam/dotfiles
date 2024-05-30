@@ -30,3 +30,5 @@ hl('MarkSign', { fg = '#ff966c' })
 
 hl('NormalMenuItem', utils.hl 'Special')
 hl('SpecialMenuItem', utils.hl 'Boolean')
+
+hl('RecordingMacroStatus', { bold = true, fg = '#ff007c' })

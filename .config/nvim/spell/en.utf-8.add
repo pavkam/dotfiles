@@ -41,3 +41,12 @@ timestamp
 lazygit
 msg
 noice
+str
+len
+upvalue
+lsp
+cmp
+fg
+gui
+hl
+ui

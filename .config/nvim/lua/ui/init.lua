@@ -3,8 +3,9 @@ local settings = require 'core.settings'
 local git = require 'git'
 local diagnostics = require 'project.diagnostics'
 local icons = require 'ui.icons'
+local progress = require 'ui.progress'
 
--- apply colorscheme first
+-- apply color-scheme first
 vim.cmd.colorscheme 'tokyonight'
 
 require 'ui.highlights'
@@ -176,7 +177,46 @@ end)
 
 -- resize splits if window got resized
 utils.on_event('VimResized', function()
-    utils.refresh_ui()
+    vim.schedule(function()
+        utils.refresh_ui()
+        utils.trigger_status_update_event()
+    end)
+end)
+
+--- Macro tracking
+utils.on_event({ 'RecordingEnter' }, function()
+    utils.info(
+        icons.UI.Macro
+            .. ' Started recording macro into register **'
+            .. icons.TUI.StrongPrefix
+            .. vim.fn.reg_recording()
+            .. icons.TUI.StrongSuffix
+            .. '** '
+            .. icons.TUI.Ellipsis
+    )
+
+    progress.register_task('recording_macro', {
+        fn = function()
+            return vim.fn.reg_recording() ~= ''
+        end,
+        desc = 'Recording macro',
+        ctx = vim.fn.reg_recording(),
+        timeout = math.huge,
+    })
+end)
+
+utils.on_event({ 'RecordingLeave' }, function()
+    utils.info(
+        icons.UI.Checkmark
+            .. ' Stopped recording macro into register **'
+            .. icons.TUI.StrongPrefix
+            .. vim.fn.reg_recording()
+            .. icons.TUI.StrongSuffix
+            .. '** '
+            .. icons.TUI.Ellipsis
+    )
+
+    progress.unregister_task 'recording_macro'
 end)
 
 ---@class ui
@@ -194,7 +234,7 @@ function M.ignore_hidden_files.active()
 end
 
 --- Toggles ignoring of hidden files on or off
----@param value? boolean # if nil, it will toggle the current value, otherwise it will set the value
+---@param value boolean|nil # if nil, it will toggle the current value, otherwise it will set the value
 function M.ignore_hidden_files.toggle(value)
     settings.set_toggle(ignore_hidden_files_setting_name, nil, value)
 end

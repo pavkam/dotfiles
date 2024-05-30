@@ -168,6 +168,17 @@ function M.check()
     vim.health._complete()
 end
 
+--- Registers stack trace highlights for a buffer
+---@param buffer integer|nil # the buffer to register the highlights for, defaults to the current buffer
+function M.register_stack_trace_highlights(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    if vim.api.nvim_buf_is_valid(buffer) then
+        vim.api.nvim_buf_call(buffer, function()
+            vim.fn.matchadd('WarningMsg', [[[^/]\+\.lua:\d\+\ze:]])
+        end)
+    end
+end
+
 -- Show buffer information
 vim.api.nvim_create_user_command('Buffer', function()
     show_for_buffer()

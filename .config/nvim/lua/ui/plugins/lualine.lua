@@ -15,30 +15,9 @@ return {
         local ui = require 'ui'
         local progress = require 'ui.progress'
 
-        --- Extracts the color and attributes from a highlight group.
-        ---@param name string
-        local function color(name)
-            local hl = utils.hl(name)
-
-            if not hl then
-                return nil
-            end
-
-            local fg = hl.fg or hl.foreground or 0
-            local attrs = {}
-
-            for _, attr in ipairs { 'italic', 'bold', 'undercurl', 'underdotted', 'underlined', 'strikethrough' } do
-                if hl[attr] then
-                    table.insert(attrs, attr)
-                end
-            end
-
-            return { fg = string.format('#%06x', fg), gui = table.concat(attrs, ',') }
-        end
-
         --- Cuts off a string if it is too long
         ---@param str string # The string to cut off
-        ---@param max? number # The maximum length of the string
+        ---@param max number|nil # The maximum length of the string
         ---@return string # The cut-off string
         local function delongify(str, max)
             max = max or 40
@@ -53,8 +32,8 @@ return {
         --- Formats a list of items into a string with a cut-off
         ---@param prefix string # The prefix to add to the string
         ---@param list string[]|string # The list of items to format
-        ---@param collapse_max? number # The minimum width of the screen to show the full list
-        ---@param len_max? number # The maximum length of the string
+        ---@param collapse_max number|nil # The minimum width of the screen to show the full list
+        ---@param len_max number|nil # The maximum length of the string
         local function sexify(prefix, list, len_max, collapse_max)
             collapse_max = collapse_max or 150
 
@@ -72,19 +51,61 @@ return {
             ['Warning'] = 'CopilotWarning',
         }
 
+        local macro_recording_fmt = icons.UI.Macro
+            .. ' Recording macro as '
+            .. icons.TUI.StrongPrefix
+            .. '%s'
+            .. icons.TUI.StrongSuffix
+            .. ' '
+            .. icons.TUI.Ellipsis
+
         return {
             options = {
                 theme = 'auto',
                 globalstatus = true,
-                disabled_filetypes = { statusline = { 'alpha' } },
+                disabled_filetypes = { statusline = utils.special_file_types },
             },
             sections = {
-                lualine_a = { 'mode' },
+                lualine_a = {
+                    { 'mode' },
+                    {
+                        settings.transient(function()
+                            local spinner, register = progress.status 'recording_macro'
+                            return spinner and sexify(spinner, string.format(macro_recording_fmt, register))
+                        end),
+                        cond = settings.transient(function()
+                            return progress.status 'recording_macro' ~= nil
+                        end),
+                        color = utils.hl_fg_color_and_attrs 'RecordingMacroStatus',
+                    },
+                },
                 lualine_b = {
                     {
                         'branch',
                         on_click = function()
                             vim.cmd 'Telescope git_branches'
+                        end,
+                    },
+                    {
+                        'filetype',
+                        icon_only = true,
+                        separator = '',
+                        padding = { left = 1, right = 0 },
+                        on_click = function()
+                            vim.cmd 'Buffer'
+                        end,
+                    },
+                    {
+                        'filename',
+                        path = 1,
+                        symbols = {
+                            modified = ' ' .. icons.Files.Modified .. ' ',
+                            readonly = '',
+                            unnamed = '',
+                        },
+                        padding = { left = 0, right = 1 },
+                        on_click = function()
+                            vim.cmd 'Buffer'
                         end,
                     },
                 },
@@ -101,8 +122,6 @@ return {
                             vim.cmd 'Telescope diagnostics'
                         end,
                     },
-                    { 'filetype', icon_only = true, separator = '', padding = { left = 1, right = 0 } },
-                    { 'filename', path = 1, symbols = { modified = ' ' .. icons.Files.Modified .. ' ', readonly = '', unnamed = '' } },
                 },
                 lualine_x = {
                     {
@@ -110,20 +129,20 @@ return {
                             local spinner, msg = progress.status 'neotest'
                             return spinner and sexify(spinner, msg)
                         end,
-                        cond = function()
+                        cond = settings.transient(function()
                             return progress.status 'neotest' ~= nil
-                        end,
-                        color = color 'AuxiliaryProgressStatus',
+                        end),
+                        color = utils.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
                     },
                     {
                         function()
                             local spinner, msg = progress.status 'package-info'
                             return spinner and sexify(spinner, msg)
                         end,
-                        cond = function()
+                        cond = settings.transient(function()
                             return progress.status 'package-info' ~= nil
-                        end,
-                        color = color 'AuxiliaryProgressStatus',
+                        end),
+                        color = utils.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
                     },
                     {
                         settings.transient(function()
@@ -144,7 +163,7 @@ return {
                         cond = settings.transient(function()
                             return shell.progress() ~= nil
                         end),
-                        color = color 'AuxiliaryProgressStatus',
+                        color = utils.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
                     },
                     {
                         settings.transient(function(buffer)
@@ -160,9 +179,9 @@ return {
                         end),
                         color = settings.transient(function(buffer)
                             if not lint.enabled(buffer) then
-                                return color 'DisabledLintersStatus'
+                                return utils.hl_fg_color_and_attrs 'DisabledLintersStatus'
                             else
-                                return color 'ActiveLintersStatus'
+                                return utils.hl_fg_color_and_attrs 'ActiveLintersStatus'
                             end
                         end),
                         separator = false,
@@ -181,9 +200,9 @@ return {
                         end),
                         color = settings.transient(function(buffer)
                             if not format.enabled(buffer) then
-                                return color 'DisabledFormattersStatus'
+                                return utils.hl_fg_color_and_attrs 'DisabledFormattersStatus'
                             else
-                                return color 'ActiveFormattersStatus'
+                                return utils.hl_fg_color_and_attrs 'ActiveFormattersStatus'
                             end
                         end),
                         on_click = function()
@@ -199,7 +218,7 @@ return {
                         cond = function()
                             return progress.status 'workspace' ~= nil
                         end,
-                        color = color 'ActiveLSPsStatus',
+                        color = utils.hl_fg_color_and_attrs 'ActiveLSPsStatus',
                     },
                     {
                         settings.transient(function(buffer)
@@ -209,7 +228,7 @@ return {
                         cond = settings.transient(function(buffer)
                             return lsp.any_active_for_buffer(buffer)
                         end),
-                        color = color 'ActiveLSPsStatus',
+                        color = utils.hl_fg_color_and_attrs 'ActiveLSPsStatus',
                         on_click = function()
                             vim.cmd 'LspInfo'
                         end,
@@ -222,7 +241,7 @@ return {
                             return lsp.is_active_for_buffer(buffer, 'copilot')
                         end),
                         color = settings.transient(function()
-                            return color(copilot_colors[require('copilot.api').status.data.status] or copilot_colors['Normal'])
+                            return utils.hl_fg_color_and_attrs(copilot_colors[require('copilot.api').status.data.status] or copilot_colors['Normal'])
                         end),
                     } or nil,
                 },
@@ -234,7 +253,7 @@ return {
                         cond = function()
                             return package.loaded['dap'] and require('dap').status() ~= ''
                         end,
-                        color = color 'Debug',
+                        color = utils.hl_fg_color_and_attrs 'Debug',
                     },
                     {
                         'diff',
@@ -262,7 +281,7 @@ return {
                         function()
                             return ui.ignore_hidden_files.active() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
                         end,
-                        color = color 'Comment',
+                        color = utils.hl_fg_color_and_attrs 'Comment',
                         on_click = function()
                             ui.ignore_hidden_files.toggle()
                         end,
@@ -272,7 +291,7 @@ return {
                         function()
                             return icons.UI.TMux
                         end,
-                        color = color 'Comment',
+                        color = utils.hl_fg_color_and_attrs 'Comment',
                         cond = require('ui.tmux').active,
                         separator = false,
                     },
@@ -280,7 +299,7 @@ return {
                         function()
                             return icons.UI.SpellCheck
                         end,
-                        color = color 'Comment',
+                        color = utils.hl_fg_color_and_attrs 'Comment',
                         cond = function()
                             return vim.o.spell
                         end,
@@ -293,12 +312,12 @@ return {
                         cond = settings.transient(function(buffer)
                             return lsp.is_active_for_buffer(buffer, 'typos_lsp')
                         end),
-                        color = color 'Comment',
+                        color = utils.hl_fg_color_and_attrs 'Comment',
                     },
                     {
                         require('lazy.status').updates,
                         cond = require('lazy.status').has_updates,
-                        color = color 'Comment',
+                        color = utils.hl_fg_color_and_attrs 'Comment',
                         on_click = function()
                             vim.cmd 'Lazy'
                         end,

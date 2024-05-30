@@ -12,6 +12,8 @@ local M = {
         IndentLevel = '│',
         PromptPrefix = '',
         SelectionPrefix = '',
+        StrongPrefix = '▸',
+        StrongSuffix = '◂',
         ListSeparator = '◦',
         ScrollLine = '▒',
         ScrollView = '█',
@@ -145,6 +147,8 @@ local M = {
         SessionRestore = '󰆔',
         Toggle = '',
         CodeLens = '󰧶',
+        Macro = '󱛟',
+        Checkmark = '✓',
     },
     Progress = {
         '⣾',

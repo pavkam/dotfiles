@@ -559,15 +559,28 @@ function M.hl(name)
     return vim.api.nvim_get_hl(0, { name = name, link = false })
 end
 
---- Gets the foreground color of a highlight group
+--- Extracts the color and attributes from a highlight group.
 ---@param name string # the name of the highlight group
----@return table<string, string>|nil # the foreground color of the highlight group
-function M.hl_fg_color(name)
+---@return { fg: string, gui: string }|nil # the color and attributes of the highlight group
+function M.hl_fg_color_and_attrs(name)
+    assert(type(name) == 'string' and name ~= '')
+
     local hl = M.hl(name)
 
-    local fg = hl and (hl.fg or hl.foreground)
+    if not hl then
+        return nil
+    end
 
-    return fg and { fg = string.format('#%06x', fg) }
+    local fg = hl.fg or hl.foreground or 0
+    local attrs = {}
+
+    for _, attr in ipairs { 'italic', 'bold', 'undercurl', 'underdotted', 'underlined', 'strikethrough' } do
+        if hl[attr] then
+            table.insert(attrs, attr)
+        end
+    end
+
+    return { fg = string.format('#%06x', fg), gui = table.concat(attrs, ',') }
 end
 
 local icons = require 'ui.icons'
