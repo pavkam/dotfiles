@@ -27,7 +27,15 @@ local function show_content(content, opts)
         style = 'minimal',
     })
 
-    vim.api.nvim_buf_set_lines(buffer, 0, -1, true, content)
+    ---@type string[]
+    local lines = {}
+    for _, line in ipairs(content) do
+        for _, sub_line in ipairs(vim.split(line, '\n')) do
+            table.insert(lines, sub_line)
+        end
+    end
+
+    vim.api.nvim_buf_set_lines(buffer, 0, -1, true, lines)
 
     vim.bo[buffer].modifiable = false
     vim.bo[buffer].modified = false

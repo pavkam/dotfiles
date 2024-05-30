@@ -72,7 +72,8 @@ return {
                 {
                     '<M-f>',
                     function()
-                        blanket 'live_grep' {}
+                        local sel = require('editor.syntax').current_selection(nil, false)
+                        blanket 'live_grep' { default_text = sel }
                     end,
                     desc = 'Grep in all files',
                     mode = { 'n', 'v' },
@@ -98,12 +99,12 @@ return {
                 },
                 {
                     '<leader>uk',
-                    'Telescope keymaps',
+                    '<cmd>Telescope keymaps<cr>',
                     desc = 'Show keymaps',
                 },
                 {
                     '<leader>uc',
-                    'Telescope commands',
+                    '<cmd>Telescope commands<cr>',
                     desc = 'Show commands',
                 },
                 {
