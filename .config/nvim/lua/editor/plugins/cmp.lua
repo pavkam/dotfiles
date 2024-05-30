@@ -28,7 +28,7 @@ return {
             local luasnip = require 'luasnip'
 
             local border_opts = {
-                border = 'rounded',
+                border = vim.g.border_style,
                 winhighlight = 'Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None',
             }
 

@@ -8,6 +8,7 @@ return {
         },
         build = ':TSUpdate',
         event = { 'BufReadPost', 'BufNewFile' },
+        -- TODO: tree-sitter not highlighting the TODOs
         cmd = {
             'TSBufDisable',
             'TSBufEnable',
@@ -90,6 +91,7 @@ return {
                 },
             },
             ensure_installed = {
+                'comment',
                 'query',
                 'regex',
                 'vim',

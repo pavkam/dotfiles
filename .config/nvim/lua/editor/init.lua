@@ -37,9 +37,9 @@ vim.keymap.set('x', '<Tab>', '>gv', { desc = 'Indent selection' })
 vim.keymap.set('x', '<S-Tab>', '<gv', { desc = 'Unindent selection' })
 
 -- Add undo break-points
-vim.keymap.set('i', ',', ',<c-g>u')
-vim.keymap.set('i', '.', '.<c-g>u')
-vim.keymap.set('i', ';', ';<c-g>u')
+for _, key in ipairs { '.', ',', '!', '?', ';', ':', '"', "'" } do
+    vim.keymap.set('i', key, string.format('%s<c-g>u', key), { desc = string.format('Insert %s and an undo break-point', key) })
+end
 
 -- Redo
 vim.keymap.set('n', 'U', '<C-r>', { desc = 'Redo' })
@@ -257,7 +257,7 @@ utils.on_event('BufWritePre', function(evt)
 end)
 
 -- forget files that have been deleted
-utils.on_event({ 'BufDelete', 'BufEnter' }, function(evt)
+utils.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
     if utils.is_special_buffer(evt.buf) then
         return
     end
@@ -270,6 +270,8 @@ utils.on_event({ 'BufDelete', 'BufEnter' }, function(evt)
     require('ui.marks').forget(file)
     require('core.old_files').forget(file)
     require('ui.qf').forget(file)
+
+    vim.cmd 'bdelete!'
 end)
 
 settings.register_toggle('spelling', function(enabled)

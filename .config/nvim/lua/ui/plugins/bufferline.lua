@@ -21,7 +21,7 @@ return {
     end,
     opts = {
         options = {
-            -- TODO: add logic to swtch to open split when switching buffers
+            -- TODO: add logic to switch to open split when switching buffers
             close_command = function(n)
                 require('mini.bufremove').delete(n, false)
             end,

@@ -35,7 +35,7 @@ return {
                 float = {
                     focused = false,
                     style = 'minimal',
-                    border = 'rounded',
+                    border = vim.g.border_style,
                     source = true,
                     header = '',
                     prefix = icons.Diagnostics.Prefix .. ' ',
@@ -266,7 +266,7 @@ return {
         },
         config = function(_, opts)
             -- set the border for the UI
-            require('lspconfig.ui.windows').default_options.border = 'single'
+            require('lspconfig.ui.windows').default_options.border = vim.g.border_style
 
             local utils = require 'core.utils'
             local lsp = require 'project.lsp'

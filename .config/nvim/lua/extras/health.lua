@@ -19,7 +19,7 @@ local function show_content(content, opts)
     local buffer = vim.api.nvim_create_buf(false, true)
     local window = vim.api.nvim_open_win(buffer, true, {
         relative = 'editor',
-        border = 'rounded',
+        border = vim.g.border_style,
         width = width,
         height = height,
         col = (vim.o.columns - width) / 2,

@@ -130,8 +130,10 @@ end)
 
 -- configure special buffers
 utils.on_event({ 'BufWinEnter' }, function(evt)
+    local ignored_fts = { '', 'neo-tree' }
     local win = vim.api.nvim_get_current_win()
-    if utils.is_special_buffer(evt.buf) and vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) ~= '' then
+
+    if utils.is_special_buffer(evt.buf) and not vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf })) then
         vim.wo[win].winfixbuf = true
         vim.wo[win].spell = false
     end

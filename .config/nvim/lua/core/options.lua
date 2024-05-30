@@ -27,7 +27,8 @@ o.title = true
 o.clipboard = 'unnamedplus'
 o.mouse = 'a'
 
--- ui
+-- UI
+g.border_style = 'rounded'
 o.showmode = false
 o.modeline = false
 o.ruler = false
@@ -43,7 +44,7 @@ o.winblend = 10
 o.guicursor =
     [[n-v-c-sm:block-blinkwait500-blinkoff400-blinkon250,i-ci:ver25-blinkwait1000-blinkoff400-blinkon250,v:block-blinkwait500-blinkoff400-blinkon250,r-cr-o:hor20-blinkwait1000-blinkoff400-blinkon250]]
 
--- menu and cmd-line
+-- menu and command-line
 o.laststatus = 2
 o.cmdheight = 0
 
@@ -68,21 +69,15 @@ o.signcolumn = 'yes:1'
 o.relativenumber = true
 o.number = true
 o.breakat = [[\ \	;:,!?]]
+
+-- folding
 o.foldlevelstart = 99
 o.foldlevel = 99
 o.foldcolumn = '1'
 o.foldenable = true
-
-if vim.treesitter.foldexpr then
-    o.foldmethod = 'expr'
-    o.foldexpr = [[v:lua.vim.treesitter.foldexpr()]]
-else
-    o.foldmethod = 'indent'
-end
-
-if vim.treesitter.foldtext then
-    o.foldtext = [[v:lua.require'core.utils'.fold_text()]]
-end
+o.foldmethod = 'expr'
+o.foldexpr = [[v:lua.vim.treesitter.foldexpr()]]
+o.foldtext = [[v:lua.require'core.utils'.fold_text()]]
 
 -- file management
 o.autowrite = true

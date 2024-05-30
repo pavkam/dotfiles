@@ -1,4 +1,3 @@
-
 local icons = require 'ui.icons'
 
 return {
@@ -18,7 +17,7 @@ return {
                 package_uninstalled = icons.Dependencies.Uninstalled,
                 package_pending = icons.Dependencies.Pending,
             },
-            border = 'single',
+            border = vim.g.border_style,
         },
         ensure_installed = {
             -- shell

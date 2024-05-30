@@ -434,7 +434,7 @@ function M.is_special_buffer(buffer)
     local filetype = vim.api.nvim_get_option_value('filetype', { buf = buffer })
     local buftype = vim.api.nvim_get_option_value('buftype', { buf = buffer })
 
-    return (vim.tbl_contains(M.special_buffer_types, buftype) or vim.tbl_contains(M.special_file_types, filetype))
+    return buftype ~= '' and (vim.tbl_contains(M.special_buffer_types, buftype) or vim.tbl_contains(M.special_file_types, filetype))
 end
 
 --- Checks if a buffer is a transient buffer (a file which we should not deal with)

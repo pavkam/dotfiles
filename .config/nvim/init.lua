@@ -76,7 +76,7 @@ require('lazy').setup {
         version = false,
     },
     ui = {
-        border = 'rounded',
+        border = vim.g.border_style,
     },
     checker = {
         enabled = true,
@@ -86,14 +86,17 @@ require('lazy').setup {
     performance = {
         rtp = {
             disabled_plugins = {
-                'gzip',
+                'rplugin',
+                'matchparen',
                 'matchit',
-                -- "matchparen",
                 'netrwPlugin',
-                'tarPlugin',
-                'tohtml',
+                'man',
                 'tutor',
+                'health',
+                'tohtml',
+                'gzip',
                 'zipPlugin',
+                'tarPlugin',
             },
         },
     },
