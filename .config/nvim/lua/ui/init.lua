@@ -185,15 +185,7 @@ end)
 
 --- Macro tracking
 utils.on_event({ 'RecordingEnter' }, function()
-    utils.info(
-        icons.UI.Macro
-            .. ' Started recording macro into register **'
-            .. icons.TUI.StrongPrefix
-            .. vim.fn.reg_recording()
-            .. icons.TUI.StrongSuffix
-            .. '** '
-            .. icons.TUI.Ellipsis
-    )
+    utils.info(icons.UI.Macro .. ' Started recording macro into register `' .. vim.fn.reg_recording() .. '` ' .. icons.TUI.Ellipsis)
 
     progress.register_task('recording_macro', {
         fn = function()
@@ -206,15 +198,7 @@ utils.on_event({ 'RecordingEnter' }, function()
 end)
 
 utils.on_event({ 'RecordingLeave' }, function()
-    utils.info(
-        icons.UI.Checkmark
-            .. ' Stopped recording macro into register **'
-            .. icons.TUI.StrongPrefix
-            .. vim.fn.reg_recording()
-            .. icons.TUI.StrongSuffix
-            .. '** '
-            .. icons.TUI.Ellipsis
-    )
+    utils.info(icons.UI.Checkmark .. ' Stopped recording macro into register `' .. vim.fn.reg_recording() .. '` ' .. icons.TUI.Ellipsis)
 
     progress.unregister_task 'recording_macro'
 end)

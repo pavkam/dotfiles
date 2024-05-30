@@ -145,6 +145,7 @@ local M = {
         CloseAll = '',
         SessionSave = '󰆓',
         SessionRestore = '󰆔',
+        SessionDelete = '󰆴',
         Toggle = '',
         CodeLens = '󰧶',
         Macro = '󱛟',

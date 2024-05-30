@@ -20,7 +20,7 @@ return {
             local utils = require 'core.utils'
             local cmp = require 'cmp'
             local icons = require 'ui.icons'
-            local defaults = require 'cmp.config.default'()
+            local compare = require 'cmp.config.compare'
             local copilot = utils.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
             local settings = require 'core.settings'
             local luasnip = require 'luasnip'
@@ -170,7 +170,15 @@ return {
                     { name = 'snippets' },
                     { name = 'luasnip' },
                     { name = 'nvim_lsp' },
-                    { name = 'buffer' },
+                    {
+                        name = 'buffer',
+                        option = {
+                            get_bufnrs = utils.get_listed_buffers,
+                            max_indexed_line_length = 100,
+                        },
+                        keyword_length = 3,
+                        max_item_count = 4,
+                    },
                     { name = 'path' },
                 },
                 formatting = {
@@ -183,7 +191,18 @@ return {
                         ellipsis_char = icons.TUI.Ellipsis,
                     },
                 },
-                sorting = defaults.sorting,
+                sorting = {
+                    comparators = {
+                        compare.offset,
+                        compare.recently_used,
+                        compare.score,
+                        compare.exact,
+                        compare.kind,
+                        compare.locality,
+                        compare.length,
+                        compare.order,
+                    },
+                },
             }
         end,
         config = function(_, opts)

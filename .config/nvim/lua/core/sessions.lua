@@ -61,6 +61,15 @@ function M.save_session(name)
     utils.hint(string.format('%s Saved session `%s`', icons.UI.SessionSave, name))
 end
 
+--- Resets the UI
+local function reset_ui()
+    vim.cmd [[silent! tabonly!]]
+    vim.cmd [[silent! %bd!]]
+    vim.cmd [[silent! %bw!]]
+
+    vim.args = {}
+end
+
 --- Restore a session
 ---@param name string # the name of the session
 function M.restore_session(name)
@@ -70,9 +79,7 @@ function M.restore_session(name)
 
     if vim.fn.filereadable(session_file) == 1 and vim.fn.filereadable(shada_file) == 1 and vim.fn.filereadable(settings_file) == 1 then
         -- close all windows, tabs and buffers
-        vim.cmd [[silent! tabonly!]]
-        vim.cmd [[silent! %bd!]]
-        vim.cmd [[silent! %bw!]]
+        reset_ui()
 
         vim.schedule(function()
             local ok, data = pcall(vim.fn.readfile, settings_file, 'b')
@@ -140,13 +147,20 @@ utils.register_function('Session', 'Manage session', {
         local name = get_session_name()
         local session_file, shada_file, settings_file = encode_session_name(name)
 
+        if not utils.file_exists(session_file) then
+            utils.warn(string.format('%s Session `%s` does not exist.', icons.UI.SessionDelete, name))
+            return
+        end
+
         local deleted = vim.fn.delete(session_file) - vim.fn.delete(shada_file) - vim.fn.delete(settings_file)
 
         if deleted == 0 then
-            utils.warn(string.format('%s Deleted session `%s`', icons.UI.SessionSave, name))
+            utils.warn(string.format('%s Deleted session `%s`', icons.UI.SessionDelete, name))
         else
             utils.error(string.format('%s Error(s) occurred while deleting session `%s`', icons.UI.SessionSave, name))
         end
+
+        reset_ui()
     end,
 })
 

@@ -3,7 +3,7 @@ return {
     dependencies = {
         'nvim-tree/nvim-web-devicons',
     },
-    event = 'VeryLazy',
+    event = 'UIEnter',
     opts = function()
         local utils = require 'core.utils'
         local icons = require 'ui.icons'

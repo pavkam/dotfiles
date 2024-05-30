@@ -50,3 +50,5 @@ fg
 gui
 hl
 ui
+lnum
+pos

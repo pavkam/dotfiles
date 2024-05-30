@@ -7,7 +7,7 @@ local M = {}
 ---@class ui.marks.Mark
 ---@field mark string # the mark name
 ---@field pos number[] # the position of the mark
----@field file? string # the file of the mark
+---@field file string|nil # the file of the mark
 
 ---@class ui.marks.SerializedMark
 ---@field mark string # the mark name
@@ -40,7 +40,7 @@ local function is_buffer_mark(mark)
 end
 
 --- Gets the marks for a buffer
----@param buffer? integer # the buffer number, or 0 or nil for the current buffer
+---@param buffer integer|nil # the buffer number, or 0 or nil for the current buffer
 ---@return ui.marks.Mark[] # a list of marks
 local get_marks = function(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
@@ -56,7 +56,7 @@ local get_marks = function(buffer)
 end
 
 --- Updates the signs for a buffer
----@param buffer? integer # the buffer number, or 0 or nil for the current buffer
+---@param buffer integer|nil # the buffer number, or 0 or nil for the current buffer
 local function update_signs(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -72,6 +72,11 @@ local function update_signs(buffer)
 
         vim.fn.sign_define(signName, { text = key, texthl = 'MarkSign' })
         vim.fn.sign_place(0, group, signName, buffer, { lnum = mark.pos[2], priority = -100 + i })
+    end
+
+    if package.loaded['satellite'] then
+        local s = require 'satellite.view'
+        s.refresh_bars()
     end
 end
 
