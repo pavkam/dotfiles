@@ -1,3 +1,12 @@
+-- TODO: add command palette
+-- TODO: figure out why TODOs don't get highlighted
+-- TODO: add URL underlining
+-- TODO: Try to replace bqf with Trouble v3
+-- TODO: make a better QF management
+-- TODO: save QF to session
+-- TODO: try to move to tabline from buffer line
+-- TODO: maybe cross-tmux-session marks?
+
 if not vim.fn.executable 'git' then
     error 'fatal: git required'
     vim.api.nvim_command 'cq1'
