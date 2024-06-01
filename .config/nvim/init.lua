@@ -7,18 +7,9 @@
 -- TODO: try to move to tabline from buffer line
 -- TODO: maybe cross-tmux-session marks?
 
-if not vim.fn.executable 'git' then
-    error 'fatal: git required'
+--- Global function to quit the current process
+_G.quit = function()
     vim.api.nvim_command 'cq1'
-
-    return
-end
-
-if not vim.fn.has 'nvim-0.10' then
-    error 'fatal: minimum required Neovim version is 0.10'
-    vim.api.nvim_command 'cq1'
-
-    return
 end
 
 --- Global debug function to help me debug (duh)
@@ -33,6 +24,29 @@ _G.dbg = function(...)
     local message = table.concat(objects, '\n')
 
     vim.notify(message)
+end
+
+--- Global function to log a message as an error and quit
+---@param message string the message to log
+_G.fatal = function(message)
+    assert(type(message) == 'string')
+
+    error(string.format('fatal error has occurred: %s', message))
+    error 'press any key to quit the process'
+
+    vim.fn.getchar()
+
+    vim.api.nvim_command 'cq1'
+end
+
+if not vim.fn.executable 'git' then
+    fatal 'git required'
+    return
+end
+
+if not vim.fn.has 'nvim-0.10' then
+    fatal 'minimum required Neovim version is 0.10'
+    return
 end
 
 local modules = {

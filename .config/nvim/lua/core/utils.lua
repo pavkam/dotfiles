@@ -287,7 +287,7 @@ end
 ---@param opts core.utils.RegisterCommandOpts|nil # the options to pass to the command
 function M.register_command(name, fn, opts)
     assert(type(name) == 'string' and name ~= '')
-    assert(type(fn) == 'function' or (vim.islist(fn) and #fn > 0) or (type(fn) == 'table' and fn.fn))
+    assert(type(fn) == 'function' or type(fn) == 'table')
 
     opts = opts or {}
 
@@ -304,7 +304,7 @@ function M.register_command(name, fn, opts)
                 bang = opts.bang,
             }
         )
-    elseif type(fn) == 'table' and not vim.islist(fn) then
+    elseif type(fn) == 'table' and type(fn.fn) == 'function' then
         vim.api.nvim_create_user_command(
             name,
             ---@param args vim.CommandCallbackArgs
@@ -361,7 +361,7 @@ function M.register_command(name, fn, opts)
                 bang = opts.bang,
                 range = vim.tbl_filter(function(f)
                     return type(f) == 'table' and f.range
-                end, fn),
+                end, fn) ~= nil,
                 complete = function(arg_lead)
                     local completions = vim.tbl_keys(fn)
                     local matches = {}
