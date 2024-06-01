@@ -1,11 +1,13 @@
 -- TODO: add command palette
 -- TODO: figure out why TODOs don't get highlighted
 -- TODO: add URL underlining
+--
 -- TODO: Try to replace bqf with Trouble v3
 -- TODO: make a better QF management
 -- TODO: save QF to session
+--
 -- TODO: try to move to tabline from buffer line
--- TODO: maybe cross-tmux-session marks?
+-- TODO: maybe cross-tmux-session marks and internalize tmux plugin
 
 --- Global function to quit the current process
 _G.quit = function()

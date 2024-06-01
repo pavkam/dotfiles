@@ -850,6 +850,14 @@ function M.feed_keys(keys)
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'n', false)
 end
 
+--- Formats the term_codes to be human-readable
+---@param str string # the string to format
+function M.format_term_codes(str)
+    assert(type(str) == 'string')
+
+    return str:gsub(string.char(9), '<TAB>'):gsub('', '<C-F>'):gsub(' ', '<Space>')
+end
+
 ---@type string
 local uuid_template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
 
