@@ -2,13 +2,13 @@
 local M = {}
 
 ---@class editor.syntax.GetNodeAtCursorOpts
----@field ignore_injections? boolean # Whether to include injected languages or not.
----@field ignore_indent? boolean # Whether to ignore the indentation or not.
----@field lang? string # The language to get the node at the cursor for.
+---@field ignore_injections boolean|nil # Whether to include injected languages or not.
+---@field ignore_indent boolean|nil # Whether to ignore the indentation or not.
+---@field lang string|nil # The language to get the node at the cursor for.
 
 --- Get the node at the cursor.
 ---@param window number|nil # The window to get the cursor position from. 0 or nil for the current window.
----@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node at the cursor.
+---@param opts editor.syntax.GetNodeAtCursorOpts|nil # The options for the node at the cursor.
 ---@return TSNode|nil # The node at the cursor.
 local function get_node_at_cursor(window, opts)
     window = window or vim.api.nvim_get_current_win()
@@ -24,7 +24,7 @@ local function get_node_at_cursor(window, opts)
         local line = M.current_line(window)
         local indent = line:match '^%s*()'
 
-        -- set position to the first non whitespace character
+        -- set position to the first non white-space character
         if indent and cursor[2] < indent - 1 then
             cursor[2] = indent - 1
         end
@@ -44,7 +44,7 @@ end
 
 --- Get the node under the cursor.
 ---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
----@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node under the cursor.
+---@param opts editor.syntax.GetNodeAtCursorOpts|nil # The options for the node under the cursor.
 ---@return TSNode|nil # The node under the cursor.
 function M.node_under_cursor(window, opts)
     local node = get_node_at_cursor(window, opts)
@@ -53,7 +53,7 @@ end
 
 --- Get the type of the node under the cursor.
 ---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
----@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node under the cursor.
+---@param opts editor.syntax.GetNodeAtCursorOpts|nil # The options for the node under the cursor.
 ---@return string|nil # The type of the node under the cursor.
 function M.node_type_under_cursor(window, opts)
     local node = get_node_at_cursor(window, opts)
@@ -62,7 +62,7 @@ end
 
 --- Get the node text under the cursor respecting syntactic boundaries.
 ---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
----@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node text under the cursor.
+---@param opts editor.syntax.GetNodeAtCursorOpts|nil # The options for the node text under the cursor.
 ---@param replacement string|nil # The text to replace the node with.
 function M.replace_node_under_cursor(window, replacement, opts)
     window = window or vim.api.nvim_get_current_win()
@@ -78,7 +78,7 @@ end
 
 --- Get the node text under the cursor respecting syntactic boundaries.
 ---@param window integer|nil # The window to get the cursor position from. 0 or nil for the current window.
----@param opts? editor.syntax.GetNodeAtCursorOpts # The options for the node text under the cursor.
+---@param opts editor.syntax.GetNodeAtCursorOpts|nil # The options for the node text under the cursor.
 ---@return string # The text under the cursor.
 function M.node_text_under_cursor(window, opts)
     local node = get_node_at_cursor(window, opts)
@@ -226,12 +226,12 @@ function M.increment_node_under_cursor(window, value)
 end
 
 ---@class editor.syntax.RenameOpts
----@field whole_word? boolean # Whether to match the whole word or not.
----@field orig? string # The original text to replace if not supplied, uses the '<C-r><C-w>' command keys.
----@field new? string # The new text to replace with (if not supplied, uses the orig).
+---@field whole_word boolean|nil # Whether to match the whole word or not.
+---@field orig string|nil # The original text to replace if not supplied, uses the '<C-r><C-w>' command keys.
+---@field new string|nil # The new text to replace with (if not supplied, uses the orig).
 
 --- Creates a rename expression that can be fed to vim.
----@param opts? editor.syntax.RenameOpts # The options for the rename expression.
+---@param opts editor.syntax.RenameOpts|nil # The options for the rename expression.
 function M.create_rename_expression(opts)
     opts = opts or {}
     assert(type(opts) == 'table')

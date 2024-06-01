@@ -83,52 +83,40 @@ local function append(title, lines, global)
     vim.api.nvim_put(lines, 'l', true, true)
 end
 
--- TODO: migrate to new API
-vim.api.nvim_create_user_command('Note', function(args)
-    if args.args == 'list' then
+utils.register_command('Note', {
+    ---@param args core.utils.CommandCallbackArgs
+    list = function(args)
         find(args.bang)
-        return
-    end
-
-    if args.args == 'grep' then
-        grep(args.bang)
-        return
-    end
-
-    if args.args == 'open' then
-        edit(args.bang)
-        return
-    end
-
-    if args.args == 'append' or args.args == '' then
-        local lines = syntax.lines(nil, args.line1, args.line2)
-
-        if #lines == 0 then
-            utils.error 'No lines selected'
-        else
-            local title = string.format('Lines %d-%d from %s:', args.line1, args.line2, vim.fn.expand '%')
-            append(title, lines, args.bang)
-        end
-
-        return
-    end
-
-    utils.error 'Invalid argument'
-end, {
-    desc = 'Manages notes',
-    complete = function(arg_lead)
-        local completions = { 'list', 'grep', 'open', 'append' }
-        local matches = {}
-
-        for _, value in ipairs(completions) do
-            if value:sub(1, #arg_lead) == arg_lead then
-                table.insert(matches, value)
-            end
-        end
-
-        return matches
     end,
-    nargs = '?',
-    range = true,
+    ---@param args core.utils.CommandCallbackArgs
+    grep = function(args)
+        grep(args.bang)
+    end,
+    ---@param args core.utils.CommandCallbackArgs
+    open = function(args)
+        edit(args.bang)
+    end,
+    append = {
+        ---@param args core.utils.CommandCallbackArgs
+        fn = function(args)
+            if not args.lines or #args.lines == 0 then
+                utils.error 'No lines selected'
+            else
+                local title
+                if args.range == 2 then
+                    title = string.format('Lines %d-%d from %s:', args.line1, args.line2, vim.fn.expand '%')
+                elseif args.range == 1 then
+                    title = string.format('Line %d from %s:', args.line1, vim.fn.expand '%')
+                end
+
+                append(title, args.lines, args.bang)
+            end
+        end,
+        range = true,
+    },
+}, {
+    default_fn = 'append',
+    desc = 'Manages notes',
+    n_args = '?',
     bang = true,
 })

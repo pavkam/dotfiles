@@ -15,6 +15,8 @@ local function enabled()
     return vim.fn.argc() == 0
 end
 
+-- TODO: move this code to git and maybe make it async
+
 --- Get the current session name
 ---@return string|nil # the current session name or nil if not enabled
 function M.current()
@@ -155,7 +157,7 @@ local function current_with_warning()
     return current
 end
 
-utils.register_function('Session', {
+utils.register_command('Session', {
     restore = function()
         local current = current_with_warning()
         if current then

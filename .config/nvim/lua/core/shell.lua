@@ -1,6 +1,6 @@
 local utils = require 'core.utils'
 local progress = require 'ui.progress'
-local esc = require('extras.markdown').escape
+local markdown = require 'extras.markdown'
 
 local progress_class = 'shell'
 
@@ -12,7 +12,7 @@ M.terminals = {}
 
 --- Creates a floating terminal
 ---@param cmd string # the command to run in the terminal
----@param opts? table # the options to pass to the terminal
+---@param opts table|nil # the options to pass to the terminal
 ---@return LazyFloat # the created terminal
 function M.floating(cmd, opts)
     assert(type(cmd) == 'string' and cmd ~= '')
@@ -133,7 +133,12 @@ local function async_cmd(cmd, args, input, callback, opts)
     if not handle then
         cleanup()
         utils.error(
-            string.format('Failed to spawn command *"%s"* with arguments *"%s"*: **%s**!', esc(cmd), esc(table.concat(args, ' ')), esc(spawn_error_or_pid))
+            string.format(
+                'Failed to spawn command *"%s"* with arguments *"%s"*: **%s**!',
+                markdown.escape(cmd),
+                markdown.escape(table.concat(args, ' ')),
+                markdown.escape(spawn_error_or_pid)
+            )
         )
         return
     end
@@ -188,8 +193,8 @@ local function async_cmd(cmd, args, input, callback, opts)
         utils.error(
             string.format(
                 'Failed to read/write from/to pipes for command *"%s"*: **%s**!',
-                esc(cmd),
-                esc(stdin_write_error or stdout_read_error or stderr_read_error)
+                markdown.escape(cmd),
+                markdown.escape(stdin_write_error or stdout_read_error or stderr_read_error)
             )
         )
     end
@@ -232,14 +237,21 @@ function M.async_cmd(cmd, args, input, callback, opts)
                 utils.error(
                     string.format(
                         'Error running command `%s %s` (error: **%s**):\n\n```\n%s\n```',
-                        esc(cmd),
-                        esc(table.concat(args, ' ')),
+                        markdown.escape(cmd),
+                        markdown.escape(table.concat(args, ' ')),
                         tostring(code),
-                        esc(message)
+                        markdown.escape(message)
                     )
                 )
             else
-                utils.error(string.format('Error running command `%s %s` (error: **%s**)', esc(cmd), esc(table.concat(args, ' ')), tostring(code)))
+                utils.error(
+                    string.format(
+                        'Error running command `%s %s` (error: **%s**)',
+                        markdown.escape(cmd),
+                        markdown.escape(table.concat(args, ' ')),
+                        tostring(code)
+                    )
+                )
             end
 
             return
@@ -286,73 +298,40 @@ function M.grep_dir(term, dir, callback)
     end, { ignore_codes = { 0, 1 } })
 end
 
---- Parses a string of arguments into a table
----@param args string # the string of arguments to parse
----@return string[] # the parsed arguments
-local function parse_args(args)
-    local parsed_args = {}
-    local in_quote = false
-    local current_arg = ''
-
-    for i = 1, #args do
-        local char = args:sub(i, i)
-        if char == '"' then
-            in_quote = not in_quote
-        elseif char == ' ' and not in_quote then
-            if #current_arg > 0 then
-                table.insert(parsed_args, current_arg)
-                current_arg = ''
-            end
-        else
-            current_arg = current_arg .. char
+utils.register_command('Run', {
+    fn = function(args)
+        if #args.split_args == 0 then
+            error 'No command specified'
         end
-    end
 
-    if #current_arg > 0 then
-        table.insert(parsed_args, current_arg)
-    end
+        local cmd_line_desc = table.concat(args.split_args, ' ')
+        local cmd = table.remove(args.split_args, 1)
 
-    return parsed_args
-end
-
-vim.api.nvim_create_user_command('Yolo', function(args)
-    local cmd_line = parse_args(args.args)
-    if #cmd_line == 0 then
-        error 'No command specified'
-    end
-
-    local cmd_line_desc = table.concat(cmd_line, ' ')
-    local cmd = table.remove(cmd_line, 1)
-
-    ---@type string[] | nil
-    local contents
-    if args.range == 2 then
-        contents = vim.api.nvim_buf_get_lines(0, args.line1 - 1, args.line2, false)
-    elseif args.range == 1 then
-        contents = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-    end
-
-    M.async_cmd(cmd, cmd_line, contents, function(output)
-        if not args.bang then
-            if #output > 0 then
-                local message = table.concat(output, '\n')
-                utils.info(string.format('Command "%s" finished:\n\n```sh\n%s\n```', esc(cmd_line_desc), esc(message)))
+        M.async_cmd(cmd, args.split_args, args.lines, function(output)
+            if not args.bang then
+                if #output > 0 then
+                    local message = markdown.escape(table.concat(output, '\n'))
+                    utils.info(string.format('Command "%s" finished:\n\n```sh\n%s\n```', markdown.escape(cmd_line_desc), markdown.escape(message)))
+                else
+                    utils.info(string.format('Command "%s" finished', markdown.escape(cmd_line_desc)))
+                end
             else
-                utils.info(string.format('Command "%s" finished', esc(cmd_line_desc)))
+                if args.range == 2 then
+                    vim.api.nvim_buf_set_lines(0, args.line1 - 1, args.line2, false, output)
+                elseif args.range == 1 then
+                    vim.api.nvim_buf_set_lines(0, 0, -1, false, output)
+                else
+                    -- insert at cursor position
+                    vim.api.nvim_put(output, 'c', true, true)
+                end
             end
-        else
-            if args.range == 2 then
-                vim.api.nvim_buf_set_lines(0, args.line1 - 1, args.line2, false, output)
-            elseif args.range == 1 then
-                vim.api.nvim_buf_set_lines(0, 0, -1, false, output)
-            else
-                -- insert at cursor position
-                vim.api.nvim_put(output, 'c', true, true)
-            end
-        end
-    end)
-end, { desc = 'Run a shell command', bang = true, nargs = '+', range = true })
-
-vim.cmd.cnoreabbrev('y', 'Yolo')
+        end)
+    end,
+    range = true,
+}, {
+    desc = 'Run a shell command asynchronously',
+    bang = true,
+    nargs = '+',
+})
 
 return M

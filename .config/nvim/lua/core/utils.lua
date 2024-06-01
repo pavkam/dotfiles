@@ -1,3 +1,5 @@
+local syntax = require 'editor.syntax'
+
 ---@class core.utils
 local M = {}
 
@@ -204,13 +206,13 @@ function M.trigger_user_event(event, data)
     vim.api.nvim_exec_autocmds('User', { pattern = event, modeline = false, data = data })
 end
 
----@class core.utils.RegisterFunctionOpts
+---@class core.utils.RegisterCommandOpts
 ---@field desc string # the description of the command
 ---@field n_args integer|'*'|'?'|nil # the number of arguments the command takes
 ---@field bang boolean|nil # whether the command takes a bang argument
 ---@field default_fn string|nil # the default function if none supplied
 
----@class core.utils.CommandFunctionArgs
+---@class vim.CommandCallbackArgs
 ---@field name string # the name of the command
 ---@field args string # the arguments passed to the command
 ---@field fargs string[] # the arguments split by un-escaped white-space
@@ -224,19 +226,101 @@ end
 ---@field mods string # the command modifiers, if any
 ---@field smods table # the command modifiers in a structured format
 
+---@class core.utils.CommandCallbackArgs: vim.CommandCallbackArgs
+---@field split_args string[] # the arguments split by escaped white-space
+---@field lines string[] # the lines of the buffer
+
+---@alias core.utils.CommandFunctionSpec fun(args: core.utils.CommandCallbackArgs) | { fn: fun(args: core.utils.CommandCallbackArgs), range: boolean|nil }
+---@alias core.utils.CommandFunctionArgs core.utils.CommandFunctionSpec|core.utils.CommandFunctionSpec[]
+
+--- Parses a string of arguments into a table
+---@param args vim.CommandCallbackArgs # the command arguments
+---@return string[] # the parsed arguments
+local function parse_command_args(args)
+    assert(type(args) == 'table')
+
+    local parsed_args = {}
+    local in_quote = false
+    local current_arg = ''
+
+    for i = 1, #args do
+        local char = args.args:sub(i, i)
+        if char == '"' then
+            in_quote = not in_quote
+        elseif char == ' ' and not in_quote then
+            if #current_arg > 0 then
+                table.insert(parsed_args, current_arg)
+                current_arg = ''
+            end
+        else
+            current_arg = current_arg .. char
+        end
+    end
+
+    if #current_arg > 0 then
+        table.insert(parsed_args, current_arg)
+    end
+
+    return parsed_args
+end
+
+--- Extracts the lines of a buffer described by the command
+---@param args vim.CommandCallbackArgs # the command arguments
+---@return string[] # the lines of the buffer
+local function extract_command_lines(args)
+    assert(type(args) == 'table')
+
+    ---@type string[]
+    local contents = {}
+    if args.range == 2 then
+        contents = vim.api.nvim_buf_get_lines(0, args.line1 - 1, args.line2, false)
+    elseif args.range == 1 then
+        contents = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    end
+
+    return contents
+end
+
 --- Registers a command that takes a single argument (function)
 ---@param name string # the name of the command
----@param funcs table<string, fun(core.utils.CommandFunctionArgs)>|fun(core.utils.CommandFunctionArgs) # the list of functions or function to register
----@param opts core.utils.RegisterFunctionOpts|nil # the options to pass to the command
-function M.register_function(name, funcs, opts)
+---@param fn core.utils.CommandFunctionArgs # the function(s) to call when the command is executed
+---@param opts core.utils.RegisterCommandOpts|nil # the options to pass to the command
+function M.register_command(name, fn, opts)
+    assert(type(name) == 'string' and name ~= '')
+    assert(type(fn) == 'function' or (vim.islist(fn) and #fn > 0) or (type(fn) == 'table' and fn.fn))
+
     opts = opts or {}
 
-    if type(funcs) == 'function' then
-        vim.api.nvim_create_user_command(name, funcs, {
-            desc = opts.desc,
-            nargs = opts.n_args,
-            bang = opts.bang,
-        })
+    if type(fn) == 'function' then
+        vim.api.nvim_create_user_command(
+            name,
+            ---@param args vim.CommandCallbackArgs
+            function(args)
+                fn(M.tbl_merge(args, { split_args = parse_command_args(args) }))
+            end,
+            {
+                desc = opts.desc,
+                nargs = opts.n_args,
+                bang = opts.bang,
+            }
+        )
+    elseif type(fn) == 'table' and not vim.islist(fn) then
+        vim.api.nvim_create_user_command(
+            name,
+            ---@param args vim.CommandCallbackArgs
+            function(args)
+                fn.fn(M.tbl_merge(args, {
+                    split_args = parse_command_args(args),
+                    lines = fn.range and extract_command_lines(args) or nil,
+                }))
+            end,
+            {
+                desc = opts.desc,
+                nargs = opts.n_args,
+                bang = opts.bang,
+                range = fn.range,
+            }
+        )
     else
         ---@type integer|'*'|'?'|'+'|nil
         local n_args = 1
@@ -254,22 +338,32 @@ function M.register_function(name, funcs, opts)
 
         vim.api.nvim_create_user_command(
             name,
-            ---@param args core.utils.CommandFunctionArgs
+            ---@param args core.utils.CommandCallbackArgs
             function(args)
-                local func = funcs[args.fargs[1] or opts.default_fn]
+                local func_or_spec = fn[args.fargs[1] or opts.default_fn]
+                if not func_or_spec then
+                    M.error(string.format('Unknown function `%s`', args.args))
+                    return
+                end
+
+                local func = type(func_or_spec) == 'function' and func_or_spec or func_or_spec.fn
 
                 if func then
-                    func(args)
-                else
-                    M.error(string.format('Unknown function `%s`', args.args))
+                    func(M.tbl_merge(args, {
+                        split_args = parse_command_args(args),
+                        lines = type(func_or_spec) == 'table' and func_or_spec.range and extract_command_lines(args) or nil,
+                    }))
                 end
             end,
             {
                 desc = opts.desc,
                 nargs = n_args,
                 bang = opts.bang,
+                range = vim.tbl_filter(function(f)
+                    return type(f) == 'table' and f.range
+                end, fn),
                 complete = function(arg_lead)
-                    local completions = vim.tbl_keys(funcs)
+                    local completions = vim.tbl_keys(fn)
                     local matches = {}
 
                     for _, value in ipairs(completions) do

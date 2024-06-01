@@ -124,7 +124,7 @@ function M.check_workspace(client, target)
     end)
 end
 
-utils.register_function('DiagnoseWorkspace', function()
+utils.register_command('DiagnoseWorkspace', function()
     utils.info 'Checking workspace diagnostics...'
 
     local clients = vim.tbl_filter(function(client)
