@@ -42,6 +42,8 @@ local function register_task(buffer, class, opts)
     if task then
         task.ctx = opts.ctx
         task.ttl = opts.timeout or task.ttl
+        task.fn = task.fn or opts.fn
+        task.prv = opts.prv or task.prv
     else
         task = {
             ctx = opts.ctx,
@@ -52,6 +54,7 @@ local function register_task(buffer, class, opts)
     end
 
     tasks[class] = task
+
     M.tasks[key] = tasks
 end
 

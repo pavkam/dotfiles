@@ -155,7 +155,7 @@ local function current_with_warning()
     return current
 end
 
-utils.register_function('Session', 'Manage session', {
+utils.register_function('Session', {
     restore = function()
         local current = current_with_warning()
         if current then
@@ -191,7 +191,7 @@ utils.register_function('Session', 'Manage session', {
 
         reset_ui()
     end,
-})
+}, { desc = 'Manages sessions' })
 
 -- save session on a timer
 vim.defer_fn(function()

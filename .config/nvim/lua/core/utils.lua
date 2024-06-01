@@ -204,34 +204,85 @@ function M.trigger_user_event(event, data)
     vim.api.nvim_exec_autocmds('User', { pattern = event, modeline = false, data = data })
 end
 
+---@class core.utils.RegisterFunctionOpts
+---@field desc string # the description of the command
+---@field n_args integer|'*'|'?'|nil # the number of arguments the command takes
+---@field bang boolean|nil # whether the command takes a bang argument
+---@field default_fn string|nil # the default function if none supplied
+
+---@class core.utils.CommandFunctionArgs
+---@field name string # the name of the command
+---@field args string # the arguments passed to the command
+---@field fargs string[] # the arguments split by un-escaped white-space
+---@field nargs string # the number of arguments
+---@field bang boolean # whether the command was executed with a bang
+---@field line1 integer # the starting line of the command range
+---@field line2 integer # the final line of the command range
+---@field range 0|1|2 # the number of items in the command range
+---@field count integer # any count supplied
+---@field reg string # the optional register, if specified
+---@field mods string # the command modifiers, if any
+---@field smods table # the command modifiers in a structured format
+
 --- Registers a command that takes a single argument (function)
 ---@param name string # the name of the command
----@param desc string # the description of the command
----@param funcs table<string, function> # the list of functions to register
-function M.register_function(name, desc, funcs)
-    vim.api.nvim_create_user_command(name, function(args)
-        local func = funcs[args.args]
-        if func then
-            func(args)
-        else
-            M.error(string.format('Unknown function `%s`', args.args))
-        end
-    end, {
-        desc = desc,
-        complete = function(arg_lead)
-            local completions = vim.tbl_keys(funcs)
-            local matches = {}
+---@param funcs table<string, fun(core.utils.CommandFunctionArgs)>|fun(core.utils.CommandFunctionArgs) # the list of functions or function to register
+---@param opts core.utils.RegisterFunctionOpts|nil # the options to pass to the command
+function M.register_function(name, funcs, opts)
+    opts = opts or {}
 
-            for _, value in ipairs(completions) do
-                if value:sub(1, #arg_lead) == arg_lead then
-                    table.insert(matches, value)
-                end
+    if type(funcs) == 'function' then
+        vim.api.nvim_create_user_command(name, funcs, {
+            desc = opts.desc,
+            nargs = opts.n_args,
+            bang = opts.bang,
+        })
+    else
+        ---@type integer|'*'|'?'|'+'|nil
+        local n_args = 1
+        if opts.n_args == '?' and opts.default_fn then
+            n_args = '?'
+        elseif opts.n_args == '*' and not opts.default_fn then
+            n_args = '+'
+        elseif type(opts.n_args) == 'number' then
+            if opts.default_fn then
+                n_args = opts.n_args
+            else
+                n_args = n_args + opts.n_args
             end
+        end
 
-            return matches
-        end,
-        nargs = 1,
-    })
+        vim.api.nvim_create_user_command(
+            name,
+            ---@param args core.utils.CommandFunctionArgs
+            function(args)
+                local func = funcs[args.fargs[1] or opts.default_fn]
+
+                if func then
+                    func(args)
+                else
+                    M.error(string.format('Unknown function `%s`', args.args))
+                end
+            end,
+            {
+                desc = opts.desc,
+                nargs = n_args,
+                bang = opts.bang,
+                complete = function(arg_lead)
+                    local completions = vim.tbl_keys(funcs)
+                    local matches = {}
+
+                    for _, value in ipairs(completions) do
+                        if value:sub(1, #arg_lead) == arg_lead then
+                            table.insert(matches, value)
+                        end
+                    end
+
+                    return matches
+                end,
+            }
+        )
+    end
 end
 
 --- Trigger a status update event

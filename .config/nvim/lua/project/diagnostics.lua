@@ -48,8 +48,6 @@ function M.jump(next_or_prev, severity)
     go { severity = sev }
 end
 
----@type table<string, integer>
-local checked_files = {}
 local indexing_in_progress = false
 
 --- Check all files in the workspace for diagnostics
@@ -57,37 +55,47 @@ local indexing_in_progress = false
 ---@param files string[] # the files to check
 ---@param index integer # the index of the current file
 local function check_file(client, files, index)
-    if index > #files then
-        indexing_in_progress = false
+    assert(type(client) == 'table')
+    assert(vim.islist(files))
+
+    indexing_in_progress = index <= #files
+    utils.trigger_status_update_event()
+
+    if not indexing_in_progress then
         return
     end
 
-    vim.schedule(function()
-        local path = files[index]
-        if path ~= vim.api.nvim_buf_get_name(0) or checked_files[path] ~= vim.fn.getftime(path) then
-            progress.register_task('workspace', {
-                ctx = string.format('Checking %d of %d files', index, #files),
-            })
+    local path = files[index]
+    progress.register_task('workspace', {
+        ctx = string.format('Checking %d of %d files', index, #files),
+    })
 
-            local ok = pcall(vim.fn.bufadd, path)
-            if ok then
-                client.notify('textDocument/didOpen', {
-                    textDocument = {
-                        uri = vim.uri_from_fname(path),
-                        version = 0,
-                        text = vim.fn.join(vim.fn.readfile(path), '\n'),
-                        languageId = utils.file_type(path),
-                    },
-                })
-            end
+    local ok, buffer = pcall(vim.fn.bufadd, path)
+    if ok then
+        client.notify(vim.lsp.protocol.Methods.textDocument_didOpen, {
+            textDocument = {
+                uri = vim.uri_from_fname(path),
+                version = 0,
+                text = vim.fn.join(vim.fn.readfile(path), '\n'),
+                languageId = utils.file_type(path),
+            },
+        })
 
-            --- store the last modified time of the file
-            checked_files[path] = vim.fn.getftime(path)
-            utils.trigger_status_update_event()
-        end
+        vim.defer_fn(function()
+            client.request_sync(vim.lsp.protocol.Methods.textDocument_publishDiagnostics, {
+                textDocument = {
+                    uri = vim.uri_from_fname(path),
+                    version = 0,
+                    text = vim.fn.join(vim.fn.readfile(path), '\n'),
+                    languageId = utils.file_type(path),
+                },
+            }, 1000, buffer)
 
+            check_file(client, files, index + 1)
+        end, 10)
+    else
         check_file(client, files, index + 1)
-    end)
+    end
 end
 
 --- Forces the LSP client to check all files in the workspace for diagnostics
@@ -101,7 +109,7 @@ function M.check_workspace(client, target)
     local git = require 'git'
     local project = require 'project'
 
-    git.tracked(project.root(target) or vim.fn.cwd(), function(paths)
+    git.tracked(project.root(target, false) or vim.fn.cwd(), function(paths)
         indexing_in_progress = true
 
         check_file(client, paths, 1)
@@ -111,21 +119,21 @@ function M.check_workspace(client, target)
                 return indexing_in_progress
             end,
             ctx = 'Checking workspace...',
-            timeout = 60 * 1000,
+            timeout = math.huge,
         })
     end)
 end
 
-utils.register_function('Check', 'Check all files', {
-    ['do'] = function()
-        local clients = vim.tbl_filter(function(client)
-            return not lsp.is_special(client)
-        end, vim.lsp.get_clients())
+utils.register_function('DiagnoseWorkspace', function()
+    utils.info 'Checking workspace diagnostics...'
 
-        for _, client in ipairs(clients) do
-            M.check_workspace(client)
-        end
-    end,
-})
+    local clients = vim.tbl_filter(function(client)
+        return not lsp.is_special(client)
+    end, vim.lsp.get_clients())
+
+    for _, client in ipairs(clients) do
+        M.check_workspace(client)
+    end
+end, { desc = 'Diagnose workspace' })
 
 return M
