@@ -9,7 +9,7 @@ utils.on_user_event('NormalFile', function(_, evt)
         if package.loaded['mini.bufremove'] then
             require('mini.bufremove').delete(buffer, true)
         else
-            vim.api.nvim_command(string.format('bdelete %s', buffer))
+            vim.api.nvim_command(string.format('bdelete! %s', buffer))
         end
     end
 

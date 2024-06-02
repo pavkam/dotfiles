@@ -359,9 +359,9 @@ function M.register_command(name, fn, opts)
                 desc = opts.desc,
                 nargs = n_args,
                 bang = opts.bang,
-                range = vim.tbl_filter(function(f)
+                range = #vim.tbl_filter(function(f)
                     return type(f) == 'table' and f.range
-                end, fn) ~= nil,
+                end, fn) > 0,
                 complete = function(arg_lead)
                     local completions = vim.tbl_keys(fn)
                     local matches = {}
@@ -844,10 +844,12 @@ end
 
 --- Feed keys to neovim
 ---@param keys string # the keys to feed
-function M.feed_keys(keys)
+---@param mode string|nil # the mode to feed the keys in
+function M.feed_keys(keys, mode)
     assert(type(keys) == 'string')
+    mode = mode or 'n'
 
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'n', false)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), mode, false)
 end
 
 --- Formats the term_codes to be human-readable

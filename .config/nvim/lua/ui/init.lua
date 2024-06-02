@@ -4,6 +4,7 @@ local git = require 'git'
 local diagnostics = require 'project.diagnostics'
 local icons = require 'ui.icons'
 local progress = require 'ui.progress'
+local command_palette = require 'ui.command_palette'
 
 -- apply color-scheme first
 vim.cmd.colorscheme 'tokyonight'
@@ -41,6 +42,10 @@ vim.keymap.set('n', '<leader><leader>', function()
         pcall(vim.cmd.edit, '#')
     end
 end, { desc = icons.UI.Switch .. ' Switch buffer', silent = true })
+
+vim.keymap.set({ 'n', 'x', 'i' }, '<F2>', function()
+    command_palette.show_command_palette()
+end, { desc = 'Show command palette' })
 
 vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = icons.UI.Save .. ' Save buffer' })
 vim.keymap.set('n', '<leader>W', '<cmd>wa<cr>', { desc = icons.UI.SaveAll .. ' Save all buffers' })

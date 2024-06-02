@@ -171,6 +171,7 @@ vim.keymap.set('n', '<M-a>', 'ggVG', { desc = 'Select all', remap = true })
 vim.keymap.set('x', '.', ':norm .<CR>', { desc = 'Repeat edit' })
 vim.keymap.set('x', '@', ':norm @q<CR>', { desc = 'Repeat macro' })
 
+-- TODO: who is hijacking my left mouse key?
 vim.keymap.set('i', '<LeftMouse>', '<Esc><LeftMouse>', { desc = 'Exit insert mode and left-click' })
 vim.keymap.set('i', '<RightMouse>', '<Esc><RightMouse>', { desc = 'Exit insert mode and right-click' })
 
@@ -265,6 +266,19 @@ utils.on_event('BufWritePre', function(evt)
 end)
 
 -- forget files that have been deleted
+local new_files = {}
+utils.on_event({ 'BufNew' }, function(evt)
+    if utils.is_special_buffer(evt.buf) then
+        return
+    end
+
+    local file = vim.api.nvim_buf_get_name(evt.buf)
+
+    if file and file ~= '' and not utils.file_exists(file) then
+        new_files[file] = true
+    end
+end)
+
 utils.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
     if utils.is_special_buffer(evt.buf) then
         return
@@ -275,11 +289,18 @@ utils.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
         return
     end
 
+    if new_files[file] then
+        new_files[file] = nil
+        return
+    end
+
     require('ui.marks').forget(file)
     require('core.old_files').forget(file)
     require('ui.qf').forget(file)
 
-    vim.cmd 'bdelete!'
+    if evt.event ~= 'BufDelete' then
+        vim.cmd 'bdelete!'
+    end
 end)
 
 settings.register_toggle('spelling', function(enabled)

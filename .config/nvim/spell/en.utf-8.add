@@ -68,3 +68,11 @@ fargs
 smods
 lang
 cmd
+Keymap
+api
+keyset
+keymap
+attrs
+expr
+noremap
+attr
