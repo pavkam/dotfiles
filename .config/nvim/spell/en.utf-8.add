@@ -76,3 +76,4 @@ attrs
 expr
 noremap
 attr
+async

@@ -49,20 +49,21 @@ return {
 
         if vim.o.filetype == 'lazy' then
             vim.cmd.close()
-            utils.on_event('User', function()
+
+            utils.on_user_event('AlphaReady', function()
                 require('lazy').show()
-            end, 'AlphaReady')
+            end)
         end
 
         require('alpha').setup(dashboard.opts)
 
-        utils.on_event('User', function()
+        utils.on_user_event('LazyVimStarted', function()
             local stats = require('lazy').stats()
             local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
 
             dashboard.section.footer.val = icons.UI.Speed .. ' Neovim loaded ' .. stats.count .. ' plugins in ' .. ms .. 'ms'
 
             pcall(vim.cmd.AlphaRedraw)
-        end, 'LazyVimStarted')
+        end)
     end,
 }

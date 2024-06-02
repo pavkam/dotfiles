@@ -81,9 +81,9 @@ end
 function M.restore_session(name)
     assert(type(name) == 'string')
 
-    local session_file, shada_file, settings_file = M.files(name)
+    if M.saved(name) then
+        local session_file, shada_file, settings_file = M.files(name)
 
-    if vim.fn.filereadable(session_file) == 1 and vim.fn.filereadable(shada_file) == 1 and vim.fn.filereadable(settings_file) == 1 then
         -- close all windows, tabs and buffers
         reset_ui()
 
@@ -111,6 +111,14 @@ function M.restore_session(name)
             end)
         end)
     end
+end
+
+--- Check if a session is saved
+---@param name string # the name of the session
+function M.saved(name)
+    local session_file, shada_file, settings_file = M.files(name)
+
+    return vim.fn.filereadable(session_file) == 1 and vim.fn.filereadable(shada_file) == 1 and vim.fn.filereadable(settings_file) == 1
 end
 
 --- Swap sessions
@@ -176,12 +184,12 @@ utils.register_command('Session', {
             return
         end
 
-        local session_file, shada_file, settings_file = M.files(current)
-
-        if not utils.file_exists(session_file) then
+        if not M.saved(current) then
             utils.warn(string.format('%s Session `%s` does not exist.', icons.UI.SessionDelete, current))
             return
         end
+
+        local session_file, shada_file, settings_file = M.files(current)
 
         local deleted = vim.fn.delete(session_file) - vim.fn.delete(shada_file) - vim.fn.delete(settings_file)
 

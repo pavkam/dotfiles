@@ -11,11 +11,29 @@ return {
         },
     },
     config = function(_, _)
-        vim.api.nvim_create_user_command('BufferRemove', function()
+        local utils = require 'core.utils'
+
+        utils.register_command('BufferRemove', function()
             local should_remove = require('core.utils').confirm_saved(0, 'closing')
             if should_remove then
-                require('mini.bufremove').delete(0, true)
+                local buffer = vim.api.nvim_get_current_buf()
+
+                require('mini.bufremove').delete(buffer, true)
+
+                -- Special code to manage alpha
+                if utils.has_plugin 'alpha-nvim' then
+                    local buffers = utils.get_listed_buffers()
+
+                    if #buffers == 1 and buffers[1] == buffer then
+                        require('alpha').start()
+                        vim.schedule(function()
+                            for _, b in ipairs(utils.get_listed_buffers()) do
+                                vim.api.nvim_buf_delete(b, { force = true })
+                            end
+                        end)
+                    end
+                end
             end
-        end, { nargs = 0 })
+        end, { desc = 'Close buffer' })
     end,
 }
