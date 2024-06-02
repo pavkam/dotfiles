@@ -42,13 +42,24 @@ function M.tracked(dir, callback)
     end, { ignore_codes = { 0, 1, 128 }, cwd = dir })
 end
 
---- Gets the current git branch for a file
+--- Gets the current git branch for a given directory
 ---@param dir string # the path under which to check the git branch
 ---@param callback fun(branch: string|nil) # the callback to call when the command finishes
 function M.current_branch(dir, callback)
     assert(type(dir) == 'string' and dir ~= '')
 
     shell.async_cmd('git', { 'branch', '--show-current' }, nil, function(output, code)
+        callback(code == 0 and output[1] or nil)
+    end, { ignore_codes = { 0, 1, 128 }, cwd = dir })
+end
+
+--- Gets the current git root for a given directory
+---@param dir string # the path under which to check the git branch
+---@param callback fun(branch: string|nil) # the callback to call when the command finishes
+function M.root(dir, callback)
+    assert(type(dir) == 'string' and dir ~= '')
+
+    shell.async_cmd('git', { 'rev-parse', '--show-toplevel' }, nil, function(output, code)
         callback(code == 0 and output[1] or nil)
     end, { ignore_codes = { 0, 1, 128 }, cwd = dir })
 end
