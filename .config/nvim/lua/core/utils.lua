@@ -857,7 +857,7 @@ end
 function M.format_term_codes(str)
     assert(type(str) == 'string')
 
-    return str:gsub(string.char(9), '<TAB>'):gsub('', '<C-F>'):gsub(' ', '<Space>')
+    return str:gsub(string.char(9), '<TAB>'):gsub('', '<C-F>'):gsub(' ', '<Space>'):gsub('\n', '<CR>')
 end
 
 ---@type string

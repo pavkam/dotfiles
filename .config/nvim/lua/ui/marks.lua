@@ -80,32 +80,43 @@ local function update_signs(buffer)
     end
 end
 
-utils.attach_keymaps(nil, function(set)
-    set('n', 'm', function()
-        local key_code = vim.fn.getchar()
-        local key = vim.fn.nr2char(key_code)
-        local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+---@type string[]
+local letters = {}
+for i = 97, 122 do -- ASCII values for 'a' to 'z'
+    table.insert(letters, string.char(i))
+    table.insert(letters, string.char(i - 32))
+end
 
-        if key:len() == 1 and is_user_mark(key) then
+utils.attach_keymaps(nil, function(set)
+    for _, key in ipairs(letters) do
+        set('n', 'm' .. key, function()
+            local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+
             vim.api.nvim_buf_set_mark(0, key, r, c, {})
             utils.info(string.format('Marked position **%d:%d** as `%s`.', r, c, key))
-        elseif key == '-' then
-            for _, mark in pairs(get_marks()) do
-                if mark.pos[2] == r then
-                    key = mark_key(mark)
-                    utils.info(string.format('Unmarked position **%d:%d** as `%s`.', r, c, key))
 
-                    if is_buffer_mark(key) then
-                        vim.api.nvim_buf_del_mark(0, key)
-                    else
-                        vim.api.nvim_del_mark(key)
-                    end
+            update_signs()
+        end, { desc = string.format('Set mark "%s" at current line', key) })
+    end
+
+    set('n', 'm-', function()
+        local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+
+        for _, mark in pairs(get_marks()) do
+            if mark.pos[2] == r then
+                local key = mark_key(mark)
+                utils.info(string.format('Unmarked position **%d:%d** as `%s`.', r, c, key))
+
+                if is_buffer_mark(key) then
+                    vim.api.nvim_buf_del_mark(0, key)
+                else
+                    vim.api.nvim_del_mark(key)
                 end
             end
         end
 
         update_signs()
-    end, { desc = 'Update mark' })
+    end, { desc = 'Remove mark from the current line' })
 end, true)
 
 utils.on_event('BufEnter', function(evt)

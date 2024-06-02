@@ -290,8 +290,11 @@ utils.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
     end
 
     if new_files[file] then
-        new_files[file] = nil
-        return
+        if evt.event == 'BufDelete' then
+            new_files[file] = nil
+        else
+            return
+        end
     end
 
     require('ui.marks').forget(file)

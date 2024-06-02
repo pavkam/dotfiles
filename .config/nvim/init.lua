@@ -1,4 +1,3 @@
--- TODO: add command palette
 -- TODO: figure out why TODOs don't get highlighted
 -- TODO: add URL underlining
 --

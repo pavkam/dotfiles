@@ -7,6 +7,18 @@ local entry_display = require 'telescope.pickers.entry_display'
 local utils = require 'core.utils'
 local icons = require 'ui.icons'
 
+---@class ui.command_palette.Options
+---@field mode string|nil # List of modes to get items for
+---@field buffer number|nil # The buffer to get the items from, 0, or nil for current buffer
+---@field column_separator string|nil # The column separator
+
+--- Check if the mode is visual
+---@param mode string # The mode
+---@return boolean # If the mode is visual
+local function is_visual_mode(mode)
+    return mode == 'v' or mode == 'V' or mode == ''
+end
+
 ---@class vim.CommandDesc # Command description
 ---@field name string # Command name
 ---@field nargs string # Number of arguments
@@ -17,21 +29,19 @@ local icons = require 'ui.icons'
 ---@field complete function|nil # Command completion
 
 --- Get all commands
----@param buffer number|nil # The buffer to get the commands from, 0, or nil for current buffer
----@param modes string[] # List of modes to get the commands from
----@return vim.CommandDesc # List of commands
-local function get_commands(buffer, modes)
-    buffer = buffer or vim.api.nvim_get_current_buf()
+---@param opts ui.command_palette.Options # The options
+---@return vim.CommandDesc[] # List of commands
+local function get_commands(opts)
+    assert(type(opts) == 'table')
 
     ---@type vim.CommandDesc[]
     local commands = vim.tbl_values(vim.api.nvim_get_commands {})
     ---@type vim.CommandDesc[]
-    local buffer_commands = vim.tbl_values(vim.api.nvim_buf_get_commands(buffer, {}))
+    local buffer_commands = vim.tbl_values(vim.api.nvim_buf_get_commands(opts.buffer, {}))
 
-    local include_visual = vim.tbl_contains(modes, 'v')
-    local include_normal = vim.tbl_contains(modes, 'n')
-
-    return vim.tbl_filter(
+    local is_visual = is_visual_mode(opts.mode)
+    ---@type vim.CommandDesc[]
+    local all = vim.tbl_filter(
         ---@param cmd vim.CommandDesc
         function(cmd)
             if cmd == nil then
@@ -39,11 +49,12 @@ local function get_commands(buffer, modes)
             end
 
             local works_in_visual = cmd.range and cmd.range ~= ''
-
-            return (works_in_visual and include_visual) or include_normal
+            return (works_in_visual and is_visual) or opts.mode == 'n'
         end,
         vim.list_extend(commands, buffer_commands)
     )
+
+    return all
 end
 
 ---@class vim.KeymapDesc # Keymap description
@@ -60,18 +71,16 @@ end
 ---@field silent number # Silent (boolean)
 
 --- Get all keymaps
----@param buffer number|nil # The buffer to get the keymaps from, 0, or nil for current buffer
----@param modes string[] # List of modes to get the keymaps from
+---@param opts ui.command_palette.Options # The options
 ---@return vim.KeymapDesc[] # List of keymaps
-local function get_keymaps(buffer, modes)
-    buffer = buffer or vim.api.nvim_get_current_buf()
+local function get_keymaps(opts)
+    assert(type(opts) == 'table')
 
     ---@type vim.api.keyset.keymap[]
     local all = {}
-    for _, mode in pairs(modes) do
-        vim.list_extend(all, vim.api.nvim_get_keymap(mode))
-        vim.list_extend(all, vim.api.nvim_buf_get_keymap(buffer, mode))
-    end
+
+    vim.list_extend(all, vim.api.nvim_get_keymap(opts.mode))
+    vim.list_extend(all, vim.api.nvim_buf_get_keymap(opts.buffer, opts.mode))
 
     ---@type table<string, vim.KeymapDesc>
     local keymaps = {}
@@ -96,39 +105,30 @@ end
 ---@field original vim.CommandDesc|vim.KeymapDesc # The original entry
 
 --- Get all command palette items
----@param buffer number|nil # The buffer to get the items from, 0, or nil for current buffer
----@param keymap_modes string[] # List of modes to get the keymaps from
+---@param opts ui.command_palette.Options # The options
 ---@return ui.command_palette.Entry[] # List of items
-local function get_items(buffer, keymap_modes)
-    local commands = get_commands(buffer, keymap_modes)
-    local keymaps = get_keymaps(buffer, keymap_modes)
+local function get_items(opts)
+    assert(type(opts) == 'table')
+
+    local commands = get_commands(opts)
+    local keymaps = get_keymaps(opts)
 
     ---@type ui.command_palette.Entry[]
     local items = {}
     for _, cmd in ipairs(commands) do
         -- attributes
-        local attrs = ''
-
-        if cmd.nargs == '?' then
-            attrs = attrs .. 'at most one argument'
-        elseif cmd.nargs == '*' then
-            attrs = attrs .. 'many arguments'
-        elseif cmd.nargs == '+' then
-            attrs = attrs .. '1 or more arguments'
-        elseif cmd.nargs == '0' then
-            attrs = attrs .. 'no arguments'
-        elseif cmd.nargs == '1' then
-            attrs = attrs .. 'one argument'
-        else
-            attrs = attrs .. cmd.nargs .. ' arguments'
-        end
+        local attrs = cmd.nargs or '0'
 
         if cmd.bang then
-            attrs = attrs .. ' !'
+            attrs = attrs .. '!'
+        end
+
+        if cmd.complete then
+            attrs = attrs .. icons.TUI.LineEnd
         end
 
         if cmd.range and cmd.range ~= '' then
-            attrs = attrs .. ' '
+            attrs = attrs .. icons.TUI.Ellipsis
         end
 
         table.insert(items, {
@@ -151,16 +151,16 @@ local function get_items(buffer, keymap_modes)
         end
 
         -- description
-        local desc = (keymap.desc or keymap.rhs or ''):gsub('\n', '\\n')
+        local desc = (keymap.desc or utils.format_term_codes(keymap.rhs or '')):gsub('\n', '\\n')
         if keymap.callback and not keymap.desc then
             desc = require('telescope.actions.utils')._get_anon_function_name(debug.getinfo(keymap.callback))
         end
 
         table.insert(items, {
             type = 'keymap',
-            name = keymap.lhs,
+            name = utils.format_term_codes(keymap.lhs),
             attrs = attrs,
-            desc = desc,
+            desc = desc:gsub('\n', ' '),
             original = keymap,
         })
     end
@@ -168,18 +168,11 @@ local function get_items(buffer, keymap_modes)
     return items
 end
 
----@class ui.command_palette.Options
----@field key_modes string[] # List of modes to get the keymaps from
----@field buffer number|nil # The buffer to get the items from, 0, or nil for current buffer
----@field column_separator string|nil # The column separator
-
 --- Gets the displayer
 ---@param name_col_width number # The width of the name column
 ---@param attr_col_width number # The width of the attributes column
 ---@param opts ui.command_palette.Options
 local function get_displayer(name_col_width, attr_col_width, opts)
-    --max_len_lhs = math.max(max_len_lhs, #utils.format_term_codes(keymap.lhs))
-
     return entry_display.create {
         separator = opts.column_separator,
         items = {
@@ -215,14 +208,11 @@ end
 local M = {}
 
 --- Open the command palette (internal)
----@param mode string # The current mode
 ---@param opts ui.command_palette.Options # The options
-local function show_command_palette(mode, opts)
+local function show_command_palette(opts)
     assert(type(opts) == 'table')
 
-    opts.column_separator = opts.column_separator or (' ' .. icons.Symbols.ColumnSeparator .. ' ')
-
-    local items = get_items(opts.buffer, opts.key_modes)
+    local items = get_items(opts)
 
     local name_col_width = 0
     local attrs_col_width = 0
@@ -239,7 +229,7 @@ local function show_command_palette(mode, opts)
         .new(opts, {
             prompt_title = 'Palette',
             finder = finders.new_table {
-                results = get_items(opts.buffer, opts.key_modes),
+                results = items,
                 entry_maker = entry_maker,
             },
             sorter = conf.generic_sorter(opts),
@@ -265,7 +255,7 @@ local function show_command_palette(mode, opts)
                         end
 
                         vim.cmd.stopinsert()
-                        if mode == 'v' then
+                        if is_visual_mode(opts.mode) then
                             utils.feed_keys 'gv'
                         end
 
@@ -273,7 +263,7 @@ local function show_command_palette(mode, opts)
                     elseif selection.type == 'keymap' then
                         local keymap = selection.original --[[@as vim.KeymapDesc]]
 
-                        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keymap.lhs, true, false, true), 't', true)
+                        utils.feed_keys(keymap.lhs, 't')
                         return actions.close(prompt_bufnr)
                     end
                 end)
@@ -288,32 +278,19 @@ end
 ---@param opts ui.command_palette.Options|nil # The options
 function M.show_command_palette(opts)
     opts = opts or {}
+
     opts.buffer = opts.buffer or vim.api.nvim_get_current_buf()
+    opts.column_separator = opts.column_separator or (' ' .. icons.Symbols.ColumnSeparator .. ' ')
+    opts.mode = opts.mode or vim.fn.mode()
 
-    local mode = vim.fn.mode()
-
-    if opts.key_modes == nil then
-        if mode == 'n' then
-            opts.key_modes = { 'n' }
-        elseif mode == 'i' then
-            opts.key_modes = { 'i' }
-        elseif mode == 's' then
-            opts.key_modes = { 's' }
-        elseif mode == 'v' or mode == 'V' then
-            opts.key_modes = { 'v' }
-        else
-            opts.key_modes = { 'n', 'i', 'c', 'x' }
-        end
-    end
-
-    if mode == 'v' then
+    if is_visual_mode(opts.mode) then
         utils.feed_keys '<esc>'
 
         vim.schedule(function()
-            show_command_palette(mode, opts)
+            show_command_palette(opts)
         end)
     else
-        show_command_palette(mode, opts)
+        show_command_palette(opts)
     end
 end
 
