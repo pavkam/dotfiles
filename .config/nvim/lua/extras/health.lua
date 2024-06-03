@@ -131,11 +131,33 @@ end
 
 function M.check()
     vim.health.start 'Personal configuration'
-    -- make sure setup function parameters are OK
-    vim.health.ok 'Setup is correct'
-    vim.health.error 'Setup is incorrect'
-    -- do some more checking
-    -- ...
+
+    --- Checks if a tool is installed
+    ---@param tool string # the tool to check
+    ---@param important boolean # whether the tool is important
+    local function check_executable(tool, important)
+        assert(type(tool) == 'string')
+        assert(type(important) == 'boolean')
+
+        local installed = vim.fn.executable(tool) == 1
+        if not installed then
+            local fn = important and vim.health.error or vim.health.warn
+            fn(string.format('%s is not installed', tool))
+        else
+            vim.health.ok(string.format('%s is installed at "%s"', tool, vim.fn.exepath(tool)))
+        end
+    end
+
+    local important_tools = { 'git', 'rg', 'fd', 'fzf', 'node', 'npm', 'yarn' }
+    for _, tool in ipairs(important_tools) do
+        check_executable(tool, true)
+    end
+
+    local optional_tools = { 'lazygit' }
+    for _, tool in ipairs(optional_tools) do
+        check_executable(tool, false)
+    end
+
     vim.health._complete()
 end
 

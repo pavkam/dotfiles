@@ -21,11 +21,11 @@ local M = {}
 local auto_transient_id = 0
 
 --- Wraps a function to be transient option
----@param func fun(buffer: integer): any # the function to wrap
----@param option string|nil # optionla the name of the option
+---@param fn fun(buffer: integer): any # the function to wrap
+---@param option string|nil # optional name of the option
 ---@return fun(): any # the wrapped function
-function M.transient(func, option)
-    assert(type(func) == 'function')
+function M.transient(fn, option)
+    assert(type(fn) == 'function')
 
     auto_transient_id = auto_transient_id + 1
     local var_name = option or ('cached_' .. tostring(auto_transient_id))
@@ -34,7 +34,7 @@ function M.transient(func, option)
         local buffer = vim.api.nvim_get_current_buf()
         local val = M.get(var_name, { buffer = buffer, scope = 'transient' })
         if val == nil then
-            val = func(buffer)
+            val = fn(buffer)
             M.set(var_name, val, { buffer = buffer, scope = 'transient' })
         end
 
@@ -138,22 +138,6 @@ function M.snapshot_for_buffer(buffer)
     return settings
 end
 
---- Gets a snapshot of all settings
----@return { global: table<string, any>, files: table<string, any> } # the settings tables
-function M.snapshot()
-    local buf_opts = {}
-    for buffer, settings in pairs(buffer_permanent_settings) do
-        buf_opts[vim.api.nvim_buf_get_name(buffer)] = settings
-    end
-
-    local settings = {
-        global = global_permanent_settings,
-        files = buf_opts,
-    }
-
-    return settings
-end
-
 ---@alias core.settings.ToggleScope 'buffer' | 'global'
 
 ---@class core.settings.ManagedToggle
@@ -166,10 +150,16 @@ end
 ---@type core.settings.ManagedToggle[]
 local managed_toggles = {}
 
+---@class core.settings.RegisterToggleOpts # The options for registering a toggle
+---@field name string|nil # the name of the option
+---@field description string|nil # the description of the option
+---@field scope core.settings.ToggleScope|core.settings.ToggleScope[] # the scope of the option
+---@field default boolean|nil # the default value of the option
+
 --- Registers a managed toggle setting
 ---@param option string # the name of the option
 ---@param toggle_fn fun(enabled: boolean, buffer?: integer) # the function to call when the toggle is triggered
----@param opts? { name?: string, description?: string, scope?: core.settings.ToggleScope|core.settings.ToggleScope[], default?: boolean } # optional modifiers
+---@param opts core.settings.RegisterToggleOpts|nil # the options for the toggle
 function M.register_toggle(option, toggle_fn, opts)
     opts = opts or {}
     opts.name = opts.name or option
@@ -202,9 +192,22 @@ function M.register_toggle(option, toggle_fn, opts)
 
             if buffer ~= nil then
                 local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
-                utils.hint(string.format(icons.UI.Toggle .. '  Turning `%s` `%s` for `%s`.', enabled and 'off' or 'on', opts.description, file_name))
+                utils.hint(
+                    string.format(
+                        icons.UI.Toggle .. '  Turning `%s` `%s` for `%s`.',
+                        enabled and 'off' or 'on',
+                        opts.description,
+                        file_name
+                    )
+                )
             else
-                utils.hint(string.format(icons.UI.Toggle .. '  Turning `%s` `%s` globally.', enabled and 'off' or 'on', opts.description))
+                utils.hint(
+                    string.format(
+                        icons.UI.Toggle .. '  Turning `%s` `%s` globally.',
+                        enabled and 'off' or 'on',
+                        opts.description
+                    )
+                )
             end
 
             enabled = not enabled
@@ -216,11 +219,17 @@ function M.register_toggle(option, toggle_fn, opts)
                 if vim.tbl_contains(scopes, 'buffer') then
                     local buffers = utils.get_listed_buffers()
                     for _, b in ipairs(buffers) do
-                        toggle_fn(enabled and M.get(option, { buffer = b, default = opts.default, scope = 'permanent' }), b)
+                        toggle_fn(
+                            enabled and M.get(option, { buffer = b, default = opts.default, scope = 'permanent' }),
+                            b
+                        )
                     end
                 end
             elseif scope == 'buffer' then
-                toggle_fn(enabled and M.get(option, { buffer = buffer, default = opts.default, scope = 'permanent' }), buffer)
+                toggle_fn(
+                    enabled and M.get(option, { buffer = buffer, default = opts.default, scope = 'permanent' }),
+                    buffer
+                )
             else
                 error 'invalid scope'
             end
@@ -248,7 +257,7 @@ end
 
 --- Gets the value of a managed toggle
 ---@param option string # the name of the option
----@param buffer? integer # the buffer to get the option for combined with the global (if available)
+---@param buffer integer|nil # the buffer to get the option for combined with the global (if available)
 ---@return boolean # the value of the option
 function M.get_toggle(option, buffer)
     assert(type(option) == 'string' and option ~= '')
@@ -272,7 +281,7 @@ end
 
 --- Toggles a managed option
 ---@param option string # the name of the option
----@param buffer? integer # the buffer to toggle the option for. if nil, toggle globally
+---@param buffer integer| nil # the buffer to toggle the option for. If nil, toggle globally
 ---@param value boolean|nil # if nil, it will toggle the current value, otherwise it will set the value
 function M.set_toggle(option, buffer, value)
     assert(type(option) == 'string' and option ~= '')
@@ -288,7 +297,7 @@ function M.set_toggle(option, buffer, value)
 end
 
 --- Shows the list of managed toggles
----@param buffer? integer # the buffer to show toggles for, or 0 or nil for current buffer
+---@param buffer integer|nil # the buffer to show toggles for, or 0 or nil for current buffer
 function M.show_settings_ui(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -349,22 +358,23 @@ function M.show_settings_ui(buffer)
     })
 end
 
---- Serializes the relevant settings to a JSON string
----@return string # the serialized settings
-function M.serialize_to_json()
-    local settings = {
+---@class core.settings.Exported
+---@field global table<string, any>
+---@field files table<string, table<string, any>>
+
+--- Exports the settings to a table
+--- @return core.settings.Exported
+function M.export()
+    return {
         global = global_permanent_settings,
         files = file_permanent_settings,
     }
-
-    return vim.json.encode(settings) or '{}'
 end
 
---- Restores settings from a serialized JSON string
----@param opts string # the serialized settings
-function M.deserialize_from_json(opts)
-    ---@type { global: table<string, any>, files: table<string, table<string, any>> }
-    local settings = assert(vim.json.decode(opts))
+--- Restores settings from an exported table
+---@param settings core.settings.Exported # the exported settings
+function M.import(settings)
+    assert(type(settings) == 'table' and settings.global and settings.files)
 
     -- restore global toggles
     for option, value in pairs(settings.global) do

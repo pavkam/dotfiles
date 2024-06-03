@@ -18,5 +18,7 @@ std = {
         'os',
         'next',
         'debug',
+        'tostring',
+        'tonumber',
     },
 }

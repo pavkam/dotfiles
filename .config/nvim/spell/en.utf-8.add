@@ -82,3 +82,6 @@ stderr
 dirs
 tmux
 qf
+bufnr
+vcol
+nr

@@ -349,7 +349,8 @@ function M.register_command(name, fn, opts)
                 if func then
                     func(M.tbl_merge(args, {
                         split_args = parse_command_args(args),
-                        lines = type(func_or_spec) == 'table' and func_or_spec.range and extract_command_lines(args) or nil,
+                        lines = type(func_or_spec) == 'table' and func_or_spec.range and extract_command_lines(args)
+                            or nil,
                     }))
                 end
             end,
@@ -558,7 +559,8 @@ function M.is_special_buffer(buffer)
     local filetype = vim.api.nvim_get_option_value('filetype', { buf = buffer })
     local buftype = vim.api.nvim_get_option_value('buftype', { buf = buffer })
 
-    return buftype ~= '' and (vim.tbl_contains(M.special_buffer_types, buftype) or vim.tbl_contains(M.special_file_types, filetype))
+    return buftype ~= ''
+        and (vim.tbl_contains(M.special_buffer_types, buftype) or vim.tbl_contains(M.special_file_types, filetype))
 end
 
 --- Checks if a buffer is a transient buffer (a file which we should not deal with)
@@ -759,7 +761,10 @@ function M.confirm_saved(buffer, reason)
     buffer = buffer or vim.api.nvim_get_current_buf()
     if vim.bo[buffer].modified then
         local message = reason and 'Save changes to %q before %s?' or 'Save changes to %q?'
-        local choice = vim.fn.confirm(string.format(message, vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t'), reason), '&Yes\n&No\n&Cancel')
+        local choice = vim.fn.confirm(
+            string.format(message, vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t'), reason),
+            '&Yes\n&No\n&Cancel'
+        )
 
         if choice == 0 or choice == 3 then -- Cancel
             return false
@@ -823,7 +828,11 @@ function M.run_with_visual_selection(buffer, callback)
             vim.api.nvim_feedkeys([[gv]], 'n', false)
 
             if command then
-                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(string.format(':%s<cr>', command), true, false, true), 'n', false)
+                vim.api.nvim_feedkeys(
+                    vim.api.nvim_replace_termcodes(string.format(':%s<cr>', command), true, false, true),
+                    'n',
+                    false
+                )
             end
         end
 

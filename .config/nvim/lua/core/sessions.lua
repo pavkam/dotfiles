@@ -1,6 +1,7 @@
 local utils = require 'core.utils'
 local icons = require 'ui.icons'
 local settings = require 'core.settings'
+local qf = require 'ui.qf'
 
 ---@class core.session
 local M = {}
@@ -49,18 +50,30 @@ function M.files(name)
     return res .. '.vim', res .. '.shada', res .. '.json'
 end
 
+---@class core.session.CustomData
+---@field settings core.settings.Exported
+---@field qf ui.qf.Exported
+
 --- Save the current session
 ---@param name string # the name of the session
 function M.save_session(name)
     assert(type(name) == 'string')
 
-    local session_file, shada_file, settings_file = M.files(name)
+    local session_file, shada_file, custom_file = M.files(name)
 
     vim.fn.mkdir(session_dir, 'p')
 
     vim.cmd('mks! ' .. session_file)
     vim.cmd('wshada! ' .. shada_file)
-    vim.fn.writefile({ settings.serialize_to_json() }, settings_file, 'bs')
+
+    ---@type core.session.CustomData
+    local custom = {
+        settings = settings.export(),
+        qf = qf.export(),
+    }
+
+    local json = vim.json.encode(custom) or '{}'
+    vim.fn.writefile({ json }, custom_file, 'bs')
 
     utils.hint(string.format('%s Saved session `%s`', icons.UI.SessionSave, name))
 end
@@ -80,27 +93,45 @@ function M.restore_session(name)
     assert(type(name) == 'string')
 
     if M.saved(name) then
-        local session_file, shada_file, settings_file = M.files(name)
+        local session_file, shada_file, custom_file = M.files(name)
 
         -- close all windows, tabs and buffers
         reset_ui()
 
         vim.schedule(function()
-            local ok, data = pcall(vim.fn.readfile, settings_file, 'b')
+            local ok, data = pcall(vim.fn.readfile, custom_file, 'b')
             if not ok then
-                utils.error(string.format('%s Failed to restore settings for session `%s`', icons.UI.SessionSave, name))
+                utils.error(string.format('%s Failed to restore custom data for session `%s`', icons.UI.Disabled, name))
             end
 
-            settings.deserialize_from_json(data[1])
+            ---@type boolean, core.session.CustomData
+            local json_ok, custom = pcall(vim.json.decode, data[1])
+            if not json_ok then
+                utils.error(string.format('%s Failed to decode custom data for session `%s`', icons.UI.Disabled, name))
+            else
+                ok = pcall(settings.import, custom.settings)
+                if not ok then
+                    utils.error(
+                        string.format('%s Failed to restore settings for session `%s`', icons.UI.Disabled, name)
+                    )
+                end
+
+                ok = pcall(qf.import, custom.qf)
+                if not ok then
+                    utils.error(
+                        string.format('%s Failed to restore quickfix for session `%s`', icons.UI.Disabled, name)
+                    )
+                end
+            end
 
             ok = pcall(vim.cmd.source, session_file)
             if not ok then
-                utils.error(string.format('%s Failed to restore vim session `%s`', icons.UI.SessionSave, name))
+                utils.error(string.format('%s Failed to restore vim session `%s`', icons.UI.Disabled, name))
             end
 
             ok = pcall(vim.cmd.rshada, shada_file)
             if not ok then
-                utils.error(string.format('%s Failed to restore shada for session `%s`', icons.UI.SessionSave, name))
+                utils.error(string.format('%s Failed to restore shada for session `%s`', icons.UI.Disabled, name))
             end
 
             vim.schedule(function()
@@ -114,9 +145,11 @@ end
 --- Check if a session is saved
 ---@param name string # the name of the session
 function M.saved(name)
-    local session_file, shada_file, settings_file = M.files(name)
+    local session_file, shada_file, custom_file = M.files(name)
 
-    return vim.fn.filereadable(session_file) == 1 and vim.fn.filereadable(shada_file) == 1 and vim.fn.filereadable(settings_file) == 1
+    return vim.fn.filereadable(session_file) == 1
+        and vim.fn.filereadable(shada_file) == 1
+        and vim.fn.filereadable(custom_file) == 1
 end
 
 --- Swap sessions
@@ -187,14 +220,16 @@ utils.register_command('Session', {
             return
         end
 
-        local session_file, shada_file, settings_file = M.files(current)
+        local session_file, shada_file, custom_file = M.files(current)
 
-        local deleted = vim.fn.delete(session_file) - vim.fn.delete(shada_file) - vim.fn.delete(settings_file)
+        local deleted = vim.fn.delete(session_file) - vim.fn.delete(shada_file) - vim.fn.delete(custom_file)
 
         if deleted == 0 then
             utils.warn(string.format('%s Deleted session `%s`', icons.UI.SessionDelete, current))
         else
-            utils.error(string.format('%s Error(s) occurred while deleting session `%s`', icons.UI.SessionSave, current))
+            utils.error(
+                string.format('%s Error(s) occurred while deleting session `%s`', icons.UI.SessionSave, current)
+            )
         end
 
         reset_ui()
