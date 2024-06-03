@@ -1,5 +1,3 @@
-local syntax = require 'editor.syntax'
-
 ---@class core.utils
 local M = {}
 
@@ -208,7 +206,7 @@ end
 
 ---@class core.utils.RegisterCommandOpts
 ---@field desc string # the description of the command
----@field n_args integer|'*'|'?'|nil # the number of arguments the command takes
+---@field n_args integer|'*'|'?'|'+'|nil # the number of arguments the command takes
 ---@field bang boolean|nil # whether the command takes a bang argument
 ---@field default_fn string|nil # the default function if none supplied
 
@@ -326,7 +324,7 @@ function M.register_command(name, fn, opts)
         local n_args = 1
         if opts.n_args == '?' and opts.default_fn then
             n_args = '?'
-        elseif opts.n_args == '*' and not opts.default_fn then
+        elseif opts.n_args == '*' and not opts.default_fn or opts.n_args == '+' then
             n_args = '+'
         elseif type(opts.n_args) == 'number' then
             if opts.default_fn then

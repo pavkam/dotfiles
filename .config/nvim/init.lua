@@ -25,6 +25,8 @@ _G.dbg = function(...)
     local message = table.concat(objects, '\n')
 
     vim.notify(message)
+
+    return ...
 end
 
 --- Global function to log a message as an error and quit

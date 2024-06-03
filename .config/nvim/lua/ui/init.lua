@@ -12,20 +12,11 @@ vim.cmd.colorscheme 'tokyonight'
 require 'ui.highlights'
 require 'ui.marks'
 require 'ui.qf'
+require 'ui.tmux'
 
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('n', '<BS>', '<Nop>', { silent = true })
-
--- window navigation
-if not utils.has_plugin 'nvim-tmux-navigation' then
-    vim.keymap.set('n', '<M-Tab>', '<C-W>w', { desc = 'Switch window' })
-    vim.keymap.set('n', '<M-Left>', '<cmd>wincmd h<cr>', { desc = 'Go to left window' })
-    vim.keymap.set('n', '<M-Right>', '<cmd>wincmd l<cr>', { desc = 'Go to right window' })
-    vim.keymap.set('n', '<M-Down>', '<cmd>wincmd j<cr>', { desc = 'Go to window below' })
-    vim.keymap.set('n', '<M-Up>', '<cmd>wincmd k<cr>', { desc = 'Go to window above' })
-end
-
 vim.keymap.set('n', '<M-v>', '<cmd>wincmd v<CR>', { desc = 'Split window below' })
 vim.keymap.set('n', '<M-h>', '<cmd>wincmd s<CR>', { desc = 'Split window right' })
 

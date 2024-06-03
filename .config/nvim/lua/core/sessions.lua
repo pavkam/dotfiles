@@ -15,8 +15,6 @@ local function enabled()
     return vim.fn.argc() == 0
 end
 
--- TODO: move this code to git and maybe make it async
-
 --- Get the current session name
 ---@return string|nil # the current session name or nil if not enabled
 function M.current()

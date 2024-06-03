@@ -169,6 +169,7 @@ return {
                 sources = cmp.config.sources {
                     { name = 'snippets' },
                     { name = 'luasnip' },
+                    utils.has_plugin 'lazydev.nvim' and { name = 'lazydev', group_index = 0 },
                     { name = 'nvim_lsp' },
                     {
                         name = 'buffer',

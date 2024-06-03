@@ -79,3 +79,5 @@ attr
 async
 stdout
 stderr
+dirs
+tmux

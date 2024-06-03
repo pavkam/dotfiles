@@ -9,17 +9,6 @@ return {
             {
                 'Hoffs/omnisharp-extended-lsp.nvim',
             },
-            {
-                'folke/neodev.nvim',
-                opts = {
-                    library = {
-                        enabled = true,
-                        runtime = true,
-                        types = true,
-                        plugins = true,
-                    },
-                },
-            },
         },
         opts = {
             ---@type vim.diagnostic.Opts

@@ -6,10 +6,12 @@ local icons = require 'ui.icons'
 ---@class ui.tmux
 local M = {}
 
---- Check if Tmux is active
----@return boolean
-function M.active()
-    return os.getenv 'TMUX' ~= nil
+--- Gets the TMUX socket or nil if not in a TMUX session
+---@return string|nil # the TMUX socket or nil
+function M.socket()
+    if vim.env.TMUX ~= nil then
+        return vim.fn.split(vim.env.TMUX, ',')[1]
+    end
 end
 
 local projects_root = os.getenv 'PROJECTS_ROOT'
@@ -190,8 +192,115 @@ local function manage_sessions()
     end)
 end
 
-if M.active() then
+---@alias ui.tmux.NavigateDirection 'h'|'j'|'k'|'l'|'p'
+
+---@type table<ui.tmux.NavigateDirection, string>
+local directions_tmux_mapping = {
+    ['p'] = 'l',
+    ['h'] = 'L',
+    ['j'] = 'D',
+    ['k'] = 'U',
+    ['l'] = 'R',
+}
+
+--- Sends the tmux command to the server running on the socket
+---@param cmd string # the command to send
+---@return string|nil # the result of the command or nil if it failed
+function M.cmd(cmd)
+    local res = vim.fn.system(string.format('tmux -S %s %s', M.socket(), cmd))
+    return vim.v.shell_error == 0 and res or nil
+end
+
+--- Gets the current pane in tmux
+---@return string|nil, boolean # the current pane or nil if it failed
+function M.current_pane()
+    local pane = M.cmd "display-message -p '#{window_zoomed_flag},#D'"
+    if pane and pane ~= '' then
+        local zoomed, id = unpack(vim.fn.split(pane:gsub('\n', ''), ','))
+        return id, zoomed == '1'
+    end
+
+    return nil, false
+end
+
+--- Change the current pane according to direction
+---@param direction ui.tmux.NavigateDirection # the direction to change to
+---@return boolean # true if the pane changed, false otherwise
+local function change_pane(direction)
+    local tmux_command = assert(directions_tmux_mapping[direction])
+
+    local id, zoomed = M.current_pane()
+    if not id or zoomed then
+        return false
+    end
+
+    M.cmd(string.format('select-pane -%s', tmux_command))
+    local new_id = M.current_pane()
+
+    return new_id ~= id
+end
+
+--- Changer the current Neovim window according to direction
+--- @param direction ui.tmux.NavigateDirection # the direction to change to
+---@return boolean # true if the window changed, false otherwise
+local function change_win(direction)
+    assert(directions_tmux_mapping[direction])
+
+    local current_window = vim.api.nvim_get_current_win()
+
+    local ok = pcall(vim.cmd.wincmd, direction)
+    if not ok then
+        utils.hint('Cannot navigate to the ' .. direction .. ' window')
+    end
+
+    return current_window ~= vim.api.nvim_get_current_win()
+end
+
+local tmux_had_control = true
+
+--- Moves to the window or pane in the given direction
+---@param direction ui.tmux.NavigateDirection # the direction to move to
+---@return boolean # true if the window or pane changed, false otherwise
+function M.navigate(direction)
+    assert(directions_tmux_mapping[direction])
+
+    if M.socket() == nil then
+        return change_win(direction)
+    end
+
+    if direction == 'p' then
+        return tmux_had_control and change_pane(direction) or change_win(direction)
+    else
+        local win_changed = change_win(direction)
+        if win_changed then
+            tmux_had_control = false
+            return true
+        end
+
+        tmux_had_control = change_pane(direction)
+        return tmux_had_control
+    end
+end
+
+if M.socket() ~= nil then
     vim.keymap.set('n', '<leader>s', manage_sessions, { desc = icons.UI.TMux .. ' Tmux sessions' })
 end
+
+-- window navigation
+vim.keymap.set('n', '<M-Tab>', function()
+    M.navigate 'p'
+end, { desc = 'Switch window' })
+vim.keymap.set('n', '<M-Left>', function()
+    M.navigate 'h'
+end, { desc = 'Go to left window' })
+vim.keymap.set('n', '<M-Right>', function()
+    M.navigate 'l'
+end, { desc = 'Go to right window' })
+vim.keymap.set('n', '<M-Down>', function()
+    M.navigate 'j'
+end, { desc = 'Go to window below' })
+vim.keymap.set('n', '<M-Up>', function()
+    M.navigate 'k'
+end, { desc = 'Go to window above' })
 
 return M

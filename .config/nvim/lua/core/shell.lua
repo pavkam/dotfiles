@@ -331,7 +331,7 @@ utils.register_command('Run', {
 }, {
     desc = 'Run a shell command asynchronously',
     bang = true,
-    nargs = '+',
+    n_args = '+',
 })
 
 return M

@@ -171,7 +171,6 @@ vim.keymap.set('n', '<M-a>', 'ggVG', { desc = 'Select all', remap = true })
 vim.keymap.set('x', '.', ':norm .<CR>', { desc = 'Repeat edit' })
 vim.keymap.set('x', '@', ':norm @q<CR>', { desc = 'Repeat macro' })
 
--- TODO: who is hijacking my left mouse key?
 vim.keymap.set('i', '<LeftMouse>', '<Esc><LeftMouse>', { desc = 'Exit insert mode and left-click' })
 vim.keymap.set('i', '<RightMouse>', '<Esc><RightMouse>', { desc = 'Exit insert mode and right-click' })
 
