@@ -43,7 +43,9 @@ return {
                             require('telescope.actions').close(prompt_bufnr)
                             ui.ignore_hidden_files.toggle()
 
-                            require('telescope.builtin')[opts.restart_picker](wrap(vim.tbl_extend('force', opts, { default_text = line })))
+                            require('telescope.builtin')[opts.restart_picker](
+                                wrap(vim.tbl_extend('force', opts, { default_text = line }))
+                            )
                         end)
 
                         return true
@@ -57,7 +59,9 @@ return {
             --- @param picker string # the picker to invoke
             local function blanket(picker)
                 return function(opts)
-                    require('telescope.builtin')[picker](wrap(vim.tbl_extend('force', opts or {}, { restart_picker = picker })))
+                    require('telescope.builtin')[picker](
+                        wrap(vim.tbl_extend('force', opts or {}, { restart_picker = picker }))
+                    )
                 end
             end
 
@@ -224,6 +228,16 @@ return {
         opts = function()
             local actions = require 'telescope.actions'
             local themes = require 'telescope.themes'
+            local qf = require 'ui.qf'
+
+            local special_actions = require('telescope.actions.mt').transform_mod {
+                open_qf_list = function()
+                    qf.toggle('c', true)
+                end,
+                open_loc_list = function()
+                    qf.toggle('l', true)
+                end,
+            }
 
             local ok, gwt = pcall(vim.api.nvim_get_var, 'git_worktrees')
 
@@ -253,15 +267,15 @@ return {
                             ['<M-v>'] = actions.file_vsplit,
                             ['<C-f>'] = actions.preview_scrolling_down,
                             ['<C-b>'] = actions.preview_scrolling_up,
-                            ['<C-q>'] = actions.smart_send_to_qflist,
-                            ['<C-l>'] = actions.smart_send_to_loclist,
+                            ['<C-q>'] = actions.smart_send_to_qflist + special_actions.open_qf_list,
+                            ['<C-l>'] = actions.smart_send_to_loclist + special_actions.open_loc_list,
                         },
                         n = {
                             ['q'] = actions.close,
                             ['s'] = actions.file_split,
                             ['v'] = actions.file_vsplit,
-                            ['<C-q>'] = actions.smart_send_to_qflist,
-                            ['<C-l>'] = actions.smart_send_to_loclist,
+                            ['<C-q>'] = actions.smart_send_to_qflist + special_actions.open_qf_list,
+                            ['<C-l>'] = actions.smart_send_to_loclist + special_actions.open_loc_list,
                         },
                     },
                 },

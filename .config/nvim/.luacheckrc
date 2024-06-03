@@ -17,5 +17,6 @@ std = {
         'math',
         'os',
         'next',
+        'debug',
     },
 }
