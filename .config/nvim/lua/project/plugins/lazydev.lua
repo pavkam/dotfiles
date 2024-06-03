@@ -4,7 +4,7 @@ return {
         ft = 'lua',
         opts = {
             library = {
-                'luvit-meta/library', -- see below
+                'luvit-meta/library',
             },
         },
     },

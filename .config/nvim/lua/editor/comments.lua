@@ -50,14 +50,14 @@ M.original_get_option = vim.filetype.get_option
 
 local option_name = 'commentstring'
 
--- Resolve the commentstring for the current buffer
----@param window? integer # The window to resolve the commentstring for
----@param file_type string # The filetype to resolve the commentstring for
----@return editor.comments.CommentSpec[] # The resolved commentstrings
+-- Resolve the comment-string for the current buffer
+---@param window integer|nil # The window to resolve the comment-string for
+---@param file_type string # The file-type to resolve the comment-string for
+---@return editor.comments.CommentSpec[] # The resolved comment-string
 function M.resolve(window, file_type)
     assert(type(file_type) == 'string')
 
-    -- find the correct commentstring for the current language
+    -- find the correct comment-string for the current language
     local lang = vim.treesitter.language.get_lang(file_type) or file_type
     local spec = M.langs[lang]
 
@@ -85,7 +85,7 @@ function M.resolve(window, file_type)
 end
 
 --- Get the comment options for the given window.
----@param window? integer # The window to get the comment options for.
+---@param window integer|nil # The window to get the comment options for.
 ---@return { single_line: string, multi_line_start: string, multi_line_end: string }|nil # The comment options for the given window.
 function M.comment_options(window)
     window = window or vim.api.nvim_get_current_win()

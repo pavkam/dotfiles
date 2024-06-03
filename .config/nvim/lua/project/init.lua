@@ -65,11 +65,19 @@ local function go_type(target)
     return nil
 end
 
+local python_root_patterns = {
+    'pyproject.toml',
+    'setup.py',
+    'setup.cfg',
+    'requirements.txt',
+    'poetry.lock',
+}
+
 --- Returns the type of the project
 ---@param target string|integer|nil # the target to get the type for
 ---@return string|nil # the type of the project
 local function python_type(target)
-    if utils.first_found_file(M.roots(target), { 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'poetry.lock' }) then
+    if utils.first_found_file(M.roots(target), python_root_patterns) then
         return 'python'
     end
 
@@ -100,6 +108,13 @@ local function js_type(target)
 
     return nil
 end
+
+M.js_types = {
+    'javascript',
+    'typescript',
+    'javascriptreact',
+    'typescriptreact',
+}
 
 -- root patterns to find project root if the LSP failed
 M.root_patterns = {
@@ -245,11 +260,18 @@ function M.type(target)
     return (js_type(target) or go_type(target) or python_type(target) or dotnet_type(target))
 end
 
+local golangci_root_patterns = {
+    '.golangci.yml',
+    '.golangci.yaml',
+    '.golangci.toml',
+    '.golangci.json',
+}
+
 --- Returns the path to the golangci file for a given target
 ---@param target string|integer|nil # the target to get the golangci file for
 ---@return string|nil # the path to the golangci file
 function M.get_golangci_config(target)
-    return utils.first_found_file(M.roots(target), { '.golangci.yml', '.golangci.yaml', '.golangci.toml', '.golangci.json' })
+    return utils.first_found_file(M.roots(target), golangci_root_patterns)
 end
 
 --- Checks if a target has a dependency
@@ -278,11 +300,18 @@ function M.get_js_bin_path(target, bin)
     return utils.first_found_file(M.roots(target), sub)
 end
 
+local eslint_root_patterns = {
+    '.eslintrc.json',
+    '.eslintrc.js',
+    'eslint.config.js',
+    'eslint.config.json',
+}
+
 --- Gets the path to the eslint config for a given target
 ---@param target string|integer|nil # the target to get the eslint config for
 ---@return string|nil # the path to the eslint config
 function M.get_eslint_config_path(target)
-    return utils.first_found_file(M.roots(target), { '.eslintrc.json', '.eslintrc.js', 'eslint.config.js', 'eslint.config.json' })
+    return utils.first_found_file(M.roots(target), eslint_root_patterns)
 end
 
 settings.register_toggle('diagnostics_enabled', function(enabled, buffer)
@@ -291,7 +320,12 @@ settings.register_toggle('diagnostics_enabled', function(enabled, buffer)
     else
         vim.diagnostic.enable(true, { bufnr = buffer })
     end
-end, { name = icons.Diagnostics.Prefix .. ' Diagnostics', description = 'diagnostics', scope = { 'global', 'buffer' }, default = true })
+end, {
+    name = icons.Diagnostics.Prefix .. ' Diagnostics',
+    description = 'diagnostics',
+    scope = { 'global', 'buffer' },
+    default = true,
+})
 
 settings.register_toggle('inlay_hint_enabled', function(enabled, buffer)
     if not enabled then
@@ -299,7 +333,12 @@ settings.register_toggle('inlay_hint_enabled', function(enabled, buffer)
     else
         vim.lsp.inlay_hint.enable(true, { bufnr = buffer })
     end
-end, { name = icons.Diagnostics.LSP.Hint .. ' Inlay hints', description = 'inlay hints', scope = { 'global', 'buffer' }, default = true })
+end, {
+    name = icons.Diagnostics.LSP.Hint .. ' Inlay hints',
+    description = 'inlay hints',
+    scope = { 'global', 'buffer' },
+    default = true,
+})
 
 settings.register_toggle('code_lens_enabled', function(enabled, buffer)
     if not enabled then
@@ -307,6 +346,11 @@ settings.register_toggle('code_lens_enabled', function(enabled, buffer)
     else
         vim.lsp.codelens.refresh { bufnr = buffer }
     end
-end, { name = icons.UI.CodeLens .. ' Code Lense', description = 'code lens', scope = { 'global', 'buffer' }, default = true })
+end, {
+    name = icons.UI.CodeLens .. ' Code Lense',
+    description = 'code lens',
+    scope = { 'global', 'buffer' },
+    default = true,
+})
 
 return M

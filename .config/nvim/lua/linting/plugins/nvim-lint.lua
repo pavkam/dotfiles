@@ -41,7 +41,8 @@ return {
                         return project.get_js_bin_path(nil, 'eslint') or 'eslint'
                     end,
                     condition = function(ctx)
-                        return project.js_has_dependency(ctx.dirname, 'eslint') and project.get_eslint_config_path(ctx.dirname) ~= nil
+                        return project.js_has_dependency(ctx.dirname, 'eslint')
+                            and project.get_eslint_config_path(ctx.dirname) ~= nil
                     end,
                     args = {
                         '--format',
@@ -53,7 +54,8 @@ return {
                         end,
                     },
                     parser = function(output, buffer)
-                        local success, data = pcall(vim.json.decode, output, { luanil = { object = true, array = true } })
+                        local success, data =
+                            pcall(vim.json.decode, output, { luanil = { object = true, array = true } })
                         local diagnostics = {}
 
                         if not success then

@@ -73,6 +73,7 @@ local function show_for_buffer(buffer)
     local debugging = require 'debugging'
 
     local current_session = sessions.current()
+
     local details = {
         Buffer = {
             id = buffer,
@@ -93,7 +94,7 @@ local function show_for_buffer(buffer)
             root = project.root(buffer),
             roots = project.roots(buffer),
             lsp_roots = lsp.roots(buffer),
-            JS = vim.tbl_contains({ 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' }, project.type(buffer)) and {
+            JS = vim.tbl_contains(project.js_types, project.type(buffer)) and {
                 eslint_config = project.get_eslint_config_path(buffer),
                 jest = project.get_js_bin_path(buffer, 'jest'),
                 eslint = project.get_js_bin_path(buffer, 'eslint'),

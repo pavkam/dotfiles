@@ -29,7 +29,6 @@ return {
         enable_modified_markers = true,
         enable_opened_markers = true,
         enable_refresh_on_write = true,
-        enable_cursor_hijack = true,
         filesystem = {
             window = {
                 position = 'float',

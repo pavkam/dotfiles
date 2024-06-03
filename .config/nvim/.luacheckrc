@@ -1,4 +1,21 @@
 std = {
-   globals = { "vim" }
-   read_globals = { "pcall" }
+    globals = { 'vim', '_G', '_' },
+    read_globals = {
+        'pcall',
+        'pairs',
+        'ipairs',
+        'table',
+        'error',
+        'type',
+        'string',
+        'fatal',
+        'dbg',
+        'assert',
+        'require',
+        'package',
+        'unpack',
+        'math',
+        'os',
+        'next',
+    },
 }

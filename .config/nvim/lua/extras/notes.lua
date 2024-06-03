@@ -1,5 +1,4 @@
 local utils = require 'core.utils'
-local syntax = require 'editor.syntax'
 
 --- Get the notes root directory
 ---@param global boolean|nil: If true, return the global notes root

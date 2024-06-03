@@ -5,14 +5,15 @@ local M = {}
 
 ---@class ui.qf.HandleRef
 ---@field id integer
----@field window? integer
+---@field window integer|nil
 
 ---@alias ui.qf.Handle ui.qf.HandleRef | 'c' | 'l'
----@alias ui.qf.Property 'changedtick' | 'context' | 'efm' | 'id' | 'idx' | 'items' |  'lines' | 'nr' | 'qfbufnr' | 'size' | 'title' | 'winid' | 'all'
+---@alias ui.qf.Property 'changedtick' | 'context' | 'efm' | 'id' | 'idx' | 'items' |  'lines'
+---| 'nr' | 'qfbufnr' | 'size' | 'title' | 'winid' | 'all'
 
 --- Gets the details of the quick-fix or locations list
 ---@param handle ui.qf.Handle # the list handle
----@param what? ui.qf.Property[] # the details to get
+---@param what ui.qf.Property[]|nil # the details to get
 ---@return { window?: integer, id: integer }|table|nil # the list details, or nil if there is no list
 local function list_details(handle, what)
     assert(not what or vim.islist(what))
@@ -47,7 +48,8 @@ local function focused_list(window)
         return nil
     end
 
-    local details = info.loclist == 0 and vim.fn.getqflist { id = 0, idx = 0 } or vim.fn.getloclist(window, { id = 0, idx = 0 })
+    local details = info.loclist == 0 and vim.fn.getqflist { id = 0, idx = 0 }
+        or vim.fn.getloclist(window, { id = 0, idx = 0 })
 
     return {
         id = details.id,
@@ -143,7 +145,7 @@ end
 --- Adds the given position to the quick-fix or locations list
 ---@param handle ui.qf.Handle # the list handle
 ---@param items { lnum: integer, col: integer, buffer: integer }[] # the items
----@param replace? boolean # whether to replace the current list
+---@param replace boolean|nil # whether to replace the current list
 function M.add_items(handle, items, replace)
     assert(vim.islist(items))
     local list = assert(list_details(handle))
@@ -177,7 +179,7 @@ end
 --- Adds the current position to the quick-fix or locations list
 ---@param handle ui.qf.Handle # the list handle
 ---@param window integer|nil # the window to add the item to, or 0 or nil for the current window
----@param replace? boolean # whether to replace the current list
+---@param replace boolean|nil # whether to replace the current list
 function M.add_at_cursor(handle, window, replace)
     local list = assert(list_details(handle))
     window = window or vim.api.nvim_get_current_win()

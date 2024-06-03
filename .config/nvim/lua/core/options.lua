@@ -41,8 +41,8 @@ o.termguicolors = true
 o.encoding = 'utf-8'
 o.lazyredraw = false
 o.winblend = 10
-o.guicursor =
-    [[n-v-c-sm:block-blinkwait500-blinkoff400-blinkon250,i-ci:ver25-blinkwait1000-blinkoff400-blinkon250,v:block-blinkwait500-blinkoff400-blinkon250,r-cr-o:hor20-blinkwait1000-blinkoff400-blinkon250]]
+o.guicursor = [[n-v-c-sm:block-blinkwait500-blinkoff400-blinkon250,i-ci:ver25-blinkwait1000-blinkoff400-blinkon250,]]
+    .. [[v:block-blinkwait500-blinkoff400-blinkon250,r-cr-o:hor20-blinkwait1000-blinkoff400-blinkon250]]
 
 -- menu and command-line
 o.laststatus = 2

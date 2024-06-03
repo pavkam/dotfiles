@@ -19,8 +19,18 @@ local keymaps = {
         desc = 'Goto definition',
         capability = vim.lsp.protocol.Methods.textDocument_definition,
     },
-    { 'gr', '<cmd>Telescope lsp_references<cr>', desc = 'Show references', capability = vim.lsp.protocol.Methods.textDocument_references },
-    { 'gD', vim.lsp.buf.declaration, desc = 'Goto declaration', capability = vim.lsp.protocol.Methods.textDocument_declaration },
+    {
+        'gr',
+        '<cmd>Telescope lsp_references<cr>',
+        desc = 'Show references',
+        capability = vim.lsp.protocol.Methods.textDocument_references,
+    },
+    {
+        'gD',
+        vim.lsp.buf.declaration,
+        desc = 'Goto declaration',
+        capability = vim.lsp.protocol.Methods.textDocument_declaration,
+    },
     {
         'gI',
         function()
@@ -38,7 +48,12 @@ local keymaps = {
         capability = vim.lsp.protocol.Methods.textDocument_typeDefinition,
     },
     { '<C-k>', vim.lsp.buf.hover, desc = 'Inspect symbol', capability = vim.lsp.protocol.Methods.textDocument_hover },
-    { 'gK', vim.lsp.buf.signature_help, desc = 'Signature help', capability = vim.lsp.protocol.Methods.textDocument_signatureHelp },
+    {
+        'gK',
+        vim.lsp.buf.signature_help,
+        desc = 'Signature help',
+        capability = vim.lsp.protocol.Methods.textDocument_signatureHelp,
+    },
     {
         'gl',
         vim.lsp.codelens.run,
@@ -55,8 +70,10 @@ local keymaps = {
     {
         '<C-r>',
         function()
-            local is_identifier =
-                vim.tbl_contains({ 'identifier', 'property_identifier', 'type_identifier' }, require('editor.syntax').node_type_under_cursor())
+            local is_identifier = vim.tbl_contains(
+                { 'identifier', 'property_identifier', 'type_identifier' },
+                require('editor.syntax').node_type_under_cursor()
+            )
 
             if is_identifier then
                 vim.lsp.buf.rename()
@@ -120,19 +137,35 @@ function M.attach(client, buffer)
 
     attach_keymaps(client, buffer)
 
-    lsp.on_capability_event({ 'BufEnter', 'CursorHold' }, vim.lsp.protocol.Methods.textDocument_codeLens, buffer, function()
-        if settings.get_toggle('code_lens_enabled', buffer) then
-            vim.lsp.codelens.refresh { bufnr = buffer }
+    lsp.on_capability_event(
+        { 'BufEnter', 'CursorHold' },
+        vim.lsp.protocol.Methods.textDocument_codeLens,
+        buffer,
+        function()
+            if settings.get_toggle('code_lens_enabled', buffer) then
+                vim.lsp.codelens.refresh { bufnr = buffer }
+            end
+        end,
+        true
+    )
+
+    lsp.on_capability_event(
+        { 'CursorHold', 'CursorHoldI' },
+        vim.lsp.protocol.Methods.textDocument_documentHighlight,
+        buffer,
+        function()
+            vim.lsp.buf.document_highlight()
         end
-    end, true)
+    )
 
-    lsp.on_capability_event({ 'CursorHold', 'CursorHoldI' }, vim.lsp.protocol.Methods.textDocument_documentHighlight, buffer, function()
-        vim.lsp.buf.document_highlight()
-    end)
-
-    lsp.on_capability_event({ 'CursorMoved', 'CursorMovedI', 'BufLeave' }, vim.lsp.protocol.Methods.textDocument_documentHighlight, buffer, function()
-        vim.lsp.buf.clear_references()
-    end)
+    lsp.on_capability_event(
+        { 'CursorMoved', 'CursorMovedI', 'BufLeave' },
+        vim.lsp.protocol.Methods.textDocument_documentHighlight,
+        buffer,
+        function()
+            vim.lsp.buf.clear_references()
+        end
+    )
 
     lsp.on_capability_event({ 'BufRead', 'BufNew' }, vim.lsp.protocol.Methods.textDocument_inlayHint, buffer, function()
         vim.lsp.inlay_hint.enable(settings.get_toggle('inlay_hint_enabled', buffer), { bufnr = buffer })

@@ -6,7 +6,7 @@
 -- TODO: save QF to session
 --
 -- TODO: try to move to tabline from buffer line
--- TODO: maybe cross-tmux-session marks and internalize tmux plugin
+-- TODO: maybe cross-tmux-session marks
 
 --- Global function to quit the current process
 _G.quit = function()
