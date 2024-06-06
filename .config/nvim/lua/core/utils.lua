@@ -158,6 +158,7 @@ end
 function M.on_focus_gained(callback)
     assert(type(callback) == 'function')
     M.on_event({ 'FocusGained', 'TermClose', 'TermLeave' }, callback)
+    M.on_event({ 'DirChanged' }, callback, 'global')
 end
 
 --- Creates an auto command that triggers on global status update event
@@ -169,7 +170,8 @@ end
 
 --- Allows attaching keymaps in a given buffer alone.
 ---@param file_types string|table|nil # the list of file types to attach the keymaps to
----@param callback fun(set: fun(mode: string|table|nil, lhs: string, rhs: string|function, opts: table)) # the callback to call when the event is triggered
+---@param callback fun(set: fun(mode: string|table|nil, lhs: string, rhs: string|function, opts: table)) # the callback
+---to call when the event is triggered
 ---@param force boolean|nil # whether to force the keymaps to be set even if they are already set
 ---@return number # the group id of the created group
 function M.attach_keymaps(file_types, callback, force)
@@ -228,7 +230,10 @@ end
 ---@field split_args string[] # the arguments split by escaped white-space
 ---@field lines string[] # the lines of the buffer
 
----@alias core.utils.CommandFunctionSpec fun(args: core.utils.CommandCallbackArgs) | { fn: fun(args: core.utils.CommandCallbackArgs), range: boolean|nil }
+---@alias core.utils.CommandFunctionCallback fun(args: core.utils.CommandCallbackArgs)
+---@alias core.utils.CommandFunctionCallbackSpec { fn: core.utils.CommandFunctionCallback, range: boolean|nil }
+---
+---@alias core.utils.CommandFunctionSpec core.utils.CommandFunctionCallback | core.utils.CommandFunctionCallbackSpec
 ---@alias core.utils.CommandFunctionArgs core.utils.CommandFunctionSpec|core.utils.CommandFunctionSpec[]
 
 --- Parses a string of arguments into a table
@@ -428,7 +433,8 @@ M.on_event('BufDelete', function(evt)
     end
 end)
 
---- Defers a function call for buffer in LIFO mode. If the function is called again before the timeout, the timer is reset.
+--- Defers a function call for buffer in LIFO mode. If the function is called again before the timeout, the
+--- timer is reset.
 ---@param buffer integer|nil # the buffer to defer the function for or the current buffer if 0 or nil
 ---@param fn fun(buffer: integer) # the function to call
 ---@param timeout integer # the timeout in milliseconds
@@ -479,8 +485,10 @@ function M.get_up_value(fn, name)
     return nil
 end
 
+---@alias core.utils.Target string|integer|nil # the target buffer or path or auto-detect
+
 --- Expands a target of any command to a buffer and a path
----@param target integer|string|nil # the target to expand
+---@param target core.utils.Target # the target to expand
 ---@return integer, string # the buffer and the path
 function M.expand_target(target)
     if type(target) == 'number' or target == nil then
@@ -645,23 +653,6 @@ function M.first_found_file(base_paths, files)
     end
 
     return nil
-end
-
---- Reads a text file
----@param path string # the path to the file to read
----@return string|nil # the content of the file or nil if the file does not exist
-function M.read_text_file(path)
-    assert(type(path) == 'string' and path ~= '')
-
-    local file = io.open(path, 'rb')
-    if not file then
-        return nil
-    end
-
-    local content = file:read '*a'
-    file:close()
-
-    return content
 end
 
 ---@type table<string, string>

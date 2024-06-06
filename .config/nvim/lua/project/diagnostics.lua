@@ -40,7 +40,8 @@ end
 
 --- Jump to the next or previous diagnostic
 ---@param next_or_prev boolean # whether to jump to the next or previous diagnostic
----@param severity vim.diagnostic.Severity|nil "ERROR"|"WARN"|"INFO"|"HINT"|nil # the severity to jump to, or nil for all
+---@param severity vim.diagnostic.Severity|nil "ERROR"|"WARN"|"INFO"|"HINT"|nil # the severity
+---to jump to, or nil for all
 function M.jump(next_or_prev, severity)
     local go = next_or_prev and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
 
@@ -109,7 +110,7 @@ function M.check_workspace(client, target)
     local git = require 'git'
     local project = require 'project'
 
-    git.tracked(project.root(target, false) or vim.fn.cwd(), function(paths)
+    git.tracked(project.root(target) or vim.fn.cwd(), function(paths)
         indexing_in_progress = true
 
         check_file(client, paths, 1)

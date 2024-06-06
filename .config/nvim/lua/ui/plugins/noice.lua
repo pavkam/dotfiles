@@ -21,7 +21,7 @@ return {
                         event = 'lsp',
                     },
                 },
-                view = 'popup',
+                view = 'split',
             },
             {
                 filter = {
@@ -48,6 +48,7 @@ return {
                         { find = '^E348' },
                         { find = '^W325' },
                         { find = '^E1513' },
+                        { find = '^E553' },
                         { find = 'E211: File .* no longer available' },
                         { find = 'No more valid diagnostics to move to' },
                     },

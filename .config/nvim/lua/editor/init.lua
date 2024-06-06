@@ -1,8 +1,8 @@
 local utils = require 'core.utils'
-local icons = require 'ui.icons'
 local settings = require 'core.settings'
 local syntax = require 'editor.syntax'
 
+require 'editor.spelling'
 require 'editor.comments'
 require 'editor.snippets'
 
@@ -38,7 +38,12 @@ vim.keymap.set('x', '<S-Tab>', '<gv', { desc = 'Unindent selection' })
 
 -- Add undo break-points
 for _, key in ipairs { '.', ',', '!', '?', ';', ':', '"', "'" } do
-    vim.keymap.set('i', key, string.format('%s<c-g>u', key), { desc = string.format('Insert %s and an undo break-point', key) })
+    vim.keymap.set(
+        'i',
+        key,
+        string.format('%s<c-g>u', key),
+        { desc = string.format('Insert %s and an undo break-point', key) }
+    )
 end
 
 -- Redo
@@ -136,7 +141,7 @@ end, { desc = 'Paste above' })
 vim.keymap.set({ 'i', 'n' }, '<esc>', function()
     vim.cmd.nohlsearch()
     if package.loaded['noice'] then
-        vim.cmd.NoiceDismiss()
+        pcall(vim.cmd.NoiceDismiss)
     end
 
     return '<esc>'
@@ -160,7 +165,12 @@ vim.keymap.set('x', '<C-S-r>', function()
 end, { desc = 'Replace selection (whole word)' })
 
 vim.keymap.set('n', '<C-r>', syntax.create_rename_expression(), { desc = 'Replace word under cursor' })
-vim.keymap.set('n', '<C-S-r>', syntax.create_rename_expression { whole_word = true }, { desc = 'Replace word under cursor (whole word)' })
+vim.keymap.set(
+    'n',
+    '<C-S-r>',
+    syntax.create_rename_expression { whole_word = true },
+    { desc = 'Replace word under cursor (whole word)' }
+)
 
 -- special keys
 vim.keymap.set('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
@@ -305,28 +315,14 @@ utils.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
     end
 end)
 
-settings.register_toggle('spelling', function(enabled)
-    ---@diagnostic disable-next-line: undefined-field
-    vim.opt.spell = enabled
-
-    local all = vim.lsp.get_clients { name = 'typos_lsp' }
-    if #all == 1 then
-        local client = all[1]
-        if enabled then
-            vim.lsp.buf_attach_client(0, client.id)
-        else
-            vim.lsp.stop_client(client.id, true)
-        end
-    end
-
-    ---@diagnostic disable-next-line: undefined-field
-end, { name = icons.UI.SpellCheck .. ' Spell checking', default = vim.opt.spell:get(), scope = 'global' })
-
 -- detect shebangs!
 utils.on_event('BufReadPost', function(evt)
     if vim.bo[evt.buf].filetype == '' and not utils.is_special_buffer(evt.buf) then
         local first_line = vim.api.nvim_buf_get_lines(evt.buf, 0, 1, false)[1]
-        if first_line and string.match(first_line, '^#!.*/bin/bash') or string.match(first_line, '^#!.*/bin/env%s+bash') then
+        if
+            first_line and string.match(first_line, '^#!.*/bin/bash')
+            or string.match(first_line, '^#!.*/bin/env%s+bash')
+        then
             vim.bo[evt.buf].filetype = 'bash'
         end
     end

@@ -14,7 +14,12 @@ local c_block_spec = { prefix = '/*', suffix = '*/' }
 ---@type editor.comments.CommentSpec[]
 local c_spec = { c_line_spec, c_block_spec }
 
----@type table<string, editor.comments.CommentSpec|editor.comments.CommentSpec[]|table<string, editor.comments.CommentSpec[]>>
+---@alias editor.comments.CommentSpecDef
+---|editor.comments.CommentSpec
+---|editor.comments.CommentSpec[]
+---|table<string, editor.comments.CommentSpec[]>
+
+---@type table<string, editor.comments.CommentSpecDef>
 M.langs = {}
 M.langs.xml = markup_spec
 M.langs.xaml = markup_spec
@@ -27,14 +32,14 @@ M.langs.cpp = c_spec
 M.langs.fsharp = c_spec
 M.langs.css = c_block_spec
 M.langs.ini = { prefix = ';' }
-M.langs.javascript = vim.tbl_extend('keep', M.langs.c --[[@as table]], {
+M.langs.javascript = vim.tbl_extend('keep', M.langs.c, {
     call_expression = c_line_spec,
     jsx_attribute = c_line_spec,
     jsx_element = c_block_spec,
     jsx_fragment = c_block_spec,
     spread_element = c_line_spec,
     statement_block = c_line_spec,
-})
+}) --[[@as table<string, editor.comments.CommentSpec[]>]]
 M.langs.jsx = M.langs.javascript
 M.langs.javascriptreact = M.langs.jsx
 M.langs['javascript.jsx'] = M.langs.jsx
@@ -43,7 +48,7 @@ M.langs.tsx = M.langs.typescript
 M.langs.typescriptreact = M.langs.tsx
 M.langs['typescript.tsx'] = M.langs.tsx
 M.langs.vim = { prefix = '"' }
-M.langs.lua = { { prefix = '--' }, { prefix = '---' } }
+M.langs.lua = { { prefix = '--' }, { prefix = '---' }, { prefix = '--[[', suffix = ']]' } }
 
 -- backup the original get_option function
 M.original_get_option = vim.filetype.get_option
@@ -84,9 +89,14 @@ function M.resolve(window, file_type)
     return result
 end
 
+---@class editor.comments.CommentOptions # The comment options for the given window.
+---@field single_line string # The single line comment string.
+---@field multi_line_start string # The multi line comment start string.
+---@field multi_line_end string # The multi line comment end string.
+
 --- Get the comment options for the given window.
 ---@param window integer|nil # The window to get the comment options for.
----@return { single_line: string, multi_line_start: string, multi_line_end: string }|nil # The comment options for the given window.
+---@return editor.comments.CommentOptions|nil # The comment options for the given window.
 function M.comment_options(window)
     window = window or vim.api.nvim_get_current_win()
 
@@ -166,7 +176,7 @@ end
 --- Override the default comment-string for a file-type
 ---@param file_type string # The file-type to override the comment-string for
 ---@param option string # The requested option
----@return boolean|integer|string # The comment-string for the file-type or whatever the original get_option function returns
+---@return boolean|integer|string # The comment-string for the file-type
 function M.get_option(file_type, option)
     if option ~= option_name then
         return M.original_get_option(file_type, option)

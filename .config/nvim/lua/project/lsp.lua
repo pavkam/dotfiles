@@ -160,7 +160,9 @@ function M.on_capability_event(events, capability, buffer, callback, run_on_regi
     vim.api.nvim_create_autocmd(events, {
         callback = function()
             if not M.buffer_has_capability(buffer, capability) then
+                -- TODO: do not show this message when deleting buffers
                 utils.warn('Buffer lost capability `' .. capability .. '`')
+
                 vim.api.nvim_del_augroup_by_name(auto_group_name)
                 return
             end
@@ -253,9 +255,12 @@ function M.roots(target, sort)
     if path then
         for _, client in ipairs(vim.lsp.get_clients { bufnr = buffer }) do
             local workspace = client.config.workspace_folders
-            local paths = workspace and vim.tbl_map(function(ws)
-                return vim.uri_to_fname(ws.uri)
-            end, workspace) or client.config.root_dir and { client.config.root_dir } or {}
+            local paths = workspace
+                    and vim.tbl_map(function(ws)
+                        return vim.uri_to_fname(ws.uri)
+                    end, workspace)
+                or client.config.root_dir and { client.config.root_dir }
+                or {}
 
             for _, p in ipairs(paths) do
                 local r = vim.loop.fs_realpath(p)
@@ -357,7 +362,14 @@ function M.monitor_health(buffer)
 
         local prev = settings.get(key, { scope = 'instance', buffer = buffer, default = 0 })
         if pending_requests > prev and prev > 0 then
-            utils.warn(string.format('Client **%s** has `%d` pending requests (increased from `%d`)!', client.name, pending_requests, prev))
+            utils.warn(
+                string.format(
+                    'Client **%s** has `%d` pending requests (increased from `%d`)!',
+                    client.name,
+                    pending_requests,
+                    prev
+                )
+            )
         end
 
         settings.set(key, pending_requests, { scope = 'instance', buffer = buffer })

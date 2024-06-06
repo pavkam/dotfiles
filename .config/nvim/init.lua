@@ -2,11 +2,10 @@
 -- TODO: add URL underlining
 --
 -- TODO: Try to replace bqf with Trouble v3
--- TODO: save QF to session
 --
 -- TODO: try to move to tabline from buffer line
 -- TODO: maybe cross-tmux-session marks
--- TODO: spell files per project
+-- TODO: Improve progress, the timeouts are not working
 
 --- Global function to quit the current process
 _G.quit = function()

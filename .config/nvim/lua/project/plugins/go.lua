@@ -1,5 +1,6 @@
 return {
     'ray-x/go.nvim',
+    cond = false,
     dependencies = {
         'ray-x/guihua.lua',
         'neovim/nvim-lspconfig',

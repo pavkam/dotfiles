@@ -42,4 +42,4 @@ __pypackages__/
 .history/
 .ionide/
 .DS_Store
-.dap.json
+.nvim/

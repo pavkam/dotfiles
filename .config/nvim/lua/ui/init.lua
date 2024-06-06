@@ -120,7 +120,10 @@ vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
 utils.on_event({ 'BufWinEnter' }, function(evt)
     local ignored_fts = { 'TelescopePrompt' }
 
-    if vim.fn.mode() == 'i' and vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf })) then
+    if
+        vim.fn.mode() == 'i'
+        and vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf }))
+    then
         vim.cmd 'stopinsert'
     end
 end)
@@ -130,19 +133,22 @@ utils.on_event({ 'BufWinEnter' }, function(evt)
     local ignored_fts = { '', 'neo-tree' }
     local win = vim.api.nvim_get_current_win()
 
-    if utils.is_special_buffer(evt.buf) and not vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf })) then
+    if
+        utils.is_special_buffer(evt.buf)
+        and not vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf }))
+    then
         vim.wo[win].winfixbuf = true
-        vim.wo[win].spell = false
     end
 end)
 
 utils.on_event('FileType', function(evt)
     if utils.is_special_buffer(evt.buf) then
         vim.bo[evt.buf].buflisted = false
-        vim.opt_local.spell = false
-    elseif utils.is_transient_buffer(evt.buf) or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown' then
+    elseif
+        utils.is_transient_buffer(evt.buf)
+        or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown'
+    then
         vim.opt_local.wrap = true
-        vim.opt_local.spell = true
     end
 end)
 
@@ -181,7 +187,13 @@ end)
 
 --- Macro tracking
 utils.on_event({ 'RecordingEnter' }, function()
-    utils.info(icons.UI.Macro .. ' Started recording macro into register `' .. vim.fn.reg_recording() .. '` ' .. icons.TUI.Ellipsis)
+    utils.info(
+        icons.UI.Macro
+            .. ' Started recording macro into register `'
+            .. vim.fn.reg_recording()
+            .. '` '
+            .. icons.TUI.Ellipsis
+    )
 
     progress.register_task('recording_macro', {
         fn = function()
@@ -194,7 +206,13 @@ utils.on_event({ 'RecordingEnter' }, function()
 end)
 
 utils.on_event({ 'RecordingLeave' }, function()
-    utils.info(icons.UI.Checkmark .. ' Stopped recording macro into register `' .. vim.fn.reg_recording() .. '` ' .. icons.TUI.Ellipsis)
+    utils.info(
+        icons.UI.Checkmark
+            .. ' Stopped recording macro into register `'
+            .. vim.fn.reg_recording()
+            .. '` '
+            .. icons.TUI.Ellipsis
+    )
 
     progress.unregister_task 'recording_macro'
 end)

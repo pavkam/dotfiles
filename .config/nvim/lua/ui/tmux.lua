@@ -146,7 +146,11 @@ local function display(items)
             local dir = i.root or i.cwd
 
             if item[2] == '' then
-                create_or_switch_to_session(item[1] ~= new_session_label and item[1] or nil --[[@as string|nil]], true, dir)
+                create_or_switch_to_session(
+                    item[1] ~= new_session_label and item[1] or nil --[[@as string|nil]],
+                    true,
+                    dir
+                )
             else
                 create_or_switch_to_session(item[1] --[[@as string]], false, dir)
             end
@@ -172,24 +176,29 @@ end
 local function manage_sessions()
     local projects_dirs = projects_root and find_git_enabled_dirs(projects_root) or {}
 
-    shell.async_cmd('tmux', { 'list-sessions', '-F', '#{session_name}:#{pane_current_path}:#{session_attached}' }, nil, function(sessions)
-        shell.async_cmd('tmux', { 'display-message', '-p', '-F', '#{session_name}' }, nil, function(current_session)
-            ---@type { cwd: string, session: string }[]
-            local results = vim.tbl_map(function(line)
-                ---@cast line string
-                local session_name, cwd, attached = line:match '^(.-):(.-):(.+)$'
-                return {
-                    session = session_name,--[[@as string]]
-                    cwd = cwd,--[[@as string]]
-                    attached = attached == '1',--[[@as boolean]]
-                    current = session_name == current_session[1],--[[@as boolean]]
-                }
-            end, sessions)
+    shell.async_cmd(
+        'tmux',
+        { 'list-sessions', '-F', '#{session_name}:#{pane_current_path}:#{session_attached}' },
+        nil,
+        function(sessions)
+            shell.async_cmd('tmux', { 'display-message', '-p', '-F', '#{session_name}' }, nil, function(current_session)
+                ---@type { cwd: string, session: string }[]
+                local results = vim.tbl_map(function(line)
+                    ---@cast line string
+                    local session_name, cwd, attached = line:match '^(.-):(.-):(.+)$'
+                    return {
+                        session = session_name,--[[@as string]]
+                        cwd = cwd,--[[@as string]]
+                        attached = attached == '1',--[[@as boolean]]
+                        current = session_name == current_session[1],--[[@as boolean]]
+                    }
+                end, sessions)
 
-            local res = merge_results(projects_dirs, results)
-            display(res)
-        end)
-    end)
+                local res = merge_results(projects_dirs, results)
+                display(res)
+            end)
+        end
+    )
 end
 
 ---@alias ui.tmux.NavigateDirection 'h'|'j'|'k'|'l'|'p'

@@ -83,11 +83,14 @@ end
 function M.node_text_under_cursor(window, opts)
     local node = get_node_at_cursor(window, opts)
     if node then
-        if node:type() == 'string_fragment' then
+        ---@type string|nil
+        local type = node:type()
+        if type == 'string_fragment' then
             node = node:parent()
+            type = node and node:type()
         end
 
-        if node and node:type() == 'string' then
+        if node and (type == 'string' or type == 'interpreted_string_literal') then
             local start_row, start_col, end_row, end_col = node:range()
             return M.text(window, start_row + 1, start_col + 1, end_row + 1, end_col)
         end

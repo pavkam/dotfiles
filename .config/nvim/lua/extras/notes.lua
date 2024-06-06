@@ -1,21 +1,21 @@
 local utils = require 'core.utils'
+local project = require 'project'
 
 --- Get the notes root directory
 ---@param global boolean|nil: If true, return the global notes root
 ---@return string: The notes root directory
 local function get_notes_root(global)
+    ---@type string|nil
     local root
+
     if global then
-        root = os.getenv 'WORK_NOTES_ROOT'
-        if root == nil then
-            error 'WORK_NOTES_ROOT is not set'
-        end
+        root = vim.env.WORK_NOTES_ROOT or vim.fn.stdpath 'data' --[[@as string|nil]]
     else
-        ---@type string
-        root = utils.join_paths(require('project').root(nil, false), '.notes')
+        root = project.nvim_settings_path()
+        root = root and utils.join_paths(root, 'notes')
     end
 
-    return root
+    return assert(root)
 end
 
 --- Greps the notes directory
@@ -84,14 +84,6 @@ end
 
 utils.register_command('Note', {
     ---@param args core.utils.CommandCallbackArgs
-    list = function(args)
-        find(args.bang)
-    end,
-    ---@param args core.utils.CommandCallbackArgs
-    grep = function(args)
-        grep(args.bang)
-    end,
-    ---@param args core.utils.CommandCallbackArgs
     open = function(args)
         edit(args.bang)
     end,
@@ -115,7 +107,23 @@ utils.register_command('Note', {
     },
 }, {
     default_fn = 'append',
-    desc = 'Manages notes',
+    desc = 'Open/Append to note',
     n_args = '?',
+    bang = true,
+})
+
+utils.register_command('Notes', {
+    ---@param args core.utils.CommandCallbackArgs
+    list = function(args)
+        find(args.bang)
+    end,
+    ---@param args core.utils.CommandCallbackArgs
+    grep = function(args)
+        grep(args.bang)
+    end,
+}, {
+    default_fn = 'grep',
+    desc = 'Manages notes',
+    n_args = 1,
     bang = true,
 })
