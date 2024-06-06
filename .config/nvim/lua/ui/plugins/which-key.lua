@@ -4,7 +4,7 @@ return {
     'folke/which-key.nvim',
     event = 'VeryLazy',
     opts = {
-        plugins = { spelling = true },
+        plugins = { spelling = false },
         icons = {
             group = '',
         },
