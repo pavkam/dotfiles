@@ -208,7 +208,7 @@ end
 
 ---@class core.utils.RegisterCommandOpts
 ---@field desc string # the description of the command
----@field n_args integer|'*'|'?'|'+'|nil # the number of arguments the command takes
+---@field nargs integer|'*'|'?'|'+'|nil # the number of arguments the command takes
 ---@field bang boolean|nil # whether the command takes a bang argument
 ---@field default_fn string|nil # the default function if none supplied
 
@@ -303,7 +303,7 @@ function M.register_command(name, fn, opts)
             end,
             {
                 desc = opts.desc,
-                nargs = opts.n_args,
+                nargs = opts.nargs,
                 bang = opts.bang,
             }
         )
@@ -319,7 +319,7 @@ function M.register_command(name, fn, opts)
             end,
             {
                 desc = opts.desc,
-                nargs = opts.n_args,
+                nargs = opts.nargs,
                 bang = opts.bang,
                 range = fn.range,
             }
@@ -327,15 +327,15 @@ function M.register_command(name, fn, opts)
     else
         ---@type integer|'*'|'?'|'+'|nil
         local n_args = 1
-        if opts.n_args == '?' and opts.default_fn then
+        if opts.nargs == '?' and opts.default_fn then
             n_args = '?'
-        elseif opts.n_args == '*' and not opts.default_fn or opts.n_args == '+' then
+        elseif opts.nargs == '*' and not opts.default_fn or opts.nargs == '+' then
             n_args = '+'
-        elseif type(opts.n_args) == 'number' then
+        elseif type(opts.nargs) == 'number' then
             if opts.default_fn then
-                n_args = opts.n_args
+                n_args = opts.nargs
             else
-                n_args = n_args + opts.n_args
+                n_args = n_args + opts.nargs
             end
         end
 

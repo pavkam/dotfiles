@@ -56,12 +56,14 @@ end
 ---@type table<integer, core.shell.RunningProcess>
 M.running_processes = {}
 
+---@alias core.shell.AsyncCallback fun(exit_code_or_error: integer|nil, stdout: string[], stderr: string[])
+
 --- Executes a given command asynchronously and returns the output
 ---@param cmd string # the command to execute
 ---@param args string[] # the arguments to pass to the command
 ---@param input string|string[]|nil # the input to pass to the command
----@param callback fun(exit_code_or_error: integer|nil, stdout: string[], stderr: string[]) # the callback to call when the command finishes
----@param opts? { cwd: string | nil } # the options to pass to the command
+---@param callback core.shell.AsyncCallback # the callback to call when the command finishes
+---@param opts { cwd: string | nil }|nil # the options to pass to the command
 local function async_cmd(cmd, args, input, callback, opts)
     local stdin = input and assert(vim.loop.new_pipe(false), 'Failed to create stdin pipe')
     local stdout = assert(vim.loop.new_pipe(false), 'Failed to create stdout pipe')
@@ -151,7 +153,6 @@ local function async_cmd(cmd, args, input, callback, opts)
         fn = function()
             return next(M.running_processes) ~= nil
         end,
-        timeout = 60 * 1000,
     })
 
     local stdin_write_success, stdin_write_error
@@ -159,7 +160,10 @@ local function async_cmd(cmd, args, input, callback, opts)
         stdin_write_success, stdin_write_error = stdin:write(input --[[@as string]], function(err)
             write_error = write_error or err
         end)
-        stdin_write_success, stdin_write_error = stdin:shutdown()
+
+        if stdin_write_success then
+            stdin_write_success, stdin_write_error = stdin:shutdown()
+        end
     end
 
     local stdout_read_success, stdout_read_error = stdout:read_start(function(err, data)
@@ -200,12 +204,17 @@ local function async_cmd(cmd, args, input, callback, opts)
     end
 end
 
+---@class core.shell.AsyncCmdOpts
+---@field cwd string|nil # the current working directory
+---@field ignore_codes integer[]|nil # the exit codes to ignore
+---@field no_checktime boolean|nil # whether to checktime after the command finishes
+
 --- Executes a given command asynchronously and returns the output
 ---@param cmd string # the command to execute
 ---@param args string[]|nil # the arguments to pass to the command
 ---@param input string|string[]|nil # the input to pass to the command
 ---@param callback fun(stdout: string[], code: integer) # the callback to call when the command finishes
----@param opts? { cwd: string | nil, ignore_codes: integer[]|nil, no_checktime: boolean|nil } # the options to pass to the command
+---@param opts core.shell.AsyncCmdOpts|nil # the options to pass to the command
 function M.async_cmd(cmd, args, input, callback, opts)
     opts = opts or {}
     args = args or {}
@@ -311,7 +320,13 @@ utils.register_command('Run', {
             if not args.bang then
                 if #output > 0 then
                     local message = markdown.escape(table.concat(output, '\n'))
-                    utils.info(string.format('Command "%s" finished:\n\n```sh\n%s\n```', markdown.escape(cmd_line_desc), markdown.escape(message)))
+                    utils.info(
+                        string.format(
+                            'Command "%s" finished:\n\n```sh\n%s\n```',
+                            markdown.escape(cmd_line_desc),
+                            markdown.escape(message)
+                        )
+                    )
                 else
                     utils.info(string.format('Command "%s" finished', markdown.escape(cmd_line_desc)))
                 end

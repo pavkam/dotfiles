@@ -47,7 +47,7 @@ local function register_task(buffer, class, opts)
     else
         task = {
             ctx = opts.ctx,
-            ttl = opts.timeout or 30000,
+            ttl = opts.timeout or (60 * 1000), -- one minute
             prv = opts.prv,
             fn = opts.fn,
         }
@@ -58,8 +58,8 @@ local function register_task(buffer, class, opts)
     M.tasks[key] = tasks
 end
 
---- Unregisters a task for progress tracking
----@param buffer integer|nil # the buffer to unregister the task for, or nil for global
+--- Un-registers a task for progress tracking
+---@param buffer integer|nil # the buffer to un-register the task for, or nil for global
 ---@param class string # the class of the task
 local function unregister_task(buffer, class)
     assert(type(class) == 'string' and class ~= '')
@@ -176,7 +176,7 @@ function M.register_task(class, opts)
     ensure_polling()
 end
 
---- Unregisters a task for progress tracking
+--- Un-registers a task for progress tracking
 ---@param opts? { buffer?: integer } # optional modifiers
 ---@param class string # the class of the task
 function M.unregister_task(class, opts)
