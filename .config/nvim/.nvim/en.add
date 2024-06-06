@@ -1,3 +1,6 @@
 utils
 param
 lang
+Neovim
+eslint
+golangci
