@@ -184,21 +184,28 @@ function M.on_capability_event(events, capability, buffer, callback, run_on_regi
     return auto_group_name
 end
 
+--- Gets all active clients
+---@param buffer integer|nil # the buffer to get the clients for or 0 or nil for current
+---@return string[] # the names of the active clients
+function M.active_for_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    return vim.iter(vim.lsp.get_clients { bufnr = buffer })
+        :filter(function(client)
+            return not M.is_special(client)
+        end)
+        :totable()
+end
+
 --- Gets the names of all active clients for a buffer
 ---@param buffer integer|nil # the buffer to get the clients for or 0 or nil for current
 ---@return string[] # the names of the active clients
 function M.active_names_for_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local buf_client_names = {}
-
-    for _, client in ipairs(vim.lsp.get_clients { bufnr = buffer }) do
-        if not M.is_special(client) then
-            buf_client_names[#buf_client_names + 1] = client.name
-        end
-    end
-
-    return buf_client_names
+    return vim.iter(M.active_for_buffer(buffer))
+        :map(function(client)
+            return client.name
+        end)
+        :totable()
 end
 
 --- Checks whether there are any active clients for a buffer

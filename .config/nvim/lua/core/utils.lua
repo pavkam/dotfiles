@@ -1,3 +1,5 @@
+local icons = require 'ui.icons'
+
 ---@class core.utils
 local M = {}
 
@@ -463,10 +465,10 @@ function M.defer_unique(buffer, fn, timeout)
     end
 end
 
---- Gets the value of an upvalue of a function
----@param fn function # the function to get the upvalue from
----@param name string # the name of the upvalue to get
----@return any # the value of the upvalue or nil if it does not exist
+--- Gets the value of an up-value of a function
+---@param fn function # the function to get the up-value from
+---@param name string # the name of the up-value to get
+---@return any # the value of the up-value or nil if it does not exist
 function M.get_up_value(fn, name)
     local i = 1
     while true do
@@ -691,6 +693,25 @@ function M.file_type(path)
     return file_type
 end
 
+--- Simplifies a path by making it relative to another path and adding ellipsis
+---@param prefix string # the prefix to make the path relative to
+---@param path string # the path to simplify
+---@return string # the simplified path
+function M.format_relative_path(prefix, path)
+    assert(type(prefix) == 'string')
+    assert(type(path) == 'string')
+
+    for _, p in ipairs { prefix, vim.env.HOME } do
+        p = p:sub(-1) == '/' and p or p .. '/'
+
+        if path:find(p, 1, true) == 1 then
+            return icons.TUI.Ellipsis .. '/' .. path:sub(#p + 1)
+        end
+    end
+
+    return path
+end
+
 --- Get the highlight group for a name
 ---@param name string # the name of the highlight group
 ---@return table<string, string>|nil # the foreground color of the highlight group
@@ -723,8 +744,6 @@ function M.hl_fg_color_and_attrs(name)
 
     return { fg = string.format('#%06x', fg), gui = table.concat(attrs, ',') }
 end
-
-local icons = require 'ui.icons'
 
 --- Helper function that calculates folds
 function M.fold_text()

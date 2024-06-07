@@ -14,28 +14,6 @@ function M.socket()
     end
 end
 
-local projects_root = os.getenv 'PROJECTS_ROOT'
-local user_home = os.getenv 'HOME'
-
---- Simplifies a directory name to be more readable
----@param dir string # the directory to simplify
----@return string # the simplified directory
-local function simplify_dir_name(dir)
-    assert(type(dir) == 'string')
-
-    local projects_adj = projects_root .. '/'
-    if dir:find(projects_adj, 1, true) == 1 then
-        return icons.TUI.Ellipsis .. '/' .. dir:sub(#projects_adj + 1)
-    end
-
-    local home_adj = user_home .. '/'
-    if dir:find(home_adj, 1, true) == 1 then
-        return '~/' .. dir:sub(#home_adj + 1)
-    end
-
-    return dir
-end
-
 --- Finds all git enabled directories in a given root
 ---@param root string # the root to search in
 ---@param collected string[]|nil # the collected directories
@@ -57,14 +35,21 @@ local function find_git_enabled_dirs(root, collected)
     return collected
 end
 
+---@class ui.tmux.SessionItem # The session item
+---@field root string # the root directory of the session
+---@field cwd string|nil # the current working directory of the session
+---@field session string|nil # the session name
+---@field attached boolean|nil # whether the session is attached
+---@field current boolean|nil # whether the session is the current one
+
 --- Merges the results of the git enabled directories and the sessions
 ---@param projects_dirs string[] # the git enabled directories
 ---@param sessions { cwd: string, session: string, attached: boolean }[] # the sessions
----@return table<string, { root: string, cwd?: string, session: string, attached?: boolean, current?: boolean }> # the merged results
+---@return table<string, ui.tmux.SessionItem> # the merged results
 local function merge_results(projects_dirs, sessions)
     local results = {}
 
-    local projects_adj = projects_root .. '/'
+    local projects_adj = vim.env.PROJECTS_ROOT .. '/'
     for _, root in ipairs(projects_dirs) do
         local name = root:sub(#projects_adj + 1)
         results[name] = {
@@ -120,7 +105,7 @@ end
 local new_session_label = '<new session>'
 
 --- Displays the UI to select and manage sessions
----@param items table<string, { root: string, cwd?: string, session?: string, attached?: boolean, current?: boolean }> # the items to display
+---@param items table<string, ui.tmux.SessionItem> # the items to display
 local function display(items)
     ---@type string[][]
     local lines = {}
@@ -129,7 +114,7 @@ local function display(items)
 
     for name, data in pairs(items) do
         local status = data.current and 'current' or data.attached and 'attached' or data.session and 'active' or ''
-        table.insert(lines, { name, status, simplify_dir_name(data.root or data.cwd) })
+        table.insert(lines, { name, status, utils.format_relative_path(vim.env.PROJECTS_ROOT, data.root or data.cwd) })
     end
 
     select.advanced(lines, {
@@ -174,7 +159,7 @@ end
 
 --- Lists all the sessions
 local function manage_sessions()
-    local projects_dirs = projects_root and find_git_enabled_dirs(projects_root) or {}
+    local projects_dirs = vim.env.PROJECTS_ROOT and find_git_enabled_dirs(vim.env.PROJECTS_ROOT) or {}
 
     shell.async_cmd(
         'tmux',

@@ -1,11 +1,7 @@
 -- TODO: figure out why TODOs don't get highlighted
--- TODO: add URL underlining
---
--- TODO: Try to replace bqf with Trouble v3
 --
 -- TODO: try to move to tabline from buffer line
 -- TODO: maybe cross-tmux-session marks
--- TODO: Improve progress, the timeouts are not working
 
 --- Global function to quit the current process
 _G.quit = function()

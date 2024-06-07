@@ -33,7 +33,7 @@ function M.swap_custom_dictionary(target)
         return
     end
 
-    utils.hint(string.format('Swapping custom spelling dictionary to "%s"', spl_file))
+    utils.hint(string.format('Selecting spelling dictionary to "%s" for buffer', project.format_relative(spl_file)))
     vim.opt.spellfile = spl_file
 end
 

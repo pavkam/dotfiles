@@ -167,9 +167,21 @@ function M.attach(client, buffer)
         end
     )
 
-    lsp.on_capability_event({ 'BufRead', 'BufNew' }, vim.lsp.protocol.Methods.textDocument_inlayHint, buffer, function()
+    if client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
         vim.lsp.inlay_hint.enable(settings.get_toggle('inlay_hint_enabled', buffer), { bufnr = buffer })
-    end, true)
+    end
+
+    if
+        client.supports_method(vim.lsp.protocol.Methods.textDocument_semanticTokens_full)
+        or client.supports_method(vim.lsp.protocol.Methods.textDocument_semanticTokens_full_delta)
+        or client.supports_method(vim.lsp.protocol.Methods.textDocument_semanticTokens_range)
+    then
+        if not settings.get_toggle('semantic_tokens_enabled', buffer) then
+            vim.defer_fn(function()
+                vim.lsp.semantic_tokens.stop(buffer, client.id)
+            end, 100)
+        end
+    end
 end
 
 return M

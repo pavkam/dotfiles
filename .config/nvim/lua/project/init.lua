@@ -246,6 +246,16 @@ function M.path_components(target)
     return { work_space_path = head, file_path = tail, work_space_name = ws }
 end
 
+--- Formats a relative path to a given target
+---@param target core.utils.Target # the target to get the settings path for
+---@return string # the formatted relative path
+function M.format_relative(target)
+    ---@type string|nil
+    local root = M.root(target)
+    local _, path = utils.expand_target(target)
+    return root and utils.format_relative_path(root, path) or path
+end
+
 --- Returns the path to the Neovim settings directory for a given target
 ---@param target core.utils.Target # the target to get the settings path for
 ---@return string|nil # the path to the settings directory
@@ -360,6 +370,24 @@ settings.register_toggle('code_lens_enabled', function(enabled, buffer)
 end, {
     name = icons.UI.CodeLens .. ' Code Lense',
     description = 'code lens',
+    scope = { 'global', 'buffer' },
+    default = true,
+})
+
+settings.register_toggle('semantic_tokens_enabled', function(enabled, buffer)
+    if not buffer then
+        return
+    end
+
+    local clients = lsp.active_for_buffer(buffer)
+    local fn = enabled and vim.lsp.semantic_tokens.start or vim.lsp.semantic_tokens.stop
+
+    vim.iter(clients):each(function(client)
+        fn(buffer, client.id)
+    end)
+end, {
+    name = icons.UI.CodeLens .. ' Semantic Tokens',
+    description = 'semantic tokens',
     scope = { 'global', 'buffer' },
     default = true,
 })

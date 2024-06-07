@@ -26,3 +26,8 @@ desc
 nargs
 fargs
 smods
+keymaps
+projects_dirs
+msg
+tmux
+ui
