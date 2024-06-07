@@ -40,19 +40,21 @@ local function get_commands(opts)
     local buffer_commands = vim.tbl_values(vim.api.nvim_buf_get_commands(opts.buffer, {}))
 
     local is_visual = is_visual_mode(opts.mode)
-    ---@type vim.CommandDesc[]
-    local all = vim.tbl_filter(
-        ---@param cmd vim.CommandDesc
-        function(cmd)
-            if cmd == nil then
-                return false
-            end
 
-            local works_in_visual = cmd.range and cmd.range ~= ''
-            return (works_in_visual and is_visual) or opts.mode == 'n'
-        end,
-        vim.list_extend(commands, buffer_commands)
-    )
+    ---@type vim.CommandDesc[]
+    local all = vim.iter(vim.list_extend(commands, buffer_commands))
+        :filter(
+            ---@param cmd vim.CommandDesc
+            function(cmd)
+                if cmd == nil then
+                    return false
+                end
+
+                local works_in_visual = cmd.range and cmd.range ~= ''
+                return (works_in_visual and is_visual) or opts.mode == 'n'
+            end
+        )
+        :totable()
 
     return all
 end
@@ -153,6 +155,7 @@ local function get_items(opts)
         -- description
         local desc = (keymap.desc or utils.format_term_codes(keymap.rhs or '')):gsub('\n', '\\n')
         if keymap.callback and not keymap.desc then
+            -- TODO: this seems to need my love
             desc = require('telescope.actions.utils')._get_anon_function_name(debug.getinfo(keymap.callback))
         end
 

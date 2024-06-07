@@ -17,12 +17,16 @@ function M.for_position(buffer, row)
         return {}
     end
 
-    local matching = vim.tbl_filter(function(d)
-        --[[@cast d vim.Diagnostic]]
-        return d.lnum <= row and d.end_lnum >= row
-    end, diagnostics)
+    ---@type vim.Diagnostic[]
+    local matching = vim.iter(diagnostics)
+        :filter(
+            ---@param d vim.Diagnostic
+            function(d)
+                return d.lnum <= row and d.end_lnum >= row
+            end
+        )
+        :totable()
 
-    ---@cast matching vim.Diagnostic[]
     return matching
 end
 
@@ -128,9 +132,12 @@ end
 utils.register_command('DiagnoseWorkspace', function()
     utils.info 'Checking workspace diagnostics...'
 
-    local clients = vim.tbl_filter(function(client)
-        return not lsp.is_special(client)
-    end, vim.lsp.get_clients())
+    ---@type vim.lsp.Client[]
+    local clients = vim.iter(vim.lsp.get_clients())
+        :filter(function(client)
+            return not lsp.is_special(client)
+        end)
+        :totable()
 
     for _, client in ipairs(clients) do
         M.check_workspace(client)

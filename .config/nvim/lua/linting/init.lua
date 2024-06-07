@@ -34,11 +34,13 @@ local function linters(buffer)
         buf = buffer,
     }
 
-    return vim.tbl_filter(function(name)
-        local linter = lint.linters[name]
-        ---@diagnostic disable-next-line: undefined-field
-        return linter and not (type(linter) == 'table' and linter.condition and not linter.condition(ctx))
-    end, clients)
+    return vim.iter(clients)
+        :filter(function(name)
+            local linter = lint.linters[name]
+            ---@diagnostic disable-next-line: undefined-field
+            return linter and not (type(linter) == 'table' and linter.condition and not linter.condition(ctx))
+        end)
+        :totable()
 end
 
 --- Checks the status of linting for a buffer
@@ -127,24 +129,20 @@ function M.enabled(buffer)
     return settings.get_toggle(setting_name, buffer or vim.api.nvim_get_current_buf())
 end
 
-settings.register_toggle(
-    setting_name,
-    function(enabled, buffer)
-        local lint = require 'linting'
+settings.register_toggle(setting_name, function(enabled, buffer)
+    local lint = require 'linting'
 
-        if not enabled then
-            lint.apply(buffer)
-        else
-            require('project.lsp').clear_diagnostics(lint.active_names_for_buffer(buffer), buffer)
-        end
-    end,
-    {
-        name = icons.UI.Lint .. ' Auto-linting',
-        description = 'auto-linting',
-        default = true,
-        scope = { 'buffer', 'global' },
-    }
-)
+    if not enabled then
+        lint.apply(buffer)
+    else
+        require('project.lsp').clear_diagnostics(lint.active_names_for_buffer(buffer), buffer)
+    end
+end, {
+    name = icons.UI.Lint .. ' Auto-linting',
+    description = 'auto-linting',
+    default = true,
+    scope = { 'buffer', 'global' },
+})
 
 if utils.has_plugin 'nvim-lint' then
     -- setup auto-commands

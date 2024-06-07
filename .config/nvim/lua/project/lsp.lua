@@ -235,9 +235,16 @@ end
 ---@param buffer integer|nil # the buffer to check the client for or 0 or nil for current
 function M.restart_all_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
-    local clients = vim.tbl_filter(function(client)
-        return not M.is_special(client)
-    end, vim.lsp.get_clients { bufnr = buffer })
+
+    ---@type vim.lsp.Client[]
+    local clients = vim.iter(vim.lsp.get_clients { bufnr = buffer })
+        :filter(
+            ---@param client vim.lsp.Client
+            function(client)
+                return not M.is_special(client)
+            end
+        )
+        :totable()
 
     if #clients == 0 then
         utils.warn 'No active clients to restart. Starting all.'

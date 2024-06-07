@@ -79,14 +79,22 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 local config_path = vim.fn.stdpath 'config'
-local plugin_dirs = vim.tbl_filter(
-    function(dir)
-        return vim.fn.isdirectory(config_path .. '/lua/' .. dir) == 1
-    end,
-    vim.tbl_map(function(module)
-        return module .. '/plugins'
-    end, modules)
-)
+
+---@type string[]
+local plugin_dirs = vim.iter(modules)
+    :map(
+        ---@param module string
+        function(module)
+            return module .. '/plugins'
+        end
+    )
+    :filter(
+        ---@param dir string
+        function(dir)
+            return vim.fn.isdirectory(config_path .. '/lua/' .. dir) == 1
+        end
+    )
+    :totable()
 
 require('lazy').setup {
     spec = vim.tbl_map(function(dir)

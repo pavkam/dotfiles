@@ -116,9 +116,11 @@ function M.delete_file(handle, file)
     assert(type(file) == 'string' and file ~= '')
 
     local list = assert(list_details(handle))
-    list.items = vim.tbl_filter(function(item)
-        return item.filename ~= file
-    end, list.items)
+    list.items = vim.iter(list.items)
+        :filter(function(item)
+            return item.filename ~= file
+        end)
+        :totable()
 
     if not list.window then
         vim.fn.setqflist({}, 'r', { id = list.id, items = list.items })
@@ -145,9 +147,11 @@ end
 --- Checks whether the quick-fix or locations list is visible
 ---@return boolean # whether the list is visible
 function M.visible()
-    return #vim.tbl_filter(function(win)
-        return win.quickfix == 1 and win.loclist == 0
-    end, vim.fn.getwininfo()) == 1
+    return #vim.iter(vim.fn.getwininfo())
+        :filter(function(win)
+            return win.quickfix == 1 and win.loclist == 0
+        end)
+        :totable() == 1
 end
 
 --- Clears the quick-fix or locations list

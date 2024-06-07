@@ -250,9 +250,11 @@ end
 ---@param scope core.settings.ToggleScope # the scope of the option
 ---@return core.settings.ManagedToggle|nil # the toggle
 local function find_toggle(option, scope)
-    return vim.tbl_filter(function(toggle)
-        return toggle.option == option and toggle.scope == scope
-    end, managed_toggles)[1]
+    return vim.iter(managed_toggles)
+        :filter(function(toggle)
+            return toggle.option == option and toggle.scope == scope
+        end)
+        :next()
 end
 
 --- Gets the value of a managed toggle

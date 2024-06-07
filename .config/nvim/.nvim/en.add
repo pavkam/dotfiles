@@ -31,3 +31,15 @@ projects_dirs
 msg
 tmux
 ui
+qf
+KeymapDesc
+Keymap
+lhs
+rhs
+expr
+noremap
+attrs
+api
+keyset
+keymap
+attr_col_width

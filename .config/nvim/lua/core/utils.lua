@@ -365,9 +365,11 @@ function M.register_command(name, fn, opts)
                 desc = opts.desc,
                 nargs = n_args,
                 bang = opts.bang,
-                range = #vim.tbl_filter(function(f)
-                    return type(f) == 'table' and f.range
-                end, fn) > 0,
+                range = #vim.iter(fn)
+                    :filter(function(f)
+                        return type(f) == 'table' and f.range
+                    end)
+                    :totable() > 0,
                 complete = function(arg_lead)
                     local completions = vim.tbl_keys(fn)
                     local matches = {}
@@ -505,9 +507,16 @@ end
 --- Gets the list of listed file buffers
 ---@return integer[] # the list of buffers
 function M.get_listed_buffers()
-    return vim.tbl_filter(function(b)
-        return (vim.api.nvim_buf_is_valid(b) and vim.api.nvim_buf_is_loaded(b) and vim.bo[b].buflisted)
-    end, vim.api.nvim_list_bufs())
+    return vim.iter(vim.api.nvim_list_bufs())
+        :filter(
+            ---@param b integer
+            function(b)
+                return vim.api.nvim_buf_is_valid(b)
+                    and vim.api.nvim_buf_is_loaded(b)
+                    and vim.api.nvim_get_option_value('buflisted', { buf = b })
+            end
+        )
+        :totable()
 end
 
 M.special_file_types = {

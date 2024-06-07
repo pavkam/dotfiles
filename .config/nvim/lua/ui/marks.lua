@@ -50,9 +50,11 @@ local get_marks = function(buffer)
     vim.list_extend(marks, vim.fn.getmarklist(buffer))
     vim.list_extend(marks, vim.fn.getmarklist())
 
-    return vim.tbl_filter(function(mark)
-        return mark.pos[1] == buffer and is_user_mark(mark)
-    end, marks)
+    return vim.iter(marks)
+        :filter(function(mark)
+            return mark.pos[1] == buffer and is_user_mark(mark)
+        end)
+        :totable()
 end
 
 --- Updates the signs for a buffer
