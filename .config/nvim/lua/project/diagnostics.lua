@@ -71,7 +71,7 @@ local function check_file(client, files, index)
     end
 
     local path = files[index]
-    progress.register_task('workspace', {
+    progress.update('workspace', {
         ctx = string.format('Checking %d of %d files', index, #files),
     })
 
@@ -119,7 +119,7 @@ function M.check_workspace(client, target)
 
         check_file(client, paths, 1)
 
-        progress.register_task('workspace', {
+        progress.update('workspace', {
             fn = function()
                 return indexing_in_progress
             end,

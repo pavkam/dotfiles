@@ -7,6 +7,7 @@ local M = {}
 ---@class utils.progress.Task
 ---@field ctx any|nil # any context for the task
 ---@field ttl number # the time to live of the task in milliseconds
+---@field timeout number # the timeout of the task in milliseconds
 ---@field prv boolean # whether the task is private (not reported globally)
 ---@field fn nil|fun(buffer: integer|nil): boolean # the function to check whether the task is still active
 
@@ -24,7 +25,7 @@ M.tasks = {}
 ---@param buffer integer|nil # the buffer to register the task for, or nil for global
 ---@param class string # the class of the task
 ---@param opts utils.progress.TaskOptions|nil # the options for the task
-local function register_task(buffer, class, opts)
+local function update(buffer, class, opts)
     assert(type(class) == 'string' and class ~= '')
 
     opts = opts or {}
@@ -41,13 +42,16 @@ local function register_task(buffer, class, opts)
     local task = tasks[class]
     if task then
         task.ctx = opts.ctx
+        task.timeout = opts.timeout or task.timeout
         task.ttl = opts.timeout or task.ttl
         task.fn = task.fn or opts.fn
         task.prv = opts.prv or task.prv
     else
+        local timeout = opts.timeout or (60 * 1000) -- one minute
         task = {
             ctx = opts.ctx,
-            ttl = opts.timeout or (60 * 1000), -- one minute
+            ttl = timeout,
+            timeout = timeout,
             prv = opts.prv,
             fn = opts.fn,
         }
@@ -61,7 +65,7 @@ end
 --- Un-registers a task for progress tracking
 ---@param buffer integer|nil # the buffer to un-register the task for, or nil for global
 ---@param class string # the class of the task
-local function unregister_task(buffer, class)
+local function stop(buffer, class)
     assert(type(class) == 'string' and class ~= '')
 
     local key = buffer or 'global'
@@ -99,9 +103,10 @@ local function update_tasks(interval)
         for _, class in ipairs(classes) do
             local task = tasks[class]
             task.ttl = task.ttl and task.ttl - interval
+
             if not task.ttl or task.ttl <= 0 then
-                utils.warn('Task "' .. class .. '" timed out!')
-                tasks[class] = nil
+                utils.warn('Task "' .. class .. '" is still running')
+                tasks[class].ttl = tasks[class].timeout
             else
                 if task.fn and not task.fn(buffer) then
                     tasks[class] = nil
@@ -165,28 +170,28 @@ end
 --- Registers a task for progress tracking
 ---@param class string # the class of the task
 ---@param opts utils.progress.TaskOptions|nil # the options for the task
-function M.register_task(class, opts)
+function M.update(class, opts)
     opts = opts or {}
 
     if opts.buffer ~= nil then
         opts.buffer = opts.buffer or vim.api.nvim_get_current_buf()
     end
 
-    register_task(opts.buffer, class, opts)
+    update(opts.buffer, class, opts)
     ensure_polling()
 end
 
 --- Un-registers a task for progress tracking
 ---@param opts? { buffer?: integer } # optional modifiers
 ---@param class string # the class of the task
-function M.unregister_task(class, opts)
+function M.stop(class, opts)
     opts = opts or {}
 
     if opts.buffer ~= nil then
         opts.buffer = opts.buffer or vim.api.nvim_get_current_buf()
     end
 
-    unregister_task(opts.buffer, class)
+    stop(opts.buffer, class)
 end
 
 --- Gets the status for a given task class

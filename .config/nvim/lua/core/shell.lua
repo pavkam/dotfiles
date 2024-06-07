@@ -99,7 +99,7 @@ local function async_cmd(cmd, args, input, callback, opts)
             ] = nil
 
             if next(M.running_processes) ~= nil then
-                progress.register_task(progress_class, {
+                progress.update(progress_class, {
                     ctx = vim.tbl_values(M.running_processes),
                 })
             end
@@ -148,7 +148,7 @@ local function async_cmd(cmd, args, input, callback, opts)
     pid = spawn_error_or_pid --[[@as integer]]
 
     M.running_processes[pid] = { cmd = cmd, args = args }
-    progress.register_task(progress_class, {
+    progress.update(progress_class, {
         ctx = vim.tbl_values(M.running_processes),
         fn = function()
             return next(M.running_processes) ~= nil

@@ -195,7 +195,7 @@ utils.on_event({ 'RecordingEnter' }, function()
             .. icons.TUI.Ellipsis
     )
 
-    progress.register_task('recording_macro', {
+    progress.update('recording_macro', {
         fn = function()
             return vim.fn.reg_recording() ~= ''
         end,
@@ -214,7 +214,7 @@ utils.on_event({ 'RecordingLeave' }, function()
             .. icons.TUI.Ellipsis
     )
 
-    progress.unregister_task 'recording_macro'
+    progress.stop 'recording_macro'
 end)
 
 ---@class ui

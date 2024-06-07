@@ -51,7 +51,7 @@ return {
             local msg = idx > 0 and ls.queue[idx].message or nil --[[@as string]]
             msg = msg and msg:sub(3) or 'Processing'
 
-            progress.register_task('package-info', {
+            progress.update('package-info', {
                 fn = function()
                     return ls.get() ~= ''
                 end,

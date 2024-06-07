@@ -9,7 +9,7 @@ local function init(client)
         ---@cast adapter_id string
 
         running_adapters[adapter_id] = true
-        progress.register_task('neotest', {
+        progress.update('neotest', {
             fn = function()
                 return next(running_adapters) ~= nil
             end,

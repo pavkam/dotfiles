@@ -93,7 +93,7 @@ function M.apply(buffer, injected)
 
     local names = formatters(buffer)
     if #names > 0 then
-        progress.register_task(progress_class, { buffer = buffer, prv = true, fn = formatting_status, ctx = names })
+        progress.update(progress_class, { buffer = buffer, prv = true, fn = formatting_status, ctx = names })
     end
 end
 

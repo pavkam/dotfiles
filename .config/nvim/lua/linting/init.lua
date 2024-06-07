@@ -111,7 +111,7 @@ function M.apply(buffer)
     utils.defer_unique(buffer, function()
         local do_lint = function()
             lint.try_lint(names, { cwd = project.root(buffer) })
-            progress.register_task(progress_class, { buffer = buffer, prv = true, fn = linting_status, ctx = names })
+            progress.update(progress_class, { buffer = buffer, prv = true, fn = linting_status, ctx = names })
         end
 
         if vim.api.nvim_buf_is_valid(buffer) then

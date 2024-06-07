@@ -55,7 +55,7 @@ utils.on_user_event('LspProgress', function(_, evt)
     local key = string.format('%s.%s', evt.data.client_id, evt.data.token)
     if evt.data.value.kind ~= 'end' then
         lsp_tasks[key] = evt.data.value
-        progress.register_task(progress_class, { prv = true, fn = lsp_status, ctx = evt.data.value.message })
+        progress.update(progress_class, { prv = true, fn = lsp_status, ctx = evt.data.value.message })
     else
         lsp_tasks[key] = nil
     end
