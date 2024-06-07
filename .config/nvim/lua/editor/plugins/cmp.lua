@@ -59,7 +59,10 @@ return {
             end
             return {
                 enabled = function()
-                    local dap_prompt = vim.tbl_contains({ 'dap-repl', 'dapui_watches', 'dapui_hover' }, vim.api.nvim_get_option_value('filetype', { buf = 0 }))
+                    local dap_prompt = vim.tbl_contains(
+                        { 'dap-repl', 'dapui_watches', 'dapui_hover' },
+                        vim.api.nvim_get_option_value('filetype', { buf = 0 })
+                    )
 
                     if vim.api.nvim_get_option_value('buftype', { buf = 0 }) == 'prompt' and not dap_prompt then
                         return false
@@ -224,7 +227,9 @@ return {
     },
     {
         'L3MON4D3/LuaSnip',
-        build = vim.fn.has 'win32' == 0 and "echo 'NOTE: jsregexp is optional, so not a big deal if it fails to build\n'; make install_jsregexp" or nil,
+        build = vim.fn.has 'win32' == 0
+                and "echo 'NOTE: jsregexp is optional, so not a big deal if it fails to build\n'; make install_jsregexp"
+            or nil,
         dependencies = {
             'rafamadriz/friendly-snippets',
         },
@@ -236,9 +241,9 @@ return {
         },
         config = function(_, opts)
             require('luasnip').config.setup(opts)
-            vim.tbl_map(function(type)
+            vim.iter({ 'vscode', 'snipmate', 'lua' }):each(function(type)
                 require('luasnip.loaders.from_' .. type).lazy_load()
-            end, { 'vscode', 'snipmate', 'lua' })
+            end)
         end,
     },
 }

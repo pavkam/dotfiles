@@ -112,17 +112,19 @@ local function show_for_buffer(buffer)
             function(client)
                 return client.name
             end,
-            vim.tbl_map(function(client)
-                return {
-                    id = client.id,
-                    name = client.name,
-                    root = client.root_dir,
-                    client_capabilities = client.capabilities,
-                    server_capabilities = client.server_capabilities,
-                    dynamic_capabilities = client.dynamic_capabilities,
-                    requests = client.requests,
-                }
-            end, vim.lsp.get_clients { bufnr = buffer })
+            vim.iter(vim.lsp.get_clients { bufnr = buffer })
+                :map(function(client)
+                    return {
+                        id = client.id,
+                        name = client.name,
+                        root = client.root_dir,
+                        client_capabilities = client.capabilities,
+                        server_capabilities = client.server_capabilities,
+                        dynamic_capabilities = client.dynamic_capabilities,
+                        requests = client.requests,
+                    }
+                end)
+                :totable()
         ),
     }
 

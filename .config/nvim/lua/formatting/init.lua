@@ -29,9 +29,11 @@ local function formatters(buffer)
         return {}
     end
 
-    return vim.tbl_map(function(v)
-        return v.name
-    end, clients)
+    return vim.iter(clients)
+        :map(function(v)
+            return v.name
+        end)
+        :totable()
 end
 
 --- Checks the status of the formatting operation for the buffer

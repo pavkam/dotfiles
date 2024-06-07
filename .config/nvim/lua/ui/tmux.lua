@@ -168,16 +168,20 @@ local function manage_sessions()
         function(sessions)
             shell.async_cmd('tmux', { 'display-message', '-p', '-F', '#{session_name}' }, nil, function(current_session)
                 ---@type { cwd: string, session: string }[]
-                local results = vim.tbl_map(function(line)
-                    ---@cast line string
-                    local session_name, cwd, attached = line:match '^(.-):(.-):(.+)$'
-                    return {
-                        session = session_name,--[[@as string]]
-                        cwd = cwd,--[[@as string]]
-                        attached = attached == '1',--[[@as boolean]]
-                        current = session_name == current_session[1],--[[@as boolean]]
-                    }
-                end, sessions)
+                local results = vim.iter(sessions)
+                    :map(
+                        ---@param line string
+                        function(line)
+                            local session_name, cwd, attached = line:match '^(.-):(.-):(.+)$'
+                            return {
+                                session = session_name,--[[@as string]]
+                                cwd = cwd,--[[@as string]]
+                                attached = attached == '1',--[[@as boolean]]
+                                current = session_name == current_session[1],--[[@as boolean]]
+                            }
+                        end
+                    )
+                    :totable()
 
                 local res = merge_results(projects_dirs, results)
                 display(res)

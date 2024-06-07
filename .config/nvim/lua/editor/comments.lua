@@ -138,9 +138,14 @@ end
 ---@return string|nil # The comment-string for the given file type.
 function M.select_matching(window, file_type)
     ---@type string[]
-    local patterns = vim.tbl_map(function(item)
-        return string.format('%s %%s %s', item.prefix, item.suffix or '')
-    end, M.resolve(window, file_type))
+    local patterns = vim.iter(M.resolve(window, file_type))
+        :map(
+            ---@param item editor.comments.CommentSpec
+            function(item)
+                return string.format('%s %%s %s', item.prefix, item.suffix or '')
+            end
+        )
+        :totable()
 
     -- add the original comment-string
     local original = M.original_get_option(file_type, option_name)

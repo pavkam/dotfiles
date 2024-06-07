@@ -42,7 +42,10 @@ return {
                 return prefix
             end
 
-            return delongify(prefix .. ' ' .. table.concat(utils.to_list(list), ' ' .. icons.TUI.ListSeparator .. ' '), len_max)
+            return delongify(
+                prefix .. ' ' .. table.concat(utils.to_list(list), ' ' .. icons.TUI.ListSeparator .. ' '),
+                len_max
+            )
         end
 
         local copilot_colors = {
@@ -147,11 +150,16 @@ return {
                         settings.transient(function()
                             local prefix, tasks = shell.progress()
 
+                            ---@type string[]|nil
                             local tasks_names = tasks
-                                and vim.tbl_map(function(task)
-                                    ---@cast task core.shell.RunningProcess
-                                    return task.cmd .. ' ' .. table.concat(task.args, ' ')
-                                end, tasks)
+                                and vim.iter(tasks)
+                                    :map(
+                                        ---@param task core.shell.RunningProcess
+                                        function(task)
+                                            return task.cmd .. ' ' .. table.concat(task.args, ' ')
+                                        end
+                                    )
+                                    :totable()
 
                             if prefix and tasks_names then
                                 return sexify(prefix, tasks_names, 70)
@@ -232,17 +240,25 @@ return {
                             vim.cmd 'LspInfo'
                         end,
                     },
-                    package.loaded['copilot.nvim'] and {
-                        settings.transient(function()
-                            return sexify(icons.Symbols.Copilot, require('copilot.api').status.data.message or '')
-                        end),
-                        cond = settings.transient(function(buffer)
-                            return lsp.is_active_for_buffer(buffer, 'copilot')
-                        end),
-                        color = settings.transient(function()
-                            return utils.hl_fg_color_and_attrs(copilot_colors[require('copilot.api').status.data.status] or copilot_colors['Normal'])
-                        end),
-                    } or nil,
+                    package.loaded['copilot.nvim']
+                            and {
+                                settings.transient(function()
+                                    return sexify(
+                                        icons.Symbols.Copilot,
+                                        require('copilot.api').status.data.message or ''
+                                    )
+                                end),
+                                cond = settings.transient(function(buffer)
+                                    return lsp.is_active_for_buffer(buffer, 'copilot')
+                                end),
+                                color = settings.transient(function()
+                                    return utils.hl_fg_color_and_attrs(
+                                        copilot_colors[require('copilot.api').status.data.status]
+                                            or copilot_colors['Normal']
+                                    )
+                                end),
+                            }
+                        or nil,
                 },
                 lualine_y = {
                     {
@@ -291,7 +307,7 @@ return {
                             return icons.UI.TMux
                         end,
                         color = utils.hl_fg_color_and_attrs 'Comment',
-                        cond = require('ui.tmux').active,
+                        cond = require('ui.tmux').socket() ~= nil,
                         separator = false,
                     },
                     {

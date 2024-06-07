@@ -11,32 +11,48 @@ local icons = require 'ui.icons'
 
 local M = {}
 
----@alias ui.select.SelectEntry string|number|boolean|(string|number|boolean)[]) # An entry in the list of items to select from
----@alias ui.select.SelectCallback fun(entry?: ui.select.SelectEntry, index?: integer) # The callback to call when an item is selected
----@alias ui.select.SelectHighlighter fun(entry: ui.select.SelectEntry, index: integer, col_index: number): string|nil # The highlighter to use for the entrygh
----@alias ui.select.SelectOpts { prompt?: string, at_cursor?: boolean, separator?: string, callback?: ui.select.SelectCallback, highlighter?: ui.select.SelectHighlighter, index_fields?: integer[], width?: number, height?: number }
+---@alias ui.select.SelectEntry
+---|string
+---|number
+---|boolean
+---|(string|number|boolean)[]) # An entry in the list of items to select from
+
+---@alias ui.select.SelectCallback
+---| fun(entry: ui.select.SelectEntry, index: integer) # The callback to call when an item is selected
+---@alias ui.select.SelectHighlighter
+---| fun(entry: ui.select.SelectEntry, index: integer, col_index: number): string|nil # The highlighter to use for entry
+
+---@class ui.select.SelectOpts # The options for the select
+---@field prompt string|nil # The prompt to display
+---@field at_cursor boolean|nil # Whether to display the select at the cursor
+---@field separator string|nil # The separator to use between columns
+---@field callback ui.select.SelectCallback|nil # The callback to call when an item is selected
+---@field highlighter ui.select.SelectHighlighter|nil # The highlighter to use for the entry
+---@field index_fields integer[]|nil # The fields to use for the index
+---@field width number|nil # The width of the select
+---@field height number|nil # The height of the select
 
 local h_padding = 8
 local v_padding = 4
 
 --- Select an item from a list of items
 ---@param items ui.select.SelectEntry[] # The list of items to select from
----@param opts? ui.select.SelectOpts # The options for the select
+---@param opts ui.select.SelectOpts|nil # The options for the select
 function M.advanced(items, opts)
     opts = opts or {}
 
-    local callback = opts.callback or function(entry)
-        utils.warn('No handler defined, selected: ' .. vim.inspect(entry))
-    end
+    local callback = opts.callback
+        or function(entry)
+            utils.warn('No handler defined, selected: ' .. vim.inspect(entry))
+        end
     opts.callback = nil
 
     local separator = opts.separator or (' ' .. icons.Symbols.ColumnSeparator .. ' ')
     opts.separator = nil
 
-    local highlighter = opts.highlighter or function()
+    opts.highlighter = opts.highlighter or function()
         return nil
     end
-    opts.highlighter = nil
 
     -- extract the prompt
     local prompt = opts.prompt or 'Select one of'
@@ -67,11 +83,16 @@ function M.advanced(items, opts)
     local max_width = strings.strdisplaywidth(prompt) + h_padding
 
     ---@type number[]
-    local max_lengths = vim.tbl_map(function(item)
-        local l = strings.strdisplaywidth(tostring(item))
-        max_width = math.max(max_width, l)
-        return l
-    end, proc_items[1])
+    local max_lengths = vim.iter(proc_items[1])
+        :map(
+            ---@param item (string|number|boolean)
+            function(item)
+                local l = strings.strdisplaywidth(tostring(item))
+                max_width = math.max(max_width, l)
+                return l
+            end
+        )
+        :totable()
 
     for _, item in ipairs(proc_items) do
         if #item ~= item_length then
@@ -91,15 +112,20 @@ function M.advanced(items, opts)
     -- build the display function
     local displayer = entry_display.create {
         separator = separator,
-        items = vim.tbl_map(function(w)
-            return { width = w }
-        end, max_lengths),
+        items = vim.iter(max_lengths)
+            :map(
+                ---@param w number
+                function(w)
+                    return { width = w }
+                end
+            )
+            :totable(),
     }
 
     local display = function(e)
         local mapped = {}
         for i, field in ipairs(e.value) do
-            table.insert(mapped, { field, highlighter(e.value, e.index, i) })
+            table.insert(mapped, { field, opts.highlighter(e.value, e.index, i) })
         end
 
         return displayer(mapped)
@@ -169,7 +195,10 @@ function M.command(commands, opts)
 
         table.insert(entry, i)
         table.insert(entry, command.name)
-        table.insert(entry, command.desc and command.desc or type(command.command) == 'string' and command.command or 'function')
+        table.insert(
+            entry,
+            command.desc and command.desc or type(command.command) == 'string' and command.command or 'function'
+        )
 
         table.insert(items, entry)
     end

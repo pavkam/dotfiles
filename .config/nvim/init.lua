@@ -97,9 +97,14 @@ local plugin_dirs = vim.iter(modules)
     :totable()
 
 require('lazy').setup {
-    spec = vim.tbl_map(function(dir)
-        return { import = dir }
-    end, plugin_dirs),
+    spec = vim.iter(plugin_dirs)
+        :map(
+            ---@param dir string
+            function(dir)
+                return { import = dir }
+            end
+        )
+        :totable(),
     defaults = {
         lazy = true,
         version = false,

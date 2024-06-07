@@ -269,10 +269,17 @@ function M.roots(target, sort)
     if path then
         for _, client in ipairs(vim.lsp.get_clients { bufnr = buffer }) do
             local workspace = client.config.workspace_folders
+
+            ---@type string[]
             local paths = workspace
-                    and vim.tbl_map(function(ws)
-                        return vim.uri_to_fname(ws.uri)
-                    end, workspace)
+                    and vim.iter(workspace)
+                        :map(
+                            ---@param ws lsp.WorkspaceFolder
+                            function(ws)
+                                return vim.uri_to_fname(ws.uri)
+                            end
+                        )
+                        :totable()
                 or client.config.root_dir and { client.config.root_dir }
                 or {}
 
