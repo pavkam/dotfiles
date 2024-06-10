@@ -35,14 +35,12 @@ return {
             },
             formatters = {
                 ['goimports-reviser'] = {
-                    ---@diagnostic disable-next-line: unused-local
-                    cwd = function(self, ctx)
+                    cwd = function(_, ctx)
                         return project.root(ctx.buf or ctx.filename)
                     end,
                 },
                 prettier = {
-                    ---@diagnostic disable-next-line: unused-local
-                    cwd = function(self, ctx)
+                    cwd = function(_, ctx)
                         return project.root(ctx.buf or ctx.filename)
                     end,
                 },
@@ -50,16 +48,14 @@ return {
                     args = { '-m', '180', '--no-reformat-tags', '--base-formatter', 'gofumpt' },
                 }),
                 prisma = {
-                    ---@diagnostic disable-next-line: unused-local
-                    cwd = function(self, ctx)
+                    cwd = function(_, ctx)
                         return project.root(ctx.buf or ctx.filename)
                     end,
                     meta = {
                         url = 'https://github.com/prisma/prisma-engines',
                         description = 'Formatter for the prisma filetype.',
                     },
-                    ---@diagnostic disable-next-line: unused-local
-                    command = function(self, ctx)
+                    command = function(_, ctx)
                         return project.get_js_bin_path(ctx.buf or ctx.filename, 'prisma') or 'prisma'
                     end,
                     stdin = false,

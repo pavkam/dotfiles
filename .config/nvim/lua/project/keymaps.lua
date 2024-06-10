@@ -3,6 +3,7 @@ local syntax = require 'editor.syntax'
 local lsp = require 'project.lsp'
 local icons = require 'ui.icons'
 local settings = require 'core.settings'
+local highlight_nav = require 'project.highlight-nav'
 
 ---@class languages.keymaps
 local M = {}
@@ -84,6 +85,26 @@ local keymaps = {
         end,
         desc = 'Rename',
         capability = vim.lsp.protocol.Methods.textDocument_rename,
+    },
+    {
+        '*',
+        function()
+            if not highlight_nav.next() then
+                vim.cmd 'normal! *'
+            end
+        end,
+        desc = 'Jump to the Next Occurrence',
+        capability = vim.lsp.protocol.Methods.textDocument_documentHighlight,
+    },
+    {
+        '#',
+        function()
+            if not highlight_nav.prev() then
+                vim.cmd 'normal! #'
+            end
+        end,
+        desc = 'Jump to the Previous Occurrence',
+        capability = vim.lsp.protocol.Methods.textDocument_documentHighlight,
     },
 }
 
