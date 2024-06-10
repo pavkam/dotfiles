@@ -39,7 +39,7 @@ return {
         }
 
         opts.consumers = vim.tbl_extend('force', opts.consumers or {}, {
-            progress = require 'testing.neotest_progress_consumer',
+            progress = require 'testing.neotest-progress-consumer',
         })
 
         return opts
