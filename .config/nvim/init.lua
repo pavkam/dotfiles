@@ -1,6 +1,4 @@
 -- TODO: figure out why TODOs don't get highlighted
---
--- TODO: try to move to tabline from buffer line
 -- TODO: maybe cross-tmux-session marks
 
 --- Global function to quit the current process

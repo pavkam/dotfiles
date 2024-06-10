@@ -34,6 +34,18 @@ vim.keymap.set('n', '<leader><leader>', function()
     end
 end, { desc = icons.UI.Switch .. ' Switch buffer', silent = true })
 
+vim.keymap.set('n', '<leader>c', utils.remove_buffer, { desc = icons.UI.Close .. ' Close buffer' })
+vim.keymap.set('n', '<leader>C', utils.remove_other_buffers, { desc = icons.UI.Close .. ' Close other buffers' })
+
+for i = 1, 9 do
+    vim.keymap.set('n', '<M-' .. i .. '>', function()
+        local buffer = utils.get_buffer_by_index(i)
+        if buffer then
+            vim.cmd.buffer(buffer)
+        end
+    end, { desc = 'Go to buffer ' .. i })
+end
+
 vim.keymap.set({ 'n', 'x', 'i' }, '<F2>', function()
     command_palette.show_command_palette()
 end, { desc = 'Show command palette' })

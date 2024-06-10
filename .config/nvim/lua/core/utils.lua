@@ -504,19 +504,99 @@ function M.expand_target(target)
     end
 end
 
+---@class (exact) core.utils.GetListedBufferOpts
+---@field loaded boolean|nil # whether to get only loaded buffers (default) true
+
 --- Gets the list of listed file buffers
+---@param opts core.utils.GetListedBufferOpts|nil # the options to get the buffers
 ---@return integer[] # the list of buffers
-function M.get_listed_buffers()
+function M.get_listed_buffers(opts)
+    opts = opts or {}
+    opts.loaded = opts.loaded == nil and true or opts.loaded
+
     return vim.iter(vim.api.nvim_list_bufs())
         :filter(
             ---@param b integer
             function(b)
                 return vim.api.nvim_buf_is_valid(b)
-                    and vim.api.nvim_buf_is_loaded(b)
+                    and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
                     and vim.api.nvim_get_option_value('buflisted', { buf = b })
             end
         )
         :totable()
+end
+
+--- Gets the index of the buffer in the list of listed buffers
+---@param buffer integer|'#'|'%'|nil # the buffer to get the index for
+---@return integer|nil # the index of the buffer in the list of listed buffers or nil if the buffer is not listed
+function M.get_buffer_index(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    if buffer == '#' or buffer == '%' then
+        buffer = vim.fn.bufnr(buffer)
+    end
+
+    ---@cast buffer integer
+
+    for i, b in ipairs(M.get_listed_buffers()) do
+        if b == buffer then
+            return i
+        end
+    end
+
+    return nil
+end
+
+--- Gets the buffer by its index in the list of listed buffers
+---@param index integer # the index of the buffer to get
+---@return integer|nil # the index of the buffer in the list of listed buffers or nil if the buffer is not listed
+function M.get_buffer_by_index(index)
+    assert(type(index) == 'number' and index > 0)
+
+    for i, b in ipairs(M.get_listed_buffers { loaded = false }) do
+        if i == index then
+            return b
+        end
+    end
+
+    return nil
+end
+
+--- Removes a buffer
+---@param buffer integer|nil # the buffer to remove or the current buffer if 0 or nil
+function M.remove_buffer(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local should_remove = M.confirm_saved(0, 'closing')
+    if should_remove then
+        require('mini.bufremove').delete(buffer, true)
+
+        -- Special code to manage alpha
+        if M.has_plugin 'alpha-nvim' then
+            local buffers = M.get_listed_buffers()
+
+            if #buffers == 1 and buffers[1] == buffer then
+                require('alpha').start()
+                vim.schedule(function()
+                    for _, b in ipairs(M.get_listed_buffers()) do
+                        vim.api.nvim_buf_delete(b, { force = true })
+                    end
+                end)
+            end
+        end
+    end
+end
+
+--- Removes other buffers (except the current one)
+---@param buffer integer|nil # the buffer to remove or the current buffer if 0 or nil
+function M.remove_other_buffers(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    for _, b in ipairs(M.get_listed_buffers()) do
+        if b ~= buffer then
+            M.remove_buffer(b)
+        end
+    end
 end
 
 M.special_file_types = {

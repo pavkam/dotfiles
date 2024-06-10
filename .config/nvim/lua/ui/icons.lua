@@ -104,6 +104,7 @@ local M = {
         ClosedFolder = '',
         EmptyFolder = '',
         OpenFolder = '',
+        Previous = '',
     },
     UI = {
         LSP = '',

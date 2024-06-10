@@ -44,3 +44,6 @@ keyset
 keymap
 attr_col_width
 ws
+str
+len_max
+lualine
