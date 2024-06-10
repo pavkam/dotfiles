@@ -296,15 +296,25 @@ return {
             end
 
             -- setup progress
-            local diagnostics_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics]
-            vim.lsp.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function(_, result, ctx, config)
+            local diagnostics_capability_handler =
+                vim.lsp.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics]
+            vim.lsp.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function(
+                _,
+                result,
+                ctx,
+                config
+            )
                 lsp.notice_diagnostics(result, ctx.client_id)
                 diagnostics_capability_handler(_, result, ctx, config)
             end
 
             -- register nvim-cmp capabilities
             local cmp_nvim_lsp = require 'cmp_nvim_lsp'
-            local capabilities = utils.tbl_merge(vim.lsp.protocol.make_client_capabilities(), cmp_nvim_lsp.default_capabilities(), opts.capabilities)
+            local capabilities = utils.tbl_merge(
+                vim.lsp.protocol.make_client_capabilities(),
+                cmp_nvim_lsp.default_capabilities(),
+                opts.capabilities
+            )
 
             -- configure the servers
             local servers = opts.servers
@@ -332,13 +342,16 @@ return {
             -- get all the servers that are available through mason-LSP-config
             local through_mason = utils.has_plugin 'mason.nvim'
             local mlsp = through_mason and require 'mason-lspconfig' or nil
-            local all_mslp_servers = through_mason and vim.tbl_keys(require('mason-lspconfig.mappings.server').lspconfig_to_package) or {}
+            local all_mslp_servers = through_mason
+                    and vim.tbl_keys(require('mason-lspconfig.mappings.server').lspconfig_to_package)
+                or {}
 
             local ensure_installed = {}
             for server, server_opts in pairs(servers) do
                 if server_opts then
                     server_opts = server_opts == true and {} or server_opts
-                    -- run manual setup if mason=false or if this is a server that cannot be installed with mason-LSP-config
+                    -- run manual setup if mason=false or if this is a server that cannot be
+                    -- installed with mason-LSP-config
                     if server_opts.mason == false or not vim.tbl_contains(all_mslp_servers, server) then
                         setup(server)
                     else

@@ -47,7 +47,7 @@ return {
     config = function(spec, opts)
         local utils = require 'core.utils'
 
-        -- register neotest virtual text
+        -- register neo-test virtual text
         local neotest_ns = vim.api.nvim_create_namespace 'neotest'
         vim.diagnostic.config({
             virtual_text = {
