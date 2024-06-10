@@ -39,7 +39,7 @@ return {
                 lualine_c = {},
                 lualine_x = {},
                 lualine_y = {},
-                lualine_z = { 'tabs' },
+                lualine_z = { lualine_sections.tabs },
             },
             sections = {
                 lualine_a = {

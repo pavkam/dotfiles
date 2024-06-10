@@ -353,6 +353,10 @@ M.buffers = {
         directory = icons.Files.OpenFolder .. ' ',
     },
 
+    filetype_names = {
+        ['neo-tree'] = 'File System',
+    },
+
     fmt = function(name)
         return delongify(name, 20)
     end,
@@ -362,10 +366,10 @@ M.buffers = {
 M.tabs = { 'tabs' }
 
 --- The section that shows the progress in file
-M.progress = { 'progress', separator = ' ', padding = { left = 1, right = 0 } }
+M.progress = { 'progress' }
 
 --- The section that shows the current location in the file
-M.location = { 'location', padding = { left = 0, right = 1 } }
+M.location = { 'location' }
 
 --- The section that shows the mode of vim
 M.mode = { 'mode' }

@@ -8,7 +8,7 @@ return {
             segments = {
                 {
                     sign = {
-                        namespace = { 'diagnostic' },
+                        namespace = { 'diagnostic/sign' },
                     },
                     colwidth = 1,
                     click = 'v:lua.ScSa',
@@ -20,7 +20,6 @@ return {
                     colwidth = 1,
                     click = 'v:lua.ScSa',
                 },
-
                 {
                     text = { builtin.lnumfunc },
                     click = 'v:lua.ScLa',
@@ -28,7 +27,7 @@ return {
                 },
                 {
                     sign = {
-                        namespace = { 'gitsigns_extmark_signs_' },
+                        namespace = { 'gitsigns' },
                     },
                     colwidth = 1,
                     click = 'v:lua.ScSa',
