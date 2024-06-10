@@ -109,6 +109,7 @@ local function update_tasks(interval)
                 tasks[class].ttl = tasks[class].timeout
             else
                 if task.fn and not task.fn(buffer) then
+                    utils.hint('Task "' .. class .. '" has finished')
                     tasks[class] = nil
                 else
                     tasks[class] = task

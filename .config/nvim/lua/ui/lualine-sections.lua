@@ -5,8 +5,8 @@ local format = require 'formatting'
 local lint = require 'linting'
 local shell = require 'core.shell'
 local settings = require 'core.settings'
-local ui = require 'ui'
 local progress = require 'ui.progress'
+local hl = require 'ui.hl'
 
 ---@class ui.lualine.sections
 local M = {}
@@ -58,7 +58,7 @@ M.macro = {
     cond = settings.transient(function()
         return progress.status 'recording_macro' ~= nil
     end),
-    color = utils.hl_fg_color_and_attrs 'RecordingMacroStatus',
+    color = hl.hl_fg_color_and_attrs 'RecordingMacroStatus',
 }
 
 --- The section that shows the current git branch
@@ -115,7 +115,7 @@ M.neotest = {
     cond = settings.transient(function()
         return progress.status 'neotest' ~= nil
     end),
-    color = utils.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
+    color = hl.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
 }
 
 --- The section that shows the status of package-info
@@ -127,7 +127,7 @@ M.package_info = {
     cond = settings.transient(function()
         return progress.status 'package-info' ~= nil
     end),
-    color = utils.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
+    color = hl.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
 }
 
 --- The section that shows the status of the shell processes
@@ -155,7 +155,7 @@ M.shell = {
     cond = settings.transient(function()
         return shell.progress() ~= nil
     end),
-    color = utils.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
+    color = hl.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
 }
 
 --- The section that shows the status of the linters
@@ -173,9 +173,9 @@ M.linting = {
     end),
     color = settings.transient(function(buffer)
         if not lint.enabled(buffer) then
-            return utils.hl_fg_color_and_attrs 'DisabledLintersStatus'
+            return hl.hl_fg_color_and_attrs 'DisabledLintersStatus'
         else
-            return utils.hl_fg_color_and_attrs 'ActiveLintersStatus'
+            return hl.hl_fg_color_and_attrs 'ActiveLintersStatus'
         end
     end),
 }
@@ -195,9 +195,9 @@ M.formatting = {
     end),
     color = settings.transient(function(buffer)
         if not format.enabled(buffer) then
-            return utils.hl_fg_color_and_attrs 'DisabledFormattersStatus'
+            return hl.hl_fg_color_and_attrs 'DisabledFormattersStatus'
         else
-            return utils.hl_fg_color_and_attrs 'ActiveFormattersStatus'
+            return hl.hl_fg_color_and_attrs 'ActiveFormattersStatus'
         end
     end),
     on_click = function()
@@ -214,7 +214,7 @@ M.workspace_diagnostics = {
     cond = function()
         return progress.status 'workspace' ~= nil
     end,
-    color = utils.hl_fg_color_and_attrs 'ActiveLSPsStatus',
+    color = hl.hl_fg_color_and_attrs 'ActiveLSPsStatus',
 }
 
 --- The section that shows the status of the LSP
@@ -226,7 +226,7 @@ M.lsp = {
     cond = settings.transient(function(buffer)
         return lsp.any_active_for_buffer(buffer)
     end),
-    color = utils.hl_fg_color_and_attrs 'ActiveLSPsStatus',
+    color = hl.hl_fg_color_and_attrs 'ActiveLSPsStatus',
     on_click = function()
         vim.cmd 'LspInfo'
     end,
@@ -248,7 +248,7 @@ M.copilot = utils.has_plugin 'copilot.lua'
                 return lsp.is_active_for_buffer(buffer, 'copilot')
             end),
             color = settings.transient(function()
-                return utils.hl_fg_color_and_attrs(
+                return hl.hl_fg_color_and_attrs(
                     copilot_colors[require('copilot.api').status.data.status] or copilot_colors['Normal']
                 )
             end),
@@ -263,7 +263,7 @@ M.debugger = {
     cond = function()
         return package.loaded['dap'] and require('dap').status() ~= ''
     end,
-    color = utils.hl_fg_color_and_attrs 'Debug',
+    color = hl.hl_fg_color_and_attrs 'Debug',
 }
 
 --- The section that shows the status of the git diff
@@ -291,11 +291,11 @@ M.diff = {
 --- The section that shows the status of hidden files
 M.ignore_hidden_files = {
     function()
-        return ui.ignore_hidden_files.active() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
+        return hl.ignore_hidden_files.active() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
     end,
-    color = utils.hl_fg_color_and_attrs 'Comment',
+    color = hl.hl_fg_color_and_attrs 'Comment',
     on_click = function()
-        ui.ignore_hidden_files.toggle()
+        hl.ignore_hidden_files.toggle()
     end,
 }
 
@@ -304,7 +304,7 @@ M.tmux = {
     function()
         return icons.UI.TMux
     end,
-    color = utils.hl_fg_color_and_attrs 'Comment',
+    color = hl.hl_fg_color_and_attrs 'Comment',
     cond = function()
         return require('ui.tmux').socket() ~= nil
     end,
@@ -315,7 +315,7 @@ M.spell_check = {
     function()
         return icons.UI.SpellCheck
     end,
-    color = utils.hl_fg_color_and_attrs 'Comment',
+    color = hl.hl_fg_color_and_attrs 'Comment',
     cond = function()
         return vim.o.spell
     end,
@@ -329,14 +329,14 @@ M.typo_check = {
     cond = settings.transient(function(buffer)
         return lsp.is_active_for_buffer(buffer, 'typos_lsp')
     end),
-    color = utils.hl_fg_color_and_attrs 'Comment',
+    color = hl.hl_fg_color_and_attrs 'Comment',
 }
 
 --- The section that shows the status of updates
 M.lazy_updates = {
     require('lazy.status').updates,
     cond = require('lazy.status').has_updates,
-    color = utils.hl_fg_color_and_attrs 'Comment',
+    color = hl.hl_fg_color_and_attrs 'Comment',
     on_click = function()
         vim.cmd 'Lazy'
     end,

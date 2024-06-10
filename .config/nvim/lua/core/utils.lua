@@ -526,27 +526,6 @@ function M.get_listed_buffers(opts)
         :totable()
 end
 
---- Gets the index of the buffer in the list of listed buffers
----@param buffer integer|'#'|'%'|nil # the buffer to get the index for
----@return integer|nil # the index of the buffer in the list of listed buffers or nil if the buffer is not listed
-function M.get_buffer_index(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    if buffer == '#' or buffer == '%' then
-        buffer = vim.fn.bufnr(buffer)
-    end
-
-    ---@cast buffer integer
-
-    for i, b in ipairs(M.get_listed_buffers()) do
-        if b == buffer then
-            return i
-        end
-    end
-
-    return nil
-end
-
 --- Gets the buffer by its index in the list of listed buffers
 ---@param index integer # the index of the buffer to get
 ---@return integer|nil # the index of the buffer in the list of listed buffers or nil if the buffer is not listed
@@ -801,39 +780,6 @@ function M.format_relative_path(prefix, path)
     return path
 end
 
---- Get the highlight group for a name
----@param name string # the name of the highlight group
----@return table<string, string>|nil # the foreground color of the highlight group
-function M.hl(name)
-    assert(type(name) == 'string' and name ~= '')
-
-    return vim.api.nvim_get_hl(0, { name = name, link = false })
-end
-
---- Extracts the color and attributes from a highlight group.
----@param name string # the name of the highlight group
----@return { fg: string, gui: string }|nil # the color and attributes of the highlight group
-function M.hl_fg_color_and_attrs(name)
-    assert(type(name) == 'string' and name ~= '')
-
-    local hl = M.hl(name)
-
-    if not hl then
-        return nil
-    end
-
-    local fg = hl.fg or hl.foreground or 0
-    local attrs = {}
-
-    for _, attr in ipairs { 'italic', 'bold', 'undercurl', 'underdotted', 'underlined', 'strikethrough' } do
-        if hl[attr] then
-            table.insert(attrs, attr)
-        end
-    end
-
-    return { fg = string.format('#%06x', fg), gui = table.concat(attrs, ',') }
-end
-
 --- Helper function that calculates folds
 function M.fold_text()
     local ok = pcall(vim.treesitter.get_parser, vim.api.nvim_get_current_buf())
@@ -948,7 +894,7 @@ function M.refresh_ui()
     vim.cmd 'redraw!'
 end
 
---- Feed keys to neovim
+--- Feed keys to Neovim
 ---@param keys string # the keys to feed
 ---@param mode string|nil # the mode to feed the keys in
 function M.feed_keys(keys, mode)

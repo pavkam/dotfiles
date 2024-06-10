@@ -12,6 +12,7 @@ return {
     },
     config = function(_, opts)
         local utils = require 'core.utils'
+
         local copilot = require 'copilot'
         local copilot_api = require 'copilot.api'
 

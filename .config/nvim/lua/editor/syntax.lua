@@ -85,7 +85,7 @@ function M.node_text_under_cursor(window, opts)
     if node then
         ---@type string|nil
         local type = node:type()
-        if type == 'string_fragment' then
+        if type == 'string_fragment' or type == 'string_content' then
             node = node:parent()
             type = node and node:type()
         end

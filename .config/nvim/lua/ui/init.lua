@@ -9,7 +9,7 @@ local command_palette = require 'ui.command_palette'
 -- apply color-scheme first
 vim.cmd.colorscheme 'tokyonight'
 
-require 'ui.highlights'
+require 'ui.hl'
 require 'ui.marks'
 require 'ui.qf'
 require 'ui.tmux'

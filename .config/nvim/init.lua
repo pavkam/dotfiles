@@ -133,12 +133,27 @@ require('lazy').setup {
     },
 }
 
+--- Load all modules
+---@type table<string, any>
+local load_errors = {}
 for _, module in ipairs(modules) do
     local ok, err = pcall(require, module)
 
     if not ok then
-        vim.api.nvim_err_writeln('Error loading ' .. module .. ': ' .. err)
+        load_errors[module] = err
     end
+end
+
+-- For any errors, print them out after the editor has started
+if next(load_errors) then
+    vim.api.nvim_create_autocmd('User', {
+        pattern = 'LazyVimStarted',
+        callback = function()
+            for module, err in pairs(load_errors) do
+                vim.api.nvim_err_writeln('Error loading "' .. module .. '": ' .. vim.inspect(err))
+            end
+        end,
+    })
 end
 
 -- open neo-tree if opening a directory

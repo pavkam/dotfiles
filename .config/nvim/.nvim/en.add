@@ -47,3 +47,8 @@ ws
 str
 len_max
 lualine
+tbl
+fg
+gui
+osdateparam
+pos
