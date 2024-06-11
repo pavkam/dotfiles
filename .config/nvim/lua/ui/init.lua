@@ -4,7 +4,7 @@ local git = require 'git'
 local diagnostics = require 'project.diagnostics'
 local icons = require 'ui.icons'
 local progress = require 'ui.progress'
-local command_palette = require 'ui.command_palette'
+local command_palette = require 'ui.command-palette'
 
 -- apply color-scheme first
 vim.cmd.colorscheme 'tokyonight'

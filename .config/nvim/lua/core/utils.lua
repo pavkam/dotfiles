@@ -548,12 +548,12 @@ function M.remove_buffer(buffer)
 
     local should_remove = M.confirm_saved(0, 'closing')
     if should_remove then
+        local buffers = M.get_listed_buffers()
+
         require('mini.bufremove').delete(buffer, true)
 
         -- Special code to manage alpha
         if M.has_plugin 'alpha-nvim' then
-            local buffers = M.get_listed_buffers()
-
             if #buffers == 1 and buffers[1] == buffer then
                 require('alpha').start()
                 vim.schedule(function()

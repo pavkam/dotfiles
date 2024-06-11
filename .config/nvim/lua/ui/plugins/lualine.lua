@@ -27,9 +27,6 @@ return {
                         separator = '',
                         padding = { left = 1, right = 0 },
                     }),
-                    with(lualine_sections.file_name, {
-                        padding = { left = 0, right = 1 },
-                    }),
                     lualine_sections.diff,
                     lualine_sections.diagnostics,
                 },
