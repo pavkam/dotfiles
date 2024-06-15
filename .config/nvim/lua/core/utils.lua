@@ -833,7 +833,7 @@ end
 function M.confirm_saved(buffer, reason)
     buffer = buffer or vim.api.nvim_get_current_buf()
     if vim.bo[buffer].modified then
-        local message = reason and 'Save changes to %q before %s?' or 'Save changes to %q?'
+        local message = reason and 'Save changes to "%q" before %s?' or 'Save changes to "%q"?'
         local choice = vim.fn.confirm(
             string.format(message, vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t'), reason),
             '&Yes\n&No\n&Cancel'

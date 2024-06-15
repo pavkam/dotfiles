@@ -130,13 +130,15 @@ vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
 
 -- Exit insert mode when switching buffers
 utils.on_event({ 'BufWinEnter' }, function(evt)
-    local ignored_fts = { 'TelescopePrompt' }
-
-    if
-        vim.fn.mode() == 'i'
-        and vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf }))
-    then
+    if vim.fn.mode() == 'i' and vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) ~= 'TelescopePrompt' then
         vim.cmd 'stopinsert'
+    end
+end)
+
+-- Fix telescope modified buffers when closing window
+utils.on_event({ 'BufModifiedSet' }, function(evt)
+    if vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'TelescopePrompt' then
+        vim.api.nvim_set_option_value('modified', false, { buf = evt.buf })
     end
 end)
 

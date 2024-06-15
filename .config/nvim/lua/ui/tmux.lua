@@ -153,7 +153,6 @@ local function display(items)
                 return 'Comment'
             end
         end,
-        width = 0.6,
     })
 end
 

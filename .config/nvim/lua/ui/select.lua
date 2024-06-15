@@ -32,7 +32,7 @@ local M = {}
 ---@field width number|nil # The width of the select
 ---@field height number|nil # The height of the select
 
-local h_padding = 8
+local h_padding = 14
 local v_padding = 4
 
 --- Select an item from a list of items
@@ -142,12 +142,22 @@ function M.advanced(items, opts)
     opts.index_fields = opts.index_fields or { 1 }
     local function make_ordinal(entry)
         local ordinal = ''
+
         for _, index in ipairs(opts.index_fields) do
-            ordinal = ordinal .. icons.Symbols.ColumnSeparator .. tostring(entry[index])
+            local v = tostring(entry[index])
+            if v == '' then
+                v = '\u{FFFFF}'
+            end
+
+            ordinal = ordinal .. '\u{FFFFE}' .. v
         end
 
         return ordinal
     end
+
+    table.sort(proc_items, function(a, b)
+        return make_ordinal(a) < make_ordinal(b)
+    end)
 
     pickers
         .new(dd, {

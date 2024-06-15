@@ -1,7 +1,5 @@
 -- TODO: figure out why TODOs don't get highlighted
 -- TODO: not sure why session fails to restore when closing file with error
--- TODO: my fancy selector for the session is not expanding in height and is too wide
--- TODO: "q" fails for telescope
 -- MAYBE: Cross-tmux-session marks
 -- MAYBE: show the number of failed/total tests in the status-line
 
