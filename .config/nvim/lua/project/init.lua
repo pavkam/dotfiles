@@ -4,7 +4,7 @@ local lsp = require 'project.lsp'
 local hover = require 'project.hover'
 local icons = require 'ui.icons'
 
-vim.keymap.set('n', 'K', hover)
+vim.keymap.set('n', 'K', hover, { desc = 'Show hover' })
 
 ---@class project
 local M = {}

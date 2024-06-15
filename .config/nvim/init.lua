@@ -1,15 +1,9 @@
 -- TODO: figure out why TODOs don't get highlighted
--- TODO: maybe cross-tmux-session marks
-
--- E5108: Error executing lua ...al/share/nvim/lazy/which-key.nvim/lua/which-key/text.lua:26: attempt to index local 'line' (a nil value)
--- stack traceback:
--- 	...al/share/nvim/lazy/which-key.nvim/lua/which-key/text.lua:26: in function 'fix_nl'
--- 	...al/share/nvim/lazy/which-key.nvim/lua/which-key/text.lua:37: in function 'set'
--- 	.../share/nvim/lazy/which-key.nvim/lua/which-key/layout.lua:199: in function 'layout'
--- 	...al/share/nvim/lazy/which-key.nvim/lua/which-key/view.lua:308: in function 'on_keys'
--- 	...al/share/nvim/lazy/which-key.nvim/lua/which-key/view.lua:246: in function 'open'
--- 	...al/share/nvim/lazy/which-key.nvim/lua/which-key/init.lua:49: in function 'show'
--- 	[string ":lua"]:1: in main chunk
+-- TODO: not sure why session fails to restore when closing file with error
+-- TODO: my fancy selector for the session is not expanding in height and is too wide
+-- TODO: "q" fails for telescope
+-- MAYBE: Cross-tmux-session marks
+-- MAYBE: show the number of failed/total tests in the status-line
 
 --- Global function to quit the current process
 _G.quit = function()
@@ -21,7 +15,17 @@ end
 _G.dbg = function(...)
     local objects = {}
     for _, v in pairs { ... } do
-        local val = v ~= nil and vim.inspect(v) or 'nil'
+        ---@type string
+        local val = 'nil'
+
+        if type(v) == 'string' then
+            val = v
+        elseif type(v) == 'number' or type(v) == 'boolean' then
+            val = tostring(v)
+        elseif type(v) == 'table' then
+            val = vim.inspect(v)
+        end
+
         table.insert(objects, val)
     end
 

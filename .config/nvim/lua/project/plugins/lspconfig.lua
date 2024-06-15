@@ -259,7 +259,7 @@ return {
 
             local utils = require 'core.utils'
             local lsp = require 'project.lsp'
-            local keymaps = require 'project.keymaps'
+            local features = require 'project.features'
 
             -- key-maps
             lsp.on_attach(function(client, buffer)
@@ -268,7 +268,7 @@ return {
                         vim.lsp.buf_detach_client(buffer, client.id)
                     end)
                 else
-                    keymaps.attach(client, buffer)
+                    features.attach(client, buffer)
                 end
             end)
 
@@ -282,7 +282,7 @@ return {
                 local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
 
                 if client.supports_method ~= nil then
-                    keymaps.attach(client, vim.api.nvim_get_current_buf())
+                    features.attach(client, vim.api.nvim_get_current_buf())
                 end
 
                 return ret

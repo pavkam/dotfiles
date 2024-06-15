@@ -158,13 +158,26 @@ function M.attach(client, buffer)
 
     attach_keymaps(client, buffer)
 
+    ---@type integer|nil
+    local buffer_changed_tick = -1
+
     lsp.on_capability_event(
         { 'BufEnter', 'CursorHold' },
         vim.lsp.protocol.Methods.textDocument_codeLens,
         buffer,
         function()
             if settings.get_toggle('code_lens_enabled', buffer) then
-                vim.lsp.codelens.refresh { bufnr = buffer }
+                if buffer_changed_tick < 0 then
+                    buffer_changed_tick = buffer_changed_tick + 1
+                    return
+                end
+
+                local current_tick = vim.api.nvim_buf_get_changedtick(buffer)
+
+                if buffer_changed_tick ~= current_tick then
+                    vim.lsp.codelens.refresh { bufnr = buffer }
+                    buffer_changed_tick = current_tick
+                end
             end
         end,
         true

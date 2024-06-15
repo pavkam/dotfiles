@@ -1,3 +1,23 @@
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
+-- vim.api.nvim_buf_is_valid(b)
+-- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
 local icons = require 'ui.icons'
 
 ---@class core.utils
@@ -518,9 +538,17 @@ function M.get_listed_buffers(opts)
         :filter(
             ---@param b integer
             function(b)
-                return vim.api.nvim_buf_is_valid(b)
-                    and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
-                    and vim.api.nvim_get_option_value('buflisted', { buf = b })
+                if not vim.api.nvim_buf_is_valid(b) then
+                    return false
+                end
+                if not vim.api.nvim_get_option_value('buflisted', { buf = b }) then
+                    return false
+                end
+                if opts.loaded and not vim.api.nvim_buf_is_loaded(b) then
+                    return false
+                end
+
+                return true
             end
         )
         :totable()
@@ -548,7 +576,7 @@ function M.remove_buffer(buffer)
 
     local should_remove = M.confirm_saved(0, 'closing')
     if should_remove then
-        local buffers = M.get_listed_buffers()
+        local buffers = M.get_listed_buffers { loaded = false }
 
         require('mini.bufremove').delete(buffer, true)
 

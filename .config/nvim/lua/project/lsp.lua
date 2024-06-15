@@ -160,8 +160,9 @@ function M.on_capability_event(events, capability, buffer, callback, run_on_regi
     vim.api.nvim_create_autocmd(events, {
         callback = function()
             if not M.buffer_has_capability(buffer, capability) then
-                -- TODO: do not show this message when deleting buffers
-                utils.warn('Buffer lost capability `' .. capability .. '`')
+                if vim.api.nvim_buf_is_valid(buffer) and vim.api.nvim_buf_is_loaded(buffer) then
+                    utils.warn('Buffer lost capability `' .. capability .. '`')
+                end
 
                 vim.api.nvim_del_augroup_by_name(auto_group_name)
                 return

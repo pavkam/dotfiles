@@ -106,7 +106,6 @@ M.diagnostics = {
     end,
 }
 
--- TODO: show the number of failed/total tests in the status-line
 --- The section that shows the status of neo-test
 M.neotest = {
     function()
@@ -349,9 +348,9 @@ M.buffers = {
     mode = 2,
 
     symbols = {
-        modified = icons.Files.Modified .. ' ',
+        modified = ' ' .. icons.Files.Modified,
         alternate_file = icons.Files.Previous .. ' ',
-        directory = icons.Files.OpenFolder .. ' ',
+        directory = ' ' .. icons.Files.OpenFolder,
     },
     use_mode_colors = true,
     filetype_names = {

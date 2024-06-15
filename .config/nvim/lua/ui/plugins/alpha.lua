@@ -61,7 +61,12 @@ return {
             local stats = require('lazy').stats()
             local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
 
-            dashboard.section.footer.val = icons.UI.Speed .. ' Neovim loaded ' .. stats.count .. ' plugins in ' .. ms .. 'ms'
+            dashboard.section.footer.val = icons.UI.Speed
+                .. ' Neovim loaded '
+                .. stats.count
+                .. ' plugins in '
+                .. ms
+                .. 'ms'
 
             pcall(vim.cmd.AlphaRedraw)
         end)

@@ -102,9 +102,9 @@ local function update_tasks(interval)
 
         for _, class in ipairs(classes) do
             local task = tasks[class]
-            task.ttl = task.ttl and task.ttl - interval
+            task.ttl = task.ttl - interval
 
-            if not task.ttl or task.ttl <= 0 then
+            if task.ttl <= 0 then
                 utils.warn('Task "' .. class .. '" is still running')
                 tasks[class].ttl = tasks[class].timeout
             else
