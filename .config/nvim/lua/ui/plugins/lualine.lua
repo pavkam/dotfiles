@@ -17,8 +17,8 @@ return {
 
         return {
             options = {
-                theme = 'auto',
                 globalstatus = true,
+                theme = require('ui.theme').lualine,
             },
             tabline = {
                 lualine_a = {

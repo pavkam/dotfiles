@@ -346,7 +346,6 @@ M.lazy_updates = {
 M.buffers = {
     'buffers',
     mode = 2,
-
     symbols = {
         modified = ' ' .. icons.Files.Modified,
         alternate_file = icons.Files.Previous .. ' ',

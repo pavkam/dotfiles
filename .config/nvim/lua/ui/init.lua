@@ -7,7 +7,7 @@ local progress = require 'ui.progress'
 local command_palette = require 'ui.command-palette'
 
 -- apply color-scheme first
-vim.cmd.colorscheme 'tokyonight'
+--vim.cmd.colorscheme 'tokyonight'
 
 require 'ui.hl'
 require 'ui.marks'

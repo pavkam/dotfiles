@@ -71,6 +71,7 @@ local modules = {
 }
 
 require 'core'
+require 'ui.theme'
 
 -- Setup the Lazy plugin manager
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -126,7 +127,6 @@ require('lazy').setup {
         enabled = true,
         notify = false,
     },
-    install = { colorscheme = { 'tokyonight', 'catppuccin', 'habamax' } },
     performance = {
         rtp = {
             disabled_plugins = {

@@ -1,5 +1,6 @@
 return {
     'folke/tokyonight.nvim',
+    cond = false,
     opts = {
         style = 'moon',
         on_colors = function(colors)
