@@ -6,9 +6,6 @@ local icons = require 'ui.icons'
 local progress = require 'ui.progress'
 local command_palette = require 'ui.command-palette'
 
--- apply color-scheme first
---vim.cmd.colorscheme 'tokyonight'
-
 require 'ui.hl'
 require 'ui.marks'
 require 'ui.qf'
@@ -127,13 +124,6 @@ end, true)
 -- Specials using "Command/Super" key (when available!)
 vim.keymap.set('n', '<M-]>', '<C-i>', { desc = 'Next location' })
 vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
-
--- Exit insert mode when switching buffers
-utils.on_event({ 'BufWinEnter' }, function(evt)
-    if vim.fn.mode() == 'i' and vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) ~= 'TelescopePrompt' then
-        vim.cmd 'stopinsert'
-    end
-end)
 
 -- Fix telescope modified buffers when closing window
 utils.on_event({ 'BufModifiedSet' }, function(evt)

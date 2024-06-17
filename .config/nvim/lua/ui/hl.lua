@@ -59,49 +59,31 @@ function M.make_hl(name, ...)
     vim.api.nvim_set_hl(0, name, merged)
 end
 
---- Converts a hex color to an RGB table
----@param c  string
-local function hex_to_rgb(c)
-    c = c or '#000000'
+local highlights = {
+    -- Other
+    CopilotAnnotation = '@string.regexp',
+    CopilotSuggestion = '@string.regexp',
+    NormalMenuItem = 'Special',
+    SpecialMenuItem = 'Boolean',
+    AuxiliaryProgressStatus = 'Comment',
+    ActiveLintersStatus = { 'Statement', { italic = true } },
+    DisabledLintersStatus = { 'ActiveLintersStatus', { strikethrough = true } },
+    ActiveFormattersStatus = { 'Function', { italic = true } },
+    DisabledFormattersStatus = { 'ActiveFormattersStatus', { strikethrough = true } },
+    ActiveLSPsStatus = 'PreProc',
+    CopilotIdle = 'Special',
+    CopilotFetching = 'DiagnosticWarn',
+    CopilotWarning = 'DiagnosticError',
+    RecordingMacroStatus = { 'Error', { bold = true } },
+    MarkSign = 'DiagnosticWarn',
+}
 
-    c = string.lower(c)
-    return { tonumber(c:sub(2, 3), 16), tonumber(c:sub(4, 5), 16), tonumber(c:sub(6, 7), 16) }
-end
-
---- Blends two colors
----@param foreground string # The foreground color
----@param background string # The background color
----@param alpha number|string # The number between 0 and 1
----@return string # The blended color
-function M.blend(foreground, background, alpha)
-    alpha = type(alpha) == 'string' and (tonumber(alpha, 16) / 0xff) or alpha
-    local bg = hex_to_rgb(background)
-    local fg = hex_to_rgb(foreground)
-
-    local blendChannel = function(i)
-        local ret = (alpha * fg[i] + ((1 - alpha) * bg[i]))
-        return math.floor(math.min(math.max(0, ret), 255) + 0.5)
+for hl, def in pairs(highlights) do
+    if type(def) == 'string' then
+        M.make_hl(hl, def)
+    else
+        M.make_hl(hl, unpack(def))
     end
-
-    return string.format('#%02x%02x%02x', blendChannel(1), blendChannel(2), blendChannel(3))
-end
-
---- Lightens a color
----@param hex string # The color to lighten
----@param amount number|string # The amount to lighten
----@param background string|nil # The background color
----@return string # The lightened color
-function M.darken(hex, amount, background)
-    return M.blend(hex, background or '#000000', amount)
-end
-
---- Lightens a color
----@param hex string # The color to lighten
----@param amount number|string # The amount to lighten
----@param foreground string|nil # The background color
----@return string # The lightened color
-function M.lighten(hex, amount, foreground)
-    return M.blend(hex, foreground or '#FFFFFF', amount)
 end
 
 return M
