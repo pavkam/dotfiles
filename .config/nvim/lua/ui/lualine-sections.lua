@@ -169,7 +169,7 @@ M.linting = {
         return sexify(prefix, lint.active(buffer))
     end),
     cond = settings.transient(function(buffer)
-        return lint.any_active(buffer)
+        return #lint.active(buffer) > 0
     end),
     color = settings.transient(function(buffer)
         if not lint.enabled(buffer) then
@@ -188,10 +188,10 @@ M.formatting = {
             prefix = format.progress(buffer) or icons.UI.Lint
         end
 
-        return sexify(prefix, format.active_names_for_buffer(buffer))
+        return sexify(prefix, format.active(buffer))
     end),
     cond = settings.transient(function(buffer)
-        return format.active_for_buffer(buffer)
+        return #format.active(buffer) > 0
     end),
     color = settings.transient(function(buffer)
         if not format.enabled(buffer) then

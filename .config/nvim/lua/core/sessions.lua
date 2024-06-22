@@ -87,6 +87,28 @@ local function reset_ui()
     vim.args = {}
 end
 
+--- Call a function with error handling
+---@param name string # the name of the function
+---@param session string # the name of the session
+---@vararg any # the function and its arguments
+---@return boolean, any # the result of the function
+local function error_call(name, session, ...)
+    local ok, res_or_error = pcall(...)
+    if not ok then
+        utils.error(
+            string.format(
+                '%s Failed to restore %s for session `%s`:\n```%s```',
+                icons.UI.Disabled,
+                name,
+                session,
+                vim.inspect(res_or_error)
+            )
+        )
+    end
+
+    return ok, res_or_error
+end
+
 --- Restore a session
 ---@param name string # the name of the session
 function M.restore_session(name)
@@ -99,40 +121,18 @@ function M.restore_session(name)
         reset_ui()
 
         vim.schedule(function()
-            local ok, data = pcall(vim.fn.readfile, custom_file, 'b')
-            if not ok then
-                utils.error(string.format('%s Failed to restore custom data for session `%s`', icons.UI.Disabled, name))
-            end
-
-            ---@type boolean, core.session.CustomData
-            local json_ok, custom = pcall(vim.json.decode, data[1])
-            if not json_ok then
-                utils.error(string.format('%s Failed to decode custom data for session `%s`', icons.UI.Disabled, name))
-            else
-                ok = pcall(settings.import, custom.settings)
-                if not ok then
-                    utils.error(
-                        string.format('%s Failed to restore settings for session `%s`', icons.UI.Disabled, name)
-                    )
-                end
-
-                ok = pcall(qf.import, custom.qf)
-                if not ok then
-                    utils.error(
-                        string.format('%s Failed to restore quickfix for session `%s`', icons.UI.Disabled, name)
-                    )
+            local ok, data = error_call('custom data', name, vim.fn.readfile, custom_file, 'b')
+            if ok then
+                ---@type boolean, core.session.CustomData
+                ok, data = error_call('custom data', name, vim.json.decode, data[1])
+                if ok then
+                    error_call('settings', name, settings.import, data.settings)
+                    error_call('quickfix', name, qf.import, data.qf)
                 end
             end
 
-            ok = pcall(vim.cmd.source, session_file)
-            if not ok then
-                utils.error(string.format('%s Failed to restore vim session `%s`', icons.UI.Disabled, name))
-            end
-
-            ok = pcall(vim.cmd.rshada, shada_file)
-            if not ok then
-                utils.error(string.format('%s Failed to restore shada for session `%s`', icons.UI.Disabled, name))
-            end
+            error_call('shada', name, vim.cmd.rshada, shada_file)
+            error_call('vim session', name, vim.cmd.source, session_file)
 
             vim.schedule(function()
                 utils.refresh_ui()

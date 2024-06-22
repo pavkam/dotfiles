@@ -6,6 +6,7 @@ local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
 local utils = require 'core.utils'
 local icons = require 'ui.icons'
+local project = require 'project'
 
 ---@class ui.command_palette.Options
 ---@field mode string|nil # List of modes to get items for
@@ -72,6 +73,114 @@ end
 ---@field noremap number # No remap (boolean)
 ---@field silent number # Silent (boolean)
 
+---@class ui.command_palette.File
+---@field file string # The file name
+---@field type 'buffer' | 'old-file' | 'mark' | 'jump-list' # The type of file
+
+--- Get all operating files
+---@return ui.command_palette.File[] # List of files
+local function get_operating_files()
+    local current_buffer = vim.api.nvim_get_current_buf()
+    local current_file = vim.api.nvim_buf_get_name(current_buffer)
+
+    ---@type ui.command_palette.File[]
+    local results = {}
+
+    --- Check if a file is already in the list
+    ---@param file string # The file to check
+    ---@return boolean # If the file is in the list
+    local function has(file)
+        if file == current_file then
+            return true
+        end
+
+        for _, entry in ipairs(results) do
+            if entry.file == file then
+                return true
+            end
+        end
+
+        return false
+    end
+
+    vim.iter(utils.get_listed_buffers { loaded = false })
+        :map(function(buffer)
+            return vim.api.nvim_buf_get_name(buffer)
+        end)
+        :filter(
+            ---@param file string
+            function(file)
+                return utils.file_exists(file) and not has(file)
+            end
+        )
+        :each(
+            ---@param file string
+            function(file)
+                table.insert(results, { file = file, type = 'buffer' })
+            end
+        )
+
+    vim.iter(vim.v.oldfiles)
+        :filter(
+            ---@param file string
+            function(file)
+                return utils.file_exists(file) and not has(file)
+            end
+        )
+        :each(
+            ---@param file string
+            function(file)
+                table.insert(results, { file = file, type = 'old-file' })
+            end
+        )
+
+    -- Get the global marks and sort them so that numeric marks come first
+    ---@type ui.marks.Mark[]
+    local marks = vim.fn.getmarklist()
+    table.sort(
+        marks,
+        ---@param a ui.marks.Mark
+        ---@param b ui.marks.Mark
+        function(a, b)
+            return a.mark < b.mark
+        end
+    )
+
+    vim.iter(marks)
+        :map(
+            ---@param mark ui.marks.Mark
+            function(mark)
+                return mark.file
+            end
+        )
+        :filter(
+            ---@param file string
+            function(file)
+                return utils.file_exists(file) and not has(file)
+            end
+        )
+        :each(
+            ---@param file string
+            function(file)
+                table.insert(results, { file = file, type = 'mark' })
+            end
+        )
+
+    local jumplist = vim.fn.getjumplist()[1]
+
+    -- Get the jump-list and sort it so that the most recent files come first
+    for i = #jumplist, 1, -1 do
+        local buffer = jumplist[i].bufnr
+        local path = vim.api.nvim_buf_is_valid(buffer) and vim.api.nvim_buf_get_name(buffer)
+
+        if path and utils.file_exists(path) and not has(path) then
+            table.insert(results, { file = path, type = 'jump-list' })
+        end
+    end
+
+    return results
+end
+
 --- Get all keymaps
 ---@param opts ui.command_palette.Options # The options
 ---@return vim.KeymapDesc[] # List of keymaps
@@ -100,7 +209,7 @@ local function get_keymaps(opts)
 end
 
 ---@class ui.command_palette.Entry
----@field type 'command'|'keymap' # Entry type
+---@field type 'command'|'keymap'|'file' # Entry type
 ---@field name string|nil # The name of the entry
 ---@field attrs string # The attributes of the entry
 ---@field desc string # The description of the entry
@@ -114,9 +223,20 @@ local function get_items(opts)
 
     local commands = get_commands(opts)
     local keymaps = get_keymaps(opts)
+    local files = get_operating_files()
 
     ---@type ui.command_palette.Entry[]
     local items = {}
+
+    for _, file in ipairs(files) do
+        table.insert(items, {
+            type = 'file',
+            name = project.format_relative(file.file),
+            attrs = file.type,
+            desc = file.file,
+        })
+    end
+
     for _, cmd in ipairs(commands) do
         -- attributes
         local attrs = cmd.nargs or '0'
@@ -170,7 +290,6 @@ local function get_items(opts)
 
     return items
 end
-
 --- Gets the displayer
 ---@param name_col_width number # The width of the name column
 ---@param attr_col_width number # The width of the attributes column
@@ -191,8 +310,13 @@ end
 local function get_entry_maker(displayer)
     ---@param entry ui.command_palette.Entry
     local make_display = function(entry)
+        local main_hl = 'TelescopeResults'
+        if entry.type == 'file' then
+            main_hl = 'TelescopeResultsConstant'
+        end
+
         return displayer {
-            { entry.name, 'TelescopeResultsIdentifier' },
+            { entry.name, main_hl },
             { entry.attrs, 'TelescopeResultsComment' },
             entry.desc,
         }
@@ -268,6 +392,10 @@ local function show_command_palette(opts)
 
                         utils.feed_keys(keymap.lhs, 't')
                         return actions.close(prompt_bufnr)
+                    elseif selection.type == 'file' then
+                        actions.close(prompt_bufnr)
+
+                        vim.cmd('edit ' .. selection.desc)
                     end
                 end)
 

@@ -113,7 +113,7 @@ local function show_for_buffer(buffer)
         } or nil,
     }
 
-    local settings_info = md(settings.snapshot_for_buffer(buffer))
+    local settings_info = md(settings.snapshot(buffer))
 
     local dap_info = md(package.loaded['dap'] and debugging.configurations(buffer))
 

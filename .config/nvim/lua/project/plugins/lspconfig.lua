@@ -6,9 +6,7 @@ return {
         event = 'User NormalFile',
         dependencies = {
             'williamboman/mason-lspconfig.nvim',
-            {
-                'Hoffs/omnisharp-extended-lsp.nvim',
-            },
+            'Hoffs/omnisharp-extended-lsp.nvim',
         },
         opts = {
             ---@type vim.diagnostic.Opts
