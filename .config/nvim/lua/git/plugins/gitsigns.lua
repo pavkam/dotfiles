@@ -32,6 +32,7 @@ return {
                     return
                 end
 
+                -- TODO: not working for preview (the popup gets closed)
                 local items = {}
                 for name, action in pairs(actions) do
                     table.insert(items, {

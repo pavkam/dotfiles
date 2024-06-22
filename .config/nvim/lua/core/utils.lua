@@ -1,23 +1,3 @@
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
--- vim.api.nvim_buf_is_valid(b)
--- and (not opts.loaded or vim.api.nvim_buf_is_loaded(b))
 local icons = require 'ui.icons'
 
 ---@class core.utils
@@ -126,23 +106,90 @@ function M.tbl_merge(...)
     end
 end
 
-local group_index = 0
+--- Gets the value of an up-value of a function
+---@param fn function # the function to get the up-value from
+---@param name string # the name of the up-value to get
+---@return any # the value of the up-value or nil if it does not exist
+function M.get_up_value(fn, name)
+    local i = 1
+    while true do
+        local n, v = debug.getupvalue(fn, i)
+        if n == nil then
+            break
+        end
+
+        if n == name then
+            return v
+        end
+
+        i = i + 1
+    end
+
+    return nil
+end
+
+---@class (exact) core.utils.TraceBackEntry # a trace-back entry
+---@field file string # the file of the entry
+---@field line integer # the line of the entry
+---@field fn_name string # the name of the function
+
+--- Gets the trace-back of the current function
+---@param level integer|nil # the level of the trace-back to get
+---@return core.utils.TraceBackEntry[] # the trace-back entries
+function M.get_trace_back(level)
+    local trace = level and debug.traceback('', level) or debug.traceback()
+
+    -- split trace by new-line into an array
+    local lines = vim.split(trace, '\n', { plain = true, trimempty = true })
+
+    ---@type core.utils.TraceBackEntry[]
+    local result = {}
+    for _, line in pairs(lines) do
+        line = line:gsub('\t', '')
+        local file, file_line, fn_name = line:match '([^:]+):(%d+): in (.+)'
+
+        if fn_name == 'main chunk' then
+            fn_name = 'module'
+        else
+            fn_name = fn_name and fn_name:match "function '(.+)'" or ''
+            if fn_name == '' then
+                fn_name = 'anonymous'
+            end
+        end
+
+        if file and file_line then
+            table.insert(result, {
+                file = file,
+                line = tonumber(file_line),
+                fn_name = fn_name,
+            })
+        end
+    end
+
+    return result
+end
+
+---@type table<string, integer>
+local group_registry = {}
 
 --- Creates an auto command that triggers on a given list of events
 ---@param events string|string[] # the list of events to trigger on
 ---@param callback function # the callback to call when the event is triggered
 ---@param target table|string|number|nil # the target to trigger on
 ---@return number # the group id of the created group
-function M.on_event(events, callback, target)
+local function on_event(events, callback, target)
     assert(type(callback) == 'function')
 
     events = M.to_list(events)
     target = M.to_list(target)
 
-    -- create group
-    local group_name = 'pavkam_' .. group_index
-    group_index = group_index + 1
-    local group = vim.api.nvim_create_augroup(group_name, { clear = true })
+    -- create/update group
+    local group_name = M.get_trace_back(3)[1].file
+    local group = group_registry[group_name]
+    if not group then
+        group = group or vim.api.nvim_create_augroup(group_name, { clear = true })
+        group_registry[group_name] = group
+    end
 
     local opts = {
         callback = function(evt)
@@ -164,13 +211,22 @@ function M.on_event(events, callback, target)
     return group
 end
 
+--- Creates an auto command that triggers on a given list of events
+---@param events string|string[] # the list of events to trigger on
+---@param callback function # the callback to call when the event is triggered
+---@param target table|string|number|nil # the target to trigger on
+---@return number # the group id of the created group
+function M.on_event(events, callback, target)
+    return on_event(events, callback, target)
+end
+
 --- Creates an auto command that triggers on a given list of user events
 ---@param events string|table # the list of events to trigger on
 ---@param callback function # the callback to call when the event is triggered
 ---@return number # the group id of the created group
 function M.on_user_event(events, callback)
     events = M.to_list(events)
-    return M.on_event('User', function(evt)
+    return on_event('User', function(evt)
         callback(evt.match, evt)
     end, events)
 end
@@ -179,15 +235,16 @@ end
 ---@param callback function # the callback to call when the event is triggered
 function M.on_focus_gained(callback)
     assert(type(callback) == 'function')
-    M.on_event({ 'FocusGained', 'TermClose', 'TermLeave' }, callback)
-    M.on_event({ 'DirChanged' }, callback, 'global')
+
+    on_event({ 'FocusGained', 'TermClose', 'TermLeave' }, callback)
+    on_event({ 'DirChanged' }, callback, 'global')
 end
 
 --- Creates an auto command that triggers on global status update event
 ---@param callback function # the callback to call when the event is triggered
 ---@return number # the group id of the created group
 function M.on_status_update_event(callback)
-    return M.on_event('User', callback, 'StatusUpdate')
+    return on_event('User', callback, 'StatusUpdate')
 end
 
 --- Allows attaching keymaps in a given buffer alone.
@@ -205,7 +262,7 @@ function M.attach_keymaps(file_types, callback, force)
         file_types = M.to_list(file_types)
     end
 
-    return M.on_event('FileType', function(evt)
+    return on_event('FileType', function(evt)
         if file_types == '*' and M.is_special_buffer(evt.buf) then
             return
         end
@@ -217,6 +274,7 @@ function M.attach_keymaps(file_types, callback, force)
                 vim.keymap.set(mode, lhs, rhs, M.tbl_merge({ buffer = evt.buf }, opts or {}))
             end
         end
+
         callback(mapper)
     end, file_types)
 end
@@ -485,28 +543,6 @@ function M.defer_unique(buffer, fn, timeout)
     if res ~= 0 then
         M.error(string.format('Failed to start defer timer for buffer %d', buffer))
     end
-end
-
---- Gets the value of an up-value of a function
----@param fn function # the function to get the up-value from
----@param name string # the name of the up-value to get
----@return any # the value of the up-value or nil if it does not exist
-function M.get_up_value(fn, name)
-    local i = 1
-    while true do
-        local n, v = debug.getupvalue(fn, i)
-        if n == nil then
-            break
-        end
-
-        if n == name then
-            return v
-        end
-
-        i = i + 1
-    end
-
-    return nil
 end
 
 ---@alias core.utils.Target string|integer|nil # the target buffer or path or auto-detect

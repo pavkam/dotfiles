@@ -57,6 +57,7 @@ return {
                     return fallback()
                 end
             end
+
             return {
                 enabled = function()
                     local dap_prompt = vim.tbl_contains(
@@ -170,9 +171,8 @@ return {
                     end, { 'i', 's' }),
                 },
                 sources = cmp.config.sources {
-                    { name = 'luasnip' },
-                    utils.has_plugin 'lazydev.nvim' and { name = 'lazydev', group_index = 0 },
-                    { name = 'nvim_lsp' },
+                    { name = 'nvim_lsp', priority = 100 },
+                    utils.has_plugin 'lazydev.nvim' and { name = 'lazydev', group_index = 0, priority = 90 } or nil,
                     {
                         name = 'buffer',
                         option = {
@@ -181,8 +181,11 @@ return {
                         },
                         keyword_length = 3,
                         max_item_count = 4,
+                        priority = 80,
                     },
-                    { name = 'path' },
+
+                    { name = 'luasnip', priority = 70 },
+                    { name = 'path', priority = 60 },
                 },
                 formatting = {
                     fields = { 'kind', 'abbr', 'menu' },

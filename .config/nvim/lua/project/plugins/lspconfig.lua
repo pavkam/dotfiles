@@ -160,6 +160,13 @@ return {
                 },
                 tsserver = {
                     single_file_support = false,
+                    root_dir = require('lspconfig.util').root_pattern(
+                        'lerna.json',
+                        'tsconfig.json',
+                        'jsconfig.json',
+                        'package.json',
+                        '.git'
+                    ),
                     settings = {
                         typescript = {
                             inlayHints = {

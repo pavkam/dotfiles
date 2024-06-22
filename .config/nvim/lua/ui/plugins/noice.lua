@@ -16,15 +16,6 @@ return {
         routes = {
             {
                 filter = {
-                    min_height = 10,
-                    ['not'] = {
-                        event = 'lsp',
-                    },
-                },
-                view = 'split',
-            },
-            {
-                filter = {
                     event = 'msg_show',
                     any = {
                         { find = '%d+L, %d+B' },
@@ -51,6 +42,7 @@ return {
                         { find = '^E553' },
                         { find = 'E211: File .* no longer available' },
                         { find = 'No more valid diagnostics to move to' },
+                        { find = 'No code actions available' },
                     },
                 },
                 view = 'mini',
@@ -81,10 +73,27 @@ return {
                     event = 'msg_show',
                     any = {
                         { find = '^[/?].' }, -- search patterns
-                        { find = '^%s*at process.processTicksAndRejections' }, -- broken LSP some times
+                        { find = '^%s*at process.processTicksAndRejections%s*' }, -- broken LSP some times
                     },
                 },
                 opts = { skip = true },
+            },
+            {
+                filter = {
+                    kind = 'error',
+                    find = '%s*at process.processTicksAndRejections', -- broken LSP some times
+                },
+                opts = { skip = true },
+            },
+            {
+                filter = {
+                    min_height = 10,
+                    ['not'] = {
+                        event = 'lsp',
+                    },
+                    kind = { 'error' },
+                },
+                view = 'split',
             },
         },
         views = {

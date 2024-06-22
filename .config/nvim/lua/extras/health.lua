@@ -71,43 +71,53 @@ local function show_for_buffer(buffer)
     local settings = require 'core.settings'
     local project = require 'project'
     local debugging = require 'debugging'
+    local progress = require 'ui.progress'
 
     local current_session = sessions.current()
+    local md = markdown.from_value
 
-    local details = {
-        Buffer = {
-            id = buffer,
-            windows = vim.fn.win_findbuf(buffer),
-            name = vim.api.nvim_buf_get_name(buffer),
-            file_type = vim.api.nvim_get_option_value('filetype', { buf = buffer }),
-            buf_type = vim.api.nvim_get_option_value('buftype', { buf = buffer }),
-            modifiable = vim.api.nvim_get_option_value('modifiable', { buf = buffer }),
-            modified = vim.api.nvim_get_option_value('modified', { buf = buffer }),
-            read_only = vim.api.nvim_get_option_value('readonly', { buf = buffer }),
-            spell_files = vim.api.nvim_get_option_value('spellfile', { buf = buffer }),
-        },
-        Session = current_session and {
+    local buffer_info = md {
+        id = buffer,
+        windows = vim.fn.win_findbuf(buffer),
+        name = vim.api.nvim_buf_get_name(buffer),
+        file_type = vim.api.nvim_get_option_value('filetype', { buf = buffer }),
+        buf_type = vim.api.nvim_get_option_value('buftype', { buf = buffer }),
+        modifiable = vim.api.nvim_get_option_value('modifiable', { buf = buffer }),
+        modified = vim.api.nvim_get_option_value('modified', { buf = buffer }),
+        read_only = vim.api.nvim_get_option_value('readonly', { buf = buffer }),
+        spell_files = vim.api.nvim_get_option_value('spellfile', { buf = buffer }),
+    }
+
+    local progress_info = md(progress.snapshot())
+
+    local session_info = current_session
+        and md {
             name = current_session,
             files = { sessions.files(current_session) },
-        },
-        Project = {
-            type = project.type(buffer) or 'unsupported',
-            root = project.root(buffer),
-            roots = project.roots(buffer),
-            lsp_roots = lsp.roots(buffer),
-            JS = vim.tbl_contains(project.js_types, project.type(buffer)) and {
-                eslint_config = project.get_eslint_config_path(buffer),
-                jest = project.get_js_bin_path(buffer, 'jest'),
-                eslint = project.get_js_bin_path(buffer, 'eslint'),
-                prettier = project.get_js_bin_path(buffer, 'prettier'),
-                vitest = project.get_js_bin_path(buffer, 'vitest'),
-            } or nil,
-            GO = project.type(buffer) == 'go' and {
-                golangci = project.get_golangci_config(buffer),
-            } or nil,
-        },
-        Settings = settings.snapshot_for_buffer(buffer),
-        DAP = package.loaded['dap'] and debugging.configurations(buffer),
+        }
+
+    local project_info = md {
+        type = project.type(buffer) or 'unsupported',
+        root = project.root(buffer),
+        roots = project.roots(buffer),
+        lsp_roots = lsp.roots(buffer),
+        JS = vim.tbl_contains(project.js_types, project.type(buffer)) and {
+            eslint_config = project.get_eslint_config_path(buffer),
+            jest = project.get_js_bin_path(buffer, 'jest'),
+            eslint = project.get_js_bin_path(buffer, 'eslint'),
+            prettier = project.get_js_bin_path(buffer, 'prettier'),
+            vitest = project.get_js_bin_path(buffer, 'vitest'),
+        } or nil,
+        GO = project.type(buffer) == 'go' and {
+            golangci = project.get_golangci_config(buffer),
+        } or nil,
+    }
+
+    local settings_info = md(settings.snapshot_for_buffer(buffer))
+
+    local dap_info = md(package.loaded['dap'] and debugging.configurations(buffer))
+
+    local lsp_info = md {
         LSP = utils.inflate_list(
             function(client)
                 return client.name
@@ -128,8 +138,28 @@ local function show_for_buffer(buffer)
         ),
     }
 
-    local md = markdown.from_value(details)
-    show_content(vim.fn.split(md, '\n'))
+    local info = '# Buffer\n'
+        .. buffer_info
+        .. '\n\n'
+        .. '# Session\n'
+        .. (session_info or 'No session')
+        .. '\n\n'
+        .. '# Project\n'
+        .. project_info
+        .. '\n\n'
+        .. '# Settings\n'
+        .. settings_info
+        .. '\n\n'
+        .. '# Progress\n'
+        .. progress_info
+        .. '\n\n'
+        .. '# DAP\n'
+        .. (dap_info or 'No DAP')
+        .. '\n\n'
+        .. '# LSP\n'
+        .. lsp_info
+
+    show_content(vim.fn.split(info, '\n'))
 end
 
 function M.check()
@@ -176,7 +206,7 @@ function M.register_stack_trace_highlights(buffer)
 end
 
 -- Show buffer information
-vim.api.nvim_create_user_command('Buffer', function()
+utils.register_command('Debug', function()
     show_for_buffer()
 end, { desc = 'Show buffer information', nargs = 0 })
 

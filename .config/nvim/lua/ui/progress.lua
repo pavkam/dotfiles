@@ -4,27 +4,30 @@ local utils = require 'core.utils'
 ---@class utils.progress
 local M = {}
 
----@class utils.progress.Task
+---@class ui.progress.Task
 ---@field ctx any|nil # any context for the task
 ---@field ttl number # the time to live of the task in milliseconds
 ---@field timeout number # the timeout of the task in milliseconds
 ---@field prv boolean # whether the task is private (not reported globally)
 ---@field fn nil|fun(buffer: integer|nil): boolean # the function to check whether the task is still active
 
----@class utils.progress.TaskOptions
+---@class ui.progress.TaskOptions
 ---@field ctx any|nil # any context for the task
 ---@field timeout number|nil # the timeout of the task in milliseconds
 ---@field prv boolean|nil # whether the task is private (not reported globally)
 ---@field fn nil|fun(buffer: integer|nil): boolean # the function to check whether the task is still active
 ---@field buffer integer|nil # the buffer to register the task for, or nil for global
---
----@type table<integer|"global", nil|table<string, utils.progress.Task>>
-M.tasks = {}
+
+---@alias ui.progress.TaskStatus table<string, ui.progress.Task>
+---@alias ui.progress.TaskRegistry table<integer|"global", nil|ui.progress.TaskStatus>
+
+---@type ui.progress.TaskRegistry
+local tasks_by_owner = {}
 
 --- Registers a task for progress tracking
 ---@param buffer integer|nil # the buffer to register the task for, or nil for global
 ---@param class string # the class of the task
----@param opts utils.progress.TaskOptions|nil # the options for the task
+---@param opts ui.progress.TaskOptions|nil # the options for the task
 local function update(buffer, class, opts)
     assert(type(class) == 'string' and class ~= '')
 
@@ -34,7 +37,7 @@ local function update(buffer, class, opts)
 
     local key = buffer or 'global'
 
-    local tasks = M.tasks[key]
+    local tasks = tasks_by_owner[key]
     if not tasks then
         tasks = {}
     end
@@ -59,7 +62,7 @@ local function update(buffer, class, opts)
 
     tasks[class] = task
 
-    M.tasks[key] = tasks
+    tasks_by_owner[key] = tasks
 end
 
 --- Un-registers a task for progress tracking
@@ -70,7 +73,7 @@ local function stop(buffer, class)
 
     local key = buffer or 'global'
 
-    local tasks = M.tasks[key]
+    local tasks = tasks_by_owner[key]
     if not tasks then
         return
     end
@@ -81,21 +84,22 @@ local function stop(buffer, class)
         tasks = nil
     end
 
-    M.tasks[key] = tasks
+    tasks_by_owner[key] = tasks
 end
+
+-- TODO: this fails for very quick progress tasks that run one after another
 
 --- Updates the tasks' statuses
 ---@param interval integer # the interval since the last update in milliseconds
 local function update_tasks(interval)
-    local keys = vim.tbl_keys(M.tasks)
+    local keys = vim.tbl_keys(tasks_by_owner)
 
     for _, key in ipairs(keys) do
-        local tasks = M.tasks[key]
-        ---@cast tasks table<string, utils.progress.Task>
+        local tasks = tasks_by_owner[key] or {}
 
         local buffer = key ~= 'global' and key or nil
         if buffer and not vim.api.nvim_buf_is_valid(buffer) then
-            M.tasks[key] = {}
+            tasks_by_owner[key] = {}
         end
 
         local classes = vim.tbl_keys(tasks)
@@ -118,13 +122,13 @@ local function update_tasks(interval)
         end
 
         if next(tasks) ~= nil then
-            M.tasks[key] = tasks
+            tasks_by_owner[key] = tasks
         else
-            M.tasks[key] = nil
+            tasks_by_owner[key] = nil
         end
     end
 
-    return next(M.tasks) ~= nil
+    return next(tasks_by_owner) ~= nil
 end
 
 ---@type uv_timer_t|nil
@@ -134,7 +138,7 @@ local timer = nil
 local spinner_index = nil
 
 local function ensure_polling()
-    if next(M.tasks) == nil or timer then
+    if next(tasks_by_owner) == nil or timer then
         return
     end
 
@@ -170,7 +174,7 @@ end
 
 --- Registers a task for progress tracking
 ---@param class string # the class of the task
----@param opts utils.progress.TaskOptions|nil # the options for the task
+---@param opts ui.progress.TaskOptions|nil # the options for the task
 function M.update(class, opts)
     opts = opts or {}
 
@@ -208,12 +212,18 @@ function M.status(class, opts)
 
     local key = opts.buffer or 'global'
 
-    local task = M.tasks[key] and M.tasks[key][class]
+    local task = tasks_by_owner[key] and tasks_by_owner[key][class]
     if task then
         return spinner_icon(spinner_index or 0), task.ctx
     end
 
     return nil, nil
+end
+
+--- Returns the current snapshot of the tasks
+---@return ui.progress.TaskRegistry
+function M.snapshot()
+    return vim.deepcopy(tasks_by_owner)
 end
 
 return M
