@@ -166,10 +166,10 @@ M.linting = {
             prefix = lint.progress(buffer) or icons.UI.Format
         end
 
-        return sexify(prefix, lint.active_names_for_buffer(buffer))
+        return sexify(prefix, lint.active(buffer))
     end),
     cond = settings.transient(function(buffer)
-        return lint.active_for_buffer(buffer)
+        return lint.any_active(buffer)
     end),
     color = settings.transient(function(buffer)
         if not lint.enabled(buffer) then

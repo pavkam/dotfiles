@@ -124,7 +124,7 @@ end
 --- Gets a snapshot of the settings for a buffer
 ---@param buffer integer|nil # the buffer to get the settings for or 0 or nil for current
 ---@return table<string, table<string, any>> # the settings tables
-function M.snapshot_for_buffer(buffer)
+function M.snapshot(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local settings = {

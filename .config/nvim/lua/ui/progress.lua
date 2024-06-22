@@ -37,12 +37,9 @@ local function update(buffer, class, opts)
 
     local key = buffer or 'global'
 
-    local tasks = tasks_by_owner[key]
-    if not tasks then
-        tasks = {}
-    end
-
+    local tasks = tasks_by_owner[key] or {}
     local task = tasks[class]
+
     if task then
         task.ctx = opts.ctx
         task.timeout = opts.timeout or task.timeout
@@ -61,7 +58,6 @@ local function update(buffer, class, opts)
     end
 
     tasks[class] = task
-
     tasks_by_owner[key] = tasks
 end
 
@@ -74,17 +70,11 @@ local function stop(buffer, class)
     local key = buffer or 'global'
 
     local tasks = tasks_by_owner[key]
-    if not tasks then
-        return
+    if tasks then
+        tasks[class] = nil
     end
 
-    tasks[class] = nil
-
-    if #tasks == 0 then
-        tasks = nil
-    end
-
-    tasks_by_owner[key] = tasks
+    tasks_by_owner[key] = #tasks > 0 and tasks or nil
 end
 
 -- TODO: this fails for very quick progress tasks that run one after another

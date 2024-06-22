@@ -78,18 +78,9 @@ end
 --- Gets the names of all active linters for a buffer
 ---@param buffer integer|nil # the buffer to get the linters for or 0 or nil for current
 ---@return string[] # the names of the active linters
-function M.active_names_for_buffer(buffer)
+function M.active(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     return linters(buffer)
-end
-
---- Checks whether there are any active linters for a buffer
----@param buffer integer|nil # the buffer to check the linters for or 0 or nil for current
----@return boolean # whether there are any active linters
-function M.active_for_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    return #linters(buffer) > 0
 end
 
 --- Applies all active linters to a buffer

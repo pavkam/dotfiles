@@ -635,7 +635,7 @@ end
 function M.remove_other_buffers(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    for _, b in ipairs(M.get_listed_buffers()) do
+    for _, b in ipairs(M.get_listed_buffers { loaded = false }) do
         if b ~= buffer then
             M.remove_buffer(b)
         end

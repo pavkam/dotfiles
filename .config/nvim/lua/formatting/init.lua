@@ -58,17 +58,9 @@ end
 --- Gets the names of all active formatters for a buffer
 ---@param buffer integer|nil # the buffer to get the formatters for or nil for current
 ---@return string[] # the names of the active formatters
-function M.active_names_for_buffer(buffer)
+function M.active(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     return formatters(buffer)
-end
-
---- Checks whether there are any active formatters for a buffer
----@param buffer integer|nil # the buffer to check the formatters for or nil for current
----@return boolean # whether there are any active formatters
-function M.active_for_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-    return #formatters(buffer) > 0
 end
 
 --- Applies all active formatters to a buffer
