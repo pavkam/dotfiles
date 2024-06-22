@@ -76,6 +76,12 @@ local highlights = {
     CopilotWarning = 'DiagnosticError',
     RecordingMacroStatus = { 'Error', { bold = true } },
     MarkSign = 'DiagnosticWarn',
+
+    CommandPaletteNearFile = 'diffNewFile',
+    CommandPaletteMarkedFile = 'MarkSign',
+    CommandPaletteOldFile = 'diffOldFile',
+    CommandPaletteCommand = 'Function',
+    CommandPaletteKeymap = 'Keyword',
 }
 
 for hl, def in pairs(highlights) do

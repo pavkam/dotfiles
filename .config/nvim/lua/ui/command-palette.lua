@@ -47,7 +47,7 @@ local function get_commands(opts)
         :filter(
             ---@param cmd vim.CommandDesc
             function(cmd)
-                if cmd == nil then
+                if type(cmd) ~= 'table' then
                     return false
                 end
 
@@ -120,6 +120,18 @@ local function get_operating_files()
             end
         )
 
+    local jumplist = vim.fn.getjumplist()[1]
+
+    -- Get the jump-list and sort it so that the most recent files come first
+    for i = #jumplist, 1, -1 do
+        local buffer = jumplist[i].bufnr
+        local path = vim.api.nvim_buf_is_valid(buffer) and vim.api.nvim_buf_get_name(buffer)
+
+        if path and utils.file_exists(path) and not has(path) then
+            table.insert(results, { file = path, type = 'jump-list' })
+        end
+    end
+
     vim.iter(vim.v.oldfiles)
         :filter(
             ---@param file string
@@ -133,50 +145,6 @@ local function get_operating_files()
                 table.insert(results, { file = file, type = 'old-file' })
             end
         )
-
-    -- Get the global marks and sort them so that numeric marks come first
-    ---@type ui.marks.Mark[]
-    local marks = vim.fn.getmarklist()
-    table.sort(
-        marks,
-        ---@param a ui.marks.Mark
-        ---@param b ui.marks.Mark
-        function(a, b)
-            return a.mark < b.mark
-        end
-    )
-
-    vim.iter(marks)
-        :map(
-            ---@param mark ui.marks.Mark
-            function(mark)
-                return mark.file
-            end
-        )
-        :filter(
-            ---@param file string
-            function(file)
-                return utils.file_exists(file) and not has(file)
-            end
-        )
-        :each(
-            ---@param file string
-            function(file)
-                table.insert(results, { file = file, type = 'mark' })
-            end
-        )
-
-    local jumplist = vim.fn.getjumplist()[1]
-
-    -- Get the jump-list and sort it so that the most recent files come first
-    for i = #jumplist, 1, -1 do
-        local buffer = jumplist[i].bufnr
-        local path = vim.api.nvim_buf_is_valid(buffer) and vim.api.nvim_buf_get_name(buffer)
-
-        if path and utils.file_exists(path) and not has(path) then
-            table.insert(results, { file = path, type = 'jump-list' })
-        end
-    end
 
     return results
 end
@@ -310,9 +278,17 @@ end
 local function get_entry_maker(displayer)
     ---@param entry ui.command_palette.Entry
     local make_display = function(entry)
-        local main_hl = 'TelescopeResults'
+        local main_hl = 'CommandPaletteCommand'
         if entry.type == 'file' then
-            main_hl = 'TelescopeResultsConstant'
+            if entry.attrs == 'buffer' or entry.attrs == 'jump-list' then
+                main_hl = 'CommandPaletteNearFile'
+            elseif entry.attrs == 'mark' then
+                main_hl = 'CommandPaletteMarkedFile'
+            else
+                main_hl = 'CommandPaletteOldFile'
+            end
+        elseif entry.type == 'keymap' then
+            main_hl = 'CommandPaletteKeymap'
         end
 
         return displayer {
