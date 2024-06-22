@@ -77,9 +77,9 @@ local highlights = {
     RecordingMacroStatus = { 'Error', { bold = true } },
     MarkSign = 'DiagnosticWarn',
 
-    CommandPaletteNearFile = 'diffNewFile',
-    CommandPaletteMarkedFile = 'MarkSign',
-    CommandPaletteOldFile = 'diffOldFile',
+    CommandPaletteNearFile = 'DiagnosticInfo',
+    CommandPaletteMarkedFile = 'DiagnosticWarn',
+    CommandPaletteOldFile = 'DiagnosticHint',
     CommandPaletteCommand = 'Function',
     CommandPaletteKeymap = 'Keyword',
 }

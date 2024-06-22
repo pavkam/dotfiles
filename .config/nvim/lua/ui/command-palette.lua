@@ -120,6 +120,32 @@ local function get_operating_files()
             end
         )
 
+    -- Get the global marks and sort them so that numeric marks come first
+    ---@type ui.marks.Mark[]
+    local marks = vim.fn.getmarklist()
+    table.sort(
+        marks,
+        ---@param a ui.marks.Mark
+        ---@param b ui.marks.Mark
+        function(a, b)
+            return a.mark < b.mark
+        end
+    )
+
+    vim.iter(marks)
+        :filter(
+            ---@param mark ui.marks.Mark
+            function(mark)
+                return utils.file_exists(mark.file) and not has(mark.file)
+            end
+        )
+        :each(
+            ---@param mark ui.marks.Mark
+            function(mark)
+                table.insert(results, { file = mark.file, type = mark.mark })
+            end
+        )
+
     local jumplist = vim.fn.getjumplist()[1]
 
     -- Get the jump-list and sort it so that the most recent files come first
@@ -282,7 +308,7 @@ local function get_entry_maker(displayer)
         if entry.type == 'file' then
             if entry.attrs == 'buffer' or entry.attrs == 'jump-list' then
                 main_hl = 'CommandPaletteNearFile'
-            elseif entry.attrs == 'mark' then
+            elseif entry.attrs:sub(1, 1) == "'" then
                 main_hl = 'CommandPaletteMarkedFile'
             else
                 main_hl = 'CommandPaletteOldFile'
@@ -371,7 +397,11 @@ local function show_command_palette(opts)
                     elseif selection.type == 'file' then
                         actions.close(prompt_bufnr)
 
-                        vim.cmd('edit ' .. selection.desc)
+                        if selection.attrs:sub(1, 1) == "'" then
+                            vim.cmd('normal! ' .. selection.attrs)
+                        else
+                            vim.cmd('edit ' .. selection.desc)
+                        end
                     end
                 end)
 
