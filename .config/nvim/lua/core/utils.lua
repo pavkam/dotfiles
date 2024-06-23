@@ -562,6 +562,7 @@ end
 
 ---@class (exact) core.utils.GetListedBufferOpts
 ---@field loaded boolean|nil # whether to get only loaded buffers (default) true
+---@field listed boolean|nil # whether to get only listed buffers (default) true
 
 --- Gets the list of listed file buffers
 ---@param opts core.utils.GetListedBufferOpts|nil # the options to get the buffers
@@ -569,6 +570,7 @@ end
 function M.get_listed_buffers(opts)
     opts = opts or {}
     opts.loaded = opts.loaded == nil and true or opts.loaded
+    opts.listed = opts.listed == nil and true or opts.listed
 
     return vim.iter(vim.api.nvim_list_bufs())
         :filter(
@@ -577,14 +579,14 @@ function M.get_listed_buffers(opts)
                 if not vim.api.nvim_buf_is_valid(b) then
                     return false
                 end
-                if not vim.api.nvim_get_option_value('buflisted', { buf = b }) then
+                if opts.listed and not vim.api.nvim_get_option_value('buflisted', { buf = b }) then
                     return false
                 end
                 if opts.loaded and not vim.api.nvim_buf_is_loaded(b) then
                     return false
                 end
 
-                return true
+                return M.is_regular_buffer(b)
             end
         )
         :totable()
@@ -763,9 +765,9 @@ end
 ---@param path string # the path to check
 ---@return boolean # true if the file exists, false otherwise
 function M.file_exists(path)
-    assert(type(path) == 'string' and path ~= '')
+    assert(type(path) == 'string')
 
-    local stat = vim.loop.fs_stat(path)
+    local stat = vim.loop.fs_stat(vim.fn.expand(path))
     return stat and stat.type == 'file' or false
 end
 
@@ -844,6 +846,36 @@ function M.format_relative_path(prefix, path)
     return path
 end
 
+---@class core.utils.PathComponents
+---@field dir_name string # the directory name
+---@field base_name string # the base name
+---@field extension string # the extension
+---@field compound_extension string # the compound extension
+
+--- Splits a file path into its components
+---@param path string # the path to split
+---@return core.utils.PathComponents # the components of the path
+function M.split_path(path)
+    assert(type(path) == 'string' and path ~= '')
+
+    local dir_name = vim.fn.fnamemodify(path, ':h')
+    local base_name = vim.fn.fnamemodify(path, ':t')
+    local extension = vim.fn.fnamemodify(path, ':e')
+    local compound_extension = extension
+
+    local parts = vim.split(base_name, '%.')
+    if #parts > 2 then
+        compound_extension = table.concat(vim.list_slice(parts, #parts - 1), '.')
+    end
+
+    return {
+        dir_name = dir_name,
+        base_name = base_name,
+        extension = extension,
+        compound_extension = compound_extension,
+    }
+end
+
 --- Helper function that calculates folds
 function M.fold_text()
     local ok = pcall(vim.treesitter.get_parser, vim.api.nvim_get_current_buf())
@@ -890,6 +922,10 @@ end
 --- Gets the selected text from the current buffer in visual mode
 ---@return string # the selected text
 function M.get_selected_text()
+    if not M.is_visual_mode() then
+        error 'Not in visual mode'
+    end
+
     local old = vim.fn.getreg 'a'
     vim.cmd [[silent! normal! "aygv]]
 
@@ -913,13 +949,22 @@ function M.has_plugin(name)
     return false
 end
 
+--- Checks if a mode is visual
+---@param mode string|nil # the mode to check or the current mode if nil
+---@return boolean # true if the mode is visual, false otherwise
+function M.is_visual_mode(mode)
+    mode = mode or vim.api.nvim_get_mode().mode
+
+    return mode == 'v' or mode == 'V' or mode == ''
+end
+
 --- Runs a function with the current visual selection
 ---@param buffer integer|nil # the buffer to run the function for or the current buffer if 0 or nil
 ---@param callback fun(restore_callback: fun(command?: string)) # the callback to call with the selection
 function M.run_with_visual_selection(buffer, callback)
     assert(type(callback) == 'function')
 
-    if vim.api.nvim_get_mode().mode ~= 'v' then
+    if not M.is_visual_mode() then
         error 'Not in visual mode'
     end
 

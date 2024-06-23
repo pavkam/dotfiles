@@ -164,4 +164,44 @@ local M = {
     },
 }
 
+---@type boolean|nil # Whether or not the dev-icons are available
+local dev_icons_available = nil
+
+--- Get the icon and highlight for a file
+---@param path string # The name of the file
+---@return string, string # The icon and highlight
+function M.get_file_icon(path)
+    if vim.fn.isdirectory(path) == 1 then
+        return M.Files.ClosedFolder, 'Normal'
+    end
+
+    if dev_icons_available == nil then
+        local has_dev_icons, dev_icons = pcall(require, 'nvim-web-devicons')
+
+        if has_dev_icons then
+            if not dev_icons.has_loaded() then
+                dev_icons.setup()
+            end
+        end
+
+        dev_icons_available = has_dev_icons
+    end
+
+    if dev_icons_available and path and #path > 0 then
+        local dev_icons = require 'nvim-web-devicons'
+        local split = require('core.utils').split_path(path)
+
+        local icon, icon_highlight = dev_icons.get_icon(split.base_name, split.compound_extension, { default = false })
+
+        if not icon then
+            icon, icon_highlight = dev_icons.get_icon(split.base_name, nil, { default = true })
+            icon = icon or M.Files.Normal
+        end
+
+        return icon, icon_highlight
+    else
+        return M.Files.Normal, 'Normal'
+    end
+end
+
 return M

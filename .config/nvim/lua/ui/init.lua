@@ -10,6 +10,7 @@ require 'ui.hl'
 require 'ui.marks'
 require 'ui.qf'
 require 'ui.tmux'
+require 'ui.file-palette'
 
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })

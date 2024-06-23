@@ -67,13 +67,6 @@ return {
 
             return {
                 {
-                    '<leader>b',
-                    function()
-                        require('telescope.builtin').buffers()
-                    end,
-                    desc = icons.UI.Buffers .. ' Show buffers',
-                },
-                {
                     '<M-f>',
                     function()
                         local sel = require('editor.syntax').current_selection(nil, false)
@@ -95,11 +88,6 @@ return {
                     '<leader>f',
                     blanket 'find_files',
                     desc = icons.UI.Search .. ' Search files',
-                },
-                {
-                    '<leader>o',
-                    blanket 'oldfiles',
-                    desc = icons.UI.Search .. ' Search old files',
                 },
                 {
                     '<leader>uk',
