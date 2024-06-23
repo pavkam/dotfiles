@@ -90,16 +90,6 @@ return {
                     desc = icons.UI.Search .. ' Search files',
                 },
                 {
-                    '<leader>uk',
-                    '<cmd>Telescope keymaps<cr>',
-                    desc = 'Show keymaps',
-                },
-                {
-                    '<leader>uc',
-                    '<cmd>Telescope commands<cr>',
-                    desc = 'Show commands',
-                },
-                {
                     '<leader>m',
                     function()
                         require('ui.select').command({
@@ -182,13 +172,6 @@ return {
                         }, { prompt = 'Level', at_cursor = true })
                     end,
                     desc = icons.Diagnostics.Prefix .. ' Diagnostics',
-                },
-                {
-                    '<leader>un',
-                    function()
-                        require('telescope').extensions.notify.notify()
-                    end,
-                    desc = 'Browse notifications',
                 },
                 {
                     'z=',

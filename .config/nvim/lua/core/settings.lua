@@ -456,6 +456,6 @@ utils.on_status_update_event(function(evt)
     end
 end)
 
-vim.keymap.set('n', '<leader>uu', M.show_settings_ui, { desc = 'Toggle options' })
+vim.keymap.set('n', '<leader>u', M.show_settings_ui, { desc = icons.UI.UI .. ' Show options' })
 
 return M

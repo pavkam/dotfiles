@@ -296,4 +296,6 @@ function M.show_command_palette(opts)
     end
 end
 
+vim.keymap.set({ 'n', 'x', 'i' }, '<F2>', M.show_command_palette, { desc = 'Show command palette' })
+
 return M

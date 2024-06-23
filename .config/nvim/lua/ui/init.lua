@@ -4,13 +4,13 @@ local git = require 'git'
 local diagnostics = require 'project.diagnostics'
 local icons = require 'ui.icons'
 local progress = require 'ui.progress'
-local command_palette = require 'ui.command-palette'
 
 require 'ui.hl'
 require 'ui.marks'
 require 'ui.qf'
 require 'ui.tmux'
 require 'ui.file-palette'
+require 'ui.command-palette'
 
 -- Disable some sequences
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
@@ -43,10 +43,6 @@ for i = 1, 9 do
         end
     end, { desc = 'Go to buffer ' .. i })
 end
-
-vim.keymap.set({ 'n', 'x', 'i' }, '<F2>', function()
-    command_palette.show_command_palette()
-end, { desc = 'Show command palette' })
 
 vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = icons.UI.Save .. ' Save buffer' })
 vim.keymap.set('n', '<leader>W', '<cmd>wa<cr>', { desc = icons.UI.SaveAll .. ' Save all buffers' })
