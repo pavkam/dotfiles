@@ -586,7 +586,7 @@ function M.get_listed_buffers(opts)
                     return false
                 end
 
-                return M.is_regular_buffer(b)
+                return true
             end
         )
         :totable()

@@ -77,8 +77,6 @@ local function stop(buffer, class)
     tasks_by_owner[key] = #tasks > 0 and tasks or nil
 end
 
--- TODO: this fails for very quick progress tasks that run one after another
-
 --- Updates the tasks' statuses
 ---@param interval integer # the interval since the last update in milliseconds
 local function update_tasks(interval)

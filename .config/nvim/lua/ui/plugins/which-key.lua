@@ -13,7 +13,6 @@ return {
             ['g'] = { name = icons.UI.Next .. ' Go-to' },
             [']'] = { name = icons.UI.Next .. ' Next' },
             ['['] = { name = icons.UI.Prev .. ' Previous' },
-            ['<leader>u'] = { name = icons.UI.UI .. ' UX' },
             ['<leader>q'] = { name = icons.UI.Fix .. ' Quick-Fix' },
             ['<leader>d'] = { name = icons.UI.Debugger .. ' Debugger' },
         },
