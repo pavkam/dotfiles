@@ -149,3 +149,5 @@ o.list = false
 o.shortmess:append { W = true, I = true, c = true, C = true }
 o.formatoptions = 'jcroqlnt'
 o.sessionoptions = { 'buffers', 'tabpages', 'winsize', 'help', 'globals', 'skiprtp', 'help', 'folds' }
+
+o.statuscolumn = [[%!v:lua.require'ui.status-column'()]]

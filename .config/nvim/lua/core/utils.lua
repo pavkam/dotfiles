@@ -592,6 +592,13 @@ function M.get_listed_buffers(opts)
         :totable()
 end
 
+--- Checks if a buffer is loaded
+--- @param buffer integer| nil # the buffer to check or the current buffer if 0 or nil
+function M.buffer_is_loaded(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    return vim.api.nvim_buf_is_valid(buffer) and vim.api.nvim_buf_is_loaded(buffer)
+end
+
 --- Gets the buffer by its index in the list of listed buffers
 ---@param index integer # the index of the buffer to get
 ---@return integer|nil # the index of the buffer in the list of listed buffers or nil if the buffer is not listed

@@ -83,13 +83,12 @@ local function update_tasks(interval)
     local keys = vim.tbl_keys(tasks_by_owner)
 
     for _, key in ipairs(keys) do
-        local tasks = tasks_by_owner[key] or {}
-
         local buffer = key ~= 'global' and key or nil
-        if buffer and not vim.api.nvim_buf_is_valid(buffer) then
+        if buffer and not utils.buffer_is_loaded(buffer) then
             tasks_by_owner[key] = {}
         end
 
+        local tasks = tasks_by_owner[key] or {}
         local classes = vim.tbl_keys(tasks)
 
         for _, class in ipairs(classes) do
@@ -175,7 +174,7 @@ function M.update(class, opts)
 end
 
 --- Un-registers a task for progress tracking
----@param opts? { buffer?: integer } # optional modifiers
+---@param opts { buffer: integer | nil } | nil # optional modifiers
 ---@param class string # the class of the task
 function M.stop(class, opts)
     opts = opts or {}

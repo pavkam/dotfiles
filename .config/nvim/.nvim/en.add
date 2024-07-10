@@ -52,3 +52,5 @@ fg
 gui
 osdateparam
 pos
+texthl
+get_extmark_item
