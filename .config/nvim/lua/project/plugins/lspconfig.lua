@@ -71,6 +71,9 @@ return {
                     },
                 },
             },
+            handlers = {
+                [vim.lsp.protocol.Methods.textDocument_rename] = require 'project.rename',
+            },
             servers = {
                 typos_lsp = {
                     init_options = {
@@ -158,13 +161,15 @@ return {
                 },
                 tsserver = {
                     single_file_support = false,
-                    root_dir = require('lspconfig.util').root_pattern(
-                        'lerna.json',
-                        'tsconfig.json',
-                        'jsconfig.json',
-                        'package.json',
-                        '.git'
-                    ),
+                    root_dir = function()
+                        return require('lspconfig.util').root_pattern(
+                            'lerna.json',
+                            'tsconfig.json',
+                            'jsconfig.json',
+                            'package.json',
+                            '.git'
+                        )
+                    end,
                     settings = {
                         typescript = {
                             inlayHints = {
@@ -230,32 +235,25 @@ return {
                             semanticTokens = true,
                         },
                     },
-                },
-            },
-            setup = {
-                gopls = function()
-                    local lsp = require 'project.lsp'
-
-                    -- HACK: workaround for gopls not supporting semanticTokensProvider
-                    -- https://github.com/golang/go/issues/54531#issuecomment-1464982242
-                    lsp.on_attach(function(client, _)
-                        if client.name == 'gopls' then
-                            if not client.server_capabilities.semanticTokensProvider then
-                                local semantic = client.config.capabilities.textDocument.semanticTokens
-                                if semantic then
-                                    client.server_capabilities.semanticTokensProvider = {
-                                        full = true,
-                                        legend = {
-                                            tokenTypes = semantic.tokenTypes,
-                                            tokenModifiers = semantic.tokenModifiers,
-                                        },
-                                        range = true,
-                                    }
-                                end
-                            end
+                    ---@param client vim.lsp.Client
+                    on_attach = function(client)
+                        if client.server_capabilities.semanticTokensProvider then
+                            return
                         end
-                    end)
-                end,
+
+                        local semantic = client.config.capabilities.textDocument.semanticTokens
+                        if semantic then
+                            client.server_capabilities.semanticTokensProvider = {
+                                full = true,
+                                legend = {
+                                    tokenTypes = semantic.tokenTypes,
+                                    tokenModifiers = semantic.tokenModifiers,
+                                },
+                                range = true,
+                            }
+                        end
+                    end,
+                },
             },
         },
         config = function(_, opts)
@@ -266,7 +264,7 @@ return {
             local lsp = require 'project.lsp'
             local features = require 'project.features'
 
-            -- key-maps
+            -- on attach work
             lsp.on_attach(function(client, buffer)
                 if utils.is_special_buffer(buffer) then
                     vim.schedule(function()
@@ -326,20 +324,8 @@ return {
             local function setup(server)
                 local server_opts = utils.tbl_merge({
                     capabilities = vim.deepcopy(capabilities),
-                    handlers = {
-                        [vim.lsp.protocol.Methods.textDocument_rename] = require 'project.rename',
-                    },
+                    handlers = opts.handlers,
                 }, servers[server] or {})
-
-                if opts.setup[server] then
-                    if opts.setup[server](server, server_opts) then
-                        return
-                    end
-                elseif opts.setup['*'] then
-                    if opts.setup['*'](server, server_opts) then
-                        return
-                    end
-                end
 
                 require('lspconfig')[server].setup(server_opts)
             end
