@@ -438,38 +438,59 @@ function M.trigger_status_update_event()
     M.trigger_user_event 'StatusUpdate'
 end
 
+---@class core.utils.NotifyOpts # the options to pass to the notification
+---@field prefix_icon string|nil # the icon to prefix the message with
+---@field suffix_icon string|nil # the icon to suffix the message with
+---@field title string|nil # the title of the notification
+
 --- Shows a notification
 ---@param msg any # the message to show
 ---@param level integer # the level of the notification
----@param opts table<string, any>|nil # the options to pass to the notification
+---@param opts core.utils.NotifyOpts|nil # the options to pass to the notification
 local function notify(msg, level, opts)
+    msg = stringify(msg) or ''
+
+    if opts and opts.prefix_icon then
+        msg = opts.prefix_icon .. ' ' .. msg
+    end
+
+    if opts and opts.suffix_icon then
+        msg = msg .. ' ' .. opts.suffix_icon
+    end
+
+    local title = opts and opts.title or 'NeoVim'
+
     vim.schedule(function()
-        vim.notify(stringify(msg) or '', level, M.tbl_merge({ title = 'NeoVim' }, opts))
+        vim.notify(stringify(msg) or '', level, { title = title })
     end)
 end
 
 --- Shows a notification with the INFO type
 ---@param msg any # the message to show
-function M.info(msg)
-    notify(msg, vim.log.levels.INFO)
+---@param opts core.utils.NotifyOpts|nil # the options to pass to the notification
+function M.info(msg, opts)
+    notify(msg, vim.log.levels.INFO, opts)
 end
 
 --- Shows a notification with the WARN type
 ---@param msg any # the message to show
-function M.warn(msg)
-    notify(msg, vim.log.levels.WARN)
+---@param opts core.utils.NotifyOpts|nil # the options to pass to the notification
+function M.warn(msg, opts)
+    notify(msg, vim.log.levels.WARN, opts)
 end
 
 --- Shows a notification with the ERROR type
 ---@param msg any # the message to show
-function M.error(msg)
-    notify(msg, vim.log.levels.ERROR)
+---@param opts core.utils.NotifyOpts|nil # the options to pass to the notification
+function M.error(msg, opts)
+    notify(msg, vim.log.levels.ERROR, opts)
 end
 
 --- Shows a notification with the HINT type
 ---@param msg any # the message to show
-function M.hint(msg)
-    notify(msg, vim.log.levels.DEBUG)
+---@param opts core.utils.NotifyOpts|nil # the options to pass to the notification
+function M.hint(msg, opts)
+    notify(msg, vim.log.levels.DEBUG, opts)
 end
 
 ---@type table<integer, uv_timer_t>

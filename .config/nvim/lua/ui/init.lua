@@ -33,7 +33,7 @@ keys.map('n', '<leader><leader>', function()
     end
 end, { icon = icons.UI.Switch, desc = 'Switch buffer', silent = true })
 
-keys.map('n', '<leader>c', utils.remove_buffer, { icon = icons.UI.Close, desc = ' Close buffer' })
+keys.map('n', '<leader>c', utils.remove_buffer, { icon = icons.UI.Close, desc = 'Close buffer' })
 keys.map('n', '<leader>C', utils.remove_other_buffers, { icon = icons.UI.Close, desc = 'Close other buffers' })
 
 for i = 1, 9 do
@@ -190,11 +190,11 @@ end)
 --- Macro tracking
 utils.on_event({ 'RecordingEnter' }, function()
     utils.info(
-        icons.UI.Macro
-            .. ' Started recording macro into register `'
-            .. vim.fn.reg_recording()
-            .. '` '
-            .. icons.TUI.Ellipsis
+        string.format(
+            'Started recording macro into register `%v`',
+            vim.fn.reg_recording(),
+            { prefix_icon = icons.UI.Macro, suffix_icon = icons.TUI.Ellipsis }
+        )
     )
 
     progress.update('recording_macro', {
@@ -209,11 +209,11 @@ end)
 
 utils.on_event({ 'RecordingLeave' }, function()
     utils.info(
-        icons.UI.Checkmark
-            .. ' Stopped recording macro into register `'
-            .. vim.fn.reg_recording()
-            .. '` '
-            .. icons.TUI.Ellipsis
+        string.format(
+            'Stopped recording macro into register `%v`',
+            vim.fn.reg_recording(),
+            { prefix_icon = icons.UI.Checkmark, suffix_icon = icons.TUI.Ellipsis }
+        )
     )
 
     progress.stop 'recording_macro'
@@ -243,7 +243,7 @@ settings.register_toggle(ignore_hidden_files_setting_name, function(enabled)
     -- Update neo-tree state
     local mgr = require 'neo-tree.sources.manager'
     mgr.get_state('filesystem').filtered_items.visible = not enabled
-end, { name = icons.UI.ShowHidden .. ' Ignore hidden files', description = 'hiding ignored files', scope = 'global' })
+end, { icon = icons.UI.ShowHidden, name = 'Ignore hidden files', scope = 'global' })
 
 settings.register_toggle('treesitter_enabled', function(enabled, buffer)
     if not enabled then
@@ -251,7 +251,7 @@ settings.register_toggle('treesitter_enabled', function(enabled, buffer)
     else
         vim.treesitter.start(buffer)
     end
-end, { name = icons.UI.SyntaxTree .. ' Treesitter', description = 'tree-sitter', scope = { 'buffer' } })
+end, { icon = icons.UI.SyntaxTree, name = 'Treesitter', scope = { 'buffer' } })
 
 ---@class ui.Sign # Defines a sign
 ---@field name string # The name of the sign

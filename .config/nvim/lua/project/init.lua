@@ -343,8 +343,8 @@ settings.register_toggle('diagnostics_enabled', function(enabled, buffer)
         vim.diagnostic.enable(true, { bufnr = buffer })
     end
 end, {
-    name = icons.Diagnostics.Prefix .. ' Diagnostics',
-    description = 'diagnostics',
+    icon = icons.Diagnostics.Prefix,
+    name = 'Diagnostics',
     scope = { 'global', 'buffer' },
     default = true,
 })
@@ -356,8 +356,8 @@ settings.register_toggle('inlay_hint_enabled', function(enabled, buffer)
         vim.lsp.inlay_hint.enable(true, { bufnr = buffer })
     end
 end, {
-    name = icons.Diagnostics.LSP.Hint .. ' Inlay hints',
-    description = 'inlay hints',
+    icon = icons.Diagnostics.LSP.Hint,
+    name = 'Inlay hints',
     scope = { 'global', 'buffer' },
     default = true,
 })
@@ -369,8 +369,8 @@ settings.register_toggle('code_lens_enabled', function(enabled, buffer)
         vim.lsp.codelens.refresh { bufnr = buffer }
     end
 end, {
-    name = icons.UI.CodeLens .. ' Code Lense',
-    description = 'code lens',
+    icon = icons.UI.CodeLens,
+    name = 'Code Lense',
     scope = { 'global', 'buffer' },
     default = true,
 })
@@ -387,8 +387,8 @@ settings.register_toggle('semantic_tokens_enabled', function(enabled, buffer)
         fn(buffer, client.id)
     end)
 end, {
-    name = icons.UI.CodeLens .. ' Semantic Tokens',
-    description = 'semantic tokens',
+    icon = icons.UI.CodeLens,
+    name = 'Semantic Tokens',
     scope = { 'global', 'buffer' },
     default = true,
 })

@@ -139,21 +139,21 @@ function M.snapshot(buffer)
     return settings
 end
 
----@alias core.settings.ToggleScope 'buffer' | 'global'
+---@alias core.settings.ToggleScope 'buffer' | 'global' # the scope of the toggle
 
----@class core.settings.ManagedToggle
----@field name string
----@field option string
----@field value_fn fun(buffer?: integer): boolean
----@field toggle_fn fun(buffer?: integer)
----@field scope core.settings.ToggleScope
+---@class core.settings.ManagedToggle # A managed toggle
+---@field name string # the name of the option
+---@field option string # the name of the option variable
+---@field value_fn fun(buffer: integer|nil): boolean # the function to get the value of the option
+---@field toggle_fn fun(buffer?: integer|nil) # the function to toggle the option
+---@field scope core.settings.ToggleScope # the scope of the option
 
 ---@type core.settings.ManagedToggle[]
 local managed_toggles = {}
 
 ---@class core.settings.RegisterToggleOpts # The options for registering a toggle
 ---@field name string|nil # the name of the option
----@field description string|nil # the description of the option
+---@field icon string|nil # the icon of the option
 ---@field scope core.settings.ToggleScope|core.settings.ToggleScope[] # the scope of the option
 ---@field default boolean|nil # the default value of the option
 
@@ -164,14 +164,13 @@ local managed_toggles = {}
 function M.register_toggle(option, toggle_fn, opts)
     opts = opts or {}
     opts.name = opts.name or option
-    opts.description = opts.description or option
     opts.scope = opts.scope or 'global'
+    opts.icon = opts.icon or icons.UI.Tool
 
     if opts.default == nil then
         opts.default = true
     end
 
-    assert(type(opts.description) == 'string' and opts.description ~= '')
     assert(type(opts.name) == 'string' and opts.name ~= '')
     assert(type(toggle_fn) == 'function')
 
@@ -195,18 +194,22 @@ function M.register_toggle(option, toggle_fn, opts)
                 local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
                 utils.hint(
                     string.format(
-                        icons.UI.Toggle .. '  Turning `%s` `%s` for `%s`.',
+                        'Turning **%s** `%s` for %s `%s`.',
                         enabled and 'off' or 'on',
-                        opts.description,
+                        icons.UI.Tool,
+                        opts.name,
                         file_name
-                    )
+                    ),
+                    { prefix_icon = icons.UI.Toggle }
                 )
             else
                 utils.hint(
                     string.format(
-                        icons.UI.Toggle .. '  Turning `%s` `%s` globally.',
+                        'Turning **%s** %s `%s` globally.',
                         enabled and 'off' or 'on',
-                        opts.description
+                        icons.UI.Tool,
+                        opts.name,
+                        { prefix_icon = icons.UI.Toggle }
                     )
                 )
             end

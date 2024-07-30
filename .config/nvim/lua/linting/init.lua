@@ -129,8 +129,8 @@ settings.register_toggle(setting_name, function(enabled, buffer)
         require('project.lsp').clear_diagnostics(lint.active_names_for_buffer(buffer), buffer)
     end
 end, {
-    name = icons.UI.Lint .. ' Auto-linting',
-    description = 'auto-linting',
+    icon = icons.UI.Lint,
+    name = 'Auto-linting',
     default = true,
     scope = { 'buffer', 'global' },
 })

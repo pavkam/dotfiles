@@ -34,7 +34,7 @@ function M.swap_custom_dictionary(target)
         return
     end
 
-    utils.hint(string.format('Selecting spelling dictionary to "%s" for buffer', project.format_relative(spl_file)))
+    utils.hint(string.format('Selecting spelling dictionary to `%s` for buffer', project.format_relative(spl_file)))
     vim.opt.spellfile = spl_file
 end
 
@@ -53,7 +53,7 @@ settings.register_toggle('spelling', function(enabled)
     end
 
     ---@diagnostic disable-next-line: undefined-field
-end, { name = icons.UI.SpellCheck .. ' Spell checking', default = vim.opt.spell:get(), scope = 'global' })
+end, { icon = icons.UI.SpellCheck, name = 'Spell checking', default = vim.opt.spell:get(), scope = 'global' })
 
 utils.on_event({ 'BufWinEnter' }, function(evt)
     local ignored_fts = { '', 'neo-tree' }

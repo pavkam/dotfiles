@@ -151,6 +151,7 @@ local M = {
         CodeLens = '󰧶',
         Macro = '󱛟',
         Checkmark = '✓',
+        Tool = '󱁤',
     },
     Progress = {
         '⣾',
