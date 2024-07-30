@@ -1,20 +1,10 @@
 local utils = require 'core.utils'
-local settings = require 'core.settings'
 local progress = require 'ui.progress'
 
 local progress_class = 'lsp'
 
 ---@class utils.lsp
 local M = {}
-
--- emit a warning when an LSP is detached!
-
---- Gets the name of the setting for detaching a client
----@param client vim.lsp.Client # the client to get the setting name for
----@return string # the name of the setting
-local function detach_processed_setting_name(client)
-    return string.format('%s_dettach_processed', client.name)
-end
 
 ---@type table<string, any>
 local lsp_tasks = {}
@@ -25,23 +15,8 @@ utils.on_event('LspDetach', function(evt)
         return
     end
 
-    local key = detach_processed_setting_name(client)
-    if not settings.get(key, { scope = 'instance' }) then
-        utils.warn('Language Server *' .. client.name .. '* has detached!')
-        settings.set(key, true, { scope = 'instance' })
-    end
-
     -- clear the tasks for the all clients to prevent infinite loops
     lsp_tasks = {}
-end)
-
-utils.on_event('LspAttach', function(evt)
-    local client = vim.lsp.get_client_by_id(evt.data.client_id)
-    if not client or M.is_special(client) then
-        return
-    end
-
-    settings.set(detach_processed_setting_name(client), false, { scope = 'instance' })
 end)
 
 --- Checks whether there are any active LSP tasks
@@ -324,89 +299,5 @@ function M.clear_diagnostics(sources, buffer)
         end
     end
 end
-
----@class utils.lsp.LspDiagnostics
----@field diagnostics vim.Diagnostic[]
----@field uri string
-
----@alias utils.lsp.LspDiagnosticsPerClient table<integer, { message: string, source: string }[]>
-
---- Records the diagnostics for a given file for later inspection
----@param diagnostics utils.lsp.LspDiagnostics # the diagnostics to record
----@param client_id integer # the ID of the client that produced the diagnostics
-function M.notice_diagnostics(diagnostics, client_id)
-    assert(type(client_id) == 'number' and client_id > 0)
-    assert(type(diagnostics) == 'table' and diagnostics.uri)
-
-    local diags = {}
-    for _, d in ipairs(diagnostics.diagnostics) do
-        diags[#diags + 1] = {
-            message = d.message,
-            source = d.source,
-        }
-    end
-
-    local buffer = vim.uri_to_bufnr(diagnostics.uri)
-    local n = settings.get('noticed_diagnostics', { scope = 'instance', buffer = buffer, default = {} })
-    ---@cast n utils.lsp.LspDiagnosticsPerClient
-
-    n[client_id] = diags
-    settings.set('lsp_noticed_diagnostics', n, { scope = 'instance', buffer = buffer, default = {} })
-end
-
-function M.monitor_health(buffer)
-    -- Check the stuck diagnostics
-    local n = settings.get('lsp_noticed_diagnostics', { scope = 'instance', buffer = buffer })
-    ---@cast n utils.lsp.LspDiagnosticsPerClient
-
-    if n and #n > 0 then
-        for client_id, diags in pairs(n) do
-            local client = vim.lsp.get_client_by_id(client_id)
-            local is_screwed = not client or not client.initialized or client.is_stopped()
-
-            if is_screwed and #diags > 0 then
-                utils.error(string.format('Client `%d` has detached and left a mess behind!', client_id))
-            end
-        end
-    end
-
-    -- Check the pending requests
-    local attached_clients = vim.lsp.get_clients { bufnr = buffer }
-    for _, client in ipairs(attached_clients) do
-        local pending_requests = 0
-        for _, req in pairs(client.requests) do
-            if req.type == 'pending' then
-                pending_requests = pending_requests + 1
-            end
-        end
-
-        local key = string.format('lsp_client_pending_requests_%s', client.id)
-
-        local prev = settings.get(key, { scope = 'instance', buffer = buffer, default = 0 })
-        if pending_requests > prev and prev > 0 then
-            utils.warn(
-                string.format(
-                    'Client **%s** has `%d` pending requests (increased from `%d`)!',
-                    client.name,
-                    pending_requests,
-                    prev
-                )
-            )
-        end
-
-        settings.set(key, pending_requests, { scope = 'instance', buffer = buffer })
-    end
-end
-
-local check_delay = 5000
-local timer = vim.loop.new_timer()
-timer:start(
-    check_delay,
-    check_delay,
-    vim.schedule_wrap(function()
-        local buffer = vim.api.nvim_get_current_buf()
-        M.monitor_health(buffer)
-    end)
-)
 
 return M

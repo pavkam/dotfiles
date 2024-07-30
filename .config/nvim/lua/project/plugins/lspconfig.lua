@@ -298,19 +298,6 @@ return {
                 progress_capability_handler(_, msg, info)
             end
 
-            -- setup progress
-            local diagnostics_capability_handler =
-                vim.lsp.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics]
-            vim.lsp.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function(
-                _,
-                result,
-                ctx,
-                config
-            )
-                lsp.notice_diagnostics(result, ctx.client_id)
-                diagnostics_capability_handler(_, result, ctx, config)
-            end
-
             -- register nvim-cmp capabilities
             local cmp_nvim_lsp = require 'cmp_nvim_lsp'
             local capabilities = utils.tbl_merge(
