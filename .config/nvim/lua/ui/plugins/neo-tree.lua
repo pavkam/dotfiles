@@ -9,16 +9,6 @@ return {
         'MunifTanjim/nui.nvim',
     },
     cmd = 'Neotree',
-    keys = {
-        {
-            '<leader>e',
-            function()
-                require('neo-tree.command').execute { toggle = true, reveal = true }
-            end,
-            -- URGENT: Fix this when updating to the which key
-            desc = 'File explorer',
-        },
-    },
     deactivate = function()
         vim.cmd [[Neotree close]]
     end,

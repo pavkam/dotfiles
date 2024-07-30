@@ -1,3 +1,4 @@
+local icons = require 'ui.icons'
 local utils = require 'core.utils'
 local keys = require 'core.keys'
 
@@ -467,5 +468,7 @@ utils.attach_keymaps(nil, function(set)
         M.add_at_cursor 'l'
     end, { desc = 'Add location item' })
 end)
+
+keys.group { lhs = '<leader>q', mode = { 'n', 'v' }, icon = icons.UI.Fix, group = 'Quick-Fix' }
 
 return M

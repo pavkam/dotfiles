@@ -1,10 +1,14 @@
 local utils = require 'core.utils'
+local icons = require 'ui.icons'
+local keys = require 'core.keys'
 local project = require 'project'
 
 local configure_go = require 'debugging.go'
 local configure_js = require 'debugging.js'
 local configure_python = require 'debugging.python'
 local configure_dotnet = require 'debugging.dotnet'
+
+keys.group { lhs = '<leader>d', mode = { 'n', 'v' }, icon = icons.UI.Debugger, group = 'Debugger' }
 
 ---@class debugging
 local M = {}

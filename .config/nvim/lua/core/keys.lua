@@ -19,14 +19,7 @@ local M = {}
 --- @param opts core.keys.KeyMapOpts|nil # the options to pass to the keymap
 function M.map(mode, key, action, opts)
     opts = opts or {}
-
-    local silent = opts.silent or false
-    local expr = opts.expr or false
-    local noremap = opts.noremap or true
-    local nowait = opts.nowait or false
-
-    -- URGENT: Fix this when updating to the which key
-    local using_which_key = false -- package.loaded['lazy'] and require('lazy.core.config').spec.plugins['which-key.nvim'] ~= nil
+    local using_which_key = package.loaded['lazy'] and require('lazy.core.config').spec.plugins['which-key.nvim'] ~= nil
 
     if using_which_key then
         local wk = require 'which-key'
@@ -35,20 +28,39 @@ function M.map(mode, key, action, opts)
             rhs = action,
             desc = opts.desc,
             icon = opts.icon,
-            silent = silent,
-            expr = expr,
-            noremap = noremap,
-            nowait = nowait,
+            silent = opts.silent,
+            expr = opts.expr,
+            noremap = opts.noremap,
+            nowait = opts.nowait,
+            mode = mode,
         }
     else
         vim.keymap.set(mode, key, action, {
-            silent = silent,
-            expr = expr,
-            noremap = noremap,
-            nowait = nowait,
+            silent = opts.silent,
+            expr = opts.expr,
+            noremap = opts.noremap,
+            nowait = opts.nowait,
             buffer = opts.buffer,
             desc = opts.icon and (opts.icon .. ' ' .. opts.desc) or opts.desc,
         })
+    end
+end
+
+---@class core.keys.KeyGroupOpts # the options to pass to the key group
+---@field lhs string # the key to decorate
+---@field icon string|nil # the icon of the key group
+---@field desc string|nil # the description of the key group
+---@field buffer integer|nil # whether the key group is buffer-local
+---@field mode core.keys.KeyMapMode|core.keys.KeyMapMode[] # the mode(s) to map the key group in
+
+--- Registers a key group
+---@param opts core.keys.KeyGroupOpts # the options to pass to the key group
+function M.group(opts)
+    local using_which_key = package.loaded['lazy'] and require('lazy.core.config').spec.plugins['which-key.nvim'] ~= nil
+
+    if using_which_key then
+        local wk = require 'which-key'
+        wk.add { opts.lhs, opts.mode, icon = opts.icon, group = opts.desc, buffer = opts.buffer }
     end
 end
 
