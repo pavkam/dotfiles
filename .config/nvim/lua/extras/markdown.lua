@@ -128,7 +128,12 @@ local function from_value(value, indent, max_length)
             else
                 for i, v in ipairs(value) do
                     if type(v) == 'table' then
-                        markdown_str = markdown_str .. prefix .. '- (' .. i .. '):\n' .. from_value(v, indent + 1, max_length)
+                        markdown_str = markdown_str
+                            .. prefix
+                            .. '- ('
+                            .. i
+                            .. '):\n'
+                            .. from_value(v, indent + 1, max_length)
                     else
                         markdown_str = markdown_str .. prefix .. '- (' .. i .. '): `' .. escape_markdown(v) .. '`\n'
                     end
@@ -151,7 +156,13 @@ local function from_value(value, indent, max_length)
                     markdown_str = markdown_str .. from_value(v, indent + 1, max_length)
                 end
             else
-                markdown_str = markdown_str .. prefix .. '- **' .. escape_markdown(k) .. '**: `' .. escape_markdown(v) .. '`\n'
+                markdown_str = markdown_str
+                    .. prefix
+                    .. '- **'
+                    .. escape_markdown(k)
+                    .. '**: `'
+                    .. escape_markdown(v)
+                    .. '`\n'
             end
         end
     else

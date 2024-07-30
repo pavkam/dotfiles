@@ -136,8 +136,16 @@ return {
                 numhl = 'DapStoppedLine',
             },
             { name = 'DapBreakpoint', text = icons.Diagnostics.DAP.Breakpoint .. ' ', texthl = 'DiagnosticInfo' },
-            { name = 'DapBreakpointRejected', text = icons.Diagnostics.DAP.BreakpointRejected .. ' ', texthl = 'DiagnosticError' },
-            { name = 'DapBreakpointCondition', text = icons.Diagnostics.DAP.BreakpointCondition .. ' ', texthl = 'DiagnosticInfo' },
+            {
+                name = 'DapBreakpointRejected',
+                text = icons.Diagnostics.DAP.BreakpointRejected .. ' ',
+                texthl = 'DiagnosticError',
+            },
+            {
+                name = 'DapBreakpointCondition',
+                text = icons.Diagnostics.DAP.BreakpointCondition .. ' ',
+                texthl = 'DiagnosticInfo',
+            },
             { name = 'DapLogPoint', text = icons.Diagnostics.DAP.LogPoint, texthl = 'DiagnosticInfo' },
         }
 

@@ -170,20 +170,21 @@ local function swap_sessions(old_name, new_name)
     end
 end
 
-utils.on_event('VimLeavePre', function()
-    local current = M.current()
-    if current then
-        M.save_session(current)
-    end
-end)
-
-utils.on_user_event('LazyDone', function()
-    swap_sessions(nil, M.current())
-end)
-
-utils.on_focus_gained(function()
-    swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
-end)
+-- URGENT: the session management is broken
+-- utils.on_event('VimLeavePre', function()
+--     local current = M.current()
+--     if current then
+--         M.save_session(current)
+--     end
+-- end)
+--
+-- utils.on_user_event('LazyDone', function()
+--     swap_sessions(nil, M.current())
+-- end)
+--
+-- utils.on_focus_gained(function()
+--     swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
+-- end)
 
 --- Get the current session with a warning if session management is disabled
 ---@return string|nil # the current session name or nil if not enabled

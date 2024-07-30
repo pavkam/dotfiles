@@ -21,5 +21,6 @@ std = {
         'debug',
         'tostring',
         'tonumber',
+        'coroutine',
     },
 }

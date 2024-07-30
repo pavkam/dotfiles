@@ -4,7 +4,7 @@ local M = {}
 ---@alias core.keys.KeyMapMode 'n' | 'v' | 'V' | 'c' | 's' | 'x' | 'i' | 'o' | 't' # the mode to map the key in
 
 ---@class core.keys.KeyMapOpts # the options to pass to the keymap
----@field buffer boolean|nil # whether the keymap is buffer-local
+---@field buffer integer|nil # whether the keymap is buffer-local
 ---@field silent boolean|nil # whether the keymap is silent
 ---@field expr boolean|nil # whether the keymap is an expression
 ---@field noremap boolean|nil # whether the keymap is non-recursive

@@ -1,10 +1,10 @@
 local utils = require 'core.utils'
 local project = require 'project'
 
-local configure_go = require('debugging.go')
-local configure_js = require('debugging.js')
-local configure_python = require('debugging.python')
-local configure_dotnet = require('debugging.dotnet')
+local configure_go = require 'debugging.go'
+local configure_js = require 'debugging.js'
+local configure_python = require 'debugging.python'
+local configure_dotnet = require 'debugging.dotnet'
 
 ---@class debugging
 local M = {}
@@ -14,7 +14,7 @@ local M = {}
 ---@return boolean # whether the debugging was configured
 local function setup(target)
     local type = project.type(target)
-    if vim.tbl_contains({'javascript', 'typescript', 'javascriptreact', 'typescriptreact'}, type) then
+    if vim.tbl_contains({ 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' }, type) then
         configure_js()
     elseif type == 'go' then
         configure_go()
@@ -62,7 +62,7 @@ end
 
 --- Gets the dap configurations for a given target
 ---@param target string|integer|nil # the target to get the dap configurations for
----@return Configuration[] # the dap configurations
+---@return dap.Configuration[] # the dap configurations
 function M.configurations(target)
     local dap = require 'dap'
 
