@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local settings = require 'core.settings'
 local git = require 'git'
 local diagnostics = require 'project.diagnostics'
@@ -13,30 +14,30 @@ local progress = require 'ui.progress'
 -- require 'ui.command-palette'
 
 -- Disable some sequences
-vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
-vim.keymap.set('n', '<BS>', '<Nop>', { silent = true })
-vim.keymap.set('n', '<M-v>', '<cmd>wincmd v<CR>', { desc = 'Split window below' })
-vim.keymap.set('n', '<M-h>', '<cmd>wincmd s<CR>', { desc = 'Split window right' })
+keys.map({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
+keys.map('n', '<BS>', '<Nop>', { silent = true })
+keys.map('n', '<M-v>', '<cmd>wincmd v<CR>', { desc = 'Split window below' })
+keys.map('n', '<M-h>', '<cmd>wincmd s<CR>', { desc = 'Split window right' })
 
 -- Better jump list navigation
-vim.keymap.set('n', ']]', '<C-i>', { desc = 'Next location' })
-vim.keymap.set('n', '[[', '<C-o>', { desc = 'Previous location' })
+keys.map('n', ']]', '<C-i>', { desc = 'Next location' })
+keys.map('n', '[[', '<C-o>', { desc = 'Previous location' })
 
 -- terminal mappings
-vim.keymap.set('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
+keys.map('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
 
 -- buffer management
-vim.keymap.set('n', '<leader><leader>', function()
+keys.map('n', '<leader><leader>', function()
     if not utils.is_special_buffer() then
         pcall(vim.cmd.edit, '#')
     end
-end, { desc = icons.UI.Switch .. ' Switch buffer', silent = true })
+end, { icon = icons.UI.Switch, desc = 'Switch buffer', silent = true })
 
-vim.keymap.set('n', '<leader>c', utils.remove_buffer, { desc = icons.UI.Close .. ' Close buffer' })
-vim.keymap.set('n', '<leader>C', utils.remove_other_buffers, { desc = icons.UI.Close .. ' Close other buffers' })
+keys.map('n', '<leader>c', utils.remove_buffer, { icon = icons.UI.Close, desc = ' Close buffer' })
+keys.map('n', '<leader>C', utils.remove_other_buffers, { icon = icons.UI.Close, desc = 'Close other buffers' })
 
 for i = 1, 9 do
-    vim.keymap.set('n', '<M-' .. i .. '>', function()
+    keys.map('n', '<M-' .. i .. '>', function()
         local buffer = utils.get_buffer_by_index(i)
         if buffer then
             vim.cmd.buffer(buffer)
@@ -44,38 +45,38 @@ for i = 1, 9 do
     end, { desc = 'Go to buffer ' .. i })
 end
 
-vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = icons.UI.Save .. ' Save buffer' })
-vim.keymap.set('n', '<leader>W', '<cmd>wa<cr>', { desc = icons.UI.SaveAll .. ' Save all buffers' })
+keys.map('n', '<leader>w', '<cmd>w<cr>', { icon = icons.UI.Save, desc = 'Save buffer' })
+keys.map('n', '<leader>W', '<cmd>wa<cr>', { icon = icons.UI.SaveAll, desc = 'Save all buffers' })
 
-vim.keymap.set('n', '[b', '<cmd>bprevious<cr>', { desc = 'Previous buffer' })
-vim.keymap.set('n', ']b', '<cmd>bnext<cr>', { desc = 'Next buffer' })
+keys.map('n', '[b', '<cmd>bprevious<cr>', { icon = icons.UI.Next, desc = 'Previous buffer' })
+keys.map('n', ']b', '<cmd>bnext<cr>', { icons = icons.UI.Prev, desc = 'Next buffer' })
 
 -- tabs
-vim.keymap.set('n', ']t', '<cmd>tabnext<cr>', { desc = 'Next tab' })
-vim.keymap.set('n', '[t', '<cmd>tabprevious<cr>', { desc = 'Previous tab' })
+keys.map('n', ']t', '<cmd>tabnext<cr>', { icon = icons.UI.Next, desc = 'Next tab' })
+keys.map('n', '[t', '<cmd>tabprevious<cr>', { icons = icons.UI.Prev, desc = 'Previous tab' })
 
 -- diagnostics
-vim.keymap.set('n', ']m', function()
+keys.map('n', ']m', function()
     diagnostics.jump(true)
-end, { desc = 'Next Diagnostic' })
-vim.keymap.set('n', '[m', function()
+end, { icon = icons.UI.Next, desc = 'Next Diagnostic' })
+keys.map('n', '[m', function()
     diagnostics.jump(false)
-end, { desc = 'Previous Diagnostic' })
-vim.keymap.set('n', ']e', function()
+end, { icon = icons.UI.Prev, desc = 'Previous Diagnostic' })
+keys.map('n', ']e', function()
     diagnostics.jump(true, 'ERROR')
-end, { desc = 'Next Error' })
-vim.keymap.set('n', '[e', function()
+end, { icon = icons.UI.Next, desc = 'Next Error' })
+keys.map('n', '[e', function()
     diagnostics.jump(false, 'ERROR')
-end, { desc = 'Previous Error' })
-vim.keymap.set('n', ']w', function()
+end, { icon = icons.UI.Prev, desc = 'Previous Error' })
+keys.map('n', ']w', function()
     diagnostics.jump(true, 'WARN')
-end, { desc = 'Next Warning' })
-vim.keymap.set('n', '[w', function()
+end, { icon = icons.UI.Next, desc = 'Next Warning' })
+keys.map('n', '[w', function()
     diagnostics.jump(false, 'WARN')
-end, { desc = 'Previous Warning' })
+end, { icon = icons.UI.Prev, desc = 'Previous Warning' })
 
 -- Command mode remaps to make my life easier using the keyboard
-vim.keymap.set('c', '<Down>', function()
+keys.map('c', '<Down>', function()
     if vim.fn.wildmenumode() then
         return '<C-n>'
     else
@@ -83,7 +84,7 @@ vim.keymap.set('c', '<Down>', function()
     end
 end, { expr = true })
 
-vim.keymap.set('c', '<Up>', function()
+keys.map('c', '<Up>', function()
     if vim.fn.wildmenumode() then
         return '<C-p>'
     else
@@ -91,7 +92,7 @@ vim.keymap.set('c', '<Up>', function()
     end
 end, { expr = true })
 
-vim.keymap.set('c', '<Left>', function()
+keys.map('c', '<Left>', function()
     if vim.fn.wildmenumode() then
         return '<Space><BS><Left>'
     else
@@ -99,7 +100,7 @@ vim.keymap.set('c', '<Left>', function()
     end
 end, { expr = true })
 
-vim.keymap.set('c', '<Right>', function()
+keys.map('c', '<Right>', function()
     if vim.fn.wildmenumode() then
         return '<Space><BS><Right>'
     else
@@ -114,13 +115,13 @@ utils.attach_keymaps(utils.special_file_types, function(set)
 end)
 
 utils.attach_keymaps('help', function(set)
-    set('n', 'q', '<cmd>close<cr>', { silent = true })
-    set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
+    set('n', 'q', '<cmd>close<cr>', { icon = icons.UI.Close, silent = true })
+    set('n', '<Esc>', '<cmd>close<cr>', { icon = icons.UI.Close, silent = true })
 end, true)
 
 -- Specials using "Command/Super" key (when available!)
-vim.keymap.set('n', '<M-]>', '<C-i>', { desc = 'Next location' })
-vim.keymap.set('n', '<M-[>', '<C-o>', { desc = 'Previous location' })
+keys.map('n', '<M-]>', '<C-i>', { icon = icons.UI.Next, desc = 'Next location' })
+keys.map('n', '<M-[>', '<C-o>', { icon = icons.UI.Prev, desc = 'Previous location' })
 
 -- Fix telescope modified buffers when closing window
 utils.on_event({ 'BufModifiedSet' }, function(evt)

@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local icons = require 'ui.icons'
 local settings = require 'core.settings'
 local project = require 'project'
@@ -111,19 +112,19 @@ local function mark_local(good)
     fn(vim.fn.expand '<cword>')
 end
 
-vim.keymap.set('n', 'zg', function()
+keys.map('n', 'zg', function()
     mark_local(true)
 end, { desc = 'Add word to the global dictionary' })
 
-vim.keymap.set('n', 'zG', function()
+keys.map('n', 'zG', function()
     mark_global(true)
 end, { desc = 'Add word to the global dictionary' })
 
-vim.keymap.set('n', 'zw', function()
+keys.map('n', 'zw', function()
     mark_local(true)
 end, { desc = 'Add word to the global dictionary' })
 
-vim.keymap.set('n', 'zW', function()
+keys.map('n', 'zW', function()
     mark_global(false)
 end, { desc = 'Mark word as bad in the global dictionary' })
 
