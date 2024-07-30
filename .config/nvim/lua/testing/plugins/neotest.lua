@@ -111,10 +111,9 @@ return {
             end, { buffer = args.buf, desc = 'Debug nearest test' })
 
             -- add which key group
-            require('which-key').register({
+            require('which-key').add({
                 desc = '<leader>t',
-                -- TODO: fix when switching to new which key
-                --icon = icons.UI.Test,
+                icon = icons.UI.Test,
                 group = 'Testing',
             }, { buffer = args.buf })
         end, spec.ft)

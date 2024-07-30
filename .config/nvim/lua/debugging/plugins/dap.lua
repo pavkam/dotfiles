@@ -130,23 +130,31 @@ return {
         local signs = {
             {
                 name = 'DapStopped',
-                text = icons.Diagnostics.DAP.Stopped .. ' ',
+                text = icons.fit(icons.Diagnostics.DAP.Stopped, 2),
                 texthl = 'DiagnosticWarn',
                 linehl = 'DapStoppedLine',
                 numhl = 'DapStoppedLine',
             },
-            { name = 'DapBreakpoint', text = icons.Diagnostics.DAP.Breakpoint .. ' ', texthl = 'DiagnosticInfo' },
+            {
+                name = 'DapBreakpoint',
+                text = icons.fit(icons.Diagnostics.DAP.Breakpoint, 2),
+                texthl = 'DiagnosticInfo',
+            },
             {
                 name = 'DapBreakpointRejected',
-                text = icons.Diagnostics.DAP.BreakpointRejected .. ' ',
+                text = icons.fit(icons.Diagnostics.DAP.BreakpointRejected, 2),
                 texthl = 'DiagnosticError',
             },
             {
                 name = 'DapBreakpointCondition',
-                text = icons.Diagnostics.DAP.BreakpointCondition .. ' ',
+                text = icons.fit(icons.Diagnostics.DAP.BreakpointCondition, 2),
                 texthl = 'DiagnosticInfo',
             },
-            { name = 'DapLogPoint', text = icons.Diagnostics.DAP.LogPoint, texthl = 'DiagnosticInfo' },
+            {
+                name = 'DapLogPoint',
+                text = icons.fit(icons.Diagnostics.DAP.LogPoint, 2),
+                texthl = 'DiagnosticInfo',
+            },
         }
 
         for _, sign in ipairs(signs) do

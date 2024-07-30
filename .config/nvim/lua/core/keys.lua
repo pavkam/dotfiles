@@ -1,9 +1,11 @@
----@class core.keys
+local icons = require 'ui.icons'
+
+---@class (strict) core.keys
 local M = {}
 
 ---@alias core.keys.KeyMapMode 'n' | 'v' | 'V' | 'c' | 's' | 'x' | 'i' | 'o' | 't' # the mode to map the key in
 
----@class core.keys.KeyMapOpts # the options to pass to the keymap
+---@class (strict) core.keys.KeyMapOpts # the options to pass to the keymap
 ---@field buffer integer|nil # whether the keymap is buffer-local
 ---@field silent boolean|nil # whether the keymap is silent
 ---@field expr boolean|nil # whether the keymap is an expression
@@ -32,6 +34,7 @@ function M.map(mode, key, action, opts)
             expr = opts.expr,
             noremap = opts.noremap,
             nowait = opts.nowait,
+            buffer = opts.buffer,
             mode = mode,
         }
     else
@@ -41,12 +44,12 @@ function M.map(mode, key, action, opts)
             noremap = opts.noremap,
             nowait = opts.nowait,
             buffer = opts.buffer,
-            desc = opts.icon and (opts.icon .. ' ' .. opts.desc) or opts.desc,
+            desc = opts.icon and icons.iconify(opts.icon, opts.desc) or opts.desc,
         })
     end
 end
 
----@class core.keys.KeyGroupOpts # the options to pass to the key group
+---@class (strict) core.keys.KeyGroupOpts # the options to pass to the key group
 ---@field lhs string # the key to decorate
 ---@field icon string|nil # the icon of the key group
 ---@field desc string|nil # the description of the key group

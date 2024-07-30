@@ -469,6 +469,6 @@ utils.attach_keymaps(nil, function(set)
     end, { desc = 'Add location item' })
 end)
 
-keys.group { lhs = '<leader>q', mode = { 'n', 'v' }, icon = icons.UI.Fix, group = 'Quick-Fix' }
+keys.group { lhs = '<leader>q', mode = { 'n', 'v' }, icon = icons.UI.Fix, desc = 'Quick-Fix' }
 
 return M

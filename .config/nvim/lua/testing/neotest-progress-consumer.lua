@@ -13,7 +13,7 @@ local function init(client)
             fn = function()
                 return next(running_adapters) ~= nil
             end,
-            ctx = icons.UI.Test .. ' Running tests',
+            ctx = icons.iconify(icons.UI.Test, 'Running tests'),
         })
     end
 

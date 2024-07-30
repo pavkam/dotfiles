@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local progress = require 'ui.progress'
 local settings = require 'core.settings'
 local icons = require 'ui.icons'
@@ -102,14 +103,10 @@ settings.register_toggle(setting_name, function(enabled, buffer)
     if enabled then
         format.apply(buffer)
     end
-end, { name = icons.UI.Format .. ' Auto-formatting', description = 'auto-formatting', scope = { 'buffer', 'global' } })
+end, { icon = icons.UI.Format, name = 'Auto-formatting', scope = { 'buffer', 'global' } })
 
 if utils.has_plugin 'conform.nvim' then
-    vim.keymap.set({ 'n', 'x' }, 'g=', function()
-        require('formatting').apply(nil, true)
-    end, { desc = 'Format buffer/selection (injected)' })
-
-    vim.keymap.set({ 'n', 'x' }, '=', function()
+    keys.map({ 'n', 'x' }, '=', function()
         require('formatting').apply()
     end, { desc = 'Format buffer/selection' })
 

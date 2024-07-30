@@ -38,7 +38,10 @@ local function sexify(prefix, list, len_max, collapse_max)
         return prefix
     end
 
-    return delongify(prefix .. ' ' .. table.concat(utils.to_list(list), ' ' .. icons.TUI.ListSeparator .. ' '), len_max)
+    return delongify(
+        icons.fit(prefix, 2) .. table.concat(utils.to_list(list), ' ' .. icons.fit(icons.TUI.ListSeparator, 2)),
+        len_max
+    )
 end
 
 local macro_recording_fmt = icons.UI.Macro
@@ -96,10 +99,10 @@ M.file_name = {
 M.diagnostics = {
     'diagnostics',
     symbols = {
-        error = icons.Diagnostics.LSP.Error .. ' ',
-        warn = icons.Diagnostics.LSP.Warn .. ' ',
-        info = icons.Diagnostics.LSP.Info .. ' ',
-        hint = icons.Diagnostics.LSP.Hint .. ' ',
+        error = icons.fit(icons.Diagnostics.LSP.Error, 2),
+        warn = icons.fit(icons.Diagnostics.LSP.Warn, 2),
+        info = icons.fit(icons.Diagnostics.LSP.Info, 2),
+        hint = icons.fit(icons.Diagnostics.LSP.Hint, 2),
     },
     on_click = function()
         vim.cmd 'Telescope diagnostics'
@@ -270,9 +273,9 @@ M.debugger = {
 M.diff = {
     'diff',
     symbols = {
-        added = icons.Git.Added .. ' ',
-        modified = icons.Git.Modified .. ' ',
-        removed = icons.Git.Removed .. ' ',
+        added = icons.fit(icons.Git.Added, 2),
+        modified = icons.fit(icons.Git.Modified, 2),
+        removed = icons.fit(icons.Git.Removed, 2),
     },
     source = function()
         ---@type table<string, number>|nil
@@ -347,9 +350,9 @@ M.buffers = {
     'buffers',
     mode = 2,
     symbols = {
-        modified = ' ' .. icons.Files.Modified,
-        alternate_file = icons.Files.Previous .. ' ',
-        directory = ' ' .. icons.Files.OpenFolder,
+        modified = icons.fit(icons.Files.Modified, 2, true),
+        alternate_file = icons.fit(icons.Files.Previous, 2),
+        directory = icons.fit(icons.Files.OpenFolder, 2, true),
     },
     use_mode_colors = true,
     filetype_names = {

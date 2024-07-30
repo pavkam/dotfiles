@@ -16,7 +16,7 @@ return {
                 virtual_text = {
                     spacing = 4,
                     source = 'if_many',
-                    prefix = icons.Diagnostics.Prefix,
+                    prefix = icons.fit(icons.Diagnostics.Prefix, 2),
                 },
                 severity_sort = true,
                 float = {
@@ -25,7 +25,7 @@ return {
                     border = vim.g.border_style,
                     source = true,
                     header = '',
-                    prefix = icons.Diagnostics.Prefix .. ' ',
+                    prefix = icons.fit(icons.Diagnostics.Prefix, 2),
                 },
                 signs = {
                     text = {

@@ -34,7 +34,7 @@ o.modeline = false
 o.ruler = false
 o.showcmd = true
 o.wrap = false
-o.showbreak = icons.TUI.LineContinuation .. ' '
+o.showbreak = icons.fit(icons.TUI.LineContinuation, 2)
 o.nrformats = ''
 o.ttyfast = true
 o.termguicolors = true
@@ -129,7 +129,7 @@ o.inccommand = 'nosplit'
 
 -- special
 o.listchars = {
-    tab = icons.TUI.VisibleSpace .. ' ',
+    tab = icons.fit(icons.TUI.VisibleSpace, 2),
     trail = icons.TUI.VisibleSpace,
     extends = icons.TUI.Ellipsis,
     eol = icons.TUI.LineEnd,

@@ -13,9 +13,9 @@ require 'ui.tmux'
 require 'ui.file-palette'
 require 'ui.command-palette'
 
-keys.group { lhs = 'g', mode = { 'n', 'v' }, icon = icons.UI.Next, group = 'Go-to' }
-keys.group { lhs = ']', mode = { 'n', 'v' }, icon = icons.UI.Next, group = 'Next' }
-keys.group { lhs = '[', mode = { 'n', 'v' }, icon = icons.UI.Prev, group = 'Previous' }
+keys.group { lhs = 'g', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Go-to' }
+keys.group { lhs = ']', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Next' }
+keys.group { lhs = '[', mode = { 'n', 'v' }, icon = icons.UI.Prev, desc = 'Previous' }
 
 -- Disable some sequences
 keys.map({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
@@ -126,13 +126,6 @@ end, true)
 -- Specials using "Command/Super" key (when available!)
 keys.map('n', '<M-]>', '<C-i>', { icon = icons.UI.Next, desc = 'Next location' })
 keys.map('n', '<M-[>', '<C-o>', { icon = icons.UI.Prev, desc = 'Previous location' })
-
-keys.map('n', '<leader>e', function()
-    require('neo-tree.command').execute { toggle = true, reveal = true }
-end, {
-    icon = icons.UI.Explorer,
-    desc = 'File explorer',
-})
 
 -- Fix telescope modified buffers when closing window
 utils.on_event({ 'BufModifiedSet' }, function(evt)

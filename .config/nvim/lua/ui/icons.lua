@@ -205,4 +205,35 @@ function M.get_file_icon(path)
     end
 end
 
+--- Fits the icon to the given width.
+---@param icon string # The icon to fit
+---@param width number # The width to fit the icon to
+---@param ltr boolean|nil # Whether or not the icon should be left-to-right
+---@return string # The fitted icon
+function M.fit(icon, width, ltr)
+    assert(type(icon) == 'string' and #icon > 0)
+    assert(type(width) == 'number' and width > 0)
+    assert(ltr == nil or type(ltr) == 'boolean')
+
+    local w = vim.fn.strwidth(icon)
+    if w < width then
+        if ltr then
+            return string.rep(' ', width - w) .. icon
+        else
+            return icon .. string.rep(' ', width - w)
+        end
+    else
+        return icon
+    end
+end
+
+--- Prepends an icon to a text
+---@param icon string # The icon to prepend
+---@param text string # The text to prepend the icon to
+---@return string # The iconified text
+function M.iconify(icon, text)
+    assert(type(text) == 'string' and #text > 0)
+    return M.fit(icon, 2) .. text
+end
+
 return M

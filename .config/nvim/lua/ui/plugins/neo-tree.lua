@@ -182,4 +182,12 @@ return {
             end
         end)
     end,
+    init = function()
+        require('core.keys').map('n', '<leader>e', function()
+            require('neo-tree.command').execute { toggle = true, reveal = true }
+        end, {
+            icon = icons.UI.Explorer,
+            desc = 'File explorer',
+        })
+    end,
 }

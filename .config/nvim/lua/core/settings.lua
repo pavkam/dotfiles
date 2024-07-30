@@ -194,10 +194,9 @@ function M.register_toggle(option, toggle_fn, opts)
                 local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
                 utils.hint(
                     string.format(
-                        'Turning **%s** `%s` for %s `%s`.',
+                        'Turning **%s** `%s` for `%s`.',
                         enabled and 'off' or 'on',
-                        icons.UI.Tool,
-                        opts.name,
+                        icons.iconify(opts.icon, opts.name),
                         file_name
                     ),
                     { prefix_icon = icons.UI.Toggle }
@@ -207,8 +206,7 @@ function M.register_toggle(option, toggle_fn, opts)
                     string.format(
                         'Turning **%s** %s `%s` globally.',
                         enabled and 'off' or 'on',
-                        icons.UI.Tool,
-                        opts.name,
+                        icons.iconify(opts.icon, opts.name),
                         { prefix_icon = icons.UI.Toggle }
                     )
                 )

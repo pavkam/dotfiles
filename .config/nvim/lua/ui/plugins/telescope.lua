@@ -13,197 +13,6 @@ return {
         },
         cmd = 'Telescope',
         version = false, -- telescope did only one release, so use HEAD for now
-        keys = function()
-            --- Wraps the options for telescope to add some defaults
-            --- @param opts table|nil
-            --- @return table
-            local function wrap(opts)
-                local utils = require 'core.utils'
-                local ui = require 'ui'
-
-                local show_hidden = not ui.ignore_hidden_files.active()
-                local add = {
-                    additional_args = show_hidden and function(args)
-                        return vim.list_extend(args, { '--hidden', '--no-ignore' })
-                    end or nil,
-                    file_ignore_patterns = { [[.git/]], [[node_modules/]], [[.idea/]], [[.DS_Store]] },
-                    cwd = require('project').root(nil, false),
-                    hidden = show_hidden,
-                    no_ignore = show_hidden,
-                }
-
-                if opts and opts.restart_picker then
-                    add.attach_mappings = function(_, map)
-                        map('i', '<C-h>', function(prompt_bufnr)
-                            -- get current text in
-                            local action_state = require 'telescope.actions.state'
-                            local line = action_state.get_current_line()
-
-                            -- toggle the hidden files
-                            require('telescope.actions').close(prompt_bufnr)
-                            ui.ignore_hidden_files.toggle()
-
-                            require('telescope.builtin')[opts.restart_picker](
-                                wrap(vim.tbl_extend('force', opts, { default_text = line }))
-                            )
-                        end)
-
-                        return true
-                    end
-                end
-
-                return utils.tbl_merge(add, opts)
-            end
-
-            --- Creates a wrapper around a picker and returns a function that can be called to invoke the picker
-            --- @param picker string # the picker to invoke
-            local function blanket(picker)
-                return function(opts)
-                    require('telescope.builtin')[picker](
-                        wrap(vim.tbl_extend('force', opts or {}, { restart_picker = picker }))
-                    )
-                end
-            end
-
-            return {
-                {
-                    '<M-f>',
-                    function()
-                        local sel = require('editor.syntax').current_selection(nil, false)
-                        blanket 'live_grep' { default_text = sel }
-                    end,
-                    desc = 'Grep in all files',
-                    mode = { 'n', 'v' },
-                },
-                {
-                    '<M-S-f>',
-                    function()
-                        local sel = require('editor.syntax').current_selection(nil, true)
-                        blanket 'live_grep' { default_text = sel }
-                    end,
-                    desc = 'Grep in all files (selection)',
-                    mode = { 'n', 'v' },
-                },
-                {
-                    '<leader>f',
-                    blanket 'find_files',
-                    -- URGENT: Fix this when updating to the which key
-
-                    --icon = icons.UI.Search,
-                    desc = 'Search files',
-                },
-                {
-                    '<leader>m',
-                    function()
-                        require('ui.select').command({
-                            {
-                                name = 'All',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0 }
-                                end,
-                            },
-                            {
-                                name = 'Errors',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'ERROR' }
-                                end,
-                                hl = 'DiagnosticError',
-                            },
-                            {
-                                name = 'Warnings',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'WARN' }
-                                end,
-                                hl = 'DiagnosticWarn',
-                            },
-                            {
-                                name = 'Info',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'INFO' }
-                                end,
-                                hl = 'DiagnosticInfo',
-                            },
-                            {
-                                name = 'Hints',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'HINT' }
-                                end,
-                                hl = 'DiagnosticHint',
-                            },
-                        }, { prompt = 'Level', at_cursor = true })
-                    end,
-                    -- URGENT: Fix this when updating to the which key
-
-                    --icon = icons.Diagnostics.Prefix,
-                    desc = 'Diagnostics (buffer)',
-                },
-                {
-                    '<leader>M',
-                    function()
-                        require('ui.select').command({
-                            {
-                                name = 'All',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0 }
-                                end,
-                            },
-                            {
-                                name = 'Errors',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'ERROR' }
-                                end,
-                                hl = 'DiagnosticError',
-                            },
-                            {
-                                name = 'Warnings',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'WARN' }
-                                end,
-                                hl = 'DiagnosticWarn',
-                            },
-                            {
-                                name = 'Info',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'INFO' }
-                                end,
-                                hl = 'DiagnosticInfo',
-                            },
-                            {
-                                name = 'Hints',
-                                command = function()
-                                    require('telescope.builtin').diagnostics { bufnr = 0, severity = 'HINT' }
-                                end,
-                                hl = 'DiagnosticHint',
-                            },
-                        }, { prompt = 'Level', at_cursor = true })
-                    end,
-                    -- URGENT: Fix this when updating to the which key
-                    --icon = icons.Diagnostics.Prefix,
-                    desc = 'Diagnostics',
-                },
-                {
-                    'z=',
-                    function()
-                        require('telescope.builtin').spell_suggest()
-                    end,
-                    desc = 'Spell suggestions',
-                },
-                {
-                    [['']],
-                    function()
-                        require('telescope.builtin').marks()
-                    end,
-                    desc = 'Marks',
-                },
-                {
-                    [[""]],
-                    function()
-                        require('telescope.builtin').registers()
-                    end,
-                    desc = 'Marks',
-                },
-            }
-        end,
         opts = function()
             local actions = require 'telescope.actions'
             local themes = require 'telescope.themes'
@@ -223,8 +32,8 @@ return {
             return {
                 defaults = {
                     git_worktrees = ok and gwt or nil,
-                    prompt_prefix = icons.TUI.PromptPrefix .. ' ',
-                    selection_caret = icons.TUI.SelectionPrefix .. ' ',
+                    prompt_prefix = icons.fit(icons.TUI.PromptPrefix, 2),
+                    selection_caret = icons.fit(icons.TUI.SelectionPrefix, 2),
                     path_display = { 'truncate' },
                     sorting_strategy = 'ascending',
                     layout_config = {
@@ -289,6 +98,85 @@ return {
             telescope.setup(opts)
 
             telescope.load_extension 'fzf'
+        end,
+        init = function()
+            --- Wraps the options for telescope to add some defaults
+            --- @param opts table|nil
+            --- @return table
+            local function wrap(opts)
+                local utils = require 'core.utils'
+                local ui = require 'ui'
+
+                local show_hidden = not ui.ignore_hidden_files.active()
+                local add = {
+                    additional_args = show_hidden and function(args)
+                        return vim.list_extend(args, { '--hidden', '--no-ignore' })
+                    end or nil,
+                    file_ignore_patterns = { [[.git/]], [[node_modules/]], [[.idea/]], [[.DS_Store]] },
+                    cwd = require('project').root(nil, false),
+                    hidden = show_hidden,
+                    no_ignore = show_hidden,
+                }
+
+                if opts and opts.restart_picker then
+                    add.attach_mappings = function(_, map)
+                        map('i', '<C-h>', function(prompt_bufnr)
+                            -- get current text in
+                            local action_state = require 'telescope.actions.state'
+                            local line = action_state.get_current_line()
+
+                            -- toggle the hidden files
+                            require('telescope.actions').close(prompt_bufnr)
+                            ui.ignore_hidden_files.toggle()
+
+                            require('telescope.builtin')[opts.restart_picker](
+                                wrap(vim.tbl_extend('force', opts, { default_text = line }))
+                            )
+                        end)
+
+                        return true
+                    end
+                end
+
+                return utils.tbl_merge(add, opts)
+            end
+
+            --- Creates a wrapper around a picker and returns a function that can be called to invoke the picker
+            --- @param picker string # the picker to invoke
+            local function blanket(picker)
+                return function(opts)
+                    require('telescope.builtin')[picker](
+                        wrap(vim.tbl_extend('force', opts or {}, { restart_picker = picker }))
+                    )
+                end
+            end
+
+            local keys = require 'core.keys'
+
+            keys.map({ 'n', 'v' }, '<M-f>', function()
+                local sel = require('editor.syntax').current_selection(nil, false)
+                blanket 'live_grep' { default_text = sel }
+            end, {
+                desc = 'Grep in all files',
+            })
+
+            keys.map({ 'n', 'v' }, '<M-S-f>', function()
+                local sel = require('editor.syntax').current_selection(nil, true)
+                blanket 'live_grep' { default_text = sel }
+            end, {
+                desc = 'Grep in all files (selection)',
+            })
+
+            keys.map('n', '<leader>f', blanket 'find_files', { icon = icons.UI.Search, desc = 'Search files' })
+            keys.map('n', 'z=', function()
+                require('telescope.builtin').spell_suggest()
+            end, { desc = 'Spell suggestions' })
+            keys.map('n', [['']], function()
+                require('telescope.builtin').marks()
+            end, { desc = 'Marks' })
+            keys.map('n', [[""]], function()
+                require('telescope.builtin').registers()
+            end, { desc = 'Registers' })
         end,
     },
 }

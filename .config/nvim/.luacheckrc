@@ -22,5 +22,6 @@ std = {
         'tostring',
         'tonumber',
         'coroutine',
+        'setmetatable',
     },
 }

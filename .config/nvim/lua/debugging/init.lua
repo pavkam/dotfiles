@@ -8,7 +8,7 @@ local configure_js = require 'debugging.js'
 local configure_python = require 'debugging.python'
 local configure_dotnet = require 'debugging.dotnet'
 
-keys.group { lhs = '<leader>d', mode = { 'n', 'v' }, icon = icons.UI.Debugger, group = 'Debugger' }
+keys.group { lhs = '<leader>d', mode = { 'n', 'v' }, icon = icons.UI.Debugger, desc = 'Debugger' }
 
 ---@class debugging
 local M = {}
