@@ -3,21 +3,21 @@ local utils = require 'core.utils'
 ---@class project.highlight-navigation
 local M = {}
 
----@class vim.lsp.Position
----@field line integer
----@field character integer
+---@class vim.lsp.Position # A position in a text document expressed as zero-based line and character offset.
+---@field line integer # Line position in a document (zero-based).
+---@field character integer # Character offset on a line in a document (zero-based).
 
----@class vim.lsp.Range
----@field start vim.lsp.Position
----@field ["end"] vim.lsp.Position
+---@class vim.lsp.Range # Represents a range in a text document expressed as (zero-based) start and end positions.
+---@field start vim.lsp.Position # The range's start position.
+---@field ["end"] vim.lsp.Position # The range's end position.
 
----@class vim.lsp.DocumentHighlightItem
----@field kind number,
----@field range vim.lsp.Range
+---@class vim.lsp.DocumentHighlightItem # Represents a document highlight, like a symbol kind, a range and a parent.
+---@field kind number string # The highlight kind, such as a symbol kind.
+---@field range vim.lsp.Range # The range this highlight applies to.
 
----@class vim.lsp.DocumentHighlightResponse
----@field error lsp.ResponseError|nil
----@field result vim.lsp.DocumentHighlightItem[]
+---@class vim.lsp.DocumentHighlightResponse # Represents a document highlight response.
+---@field error lsp.ResponseError|nil # Error message
+---@field result vim.lsp.DocumentHighlightItem[] # The highlight items.
 
 ---@alias vim.lsp.ClientDocumentHighlightResponse table<integer, vim.lsp.DocumentHighlightResponse>
 
@@ -53,6 +53,10 @@ local function jump(window, forward)
         return false
     end
 
+    if (first_response == nil) or (first_response.result == nil) then
+        return false
+    end
+
     ---@cast first_response vim.lsp.DocumentHighlightResponse
 
     -- get the highlight ranges
@@ -79,9 +83,17 @@ local function jump(window, forward)
             and (range.start.character <= current_col and range['end'].character >= current_col)
         then
             if forward then
-                target = highlights[i + 1]
+                if i == #highlights then
+                    target = highlights[1]
+                else
+                    target = highlights[i + 1]
+                end
             else
-                target = highlights[i - 1]
+                if i == 1 then
+                    target = highlights[#highlights]
+                else
+                    target = highlights[i - 1]
+                end
             end
         end
     end

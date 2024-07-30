@@ -10,6 +10,7 @@ std = {
         'string',
         'fatal',
         'dbg',
+        'who',
         'assert',
         'require',
         'package',

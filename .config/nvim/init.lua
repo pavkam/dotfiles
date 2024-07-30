@@ -42,10 +42,11 @@ _G.dbg = function(...)
 end
 
 --- Prints the call stack if a condition is met
---- @param cond boolean|nil # the condition to print the call stack
-_G.who = function(cond)
+---@param cond any # the condition to print the call stack
+---@vararg any # anything to print
+_G.who = function(cond, ...)
     if cond == nil or cond then
-        dbg(debug.traceback(2))
+        dbg(debug.traceback(nil, 2), ...)
     end
 end
 

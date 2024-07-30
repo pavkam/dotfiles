@@ -65,8 +65,7 @@ end
 
 --- Applies all active formatters to a buffer
 ---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
----@param injected boolean|nil # whether to format injected code
-function M.apply(buffer, injected)
+function M.apply(buffer)
     if not package.loaded['conform'] then
         utils.warn 'Conform plugin is not installed!'
         return
@@ -79,12 +78,11 @@ function M.apply(buffer, injected)
         return
     end
 
-    local additional = injected and { formatters = { 'injected' } } or {}
-
-    conform.format(utils.tbl_merge({ bufnr = buffer }, additional))
-
     local names = formatters(buffer)
     if #names > 0 then
+        table.insert(names, 'injected')
+        conform.format { bufnr = buffer, formatters = names, quiet = false, lsp_format = 'fallback', timeout_ms = 5000 }
+
         progress.update(progress_class, { buffer = buffer, prv = true, fn = formatting_status, ctx = names })
     end
 end
