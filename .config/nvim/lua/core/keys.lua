@@ -24,7 +24,8 @@ function M.map(mode, key, action, opts)
     local noremap = opts.noremap or true
     local nowait = opts.nowait or false
 
-    local using_which_key = package.loaded['lazy'] and require('lazy.core.config').spec.plugins['which-key.nvim'] ~= nil
+    -- URGENT: Fix this when updating to the which key
+    local using_which_key = false -- package.loaded['lazy'] and require('lazy.core.config').spec.plugins['which-key.nvim'] ~= nil
 
     if using_which_key then
         local wk = require 'which-key'

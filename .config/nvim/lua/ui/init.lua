@@ -6,12 +6,12 @@ local diagnostics = require 'project.diagnostics'
 local icons = require 'ui.icons'
 local progress = require 'ui.progress'
 
--- require 'ui.hl'
--- require 'ui.marks'
--- require 'ui.qf'
--- require 'ui.tmux'
--- require 'ui.file-palette'
--- require 'ui.command-palette'
+require 'ui.hl'
+require 'ui.marks'
+require 'ui.qf'
+require 'ui.tmux'
+require 'ui.file-palette'
+require 'ui.command-palette'
 
 -- Disable some sequences
 keys.map({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })

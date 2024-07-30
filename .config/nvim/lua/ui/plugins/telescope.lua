@@ -87,7 +87,9 @@ return {
                 {
                     '<leader>f',
                     blanket 'find_files',
-                    icon = icons.UI.Search,
+                    -- URGENT: Fix this when updating to the which key
+
+                    --icon = icons.UI.Search,
                     desc = 'Search files',
                 },
                 {
@@ -130,7 +132,9 @@ return {
                             },
                         }, { prompt = 'Level', at_cursor = true })
                     end,
-                    icon = icons.Diagnostics.Prefix,
+                    -- URGENT: Fix this when updating to the which key
+
+                    --icon = icons.Diagnostics.Prefix,
                     desc = 'Diagnostics (buffer)',
                 },
                 {
@@ -173,7 +177,8 @@ return {
                             },
                         }, { prompt = 'Level', at_cursor = true })
                     end,
-                    icon = icons.Diagnostics.Prefix,
+                    -- URGENT: Fix this when updating to the which key
+                    --icon = icons.Diagnostics.Prefix,
                     desc = 'Diagnostics',
                 },
                 {

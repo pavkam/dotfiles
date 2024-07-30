@@ -15,7 +15,7 @@ return {
             function()
                 require('neo-tree.command').execute { toggle = true, reveal = true }
             end,
-            icon = icons.UI.Explorer,
+            -- URGENT: Fix this when updating to the which key
             desc = 'File explorer',
         },
     },

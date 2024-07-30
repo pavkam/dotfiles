@@ -55,7 +55,6 @@
   "playground": { "branch": "master", "commit": "ba48c6a62a280eefb7c85725b0915e021a1a0749" },
   "plenary.nvim": { "branch": "master", "commit": "a3e3bc82a3f95c5ed0d7201546d5d2c19b20d683" },
   "promise-async": { "branch": "main", "commit": "28c1d5a295eb5310afa2523d4ae9aa41ec5a9de2" },
-  "statuscol.nvim": { "branch": "main", "commit": "d6f7f5437c5404d958b88bb73e0721b1c0e09223" },
   "telescope-fzf-native.nvim": { "branch": "main", "commit": "cf48d4dfce44e0b9a2e19a008d6ec6ea6f01a83b" },
   "telescope.nvim": { "branch": "master", "commit": "bfcc7d5c6f12209139f175e6123a7b7de6d9c18a" },
   "tokyonight.nvim": { "branch": "main", "commit": "66a272ba6cf93bf303c4b7a91b100ca0dd3ec7bd" },
