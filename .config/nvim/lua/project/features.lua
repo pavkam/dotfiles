@@ -133,22 +133,9 @@ local function attach_keymaps(client, buffer)
                 silent = mapping.silent,
                 remap = mapping.remap,
                 expr = mapping.expr,
+                icon = mapping.icon,
             })
         end
-    end
-
-    -- special keymaps
-    if not lsp.is_special(client) then
-        keys.map('n', '<leader>!', function()
-            vim.cmd.write()
-
-            lsp.clear_diagnostics(nil)
-            lsp.restart_all_for_buffer()
-
-            vim.treesitter.stop()
-            vim.cmd.edit()
-            vim.treesitter.start()
-        end, { buffer = buffer, icon = icons.UI.Nuke, desc = 'Nuke buffer state' })
     end
 end
 

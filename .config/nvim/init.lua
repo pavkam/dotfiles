@@ -41,9 +41,12 @@ _G.dbg = function(...)
     return ...
 end
 
---- Prints the call stack
-_G.who = function()
-    dbg(debug.traceback(2))
+--- Prints the call stack if a condition is met
+--- @param cond boolean|nil # the condition to print the call stack
+_G.who = function(cond)
+    if cond == nil or cond then
+        dbg(debug.traceback(2))
+    end
 end
 
 --- Global function to log a message as an error and quit
