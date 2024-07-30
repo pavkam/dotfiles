@@ -63,7 +63,7 @@ function M.group(opts)
 
     if using_which_key then
         local wk = require 'which-key'
-        wk.add { opts.lhs, opts.mode, icon = opts.icon, group = opts.desc, buffer = opts.buffer }
+        wk.add { opts.lhs, mode = opts.mode, icon = opts.icon, group = opts.desc, buffer = opts.buffer }
     end
 end
 
