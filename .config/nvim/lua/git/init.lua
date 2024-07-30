@@ -67,7 +67,7 @@ end
 
 -- Add a command to run lazygit
 if vim.fn.executable 'lazygit' == 1 then
-    vim.api.nvim_create_user_command('Lazygit', function()
+    utils.register_command('Lazygit', function()
         shell.floating 'lazygit'
     end, { desc = 'Run Lazygit', nargs = 0 })
 

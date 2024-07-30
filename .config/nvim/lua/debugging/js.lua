@@ -2,7 +2,7 @@ local project = require 'project'
 
 local bin_filetypes = { 'typescript', 'javascript' }
 local jsx_filetypes = { 'typescriptreact', 'javascriptreact' }
-local filetypes = vim.tbl_flatten { bin_filetypes, jsx_filetypes } -- TODO: don't use depreacated
+local filetypes = vim.iter(bin_filetypes, jsx_filetypes):flatten():totable()
 
 local dap_configurations = {
     pwa_node_launch = {

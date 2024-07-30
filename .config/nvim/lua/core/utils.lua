@@ -387,6 +387,10 @@ function M.register_command(name, fn, opts)
             end
         end
 
+        local supports_range = #vim.tbl_filter(function(f)
+            return type(f) == 'table' and f.range
+        end, fn) > 0
+
         vim.api.nvim_create_user_command(
             name,
             ---@param args core.utils.CommandCallbackArgs
@@ -411,11 +415,7 @@ function M.register_command(name, fn, opts)
                 desc = opts.desc,
                 nargs = n_args,
                 bang = opts.bang,
-                range = #vim.iter(fn)
-                    :filter(function(f)
-                        return type(f) == 'table' and f.range
-                    end)
-                    :totable() > 0,
+                range = supports_range,
                 complete = function(arg_lead)
                     local completions = vim.tbl_keys(fn)
                     local matches = {}

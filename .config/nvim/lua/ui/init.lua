@@ -166,7 +166,8 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     if not utils.is_special_buffer(evt.buf) then
         utils.trigger_user_event 'NormalFile'
 
-        git.check_tracked(vim.loop.fs_realpath(current_file) or current_file, function(yes)
+        -- TODO: real path seems fucked
+        git.check_tracked(vim.uv.fs_realpath(current_file) or current_file, function(yes)
             if yes then
                 utils.trigger_user_event 'GitFile'
             end
@@ -191,7 +192,7 @@ end)
 utils.on_event({ 'RecordingEnter' }, function()
     utils.info(
         string.format(
-            'Started recording macro into register `%v`',
+            'Started recording macro into register `%s`',
             vim.fn.reg_recording(),
             { prefix_icon = icons.UI.Macro, suffix_icon = icons.TUI.Ellipsis }
         )
@@ -210,7 +211,7 @@ end)
 utils.on_event({ 'RecordingLeave' }, function()
     utils.info(
         string.format(
-            'Stopped recording macro into register `%v`',
+            'Stopped recording macro into register `%s`',
             vim.fn.reg_recording(),
             { prefix_icon = icons.UI.Checkmark, suffix_icon = icons.TUI.Ellipsis }
         )

@@ -108,7 +108,7 @@ utils.register_command('Note', {
 }, {
     default_fn = 'append',
     desc = 'Open/Append to note',
-    n_args = '?',
+    nargs = '?',
     bang = true,
 })
 
@@ -124,6 +124,6 @@ utils.register_command('Notes', {
 }, {
     default_fn = 'grep',
     desc = 'Manages notes',
-    n_args = 1,
+    nargs = 1,
     bang = true,
 })

@@ -21,12 +21,18 @@ return {
         local vitest = require 'neotest-vitest'
 
         jest = jest {
+            jestCommand = function(path)
+                return project.get_js_bin_path(path, 'jest')
+            end,
             cwd = function(path)
                 return project.root(path)
             end,
         }
 
         vitest = vitest {
+            vitestCommand = function(path)
+                return project.get_js_bin_path(path, 'vitest')
+            end,
             cwd = function(path)
                 return project.root(path)
             end,

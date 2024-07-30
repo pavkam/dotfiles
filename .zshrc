@@ -369,16 +369,21 @@ sesh() {
         echo -ne " Enter session name (empty to cancel): "
         read SESSION
 
+        SESSION=$(echo "$SESSION" | sed 's/[^a-zA-Z0-9\/]/_/g')
+
         if [ "$SESSION" != "" ]; then
             tmux new -d -s "$SESSION" && tmux switch -t "$SESSION"
         fi
     elif [ "$SESSION" != "" ]; then
         title "tmux" "$SESSION"
 
+        DIR="${PROJECTS_ROOT}/$SESSION"
+        SESSION=$(echo "$SESSION" | sed 's/[^a-zA-Z0-9\/]/_/g')
+
         if tmux has -t "$SESSION" &> /dev/null; then
             tmux switch -t "$SESSION"
         else
-            tmux new -d -s "$SESSION" && tmux switch -t "$SESSION"
+            tmux new -d -s "$SESSION" -c "$DIR" && tmux switch -t "$SESSION"
         fi
     fi
 }
