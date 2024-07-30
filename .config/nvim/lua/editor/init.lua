@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local settings = require 'core.settings'
 local syntax = require 'editor.syntax'
 
@@ -6,13 +7,13 @@ require 'editor.spelling'
 require 'editor.comments'
 
 -- Remap for dealing with word wrap
-vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
-vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
-vim.keymap.set('n', '<Up>', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
-vim.keymap.set('n', '<Down>', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
+keys.map('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
+keys.map('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
+keys.map('n', '<Up>', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
+keys.map('n', '<Down>', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
 
 -- Better normal mode navigation
-vim.keymap.set({ 'n', 'x' }, 'gg', function()
+keys.map({ 'n', 'x' }, 'gg', function()
     if vim.v.count > 0 then
         vim.cmd('normal! ' .. vim.v.count .. 'gg')
     else
@@ -20,24 +21,24 @@ vim.keymap.set({ 'n', 'x' }, 'gg', function()
     end
 end, { desc = 'Start of buffer' })
 
-vim.keymap.set({ 'n', 'x' }, 'G', function()
+keys.map({ 'n', 'x' }, 'G', function()
     vim.cmd 'normal! G$'
 end, { desc = 'End of buffer' })
 
 -- move selection up/down
-vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move selection downward' })
-vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move selection upward' })
+keys.map('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move selection downward' })
+keys.map('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move selection upward' })
 
 -- better indenting
-vim.keymap.set('x', '<', '<gv', { desc = 'Indent selection' })
-vim.keymap.set('x', '>', '>gv', { desc = 'Unindent selection' })
+keys.map('x', '<', '<gv', { desc = 'Indent selection' })
+keys.map('x', '>', '>gv', { desc = 'Unindent selection' })
 
-vim.keymap.set('x', '<Tab>', '>gv', { desc = 'Indent selection' })
-vim.keymap.set('x', '<S-Tab>', '<gv', { desc = 'Unindent selection' })
+keys.map('x', '<Tab>', '>gv', { desc = 'Indent selection' })
+keys.map('x', '<S-Tab>', '<gv', { desc = 'Unindent selection' })
 
 -- Add undo break-points
 for _, key in ipairs { '.', ',', '!', '?', ';', ':', '"', "'" } do
-    vim.keymap.set(
+    keys.map(
         'i',
         key,
         string.format('%s<c-g>u', key),
@@ -46,12 +47,12 @@ for _, key in ipairs { '.', ',', '!', '?', ';', ':', '"', "'" } do
 end
 
 -- Redo
-vim.keymap.set('n', 'U', '<C-r>', { desc = 'Redo' })
+keys.map('n', 'U', '<C-r>', { desc = 'Redo' })
 
 -- Some editor mappings
-vim.keymap.set('i', '<C-BS>', '<C-w>', { desc = 'Delete word' })
+keys.map('i', '<C-BS>', '<C-w>', { desc = 'Delete word' })
 
-vim.keymap.set('i', '<Tab>', function()
+keys.map('i', '<Tab>', function()
     local r, c = unpack(vim.api.nvim_win_get_cursor(0))
     if c and r then
         local line = vim.api.nvim_buf_get_lines(vim.fn.winbufnr(0), r - 1, r, true)[1]
@@ -67,9 +68,9 @@ vim.keymap.set('i', '<Tab>', function()
     return '<Tab>'
 end, { desc = 'Indent/Tab', expr = true })
 
-vim.keymap.set('i', '<S-Tab>', '<C-d>', { desc = 'Unindent' })
-vim.keymap.set('n', '<Tab>', '>>', { desc = 'Indent' })
-vim.keymap.set('n', '<S-Tab>', '<<', { desc = 'Indent' })
+keys.map('i', '<S-Tab>', '<C-d>', { desc = 'Unindent' })
+keys.map('n', '<Tab>', '>>', { desc = 'Indent' })
+keys.map('n', '<S-Tab>', '<<', { desc = 'Indent' })
 
 -- Better page up/down
 local function page_expr(dir)
@@ -81,32 +82,32 @@ local function page_expr(dir)
     vim.cmd('normal! ' .. jump .. dir .. 'zz')
 end
 
-vim.keymap.set({ 'i', 'n' }, '<PageUp>', function()
+keys.map({ 'i', 'n' }, '<PageUp>', function()
     page_expr 'k'
 end, { desc = 'Page up' })
 
-vim.keymap.set({ 'x' }, '<S-PageUp>', function()
+keys.map({ 'x' }, '<S-PageUp>', function()
     page_expr 'k'
 end, { desc = 'Page up' })
 
-vim.keymap.set({ 'i', 'n' }, '<PageDown>', function()
+keys.map({ 'i', 'n' }, '<PageDown>', function()
     page_expr 'j'
 end, { desc = 'Page down' })
 
-vim.keymap.set({ 'x' }, '<S-PageDown>', function()
+keys.map({ 'x' }, '<S-PageDown>', function()
     page_expr 'j'
 end, { desc = 'Page down' })
 
 -- Disable the annoying yank on change
-vim.keymap.set({ 'n', 'x' }, 'c', [["_c]], { desc = 'Change' })
-vim.keymap.set({ 'n', 'x' }, 'C', [["_C]], { desc = 'Change' })
-vim.keymap.set('x', 'p', 'P', { desc = 'Paste' })
-vim.keymap.set('x', 'P', 'p', { desc = 'Yank & paste' })
-vim.keymap.set('n', 'x', [["_x]], { desc = 'Delete character' })
-vim.keymap.set('n', '<Del>', [["_x]], { desc = 'Delete character' })
-vim.keymap.set('x', '<BS>', 'd', { desc = 'Delete selection' })
+keys.map({ 'n', 'x' }, 'c', [["_c]], { desc = 'Change' })
+keys.map({ 'n', 'x' }, 'C', [["_C]], { desc = 'Change' })
+keys.map('x', 'p', 'P', { desc = 'Paste' })
+keys.map('x', 'P', 'p', { desc = 'Yank & paste' })
+keys.map('n', 'x', [["_x]], { desc = 'Delete character' })
+keys.map('n', '<Del>', [["_x]], { desc = 'Delete character' })
+keys.map('x', '<BS>', 'd', { desc = 'Delete selection' })
 
-vim.keymap.set('n', 'dd', function()
+keys.map('n', 'dd', function()
     if vim.api.nvim_get_current_line():match '^%s*$' then
         return '"_dd'
     else
@@ -128,16 +129,16 @@ local function ins_paste(op)
     end
 end
 
-vim.keymap.set('n', 'gp', function()
+keys.map('n', 'gp', function()
     ins_paste 'o'
 end, { desc = 'Paste below' })
 
-vim.keymap.set('n', 'gP', function()
+keys.map('n', 'gP', function()
     ins_paste 'O'
 end, { desc = 'Paste above' })
 
 -- search
-vim.keymap.set({ 'i', 'n' }, '<esc>', function()
+keys.map({ 'i', 'n' }, '<esc>', function()
     vim.cmd.nohlsearch()
     if package.loaded['noice'] then
         pcall(vim.cmd.NoiceDismiss)
@@ -146,25 +147,25 @@ vim.keymap.set({ 'i', 'n' }, '<esc>', function()
     return '<esc>'
 end, { expr = true, desc = 'Escape and clear highlight' })
 
-vim.keymap.set('n', 'n', "'Nn'[v:searchforward].'zv'", { expr = true, desc = 'Next search result' })
-vim.keymap.set({ 'x', 'o' }, 'n', "'Nn'[v:searchforward]", { expr = true, desc = 'Next search result' })
-vim.keymap.set('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Previous search result' })
-vim.keymap.set({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Previous search result' })
+keys.map('n', 'n', "'Nn'[v:searchforward].'zv'", { expr = true, desc = 'Next search result' })
+keys.map({ 'x', 'o' }, 'n', "'Nn'[v:searchforward]", { expr = true, desc = 'Next search result' })
+keys.map('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Previous search result' })
+keys.map({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Previous search result' })
 
-vim.keymap.set('n', '\\', 'viw', { desc = 'Select word' })
+keys.map('n', '\\', 'viw', { desc = 'Select word' })
 
-vim.keymap.set('x', '<C-r>', function()
+keys.map('x', '<C-r>', function()
     local text = utils.get_selected_text()
     utils.feed_keys(syntax.create_rename_expression { orig = text })
 end, { desc = 'Replace selection' })
 
-vim.keymap.set('x', '<C-S-r>', function()
+keys.map('x', '<C-S-r>', function()
     local text = utils.get_selected_text()
     utils.feed_keys(syntax.create_rename_expression { orig = text, whole_word = true })
 end, { desc = 'Replace selection (whole word)' })
 
-vim.keymap.set('n', '<C-r>', syntax.create_rename_expression(), { desc = 'Replace word under cursor' })
-vim.keymap.set(
+keys.map('n', '<C-r>', syntax.create_rename_expression(), { desc = 'Replace word under cursor' })
+keys.map(
     'n',
     '<C-S-r>',
     syntax.create_rename_expression { whole_word = true },
@@ -172,24 +173,24 @@ vim.keymap.set(
 )
 
 -- special keys
-vim.keymap.set('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
-vim.keymap.set('n', '<M-x>', 'dd', { desc = 'Delete line' })
-vim.keymap.set('x', '<M-x>', 'd', { desc = 'Delete selection' })
-vim.keymap.set('n', '<M-a>', 'ggVG', { desc = 'Select all', remap = true })
+keys.map('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
+keys.map('n', '<M-x>', 'dd', { desc = 'Delete line' })
+keys.map('x', '<M-x>', 'd', { desc = 'Delete selection' })
+keys.map('n', '<M-a>', 'ggVG', { desc = 'Select all', remap = true })
 
-vim.keymap.set('x', '.', ':norm .<CR>', { desc = 'Repeat edit' })
-vim.keymap.set('x', '@', ':norm @q<CR>', { desc = 'Repeat macro' })
+keys.map('x', '.', ':norm .<CR>', { desc = 'Repeat edit' })
+keys.map('x', '@', ':norm @q<CR>', { desc = 'Repeat macro' })
 
-vim.keymap.set('i', '<LeftMouse>', '<Esc><LeftMouse>', { desc = 'Exit insert mode and left-click' })
-vim.keymap.set('i', '<RightMouse>', '<Esc><RightMouse>', { desc = 'Exit insert mode and right-click' })
+keys.map('i', '<LeftMouse>', '<Esc><LeftMouse>', { desc = 'Exit insert mode and left-click' })
+keys.map('i', '<RightMouse>', '<Esc><RightMouse>', { desc = 'Exit insert mode and right-click' })
 
-vim.keymap.set('n', '<C-a>', function()
+keys.map('n', '<C-a>', function()
     if not syntax.increment_node_under_cursor(nil, 1) then
         vim.cmd 'norm! <C-a>'
     end
 end, { desc = 'Increment/Toggle value' })
 
-vim.keymap.set('n', '<C-x>', function()
+keys.map('n', '<C-x>', function()
     if not syntax.increment_node_under_cursor(nil, -1) then
         vim.cmd 'norm! <C-x>'
     end

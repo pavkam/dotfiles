@@ -302,7 +302,8 @@ fi
 # Helper aliases and functions
 
 if command -v heroku &> /dev/null; then
-    eval $(heroku autocomplete:script zsh)
+    # Heroku autocomplete setup
+    HEROKU_AC_ZSH_SETUP_PATH=~/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
 
     heroku-env() {
         # Check for correct number of arguments
@@ -491,6 +492,7 @@ elif type compctl &>/dev/null; then
   compctl -K _npm_completion npm
 fi
 ###-end-npm-completion-###
+
 
 # Import the local configuration, if any.
 if [ -f "$HOME/.zshrc.local" ]; then

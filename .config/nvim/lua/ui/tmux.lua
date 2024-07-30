@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local shell = require 'core.shell'
 local select = require 'ui.select'
 local icons = require 'ui.icons'
@@ -280,23 +281,23 @@ function M.navigate(direction)
 end
 
 if M.socket() ~= nil then
-    vim.keymap.set('n', '<leader>s', manage_sessions, { desc = icons.UI.TMux .. ' Tmux sessions' })
+    keys.map('n', '<leader>s', manage_sessions, { icon = icons.UI.TMux, desc = ' Tmux sessions' })
 end
 
 -- window navigation
-vim.keymap.set('n', '<M-Tab>', function()
+keys.map('n', '<M-Tab>', function()
     M.navigate 'p'
 end, { desc = 'Switch window' })
-vim.keymap.set('n', '<M-Left>', function()
+keys.map('n', '<M-Left>', function()
     M.navigate 'h'
 end, { desc = 'Go to left window' })
-vim.keymap.set('n', '<M-Right>', function()
+keys.map('n', '<M-Right>', function()
     M.navigate 'l'
 end, { desc = 'Go to right window' })
-vim.keymap.set('n', '<M-Down>', function()
+keys.map('n', '<M-Down>', function()
     M.navigate 'j'
 end, { desc = 'Go to window below' })
-vim.keymap.set('n', '<M-Up>', function()
+keys.map('n', '<M-Up>', function()
     M.navigate 'k'
 end, { desc = 'Go to window above' })
 

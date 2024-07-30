@@ -6,6 +6,7 @@ return {
     },
     opts = {},
     config = function(_, opts)
+        local keys = require 'core.keys'
         local pi = require 'package-info'
         local icons = require 'ui.icons'
 
@@ -13,7 +14,7 @@ return {
 
         local utils = require 'core.utils'
         utils.on_event('BufReadPre', function(args)
-            vim.keymap.set('n', '<leader>p', function()
+            keys.map('n', '<leader>p', function()
                 require('ui.select').command({
                     {
                         name = 'Change',
@@ -36,7 +37,7 @@ return {
                         desc = 'Install the package',
                     },
                 }, { at_cursor = true })
-            end, { buffer = args.buf, desc = icons.UI.Action .. ' package.json' })
+            end, { buffer = args.buf, icon = icons.UI.Action, desc = 'package.json' })
         end, 'package\\.json')
 
         -- HACK: plug into the package-info plugin to make it work with my progress indicator

@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local markdown = require 'extras.markdown'
 local sessions = require 'core.sessions'
 
@@ -46,8 +47,8 @@ local function show_content(content, opts)
     vim.bo[buffer].readonly = true
     vim.wo[window].spell = false
 
-    vim.keymap.set('n', 'q', '<cmd>close<cr>', { buffer = buffer, nowait = true, desc = 'Close window' })
-    vim.keymap.set('n', '<Esc>', '<cmd>close<cr>', { buffer = buffer, nowait = true, desc = 'Close window' })
+    keys.map('n', 'q', '<cmd>close<cr>', { buffer = buffer, nowait = true, desc = 'Close window' })
+    keys.map('n', '<Esc>', '<cmd>close<cr>', { buffer = buffer, nowait = true, desc = 'Close window' })
 
     vim.api.nvim_create_autocmd('BufLeave', {
         desc = 'Close info window when leaving buffer',

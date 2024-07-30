@@ -5,6 +5,7 @@ local actions = require 'telescope.actions'
 local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local icons = require 'ui.icons'
 
 ---@class ui.command_palette.Options
@@ -296,6 +297,6 @@ function M.show_command_palette(opts)
     end
 end
 
-vim.keymap.set({ 'n', 'x', 'i' }, '<F2>', M.show_command_palette, { desc = 'Show command palette' })
+keys.map({ 'n', 'x', 'i' }, '<F2>', M.show_command_palette, { desc = 'Show command palette' })
 
 return M

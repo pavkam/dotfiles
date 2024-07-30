@@ -3,26 +3,6 @@ local icons = require 'ui.icons'
 local settings = require 'core.settings'
 local project = require 'project'
 
--- TODO: do not try to load dicts for files outside the working repo
---[[
-Error executing lua callback: vim/_options.lua:0: E474: Invalid argument
-stack traceback:
-	[C]: in function 'nvim_set_option_value'
-	vim/_options.lua: in function '_set'
-	vim/_options.lua: in function '__newindex'
-	/Users/alex/.config/nvim/lua/editor/spelling.lua:37: in function 'swap_custom_dictionary'
-	/Users/alex/.config/nvim/lua/editor/spelling.lua:81: in function 'callback'
-	/Users/alex/.config/nvim/lua/core/utils.lua:196: in function </Users/alex/.config/nvim/lua/core/utils.lua:195>
-	[C]: in function 'nvim_exec_autocmds'
-	.../neovim/0.10.0/share/nvim/runtime/lua/vim/lsp/client.lua:946: in function '_on_attach'
-	.../Cellar/neovim/0.10.0/share/nvim/runtime/lua/vim/lsp.lua:625: in function 'buf_attach_client'
-	.../Cellar/neovim/0.10.0/share/nvim/runtime/lua/vim/lsp.lua:252: in function 'lsp_start'
-	...local/share/nvim/lazy/copilot.lua/lua/copilot/client.lua:100: in function 'buf_attach'
-	...local/share/nvim/lazy/copilot.lua/lua/copilot/client.lua:250: in function ''
-	vim/_editor.lua: in function <vim/_editor.lua:0>
-        ]]
---
-
 ---@class editor.spelling
 local M = {}
 

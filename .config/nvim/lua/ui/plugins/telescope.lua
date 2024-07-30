@@ -87,7 +87,8 @@ return {
                 {
                     '<leader>f',
                     blanket 'find_files',
-                    desc = icons.UI.Search .. ' Search files',
+                    icon = icons.UI.Search,
+                    desc = 'Search files',
                 },
                 {
                     '<leader>m',
@@ -129,7 +130,8 @@ return {
                             },
                         }, { prompt = 'Level', at_cursor = true })
                     end,
-                    desc = icons.Diagnostics.Prefix .. ' Diagnostics (buffer)',
+                    icon = icons.Diagnostics.Prefix,
+                    desc = 'Diagnostics (buffer)',
                 },
                 {
                     '<leader>M',
@@ -171,7 +173,8 @@ return {
                             },
                         }, { prompt = 'Level', at_cursor = true })
                     end,
-                    desc = icons.Diagnostics.Prefix .. ' Diagnostics',
+                    icon = icons.Diagnostics.Prefix,
+                    desc = 'Diagnostics',
                 },
                 {
                     'z=',

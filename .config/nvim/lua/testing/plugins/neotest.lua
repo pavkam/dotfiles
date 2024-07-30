@@ -46,6 +46,7 @@ return {
     end,
     config = function(spec, opts)
         local utils = require 'core.utils'
+        local keys = require 'core.keys'
 
         -- register neo-test virtual text
         local neotest_ns = vim.api.nvim_create_namespace 'neotest'
@@ -67,23 +68,23 @@ return {
             local icons = require 'ui.icons'
             local neotest = require 'neotest'
 
-            vim.keymap.set('n', '<leader>tU', function()
+            keys.map('n', '<leader>tU', function()
                 neotest.summary.toggle()
             end, { buffer = args.buf, desc = 'Toggle summary view' })
 
-            vim.keymap.set('n', '<leader>to', function()
+            keys.map('n', '<leader>to', function()
                 neotest.output.open()
             end, { buffer = args.buf, desc = 'Show test output' })
 
-            vim.keymap.set('n', '<leader>tw', function()
+            keys.map('n', '<leader>tw', function()
                 neotest.watch.toggle()
             end, { buffer = args.buf, desc = 'Toggle test watching' })
 
-            vim.keymap.set('n', '<leader>tf', function()
+            keys.map('n', '<leader>tf', function()
                 neotest.run.run(vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf()))
             end, { buffer = args.buf, desc = 'Run all tests' })
 
-            vim.keymap.set('n', '<leader>tr', function()
+            keys.map('n', '<leader>tr', function()
                 if not confirm_saved() then
                     return
                 end
@@ -91,7 +92,7 @@ return {
                 neotest.run.run()
             end, { buffer = args.buf, desc = 'Run nearest test' })
 
-            vim.keymap.set('n', '<leader>td', function()
+            keys.map('n', '<leader>td', function()
                 if not confirm_saved() then
                     return
                 end
@@ -104,8 +105,10 @@ return {
             end, { buffer = args.buf, desc = 'Debug nearest test' })
 
             -- add which key group
-            require('which-key').register({
-                ['<leader>t'] = { name = icons.UI.Test .. ' Testing' },
+            require('which-key').add({
+                desc = '<leader>t',
+                icon = icons.UI.Test,
+                group = 'Testing',
             }, { buffer = args.buf })
         end, spec.ft)
 

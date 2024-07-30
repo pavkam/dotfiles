@@ -1,7 +1,6 @@
 local utils = require 'core.utils'
 local progress = require 'ui.progress'
 local markdown = require 'extras.markdown'
-
 local progress_class = 'shell'
 
 ---@class core.shell

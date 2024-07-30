@@ -5,6 +5,7 @@ local actions = require 'telescope.actions'
 local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local icons = require 'ui.icons'
 local project = require 'project'
 
@@ -346,7 +347,7 @@ utils.register_command('Files', function()
     M.show_file_palette()
 end, { desc = 'Show file palette' })
 
-vim.keymap.set('n', '<F3>', '<cmd>Files<cr>', { desc = 'Show file palette' })
-vim.keymap.set('n', '<leader>b', '<cmd>Files<cr>', { desc = 'Show file palette' })
+keys.map('n', '<F3>', '<cmd>Files<cr>', { desc = 'Show file palette' })
+keys.map('n', '<leader>b', '<cmd>Files<cr>', { desc = 'Show file palette' })
 
 return M

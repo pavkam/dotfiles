@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local syntax = require 'editor.syntax'
 local lsp = require 'project.lsp'
 local icons = require 'ui.icons'
@@ -64,7 +65,8 @@ local keymaps = {
     {
         '<M-CR>',
         vim.lsp.buf.code_action,
-        desc = icons.UI.Action .. ' Code actions',
+        icon = icons.UI.Action,
+        desc = 'Code actions',
         mode = { 'n', 'v' },
         capability = vim.lsp.protocol.Methods.textDocument_codeAction,
     },
@@ -125,7 +127,7 @@ local function attach_keymaps(client, buffer)
 
     for _, mapping in pairs(resolved_keymaps) do
         if not mapping.capability or client.supports_method(mapping.capability) then
-            vim.keymap.set(mapping.mode or 'n', mapping.lhs, mapping.rhs, {
+            keys.map(mapping.mode or 'n', mapping.lhs, mapping.rhs, {
                 desc = mapping.desc,
                 buffer = buffer,
                 silent = mapping.silent,
@@ -137,7 +139,7 @@ local function attach_keymaps(client, buffer)
 
     -- special keymaps
     if not lsp.is_special(client) then
-        vim.keymap.set('n', '<leader>!', function()
+        keys.map('n', '<leader>!', function()
             vim.cmd.write()
 
             lsp.clear_diagnostics(nil)
@@ -146,7 +148,7 @@ local function attach_keymaps(client, buffer)
             vim.treesitter.stop()
             vim.cmd.edit()
             vim.treesitter.start()
-        end, { buffer = buffer, desc = icons.UI.Nuke .. ' Nuke buffer state' })
+        end, { buffer = buffer, icon = icons.UI.Nuke, desc = 'Nuke buffer state' })
     end
 end
 

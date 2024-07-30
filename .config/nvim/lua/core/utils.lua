@@ -247,38 +247,6 @@ function M.on_status_update_event(callback)
     return on_event('User', callback, 'StatusUpdate')
 end
 
---- Allows attaching keymaps in a given buffer alone.
----@param file_types string|table|nil # the list of file types to attach the keymaps to
----@param callback fun(set: fun(mode: string|table|nil, lhs: string, rhs: string|function, opts: table)) # the callback
----to call when the event is triggered
----@param force boolean|nil # whether to force the keymaps to be set even if they are already set
----@return number # the group id of the created group
-function M.attach_keymaps(file_types, callback, force)
-    assert(type(callback) == 'function')
-
-    if file_types == nil then
-        file_types = '*'
-    else
-        file_types = M.to_list(file_types)
-    end
-
-    return on_event('FileType', function(evt)
-        if file_types == '*' and M.is_special_buffer(evt.buf) then
-            return
-        end
-
-        local mapper = function(mode, lhs, rhs, opts)
-            ---@diagnostic disable-next-line: param-type-mismatch
-            local has_mapping = not vim.tbl_isempty(vim.fn.maparg(lhs, mode, 0, 1))
-            if not has_mapping or force then
-                vim.keymap.set(mode, lhs, rhs, M.tbl_merge({ buffer = evt.buf }, opts or {}))
-            end
-        end
-
-        callback(mapper)
-    end, file_types)
-end
-
 --- Trigger a user event
 ---@param event string # the name of the event to trigger
 ---@param data any # the data to pass to the event
@@ -1008,6 +976,40 @@ function M.refresh_ui()
     vim.cmd 'tabdo wincmd ='
     vim.cmd('tabnext ' .. current_tab)
     vim.cmd 'redraw!'
+end
+
+---@alias core.utils.KeyMapCallback fun(mode: core.utils.KeyMapMode|core.utils.KeyMapMode[], lhs: string, rhs: string|function, opts: core.utils.KeyMapOpts)
+
+--- Allows attaching keymaps in a given buffer alone.
+---@param file_types string|table|nil # the list of file types to attach the keymaps to
+---@param callback fun(core.utils.KeyMapCallback) # the callback to call when the event is triggered
+---@param force boolean|nil # whether to force the keymaps to be set even if they are already set
+---@return number # the group id of the created group
+function M.attach_keymaps(file_types, callback, force)
+    assert(type(callback) == 'function')
+
+    if file_types == nil then
+        file_types = '*'
+    else
+        file_types = M.to_list(file_types)
+    end
+
+    return on_event('FileType', function(evt)
+        if file_types == '*' and M.is_special_buffer(evt.buf) then
+            return
+        end
+
+        ---@type core.utils.KeyMapCallback
+        local mapper = function(mode, lhs, rhs, opts)
+            ---@diagnostic disable-next-line: param-type-mismatch
+            local has_mapping = not vim.tbl_isempty(vim.fn.maparg(lhs, mode, 0, 1))
+            if not has_mapping or force then
+                require('core.keys').map(mode, lhs, rhs, M.tbl_merge({ buffer = evt.buf }, opts or {}))
+            end
+        end
+
+        callback(mapper)
+    end, file_types)
 end
 
 --- Feed keys to Neovim

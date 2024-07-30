@@ -54,3 +54,14 @@ osdateparam
 pos
 texthl
 get_extmark_item
+nowait
+lazygit
+stringified
+listified
+bufnr
+vcol
+nr
+changedtick
+idx
+qfbufnr
+winid

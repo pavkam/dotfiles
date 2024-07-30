@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 
 ---@class ui.qf`
 local M = {}
@@ -404,29 +405,29 @@ function M.import(data)
 end
 
 -- quick-fix and locations list
-vim.keymap.set('n', '<leader>qc', function()
+keys.map('n', '<leader>qc', function()
     M.clear 'c'
     M.toggle('c', false)
 end, { desc = 'Clear quick-fix list' })
 
-vim.keymap.set('n', '<leader>qC', function()
+keys.map('n', '<leader>qC', function()
     M.clear 'l'
     M.toggle('l', false)
 end, { desc = 'Clear locations list' })
 
-vim.keymap.set('n', '<leader>qq', function()
+keys.map('n', '<leader>qq', function()
     M.toggle('c', true)
 end, { desc = 'Show quick-fix list' })
 
-vim.keymap.set('n', '<leader>ql', function()
+keys.map('n', '<leader>ql', function()
     M.toggle('l', true)
 end, { desc = 'Show locations list' })
 
-vim.keymap.set('n', ']q', '<cmd>cnext<cr>', { desc = 'Next quick-fix item' })
-vim.keymap.set('n', '[q', '<cmd>cprev<cr>', { desc = 'Previous quick-fix item' })
+keys.map('n', ']q', '<cmd>cnext<cr>', { desc = 'Next quick-fix item' })
+keys.map('n', '[q', '<cmd>cprev<cr>', { desc = 'Previous quick-fix item' })
 
-vim.keymap.set('n', ']l', '<cmd>lnext<cr>', { desc = 'Next location item' })
-vim.keymap.set('n', '[l', '<cmd>lprev<cr>', { desc = 'Previous location item' })
+keys.map('n', ']l', '<cmd>lnext<cr>', { desc = 'Next location item' })
+keys.map('n', '[l', '<cmd>lprev<cr>', { desc = 'Previous location item' })
 
 utils.attach_keymaps('qf', function(set)
     set('n', 'x', function()

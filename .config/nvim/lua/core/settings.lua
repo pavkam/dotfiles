@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 local icons = require 'ui.icons'
 
 ---@type table<string, any>
@@ -456,6 +457,6 @@ utils.on_status_update_event(function(evt)
     end
 end)
 
-vim.keymap.set('n', '<leader>u', M.show_settings_ui, { desc = icons.UI.UI .. ' Show options' })
+keys.map('n', '<leader>u', M.show_settings_ui, { icon = icons.UI.UI, desc = 'Show options' })
 
 return M

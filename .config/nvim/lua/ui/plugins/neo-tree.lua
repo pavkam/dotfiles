@@ -15,7 +15,8 @@ return {
             function()
                 require('neo-tree.command').execute { toggle = true, reveal = true }
             end,
-            desc = icons.UI.Explorer .. 'File explorer',
+            icon = icons.UI.Explorer,
+            desc = 'File explorer',
         },
     },
     deactivate = function()

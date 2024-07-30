@@ -161,15 +161,6 @@ return {
                 },
                 tsserver = {
                     single_file_support = false,
-                    root_dir = function()
-                        return require('lspconfig.util').root_pattern(
-                            'lerna.json',
-                            'tsconfig.json',
-                            'jsconfig.json',
-                            'package.json',
-                            '.git'
-                        )
-                    end,
                     settings = {
                         typescript = {
                             inlayHints = {
@@ -263,6 +254,15 @@ return {
             local utils = require 'core.utils'
             local lsp = require 'project.lsp'
             local features = require 'project.features'
+
+            -- fix the root_dir for ts-server
+            opts.servers.tsserver.root_dir = require('lspconfig.util').root_pattern(
+                'lerna.json',
+                'tsconfig.json',
+                'jsconfig.json',
+                'package.json',
+                '.git'
+            )
 
             -- on attach work
             lsp.on_attach(function(client, buffer)
