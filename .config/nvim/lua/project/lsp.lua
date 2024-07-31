@@ -260,7 +260,7 @@ function M.roots(target, sort)
                 or {}
 
             for _, p in ipairs(paths) do
-                local r = vim.loop.fs_realpath(p)
+                local r = vim.uv.fs_realpath(p)
                 if r and path:find(r, 1, true) then
                     if not vim.tbl_contains(roots, r) then
                         roots[#roots + 1] = r

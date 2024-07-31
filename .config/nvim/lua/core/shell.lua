@@ -16,12 +16,12 @@ M.terminals = {}
 function M.floating(cmd, opts)
     assert(type(cmd) == 'string' and cmd ~= '')
 
-    local cwd = vim.loop.cwd()
+    local cwd = vim.uv.cwd()
 
     opts = utils.tbl_merge({
         ft = 'lazyterm',
         size = { width = 0.9, height = 0.9 },
-        cwd = cwd and vim.loop.fs_realpath(cwd),
+        cwd = cwd and vim.uv.fs_realpath(cwd),
     }, opts or {}, { persistent = true })
 
     local key = vim.inspect {
@@ -64,9 +64,9 @@ M.running_processes = {}
 ---@param callback core.shell.AsyncCallback # the callback to call when the command finishes
 ---@param opts { cwd: string | nil }|nil # the options to pass to the command
 local function async_cmd(cmd, args, input, callback, opts)
-    local stdin = input and assert(vim.loop.new_pipe(false), 'Failed to create stdin pipe')
-    local stdout = assert(vim.loop.new_pipe(false), 'Failed to create stdout pipe')
-    local stderr = assert(vim.loop.new_pipe(false), 'Failed to create stderr pipe')
+    local stdin = input and assert(vim.uv.new_pipe(false), 'Failed to create stdin pipe')
+    local stdout = assert(vim.uv.new_pipe(false), 'Failed to create stdout pipe')
+    local stderr = assert(vim.uv.new_pipe(false), 'Failed to create stderr pipe')
 
     opts = opts or {}
 
@@ -118,12 +118,12 @@ local function async_cmd(cmd, args, input, callback, opts)
     ---@type string|integer
     local spawn_error_or_pid
 
-    handle, spawn_error_or_pid = vim.loop.spawn(
+    handle, spawn_error_or_pid = vim.uv.spawn(
         cmd,
         {
             args = args,
             stdio = { stdin, stdout, stderr },
-            cwd = opts.cwd or vim.loop.cwd(),
+            cwd = opts.cwd or vim.uv.cwd(),
         },
         vim.schedule_wrap(function(code)
             cleanup()
@@ -286,7 +286,7 @@ end
 ---@param dir string|nil # the directory to grep in or the current directory if nil
 ---@param callback fun(results: core.shell.GrepResult[]) # the callback to call when the command finishes
 function M.grep_dir(term, dir, callback)
-    dir = dir or vim.loop.cwd()
+    dir = dir or vim.uv.cwd()
     M.async_cmd('rg', { term, dir, '--vimgrep', '--no-heading', '--smart-case' }, nil, function(stdout)
         ---@type core.shell.GrepResult[]
         local results = {}

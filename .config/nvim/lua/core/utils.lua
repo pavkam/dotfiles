@@ -492,7 +492,7 @@ function M.defer_unique(buffer, fn, timeout)
 
     local timer = differed_buffer_timers[buffer]
     if not timer then
-        timer = vim.loop.new_timer()
+        timer = vim.uv.new_timer()
         differed_buffer_timers[buffer] = timer
     else
         timer:stop()
@@ -523,7 +523,7 @@ function M.expand_target(target)
         return target, vim.api.nvim_buf_get_name(target)
     else
         local path = vim.fn.expand(target --[[@as string]])
-        return vim.api.nvim_get_current_buf(), vim.loop.fs_realpath(vim.fn.expand(path)) or path
+        return vim.api.nvim_get_current_buf(), vim.uv.fs_realpath(vim.fn.expand(path)) or path
     end
 end
 
@@ -741,7 +741,7 @@ end
 function M.file_exists(path)
     assert(type(path) == 'string')
 
-    local stat = vim.loop.fs_stat(vim.fn.expand(path))
+    local stat = vim.uv.fs_stat(vim.fn.expand(path))
     return stat and stat.type == 'file' or false
 end
 

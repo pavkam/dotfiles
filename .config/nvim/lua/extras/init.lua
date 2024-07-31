@@ -28,7 +28,7 @@ utils.on_user_event('NormalFile', function(_, evt)
                 return
             end
 
-            local ok, _, msg = vim.loop.fs_rename(old_path, new_path)
+            local ok, _, msg = vim.uv.fs_rename(old_path, new_path)
             if not ok then
                 utils.error(string.format('Failed to rename file: **%s**', msg))
                 return
@@ -71,7 +71,7 @@ utils.on_user_event('NormalFile', function(_, evt)
             end
         end
 
-        local ok, _, msg = vim.loop.fs_unlink(path)
+        local ok, _, msg = vim.uv.fs_unlink(path)
         if not ok then
             utils.error(string.format('Failed to delete file: **%s**', msg))
             return

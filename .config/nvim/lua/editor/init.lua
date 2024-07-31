@@ -270,7 +270,7 @@ utils.on_event('BufWritePre', function(evt)
         return
     end
 
-    local file = vim.loop.fs_realpath(evt.match) or evt.match
+    local file = vim.uv.fs_realpath(evt.match) or evt.match
     vim.fn.mkdir(vim.fn.fnamemodify(file, ':p:h'), 'p')
 end)
 

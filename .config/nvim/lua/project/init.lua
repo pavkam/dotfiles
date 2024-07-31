@@ -184,7 +184,7 @@ function M.roots(target)
     end
 
     -- find also roots based on patterns
-    local cwd = vim.loop.cwd()
+    local cwd = vim.uv.cwd()
     path = path and vim.fs.dirname(path) or cwd
 
     -- now add all the roots from the patterns
@@ -192,7 +192,7 @@ function M.roots(target)
         path = path,
         upward = true,
         limit = math.huge,
-        stop = vim.loop.os_homedir(),
+        stop = vim.uv.os_homedir(),
     })
 
     for _, matched_file in ipairs(matched_files) do

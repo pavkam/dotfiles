@@ -170,7 +170,6 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     if not utils.is_special_buffer(evt.buf) then
         utils.trigger_user_event 'NormalFile'
 
-        -- TODO: real path seems fucked
         git.check_tracked(vim.uv.fs_realpath(current_file) or current_file, function(yes)
             if yes then
                 utils.trigger_user_event 'GitFile'

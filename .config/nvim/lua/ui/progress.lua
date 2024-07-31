@@ -129,7 +129,7 @@ local function ensure_polling()
         return
     end
 
-    timer = vim.loop.new_timer()
+    timer = vim.uv.new_timer()
     local interval = 100
 
     local res = timer:start(
