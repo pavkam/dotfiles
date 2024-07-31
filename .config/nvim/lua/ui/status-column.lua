@@ -1,7 +1,13 @@
 local utils = require 'core.utils'
 
+---@class ui.status-column.Sign # Defines a sign
+---@field name string # The name of the sign
+---@field text string # The text of the sign
+---@field texthl string # The highlight group of the text
+---@field priority number # The priority of the sign
+
 --- Gets the icon for a sign
----@param sign ui.Sign | nil # the sign to get the icon for
+---@param sign ui.status-column.Sign | nil # the sign to get the icon for
 ---@return string # the icon
 local function icon(sign)
     sign = sign or {}
@@ -12,11 +18,10 @@ local function icon(sign)
     return sign.texthl and ('%#' .. sign.texthl .. '#' .. text .. '%*') or text
 end
 
--- URGENT: figure out why this is not working
 --- Returns a list of regular and ext-mark signs sorted by priority (low to high)
 ---@param buffer number | nil # The buffer to get the signs from or nil for the current buffer
 ---@param lnum number # The line number to get the signs from
----@return ui.Sign[] # A list of signs
+---@return ui.status-column.Sign[] # A list of signs
 local function get_ext_marks(buffer, lnum)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -28,7 +33,7 @@ local function get_ext_marks(buffer, lnum)
         { details = true, type = 'sign' }
     )
 
-    ---@cast ext_marks ui.Sign[]
+    ---@cast ext_marks ui.status-column.Sign[]
     ext_marks = vim.iter(ext_marks)
         :map(
             ---@param ext_mark vim.api.keyset.get_extmark_item
@@ -65,7 +70,7 @@ local function status_column()
     if show_signs then
         local ext_marks = get_ext_marks(buffer, vim.v.lnum)
 
-        ---@type ui.Sign | nil, ui.Sign | nil, ui.Sign | nil, string | nil
+        ---@type ui.status-column.Sign | nil, ui.status-column.Sign | nil, ui.status-column.Sign | nil, string | nil
         local left, right, fold, githl
 
         for _, s in ipairs(ext_marks) do

@@ -9,6 +9,16 @@ local keys = require 'core.keys'
 local icons = require 'ui.icons'
 local project = require 'project'
 
+-- URGENT: This is shit -- opening crappy empty file
+-- E5108: Error executing lua: vim/_editor.lua:0: nvim_exec2(): Vim(edit):E32: No file name
+-- stack traceback:
+-- 	[C]: in function 'nvim_exec2'
+-- 	vim/_editor.lua: in function 'cmd'
+-- 	/Users/alex/.config/nvim/lua/ui/file-palette.lua:326: in function 'run_replace_or_original'
+-- 	...re/nvim/lazy/telescope.nvim/lua/telescope/actions/mt.lua:65: in function 'key_func'
+-- 	...hare/nvim/lazy/telescope.nvim/lua/telescope/mappings.lua:293: in function <...hare/nvim/lazy/telescope.nvim/lua/telescope/mappings.lua:292>
+--
+
 ---@class ui.file_palette.Options
 ---@field buffer number|nil # The buffer number, 0 or nil for the current buffer
 ---@field column_separator string|nil # The column separator

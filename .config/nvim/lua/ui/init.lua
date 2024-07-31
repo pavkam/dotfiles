@@ -257,48 +257,4 @@ settings.register_toggle('treesitter_enabled', function(enabled, buffer)
     end
 end, { icon = icons.UI.SyntaxTree, name = 'Treesitter', scope = { 'buffer' } })
 
----@class ui.Sign # Defines a sign
----@field name string # The name of the sign
----@field text string # The text of the sign
----@field texthl string # The highlight group of the text
----@field priority number # The priority of the sign
-
---- Returns a list of regular and ext-mark signs sorted by priority (low to high)
----@param buffer number | nil # The buffer to get the signs from or nil for the current buffer
----@param lnum number # The line number to get the signs from
----@return ui.Sign[] # A list of signs
-function M.get_ext_marks(buffer, lnum)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    local ext_marks = vim.api.nvim_buf_get_extmarks(
-        buffer,
-        -1,
-        { lnum - 1, 0 },
-        { lnum - 1, -1 },
-        { details = true, type = 'sign' }
-    )
-
-    ---@cast ext_marks ui.Sign[]
-    ext_marks = vim.iter(ext_marks)
-        :map(
-            ---@param ext_mark vim.api.keyset.get_extmark_item
-            function(ext_mark)
-                return {
-                    name = ext_mark[4].sign_hl_group or ext_mark[4].sign_name or '',
-                    text = ext_mark[4].sign_text,
-                    texthl = ext_mark[4].sign_hl_group,
-                    priority = ext_mark[4].priority,
-                }
-            end
-        )
-        :totable()
-
-    -- Sort by priority
-    table.sort(ext_marks, function(a, b)
-        return (a.priority or 0) < (b.priority or 0)
-    end)
-
-    return ext_marks
-end
-
 return M

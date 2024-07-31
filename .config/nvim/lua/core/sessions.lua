@@ -75,7 +75,7 @@ function M.save_session(name)
     local json = vim.json.encode(custom) or '{}'
     vim.fn.writefile({ json }, custom_file, 'bs')
 
-    utils.hint(string.format('%s Saved session `%s`', icons.UI.SessionSave, name))
+    utils.hint(string.format('Saved session `%s`', name), { prefix_icon = icons.UI.SessionSave })
 end
 
 --- Resets the UI
@@ -132,11 +132,11 @@ function M.restore_session(name)
             end
 
             error_call('shada', name, vim.cmd.rshada, shada_file)
-            error_call('vim session', name, vim.cmd.source, session_file)
+            -- URGENT: this session management is crap:  error_call('vim session', name, vim.cmd.source, session_file)
 
             vim.schedule(function()
                 utils.refresh_ui()
-                utils.hint(string.format('%s Restored session `%s`', icons.UI.SessionSave, name))
+                utils.hint(string.format('Restored session `%s`', name), { prefix_icon = icons.UI.SessionSave })
             end)
         end)
     end
@@ -170,28 +170,27 @@ local function swap_sessions(old_name, new_name)
     end
 end
 
--- URGENT: the session management is broken
--- utils.on_event('VimLeavePre', function()
---     local current = M.current()
---     if current then
---         M.save_session(current)
---     end
--- end)
---
--- utils.on_user_event('LazyDone', function()
---     swap_sessions(nil, M.current())
--- end)
---
--- utils.on_focus_gained(function()
---     swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
--- end)
+utils.on_event('VimLeavePre', function()
+    local current = M.current()
+    if current then
+        M.save_session(current)
+    end
+end)
+
+utils.on_user_event('LazyVimStarted', function()
+    swap_sessions(nil, M.current())
+end)
+
+utils.on_focus_gained(function()
+    swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
+end)
 
 --- Get the current session with a warning if session management is disabled
 ---@return string|nil # the current session name or nil if not enabled
 local function current_with_warning()
     local current = M.current()
     if not current then
-        utils.warn(string.format('%s Session management is disabled in this instance.', icons.UI.SessionDelete))
+        utils.warn('Session management is disabled in this instance.', { prefix_icon = icons.UI.SessionDelete })
     end
 
     return current
@@ -217,7 +216,7 @@ utils.register_command('Session', {
         end
 
         if not M.saved(current) then
-            utils.warn(string.format('%s Session `%s` does not exist.', icons.UI.SessionDelete, current))
+            utils.warn(string.format('Session `%s` does not exist', current), { prefix_icon = icons.UI.SessionDelete })
             return
         end
 
@@ -226,11 +225,11 @@ utils.register_command('Session', {
         local deleted = vim.fn.delete(session_file) - vim.fn.delete(shada_file) - vim.fn.delete(custom_file)
 
         if deleted == 0 then
-            utils.warn(string.format('%s Deleted session `%s`', icons.UI.SessionDelete, current))
+            utils.warn(string.format('Deleted session `%s`', current), { prefix_icon = icons.UI.SessionDelete })
         else
-            utils.error(
-                string.format('%s Error(s) occurred while deleting session `%s`', icons.UI.SessionSave, current)
-            )
+            utils.error(string.format('Error(s) occurred while deleting session `%s`', current), {
+                prefix_icon = icons.UI.SessionSave,
+            })
         end
 
         reset_ui()
