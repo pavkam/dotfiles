@@ -156,12 +156,12 @@ keys.map('n', '\\', 'viw', { desc = 'Select word' })
 
 keys.map('x', '<C-r>', function()
     local text = utils.get_selected_text()
-    utils.feed_keys(syntax.create_rename_expression { orig = text })
+    keys.feed(syntax.create_rename_expression { orig = text })
 end, { desc = 'Replace selection' })
 
 keys.map('x', '<C-S-r>', function()
     local text = utils.get_selected_text()
-    utils.feed_keys(syntax.create_rename_expression { orig = text, whole_word = true })
+    keys.feed(syntax.create_rename_expression { orig = text, whole_word = true })
 end, { desc = 'Replace selection (whole word)' })
 
 keys.map('n', '<C-r>', syntax.create_rename_expression(), { desc = 'Replace word under cursor' })

@@ -113,12 +113,12 @@ keys.map('c', '<Right>', function()
 end, { expr = true })
 
 -- Add "q" to special windows
-utils.attach_keymaps(utils.special_file_types, function(set)
+keys.attach(utils.special_file_types, function(set)
     set('n', 'q', '<cmd>close<cr>', { silent = true })
     set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
 end)
 
-utils.attach_keymaps('help', function(set)
+keys.attach('help', function(set)
     set('n', 'q', '<cmd>close<cr>', { icon = icons.UI.Close, silent = true })
     set('n', '<Esc>', '<cmd>close<cr>', { icon = icons.UI.Close, silent = true })
 end, true)

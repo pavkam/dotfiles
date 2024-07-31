@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
 
 require 'extras.health'
 require 'extras.notes'
@@ -82,7 +83,7 @@ end)
 
 -- Some custom mappings for file types
 if vim.fn.executable 'jq' then
-    utils.attach_keymaps('json', function(set)
+    keys.attach('json', function(set)
         set('n', '=', ':%Apply jq .<cr>', { desc = 'Pretty-format JSON' })
     end)
 end

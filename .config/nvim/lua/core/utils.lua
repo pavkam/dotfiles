@@ -44,28 +44,6 @@ function M.to_list(value)
     end
 end
 
---- Flattens a table
---- @param tbl table # the table to flatten
---- @param key string|nil # the initial prefix to use for the flattened table. All keys are concatenated with a dot.
---- @return table<string, any> # the flattened table
-function M.flatten(tbl, key)
-    if type(tbl) ~= 'table' then
-        return { [key] = tbl }
-    end
-
-    ---@type table<string, any>
-    local result = {}
-
-    for p, v in pairs(tbl) do
-        for pr, pv in pairs(M.flatten(v, p)) do
-            local k = key and key .. '.' .. pr or pr
-            result[k] = pv
-        end
-    end
-
-    return result
-end
-
 --- Inflates a list to a table
 ---@generic T: table
 ---@param list T[] # the list to inflate
@@ -997,58 +975,6 @@ function M.refresh_ui()
     vim.cmd 'tabdo wincmd ='
     vim.cmd('tabnext ' .. current_tab)
     vim.cmd 'redraw!'
-end
-
----@alias core.utils.KeyMapCallback fun(mode: core.utils.KeyMapMode|core.utils.KeyMapMode[], lhs: string, rhs: string|function, opts: core.utils.KeyMapOpts)
-
---- Allows attaching keymaps in a given buffer alone.
----@param file_types string|table|nil # the list of file types to attach the keymaps to
----@param callback fun(core.utils.KeyMapCallback) # the callback to call when the event is triggered
----@param force boolean|nil # whether to force the keymaps to be set even if they are already set
----@return number # the group id of the created group
-function M.attach_keymaps(file_types, callback, force)
-    assert(type(callback) == 'function')
-
-    if file_types == nil then
-        file_types = '*'
-    else
-        file_types = M.to_list(file_types)
-    end
-
-    return on_event('FileType', function(evt)
-        if file_types == '*' and M.is_special_buffer(evt.buf) then
-            return
-        end
-
-        ---@type core.utils.KeyMapCallback
-        local mapper = function(mode, lhs, rhs, opts)
-            ---@diagnostic disable-next-line: param-type-mismatch
-            local has_mapping = not vim.tbl_isempty(vim.fn.maparg(lhs, mode, 0, 1))
-            if not has_mapping or force then
-                require('core.keys').map(mode, lhs, rhs, M.tbl_merge({ buffer = evt.buf }, opts or {}))
-            end
-        end
-
-        callback(mapper)
-    end, file_types)
-end
-
---- Feed keys to Neovim
----@param keys string # the keys to feed
----@param mode string|nil # the mode to feed the keys in
-function M.feed_keys(keys, mode)
-    assert(type(keys) == 'string')
-    mode = mode or 'n'
-
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), mode, false)
-end
-
---- Formats the term_codes to be human-readable
----@param str string # the string to format
-function M.format_term_codes(str)
-    assert(type(str) == 'string')
-
-    return str:gsub(string.char(9), '<TAB>'):gsub('', '<C-F>'):gsub(' ', '<Space>'):gsub('\n', '<CR>')
 end
 
 ---@type string

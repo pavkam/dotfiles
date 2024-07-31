@@ -1,4 +1,5 @@
 local icons = require 'ui.icons'
+local utils = require 'core.utils'
 
 ---@class (strict) core.keys
 local M = {}
@@ -65,6 +66,61 @@ function M.group(opts)
         local wk = require 'which-key'
         wk.add { opts.lhs, mode = opts.mode, icon = opts.icon, group = opts.desc, buffer = opts.buffer }
     end
+end
+
+---@alias core.keys.KeyMapCallback
+---| fun(mode: core.keys.KeyMapMode|core.keys.KeyMapMode[], lhs: string, rhs: string|function, opts: core.keys.KeyMapOpts)
+
+--- Allows attaching keymaps in a given buffer alone.
+---@param file_types string|table|nil # the list of file types to attach the keymaps to
+---@param callback fun(core.keys.KeyMapCallback) # the callback to call when the event is triggered
+---@param force boolean|nil # whether to force the keymaps to be set even if they are already set
+---@return number # the group id of the created group
+function M.attach(file_types, callback, force)
+    assert(type(callback) == 'function')
+
+    if file_types == nil then
+        file_types = '*'
+    else
+        file_types = utils.to_list(file_types)
+    end
+
+    return utils.on_event('FileType', function(evt)
+        if file_types == '*' and utils.is_special_buffer(evt.buf) then
+            return
+        end
+
+        ---@type core.keys.KeyMapCallback
+        local mapper = function(mode, lhs, rhs, opts)
+            ---@diagnostic disable-next-line: param-type-mismatch
+            local has_mapping = not vim.tbl_isempty(vim.fn.maparg(lhs, mode, 0, 1))
+            if not has_mapping or force then
+                M.map(mode, lhs, rhs, utils.tbl_merge({ buffer = evt.buf }, opts or {}))
+            end
+        end
+
+        callback(mapper)
+    end, file_types)
+end
+
+--- Feed keys to Neovim
+---@param keys string # the keys to feed
+---@param mode string|nil # the mode to feed the keys in
+function M.feed(keys, mode)
+    assert(type(keys) == 'string')
+    mode = mode or 'n'
+
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), mode, false)
+end
+
+--- Formats the term_codes to be human-readable
+---@param str string # the string to format
+---@return string # the formatted string
+function M.format_term_codes(str)
+    assert(type(str) == 'string')
+
+    local sub = str:gsub(string.char(9), '<TAB>'):gsub('', '<C-F>'):gsub(' ', '<Space>'):gsub('\n', '<CR>')
+    return sub
 end
 
 return M

@@ -1,4 +1,6 @@
 local utils = require 'core.utils'
+local keys = require 'core.keys'
+
 local group = 'pavkam_marks'
 
 ---@class ui.marks
@@ -89,7 +91,7 @@ for i = 97, 122 do -- ASCII values for 'a' to 'z'
     table.insert(letters, string.char(i - 32))
 end
 
-utils.attach_keymaps(nil, function(set)
+keys.attach(nil, function(set)
     for _, key in ipairs(letters) do
         set('n', 'm' .. key, function()
             local r, c = unpack(vim.api.nvim_win_get_cursor(0))

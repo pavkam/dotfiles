@@ -148,7 +148,7 @@ local function get_items(opts)
         end
 
         -- description
-        local desc = (keymap.desc or utils.format_term_codes(keymap.rhs or '')):gsub('\n', '\\n')
+        local desc = (keymap.desc or keys.format_term_codes(keymap.rhs or '')):gsub('\n', '\\n')
         if keymap.callback and not keymap.desc then
             -- TODO: this seems to need my love
             desc = require('telescope.actions.utils')._get_anon_function_name(debug.getinfo(keymap.callback))
@@ -156,7 +156,7 @@ local function get_items(opts)
 
         table.insert(items, {
             type = 'keymap',
-            name = utils.format_term_codes(keymap.lhs),
+            name = keys.format_term_codes(keymap.lhs),
             attrs = attrs,
             desc = desc:gsub('\n', ' '),
             original = keymap,
@@ -259,14 +259,14 @@ local function show_command_palette(opts)
 
                         vim.cmd.stopinsert()
                         if utils.is_visual_mode(opts.mode) then
-                            utils.feed_keys 'gv'
+                            keys.feed 'gv'
                         end
 
-                        utils.feed_keys(cmd, 'nt')
+                        keys.feed(cmd, 'nt')
                     elseif selection.type == 'keymap' then
                         local keymap = selection.original --[[@as vim.KeymapDesc]]
 
-                        utils.feed_keys(keymap.lhs, 't')
+                        keys.feed(keymap.lhs, 't')
                         return actions.close(prompt_bufnr)
                     end
                 end)
@@ -287,7 +287,7 @@ function M.show_command_palette(opts)
     opts.mode = opts.mode or vim.fn.mode()
 
     if utils.is_visual_mode(opts.mode) then
-        utils.feed_keys '<esc>'
+        keys.feed '<esc>'
 
         vim.schedule(function()
             show_command_palette(opts)

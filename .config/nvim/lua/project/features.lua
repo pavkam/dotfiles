@@ -82,7 +82,7 @@ local keymaps = {
                 vim.lsp.buf.rename()
                 return ':<nop><cr>'
             else
-                utils.feed_keys(syntax.create_rename_expression())
+                keys.feed(syntax.create_rename_expression())
             end
         end,
         desc = 'Rename',
