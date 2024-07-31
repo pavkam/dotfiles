@@ -1,11 +1,10 @@
 -- LOW: figure out why TODOs don't get highlighted
--- URGENT: not sure why session fails to restore when closing file with error
+-- LOW: show the number of failed/total tests in the status-line
 -- TODO: the typos lsp is not dying correctly when disabled
 -- TODO: fixwin fails in many cases, probably need to be very specific,
 -- TODO: Alpha appears when it should not
 -- TODO: the file palette is crap
 -- MAYBE: Cross-tmux-session marks
--- LOW: show the number of failed/total tests in the status-line
 
 --- Global function to quit the current process
 _G.quit = function()
