@@ -51,7 +51,6 @@ return {
         return opts
     end,
     config = function(spec, opts)
-        local utils = require 'core.utils'
         local keys = require 'core.keys'
 
         -- register neo-test virtual text
@@ -70,53 +69,55 @@ return {
         end
 
         -- register neotest mappings
-        utils.on_event('FileType', function(args)
+        keys.attach(spec.ft, function(set, file_type, buffer)
             local icons = require 'ui.icons'
             local neotest = require 'neotest'
 
-            keys.map('n', '<leader>tU', function()
+            set('n', '<leader>tU', function()
                 neotest.summary.toggle()
-            end, { buffer = args.buf, desc = 'Toggle summary view' })
+            end, { desc = 'Toggle summary view' })
 
-            keys.map('n', '<leader>to', function()
+            set('n', '<leader>to', function()
                 neotest.output.open()
-            end, { buffer = args.buf, desc = 'Show test output' })
+            end, { desc = 'Show test output' })
 
-            keys.map('n', '<leader>tw', function()
+            set('n', '<leader>tw', function()
                 neotest.watch.toggle()
-            end, { buffer = args.buf, desc = 'Toggle test watching' })
+            end, { desc = 'Toggle test watching' })
 
-            keys.map('n', '<leader>tf', function()
+            set('n', '<leader>tf', function()
                 neotest.run.run(vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf()))
-            end, { buffer = args.buf, desc = 'Run all tests' })
+            end, { desc = 'Run all tests' })
 
-            keys.map('n', '<leader>tr', function()
+            set('n', '<leader>tr', function()
                 if not confirm_saved() then
                     return
                 end
 
                 neotest.run.run()
-            end, { buffer = args.buf, desc = 'Run nearest test' })
+            end, { desc = 'Run nearest test' })
 
-            keys.map('n', '<leader>td', function()
+            set('n', '<leader>td', function()
                 if not confirm_saved() then
                     return
                 end
 
-                if args.match == 'go' then
+                if file_type == 'go' then
                     require('dap-go').debug_test()
                 else
                     require('neotest').run.run { strategy = 'dap', suite = false }
                 end
-            end, { buffer = args.buf, desc = 'Debug nearest test' })
+            end, { desc = 'Debug nearest test' })
 
             -- add which key group
-            require('which-key').add({
-                desc = '<leader>t',
+            keys.group {
+                mode = 'n',
+                lhs = '<leader>t',
                 icon = icons.UI.Test,
-                group = 'Testing',
-            }, { buffer = args.buf })
-        end, spec.ft)
+                desc = 'Testing',
+                buffer = buffer,
+            }
+        end)
 
         local neotest = require 'neotest'
         neotest.setup(opts)

@@ -24,11 +24,11 @@ function M.map(mode, key, action, opts)
     opts = opts or {}
     local using_which_key = package.loaded['lazy'] and require('lazy.core.config').spec.plugins['which-key.nvim'] ~= nil
 
-    if using_which_key then
+    if using_which_key and mode ~= 'c' then
         local wk = require 'which-key'
         wk.add {
-            lhs = key,
-            rhs = action,
+            key,
+            action,
             desc = opts.desc,
             icon = opts.icon,
             silent = opts.silent,
@@ -73,7 +73,8 @@ end
 
 --- Allows attaching keymaps in a given buffer alone.
 ---@param file_types string|table|nil # the list of file types to attach the keymaps to
----@param callback fun(core.keys.KeyMapCallback) # the callback to call when the event is triggered
+---@param callback fun(set: core.keys.KeyMapCallback, file_type: string, buffer: integer) # the callback to call
+---when the event is triggered
 ---@param force boolean|nil # whether to force the keymaps to be set even if they are already set
 ---@return number # the group id of the created group
 function M.attach(file_types, callback, force)
@@ -99,7 +100,7 @@ function M.attach(file_types, callback, force)
             end
         end
 
-        callback(mapper)
+        callback(mapper, evt.match, evt.buf)
     end, file_types)
 end
 
