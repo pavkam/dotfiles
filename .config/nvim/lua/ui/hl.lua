@@ -77,11 +77,16 @@ local highlights = {
     RecordingMacroStatus = { 'Error', { bold = true } },
     MarkSign = 'DiagnosticWarn',
 
-    CommandPaletteNearFile = 'DiagnosticInfo',
+    CommandPaletteNearFile = 'TelescopeResultsNormal',
     CommandPaletteMarkedFile = 'DiagnosticWarn',
     CommandPaletteOldFile = 'DiagnosticHint',
     CommandPaletteCommand = 'Function',
     CommandPaletteKeymap = 'Keyword',
+
+    FilePaletteOpenFile = '@lsp.type.variable',
+    FilePaletteJumpedFile = '@lsp.type.decorator',
+    FilePaletteOldFile = '@lsp.type.number',
+    FilePaletteMarkedFile = '@keyword',
 }
 
 for hl, def in pairs(highlights) do

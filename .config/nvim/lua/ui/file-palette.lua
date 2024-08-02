@@ -9,16 +9,6 @@ local keys = require 'core.keys'
 local icons = require 'ui.icons'
 local project = require 'project'
 
--- URGENT: This is shit -- opening crappy empty file
--- E5108: Error executing lua: vim/_editor.lua:0: nvim_exec2(): Vim(edit):E32: No file name
--- stack traceback:
--- 	[C]: in function 'nvim_exec2'
--- 	vim/_editor.lua: in function 'cmd'
--- 	/Users/alex/.config/nvim/lua/ui/file-palette.lua:326: in function 'run_replace_or_original'
--- 	...re/nvim/lazy/telescope.nvim/lua/telescope/actions/mt.lua:65: in function 'key_func'
--- 	...hare/nvim/lazy/telescope.nvim/lua/telescope/mappings.lua:293: in function <...hare/nvim/lazy/telescope.nvim/lua/telescope/mappings.lua:292>
---
-
 ---@class ui.file_palette.Options
 ---@field buffer number|nil # The buffer number, 0 or nil for the current buffer
 ---@field column_separator string|nil # The column separator
@@ -209,16 +199,14 @@ local function get_items(opts)
 
     ---@type ui.file_palette.File[]
     local all = get_listed_buffers()
-    vim.list_extend(all, get_marked_buffer(opts.buffer))
-    vim.list_extend(all, get_global_marked_files())
+    vim.list_extend(all, get_opened_files())
     vim.list_extend(all, get_jump_list_files())
     vim.list_extend(all, get_old_files())
-    vim.list_extend(all, get_opened_files())
+    vim.list_extend(all, get_marked_buffer(opts.buffer))
+    vim.list_extend(all, get_global_marked_files())
 
     ---@type table<string, boolean>
-    local seen_linewise = {}
-    ---@type table<string, boolean>
-    local seen_filewise = {}
+    local seen = {}
 
     return vim.iter(all)
         :map(
@@ -234,13 +222,15 @@ local function get_items(opts)
         :filter(
             ---@param file ui.file_palette.File
             function(file)
-                local meta = file.file .. ':' .. file.line
-                if seen_linewise[meta] or (file.line <= 1 and seen_filewise[file.file]) then
+                if file.file == '' then
                     return false
                 end
 
-                seen_linewise[meta] = true
-                seen_filewise[file.file] = true
+                if seen[file.file] then
+                    return false
+                end
+
+                seen[file.file] = true
                 return true
             end
         )
@@ -259,18 +249,23 @@ local function get_items(opts)
 end
 
 --- Gets the displayer
----@param type_col_width number # The width of the type column
 ---@param opts ui.file_palette.Options
-local function get_displayer(type_col_width, opts)
+local function get_displayer(opts)
     return entry_display.create {
         separator = opts.column_separator,
         items = {
-            { width = type_col_width },
             { width = 2 },
             { remaining = true },
         },
     }
 end
+
+local hl_map = {
+    ['old-file'] = 'FilePaletteOldFile',
+    ['jump-list'] = 'FilePaletteJumpedFile',
+    ['buffer'] = 'FilePaletteOpenFile',
+    ['*'] = 'FilePaletteMarkedFile',
+}
 
 --- Get the entry maker
 ---@param displayer function # The displayer
@@ -278,11 +273,9 @@ local function get_entry_maker(displayer)
     ---@param entry ui.file_palette.Entry
     local make_display = function(entry)
         local icon, hl = icons.get_file_icon(entry.filename)
-
         return displayer {
-            { entry.type, 'TelescopeResultsComment' },
             { icon, hl },
-            { entry.short_name, 'CommandPaletteMarkedFile' },
+            { entry.short_name .. ' : ' .. entry.lnum, hl_map[entry.type] or hl_map['*'] },
         }
     end
 
@@ -305,12 +298,7 @@ local function show_file_palette(opts)
 
     local items = get_items(opts)
 
-    local type_col_width = 0
-    for _, item in ipairs(items) do
-        type_col_width = math.max(type_col_width, #item.type)
-    end
-
-    local displayer = get_displayer(type_col_width + 1, opts)
+    local displayer = get_displayer(opts)
     local entry_maker = get_entry_maker(displayer)
 
     pickers
@@ -348,7 +336,7 @@ function M.show_file_palette(opts)
     opts = opts or {}
 
     opts.buffer = opts.buffer or vim.api.nvim_get_current_buf()
-    opts.column_separator = opts.column_separator or (' ' .. icons.Symbols.ColumnSeparator .. ' ')
+    opts.column_separator = opts.column_separator or ''
 
     show_file_palette(opts)
 end
