@@ -3,7 +3,7 @@
 -- TODO: the typos lsp is not dying correctly when disabled
 -- TODO: fixwin fails in many cases, probably need to be very specific,
 -- TODO: Alpha appears when it should not
--- TODO: the file palette is crap
+-- URGENT: Do not use which key if there is no icon attached.
 -- MAYBE: Cross-tmux-session marks
 
 --- Global function to quit the current process
@@ -133,6 +133,9 @@ require('lazy').setup {
     },
     ui = {
         border = vim.g.border_style,
+    },
+    change_detection = {
+        enabled = false,
     },
     checker = {
         enabled = true,

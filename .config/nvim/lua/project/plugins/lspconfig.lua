@@ -159,7 +159,37 @@ return {
                         },
                     },
                 },
-                tsserver = {
+                -- tsserver = {
+                --     single_file_support = false,
+                --     settings = {
+                --         typescript = {
+                --             inlayHints = {
+                --                 includeInlayParameterNameHints = 'literal',
+                --                 includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                --                 includeInlayFunctionParameterTypeHints = true,
+                --                 includeInlayVariableTypeHints = false,
+                --                 includeInlayPropertyDeclarationTypeHints = true,
+                --                 includeInlayFunctionLikeReturnTypeHints = true,
+                --                 includeInlayEnumMemberValueHints = true,
+                --             },
+                --         },
+                --         javascript = {
+                --             inlayHints = {
+                --                 includeInlayParameterNameHints = 'all',
+                --                 includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                --                 includeInlayFunctionParameterTypeHints = true,
+                --                 includeInlayVariableTypeHints = true,
+                --                 includeInlayPropertyDeclarationTypeHints = true,
+                --                 includeInlayFunctionLikeReturnTypeHints = true,
+                --                 includeInlayEnumMemberValueHints = true,
+                --             },
+                --         },
+                --         completions = {
+                --             completeFunctionCalls = true,
+                --         },
+                --     },
+                -- },
+                vtsls = {
                     single_file_support = false,
                     settings = {
                         typescript = {
@@ -256,7 +286,7 @@ return {
             local features = require 'project.features'
 
             -- fix the root_dir for ts-server
-            opts.servers.tsserver.root_dir = require('lspconfig.util').root_pattern(
+            opts.servers.vtsls.root_dir = require('lspconfig.util').root_pattern(
                 'lerna.json',
                 'tsconfig.json',
                 'jsconfig.json',

@@ -24,7 +24,7 @@ function M.map(mode, key, action, opts)
     opts = opts or {}
     local using_which_key = package.loaded['lazy'] and require('lazy.core.config').spec.plugins['which-key.nvim'] ~= nil
 
-    if using_which_key and mode ~= 'c' then
+    if using_which_key and mode ~= 'c' and opts.icon then
         local wk = require 'which-key'
         wk.add {
             key,
