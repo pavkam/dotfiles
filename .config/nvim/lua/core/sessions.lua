@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local logging = require 'core.logging'
 local events = require 'core.events'
 local icons = require 'ui.icons'
 local settings = require 'core.settings'
@@ -76,7 +77,7 @@ function M.save_session(name)
     local json = vim.json.encode(custom) or '{}'
     vim.fn.writefile({ json }, custom_file, 'bs')
 
-    utils.hint(string.format('Saved session `%s`', name), { prefix_icon = icons.UI.SessionSave })
+    logging.hint(string.format('Saved session `%s`', name), { prefix_icon = icons.UI.SessionSave })
 end
 
 --- Resets the UI
@@ -96,7 +97,7 @@ end
 local function error_call(name, session, ...)
     local ok, res_or_error = pcall(...)
     if not ok then
-        utils.error(
+        logging.error(
             string.format(
                 '%s Failed to restore %s for session `%s`:\n```%s```',
                 icons.UI.Disabled,
@@ -137,7 +138,7 @@ function M.restore_session(name)
 
             vim.schedule(function()
                 utils.refresh_ui()
-                utils.hint(string.format('Restored session `%s`', name), { prefix_icon = icons.UI.SessionSave })
+                logging.hint(string.format('Restored session `%s`', name), { prefix_icon = icons.UI.SessionSave })
             end)
         end)
     end
@@ -191,7 +192,7 @@ end)
 local function current_with_warning()
     local current = M.current()
     if not current then
-        utils.warn('Session management is disabled in this instance.', { prefix_icon = icons.UI.SessionDelete })
+        logging.warn('Session management is disabled in this instance.', { prefix_icon = icons.UI.SessionDelete })
     end
 
     return current
@@ -217,7 +218,10 @@ require('core.commands').register_command('Session', {
         end
 
         if not M.saved(current) then
-            utils.warn(string.format('Session `%s` does not exist', current), { prefix_icon = icons.UI.SessionDelete })
+            logging.warn(
+                string.format('Session `%s` does not exist', current),
+                { prefix_icon = icons.UI.SessionDelete }
+            )
             return
         end
 
@@ -226,9 +230,9 @@ require('core.commands').register_command('Session', {
         local deleted = vim.fn.delete(session_file) - vim.fn.delete(shada_file) - vim.fn.delete(custom_file)
 
         if deleted == 0 then
-            utils.warn(string.format('Deleted session `%s`', current), { prefix_icon = icons.UI.SessionDelete })
+            logging.warn(string.format('Deleted session `%s`', current), { prefix_icon = icons.UI.SessionDelete })
         else
-            utils.error(string.format('Error(s) occurred while deleting session `%s`', current), {
+            logging.error(string.format('Error(s) occurred while deleting session `%s`', current), {
                 prefix_icon = icons.UI.SessionSave,
             })
         end

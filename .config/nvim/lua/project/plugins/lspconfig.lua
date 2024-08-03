@@ -282,6 +282,7 @@ return {
             require('lspconfig.ui.windows').default_options.border = vim.g.border_style
 
             local utils = require 'core.utils'
+            local buffers = require 'core.buffers'
             local events = require 'core.events'
             local lsp = require 'project.lsp'
             local features = require 'project.features'
@@ -297,7 +298,7 @@ return {
 
             -- on attach work
             lsp.on_attach(function(client, buffer)
-                if utils.is_special_buffer(buffer) then
+                if buffers.is_special_buffer(buffer) then
                     vim.schedule(function()
                         vim.lsp.buf_detach_client(buffer, client.id)
                     end)

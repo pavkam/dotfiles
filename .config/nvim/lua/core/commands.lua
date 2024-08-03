@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local logging = require 'core.logging'
 
 --- @class (strict) core.commands
 local M = {}
@@ -148,7 +149,7 @@ function M.register_command(name, fn, opts)
             function(args)
                 local func_or_spec = fn[args.fargs[1] or opts.default_fn]
                 if not func_or_spec then
-                    utils.error(string.format('Unknown function `%s`', args.args))
+                    logging.error(string.format('Unknown function `%s`', args.args))
                     return
                 end
 

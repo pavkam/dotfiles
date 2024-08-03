@@ -1,4 +1,6 @@
 local utils = require 'core.utils'
+local buffers = require 'core.buffers'
+local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 
@@ -98,7 +100,7 @@ keys.attach(nil, function(set)
             local r, c = unpack(vim.api.nvim_win_get_cursor(0))
 
             vim.api.nvim_buf_set_mark(0, key, r, c, {})
-            utils.info(string.format('Marked position **%d:%d** as `%s`.', r, c, key))
+            logging.info(string.format('Marked position **%d:%d** as `%s`.', r, c, key))
 
             update_signs()
         end, { desc = string.format('Set mark "%s" at current line', key) })
@@ -110,7 +112,7 @@ keys.attach(nil, function(set)
         for _, mark in pairs(get_marks()) do
             if mark.pos[2] == r then
                 local key = mark_key(mark)
-                utils.info(string.format('Unmarked position **%d:%d** as `%s`.', r, c, key))
+                logging.info(string.format('Unmarked position **%d:%d** as `%s`.', r, c, key))
 
                 if is_buffer_mark(key) then
                     vim.api.nvim_buf_del_mark(0, key)
@@ -125,7 +127,7 @@ keys.attach(nil, function(set)
 end, true)
 
 events.on_event('BufEnter', function(evt)
-    if utils.is_special_buffer(evt.buf) then
+    if buffers.is_special_buffer(evt.buf) then
         return
     end
 
@@ -136,7 +138,7 @@ end)
 
 -- restore marks after reloading a file
 events.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
-    if utils.is_special_buffer(evt.buf) or utils.is_transient_buffer(evt.buf) then
+    if buffers.is_special_buffer(evt.buf) or buffers.is_transient_buffer(evt.buf) then
         return
     end
 

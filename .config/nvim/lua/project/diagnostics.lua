@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local logging = require 'core.logging'
 local events = require 'core.events'
 local lsp = require 'project.lsp'
 local progress = require 'ui.progress'
@@ -131,7 +132,7 @@ function M.check_workspace(client, target)
 end
 
 require('core.commands').register_command('DiagnoseWorkspace', function()
-    utils.info 'Checking workspace diagnostics...'
+    logging.info 'Checking workspace diagnostics...'
 
     ---@type vim.lsp.Client[]
     local clients = vim.iter(vim.lsp.get_clients())

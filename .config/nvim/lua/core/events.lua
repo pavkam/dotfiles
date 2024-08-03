@@ -1,4 +1,4 @@
----@class (strict) core.events
+---@class core.events
 local M = {}
 
 ---@type table<string, integer>

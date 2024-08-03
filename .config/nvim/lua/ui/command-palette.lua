@@ -5,6 +5,7 @@ local actions = require 'telescope.actions'
 local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
 local utils = require 'core.utils'
+local logging = require 'core.logging'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
 
@@ -241,7 +242,7 @@ local function show_command_palette(opts)
                     local selection = action_state.get_selected_entry()
                     ---@cast selection ui.command_palette.Entry|nil
                     if selection == nil then
-                        utils.warn 'Nothing has been selected'
+                        logging.warn 'Nothing has been selected'
                         return
                     end
 

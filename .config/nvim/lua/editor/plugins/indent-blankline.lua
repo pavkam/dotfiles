@@ -1,5 +1,5 @@
 local icons = require 'ui.icons'
-local utils = require 'core.utils'
+local buffers = require 'editor.buffers'
 
 return {
     'lukas-reineke/indent-blankline.nvim',
@@ -13,8 +13,8 @@ return {
             enabled = true,
         },
         exclude = {
-            buftypes = utils.special_buffer_types,
-            filetypes = utils.special_file_types,
+            buftypes = buffers.special_buffer_types,
+            filetypes = buffers.special_file_types,
         },
     },
     main = 'ibl',

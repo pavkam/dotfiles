@@ -1,6 +1,6 @@
+local logging = require 'core.logging'
 local diagnostics = require 'project.diagnostics'
 local lsp = require 'project.lsp'
-local utils = require 'core.utils'
 
 --- Shows the hover popup
 local function hover()
@@ -22,7 +22,7 @@ local function hover()
     elseif lsp.buffer_has_capability(0, 'hover') then
         vim.lsp.buf.hover()
     else
-        utils.info 'No hover information available!'
+        logging.info 'No hover information available!'
     end
 end
 

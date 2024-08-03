@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local buffers = require 'core.buffers'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local settings = require 'core.settings'
@@ -252,7 +253,7 @@ if folds_in_session then
 
     events.on_event('BufWinEnter', function(evt)
         if not settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
-            if not utils.is_transient_buffer(evt.buf) then
+            if not buffers.is_transient_buffer(evt.buf) then
                 settings.set('view_activated', true, { buffer = evt.buf, scope = 'instance' })
                 vim.cmd.loadview { mods = { emsg_silent = true } }
             end
@@ -296,7 +297,7 @@ end)
 -- forget files that have been deleted
 local new_files = {}
 events.on_event({ 'BufNew' }, function(evt)
-    if utils.is_special_buffer(evt.buf) then
+    if buffers.is_special_buffer(evt.buf) then
         return
     end
 
@@ -308,7 +309,7 @@ events.on_event({ 'BufNew' }, function(evt)
 end)
 
 events.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
-    if utils.is_special_buffer(evt.buf) then
+    if buffers.is_special_buffer(evt.buf) then
         return
     end
 
@@ -336,7 +337,7 @@ end)
 
 -- detect shebangs!
 events.on_event('BufReadPost', function(evt)
-    if vim.bo[evt.buf].filetype == '' and not utils.is_special_buffer(evt.buf) then
+    if vim.bo[evt.buf].filetype == '' and not buffers.is_special_buffer(evt.buf) then
         local first_line = vim.api.nvim_buf_get_lines(evt.buf, 0, 1, false)[1]
         if
             first_line and string.match(first_line, '^#!.*/bin/bash')

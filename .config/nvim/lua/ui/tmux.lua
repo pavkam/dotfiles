@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local logging = require 'core.logging'
 local keys = require 'core.keys'
 local shell = require 'core.shell'
 local select = require 'ui.select'
@@ -70,7 +71,7 @@ end
 ---@param session string|nil # the session to switch to
 local function switch_to_session(session)
     shell.async_cmd('tmux', { 'switch', '-t', session }, nil, function(_, _)
-        utils.info(string.format('Switched to session *%s*', session))
+        logging.info(string.format('Switched to session *%s*', session))
     end)
 end
 
@@ -248,7 +249,7 @@ local function change_win(direction)
 
     local ok = pcall(vim.cmd.wincmd, direction)
     if not ok then
-        utils.hint('Cannot navigate to the ' .. direction .. ' window')
+        logging.hint('Cannot navigate to the ' .. direction .. ' window')
     end
 
     return current_window ~= vim.api.nvim_get_current_win()

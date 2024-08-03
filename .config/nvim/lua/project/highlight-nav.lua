@@ -1,4 +1,4 @@
-local utils = require 'core.utils'
+local logging = require 'core.logging'
 
 ---@class project.highlight-navigation
 local M = {}
@@ -43,7 +43,7 @@ local function jump(window, forward)
     local first_response = reply and next(reply) and reply[next(reply)]
 
     if err or first_response and first_response.error then
-        utils.warn(
+        logging.warn(
             string.format(
                 'Failed to get document highlights: %s',
                 vim.inspect(err or first_response and first_response.error.message)

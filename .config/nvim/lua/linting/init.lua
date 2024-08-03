@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local buffers = require 'core.buffers'
 local events = require 'core.events'
 local project = require 'project'
 local progress = require 'ui.progress'
@@ -19,7 +20,7 @@ local function linters(buffer)
     end
 
     buffer = buffer or vim.api.nvim_get_current_buf()
-    if not utils.is_regular_buffer(buffer) then
+    if not buffers.is_regular_buffer(buffer) then
         return {}
     end
 
@@ -88,7 +89,7 @@ end
 ---@param buffer integer|nil # the buffer to apply the linters to or 0 or nil for current
 function M.apply(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
-    if not utils.is_regular_buffer(buffer) then
+    if not buffers.is_regular_buffer(buffer) then
         return
     end
 
@@ -122,12 +123,10 @@ function M.enabled(buffer)
 end
 
 settings.register_toggle(setting_name, function(enabled, buffer)
-    local lint = require 'linting'
-
     if not enabled then
-        lint.apply(buffer)
+        M.apply(buffer)
     else
-        require('project.lsp').clear_diagnostics(lint.active_names_for_buffer(buffer), buffer)
+        require('project.lsp').clear_diagnostics(M.active(buffer), buffer)
     end
 end, {
     icon = icons.UI.Lint,

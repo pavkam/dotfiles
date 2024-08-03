@@ -176,7 +176,7 @@ return {
                     {
                         name = 'buffer',
                         option = {
-                            get_bufnrs = utils.get_listed_buffers,
+                            get_bufnrs = require('core.buffers').get_listed_buffers,
                             max_indexed_line_length = 100,
                         },
                         keyword_length = 3,

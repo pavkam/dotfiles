@@ -1,4 +1,6 @@
 local utils = require 'core.utils'
+local buffers = require 'core.buffers'
+local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local progress = require 'ui.progress'
@@ -20,7 +22,7 @@ local function formatters(buffer)
         return {}
     end
 
-    if not utils.is_regular_buffer(buffer) then
+    if not buffers.is_regular_buffer(buffer) then
         return {}
     end
 
@@ -69,14 +71,14 @@ end
 ---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
 function M.apply(buffer)
     if not package.loaded['conform'] then
-        utils.warn 'Conform plugin is not installed!'
+        logging.warn 'Conform plugin is not installed!'
         return
     end
 
     local conform = require 'conform'
 
     buffer = buffer or vim.api.nvim_get_current_buf()
-    if not utils.is_regular_buffer(buffer) then
+    if not buffers.is_regular_buffer(buffer) then
         return
     end
 

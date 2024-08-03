@@ -1,5 +1,6 @@
 local icons = require 'ui.icons'
-local utils = require 'core.utils'
+local buffers = require 'core.buffers'
+local logging = require 'core.logging'
 
 ---@class utils.progress
 local M = {}
@@ -84,7 +85,7 @@ local function update_tasks(interval)
 
     for _, key in ipairs(keys) do
         local buffer = key ~= 'global' and key or nil
-        if buffer and not utils.buffer_is_loaded(buffer) then
+        if buffer and not buffers.buffer_is_loaded(buffer) then
             tasks_by_owner[key] = {}
         end
 
@@ -96,11 +97,11 @@ local function update_tasks(interval)
             task.ttl = task.ttl - interval
 
             if task.ttl <= 0 then
-                utils.warn('Task "' .. class .. '" is still running')
+                logging.warn('Task "' .. class .. '" is still running')
                 tasks[class].ttl = tasks[class].timeout
             else
                 if task.fn and not task.fn(buffer) then
-                    utils.hint('Task "' .. class .. '" has finished')
+                    logging.hint('Task "' .. class .. '" has finished')
                     tasks[class] = nil
                 else
                     tasks[class] = task

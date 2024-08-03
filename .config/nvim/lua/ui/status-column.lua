@@ -1,4 +1,4 @@
-local utils = require 'core.utils'
+local buffers = require 'core.buffers'
 
 ---@class ui.status-column.Sign # Defines a sign
 ---@field name string # The name of the sign
@@ -62,7 +62,7 @@ local function status_column()
     local window = vim.api.nvim_get_var 'statusline_winid'
     local buffer = vim.api.nvim_win_get_buf(window)
 
-    local is_file = utils.is_regular_buffer(buffer)
+    local is_file = buffers.is_regular_buffer(buffer)
     local show_signs = vim.api.nvim_get_option_value('signcolumn', { win = window }) ~= 'no'
 
     local components = { '', '', '' } -- left, middle, right

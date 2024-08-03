@@ -6,7 +6,7 @@ local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
 local strings = require 'plenary.strings'
 local config = require('telescope.config').values
-local utils = require 'core.utils'
+local logging = require 'core.logging'
 local icons = require 'ui.icons'
 
 local M = {}
@@ -43,7 +43,7 @@ function M.advanced(items, opts)
 
     local callback = opts.callback
         or function(entry)
-            utils.warn('No handler defined, selected: ' .. vim.inspect(entry))
+            logging.warn('No handler defined, selected: ' .. vim.inspect(entry))
         end
     opts.callback = nil
 

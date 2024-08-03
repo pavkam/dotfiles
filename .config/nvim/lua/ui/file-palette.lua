@@ -5,6 +5,8 @@ local actions = require 'telescope.actions'
 local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
 local utils = require 'core.utils'
+local buffers = require 'core.buffers'
+local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
@@ -23,7 +25,7 @@ local project = require 'project'
 local session_open_files = {}
 
 events.on_event('BufRead', function(evt)
-    local path = utils.is_regular_buffer(evt.buf) and vim.api.nvim_buf_get_name(evt.buf)
+    local path = buffers.is_regular_buffer(evt.buf) and vim.api.nvim_buf_get_name(evt.buf)
     if not path or not utils.file_exists(path) then
         return
     end
@@ -34,7 +36,7 @@ end)
 --- Get all listed buffers
 ---@return ui.file_palette.File[] # List of files
 local function get_listed_buffers()
-    return vim.iter(utils.get_listed_buffers { loaded = false, listed = false })
+    return vim.iter(buffers.get_listed_buffers { loaded = false, listed = false })
         :map(function(buffer)
             return {
                 file = vim.api.nvim_buf_get_name(buffer),
@@ -100,7 +102,7 @@ end
 --- Get all local file marks
 ---@return ui.file_palette.File[] # List of files
 local function get_marked_buffer(buffer)
-    if not utils.is_regular_buffer(buffer) then
+    if not buffers.is_regular_buffer(buffer) then
         return {}
     end
 
@@ -149,7 +151,7 @@ local function get_jump_list_files()
     -- Get the jump-list and sort it so that the most recent files come first
     for i = #jumplist, 1, -1 do
         local buffer = jumplist[i].bufnr
-        local path = utils.is_regular_buffer(buffer) and vim.api.nvim_buf_get_name(buffer)
+        local path = buffers.is_regular_buffer(buffer) and vim.api.nvim_buf_get_name(buffer)
 
         if path and utils.file_exists(path) then
             table.insert(results, {
@@ -316,7 +318,7 @@ local function show_file_palette(opts)
                     local selection = action_state.get_selected_entry()
                     ---@cast selection ui.file_palette.Entry|nil
                     if selection == nil then
-                        utils.warn 'Nothing has been selected'
+                        logging.warn 'Nothing has been selected'
                         return
                     end
 

@@ -1,5 +1,5 @@
 local icons = require 'ui.icons'
-local utils = require 'core.utils'
+local logging = require 'core.logging'
 local keys = require 'core.keys'
 
 ---@class ui.qf`
@@ -219,7 +219,9 @@ function M.add_at_cursor(handle, window, opts)
 
     local r, c = unpack(vim.api.nvim_win_get_cursor(window))
 
-    utils.info(string.format('Added position **%d:%d** to %s list.', r, c, list.window and 'locations' or 'quick-fix'))
+    logging.info(
+        string.format('Added position **%d:%d** to %s list.', r, c, list.window and 'locations' or 'quick-fix')
+    )
 
     M.add_items(handle, {
         {
