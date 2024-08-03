@@ -306,7 +306,7 @@ function M.grep_dir(term, dir, callback)
     end, { ignore_codes = { 0, 1 } })
 end
 
-utils.register_command('Run', {
+require('core.commands').register_command('Run', {
     fn = function(args)
         if #args.split_args == 0 then
             error 'No command specified'

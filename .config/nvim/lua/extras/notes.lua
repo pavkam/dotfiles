@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local commands = require 'core.commands'
 local project = require 'project'
 
 --- Get the notes root directory
@@ -82,7 +83,7 @@ local function append(title, lines, global)
     vim.api.nvim_put(lines, 'l', true, true)
 end
 
-utils.register_command('Note', {
+commands.register_command('Note', {
     ---@param args core.utils.CommandCallbackArgs
     open = function(args)
         edit(args.bang)
@@ -112,7 +113,7 @@ utils.register_command('Note', {
     bang = true,
 })
 
-utils.register_command('Notes', {
+commands.register_command('Notes', {
     ---@param args core.utils.CommandCallbackArgs
     list = function(args)
         find(args.bang)

@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local keys = require 'core.keys'
 local settings = require 'core.settings'
 local syntax = require 'editor.syntax'
@@ -225,31 +226,31 @@ vim.on_key(function(char)
 end, vim.api.nvim_create_namespace 'auto_hlsearch')
 
 -- show cursor only in active window
-utils.on_event({ 'InsertLeave', 'WinEnter' }, function(evt)
+events.on_event({ 'InsertLeave', 'WinEnter' }, function(evt)
     if vim.bo[evt.buf].buftype == '' then
         vim.opt_local.cursorline = true
     end
 end)
 
-utils.on_event({ 'InsertEnter', 'WinLeave' }, function()
+events.on_event({ 'InsertEnter', 'WinLeave' }, function()
     vim.opt_local.cursorline = false
 end)
 
 -- highlight on yank
-utils.on_event('TextYankPost', function()
+events.on_event('TextYankPost', function()
     vim.highlight.on_yank()
 end)
 
 local folds_in_session = vim.list_contains(vim.opt.sessionoptions:get(), 'folds')
 if folds_in_session then
     -- Turn on view generation and loading only if session management is not enabled
-    utils.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
+    events.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
         if settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
             vim.cmd.mkview { mods = { emsg_silent = true } }
         end
     end)
 
-    utils.on_event('BufWinEnter', function(evt)
+    events.on_event('BufWinEnter', function(evt)
         if not settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
             if not utils.is_transient_buffer(evt.buf) then
                 settings.set('view_activated', true, { buffer = evt.buf, scope = 'instance' })
@@ -260,7 +261,7 @@ if folds_in_session then
 end
 
 -- disable swap/undo files for certain file-types
-utils.on_event('BufWritePre', function(evt)
+events.on_event('BufWritePre', function(evt)
     vim.opt_local.undofile = false
     if evt.file == 'COMMIT_EDITMSG' or evt.file == 'MERGE_MSG' then
         vim.opt_local.swapfile = false
@@ -268,7 +269,7 @@ utils.on_event('BufWritePre', function(evt)
 end, { '/tmp/*', '*.tmp', '*.bak', 'COMMIT_EDITMSG', 'MERGE_MSG' })
 
 -- disable swap/undo/backup files in temp directories or SHM
-utils.on_event({ 'BufNewFile', 'BufReadPre' }, function()
+events.on_event({ 'BufNewFile', 'BufReadPre' }, function()
     vim.opt_local.undofile = false
     vim.opt_local.swapfile = false
     vim.opt_global.backup = false
@@ -283,7 +284,7 @@ end, {
 })
 
 -- Auto create dir when saving a file, in case some intermediate directory does not exist
-utils.on_event('BufWritePre', function(evt)
+events.on_event('BufWritePre', function(evt)
     if evt.match:match '^%w%w+://' then
         return
     end
@@ -294,7 +295,7 @@ end)
 
 -- forget files that have been deleted
 local new_files = {}
-utils.on_event({ 'BufNew' }, function(evt)
+events.on_event({ 'BufNew' }, function(evt)
     if utils.is_special_buffer(evt.buf) then
         return
     end
@@ -306,7 +307,7 @@ utils.on_event({ 'BufNew' }, function(evt)
     end
 end)
 
-utils.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
+events.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
     if utils.is_special_buffer(evt.buf) then
         return
     end
@@ -334,7 +335,7 @@ utils.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
 end)
 
 -- detect shebangs!
-utils.on_event('BufReadPost', function(evt)
+events.on_event('BufReadPost', function(evt)
     if vim.bo[evt.buf].filetype == '' and not utils.is_special_buffer(evt.buf) then
         local first_line = vim.api.nvim_buf_get_lines(evt.buf, 0, 1, false)[1]
         if

@@ -342,7 +342,7 @@ function M.show_file_palette(opts)
     show_file_palette(opts)
 end
 
-utils.register_command('Files', function()
+require('core.commands').register_command('Files', function()
     M.show_file_palette()
 end, { desc = 'Show file palette' })
 

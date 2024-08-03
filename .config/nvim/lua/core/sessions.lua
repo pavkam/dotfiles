@@ -178,11 +178,11 @@ events.on_event('VimLeavePre', function()
     end
 end)
 
-utils.on_user_event('LazyVimStarted', function()
+events.on_user_event('LazyVimStarted', function()
     swap_sessions(nil, M.current())
 end)
 
-utils.on_focus_gained(function()
+events.on_focus_gained(function()
     swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
 end)
 
@@ -197,7 +197,7 @@ local function current_with_warning()
     return current
 end
 
-utils.register_command('Session', {
+require('core.commands').register_command('Session', {
     restore = function()
         local current = current_with_warning()
         if current then

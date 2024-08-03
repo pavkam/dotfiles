@@ -1,4 +1,5 @@
 local icons = require 'ui.icons'
+local events = require 'core.events'
 local utils = require 'core.utils'
 
 ---@class (strict) core.keys
@@ -86,7 +87,7 @@ function M.attach(file_types, callback, force)
         file_types = utils.to_list(file_types)
     end
 
-    return utils.on_event('FileType', function(evt)
+    return events.on_event('FileType', function(evt)
         if file_types == '*' and utils.is_special_buffer(evt.buf) then
             return
         end

@@ -1,7 +1,5 @@
 local shell = require 'core.shell'
-local icons = require 'ui.icons'
 local utils = require 'core.utils'
-local keys = require 'core.keys'
 
 ---@class git
 local M = {}
@@ -67,13 +65,13 @@ end
 
 -- Add a command to run lazygit
 if vim.fn.executable 'lazygit' == 1 then
-    utils.register_command('Lazygit', function()
+    require('core.commands').register_command('Lazygit', function()
         shell.floating 'lazygit'
     end, { desc = 'Run Lazygit', nargs = 0 })
 
-    keys.map('n', '<leader>g', function()
+    require('core.keys').map('n', '<leader>g', function()
         vim.cmd 'Lazygit'
-    end, { icon = icons.UI.Git, desc = 'Lazygit' })
+    end, { icon = require('ui.icons').UI.Git, desc = 'Lazygit' })
 end
 
 return M
