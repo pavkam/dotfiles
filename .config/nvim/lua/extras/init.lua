@@ -22,10 +22,10 @@ events.on_user_event('NormalFile', function(_, evt)
         local directory = vim.fn.fnamemodify(old_path, ':h')
 
         local function rename(new_name)
-            local new_path = utils.join_paths(directory, new_name)
+            local new_path = vim.fs.join_paths(directory, new_name)
             ---@cast new_path string
 
-            if not utils.file_exists(old_path) then
+            if not vim.fs.file_exists(old_path) then
                 vim.api.nvim_buf_set_name(evt.buf, new_name)
                 return
             end
@@ -60,7 +60,7 @@ events.on_user_event('NormalFile', function(_, evt)
         local path = vim.api.nvim_buf_get_name(evt.buf)
         local name = vim.fn.fnamemodify(path, ':t')
 
-        if not utils.file_exists(path) then
+        if not vim.fs.file_exists(path) then
             delete_buffer(evt.buf)
             return
         end

@@ -23,11 +23,12 @@ end
 local function find_git_enabled_dirs(root, collected)
     collected = collected or {}
 
-    if vim.fn.isdirectory(utils.join_paths(root, '.git')) == 1 then
+    if vim.fn.isdirectory(vim.fs.join_paths(root, '.git')) == 1 then
         table.insert(collected, root)
     else
         for _, dir in ipairs(vim.fn.readdir(root)) do
-            local full = utils.join_paths(root, dir)
+            local full = vim.fs.join_paths(root, dir)
+            -- URGENT: this is directory can be in `fs`
             if full and vim.fn.isdirectory(full) == 1 then
                 find_git_enabled_dirs(full, collected)
             end
@@ -116,7 +117,7 @@ local function display(items)
 
     for name, data in pairs(items) do
         local status = data.current and 'current' or data.attached and 'attached' or data.session and 'active' or ''
-        table.insert(lines, { name, status, utils.format_relative_path(vim.env.PROJECTS_ROOT, data.root or data.cwd) })
+        table.insert(lines, { name, status, vim.fs.format_relative_path(vim.env.PROJECTS_ROOT, data.root or data.cwd) })
     end
 
     select.advanced(lines, {

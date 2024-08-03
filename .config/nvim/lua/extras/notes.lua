@@ -14,7 +14,7 @@ local function get_notes_root(global)
         root = vim.env.WORK_NOTES_ROOT or vim.fn.stdpath 'data' --[[@as string|nil]]
     else
         root = project.nvim_settings_path()
-        root = root and utils.join_paths(root, 'notes')
+        root = root and vim.fs.join_paths(root, 'notes')
     end
 
     return assert(root)
@@ -60,7 +60,7 @@ end
 --- Edits a new or existing note
 ---@param global boolean|nil: If true, edit a new note in the global notes directory
 local function edit(global)
-    local file_name = utils.join_paths(get_notes_root(global), os.date '%Y-%m-%d' .. '.md')
+    local file_name = vim.fs.join_paths(get_notes_root(global), os.date '%Y-%m-%d' .. '.md')
     vim.api.nvim_command('edit ' .. file_name)
 end
 

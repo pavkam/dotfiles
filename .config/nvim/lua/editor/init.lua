@@ -303,7 +303,7 @@ events.on_event({ 'BufNew' }, function(evt)
 
     local file = vim.api.nvim_buf_get_name(evt.buf)
 
-    if file and file ~= '' and not utils.file_exists(file) then
+    if file and file ~= '' and not vim.fs.file_exists(file) then
         new_files[file] = true
     end
 end)
@@ -314,7 +314,7 @@ events.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
     end
 
     local file = vim.api.nvim_buf_get_name(evt.buf)
-    if not file or file == '' or utils.file_exists(file) then
+    if not file or file == '' or vim.fs.file_exists(file) then
         return
     end
 

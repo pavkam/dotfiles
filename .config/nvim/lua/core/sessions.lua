@@ -7,7 +7,7 @@ local qf = require 'ui.qf'
 
 ---@class core.session
 local M = {}
-local session_dir = utils.join_paths(vim.fn.stdpath 'data' --[[@as string]], 'sessions') --[[@as string]]
+local session_dir = vim.fs.join_paths(vim.fn.stdpath 'data' --[[@as string]], 'sessions') --[[@as string]]
 
 ---@type string
 local setting_name = 'current_session_name'
@@ -46,7 +46,7 @@ function M.files(name)
     end)
     name = string.gsub(name, ' ', '+')
 
-    local res = utils.join_paths(session_dir, name)
+    local res = vim.fs.join_paths(session_dir, name)
     ---@cast res string
 
     return res .. '.vim', res .. '.shada', res .. '.json'

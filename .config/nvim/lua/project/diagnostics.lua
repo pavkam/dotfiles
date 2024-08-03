@@ -83,8 +83,9 @@ local function check_file(client, files, index)
             textDocument = {
                 uri = vim.uri_from_fname(path),
                 version = 0,
+                -- URGENT: this can go to `fs`
                 text = vim.fn.join(vim.fn.readfile(path), '\n'),
-                languageId = utils.file_type(path),
+                languageId = vim.fs.file_type(path),
             },
         })
 
@@ -94,7 +95,7 @@ local function check_file(client, files, index)
                     uri = vim.uri_from_fname(path),
                     version = 0,
                     text = vim.fn.join(vim.fn.readfile(path), '\n'),
-                    languageId = utils.file_type(path),
+                    languageId = vim.fs.file_type(path),
                 },
             }, 1000, buffer)
 

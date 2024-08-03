@@ -173,3 +173,193 @@ function _G.get_trace_back(level)
 
     return result
 end
+
+math.randomseed(os.time())
+
+---@type string
+local uuid_template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+
+--- Generates a new UUID
+---@return string # the generated UUID
+function vim.fn.uuid()
+    ---@param c string
+    local function subs(c)
+        local v = (((c == 'x') and math.random(0, 15)) or math.random(8, 11))
+        return string.format('%x', v)
+    end
+
+    local res = uuid_template:gsub('[xy]', subs)
+    return res
+end
+
+--- Gets the timezone offset for a given timestamp
+---@param timestamp integer # the timestamp to get the offset for
+---@return integer # the timezone offset
+function vim.fn.timezone_offset(timestamp)
+    assert(type(timestamp) == 'number')
+
+    local utc_date = os.date('!*t', timestamp)
+    local local_date = os.date('*t', timestamp)
+
+    local_date.isdst = false
+
+    local diff = os.difftime(os.time(local_date --[[@as osdateparam]]), os.time(utc_date --[[@as osdateparam]]))
+    local h, m = math.modf(diff / 3600)
+
+    return 100 * h + 60 * m
+end
+
+--- Joins two paths
+---@param part1 string # the first part of the path
+---@param part2 string # the second part of the path
+---@return string # the joined path
+local function join_paths(part1, part2)
+    part1 = part1:gsub('([^/])$', '%1/'):gsub('//', '/')
+    part2 = part2:gsub('^/', '')
+
+    return part1 .. part2
+end
+
+--- Joins multiple paths
+---@vararg string|nil # the paths to join
+---@return string|nil # the joined path or nil if none of the paths are valid
+function vim.fs.join_paths(...)
+    ---@type string|nil
+    local acc
+    for _, part in ipairs { ... } do
+        if part ~= nil then
+            if acc then
+                acc = join_paths(acc, part)
+            else
+                acc = part
+            end
+        end
+    end
+
+    return acc
+end
+
+--- URGENT: can this be simplified?
+--- Checks if a file exists
+---@param path string # the path to check
+---@return boolean # true if the file exists, false otherwise
+function vim.fs.file_exists(path)
+    assert(type(path) == 'string')
+
+    local stat = vim.uv.fs_stat(vim.fn.expand(path))
+    return stat and stat.type == 'file' or false
+end
+
+--- Checks if files exist in a given directory and returns the first one that exists
+---@param base_paths string|table<number, string|nil> # the list of base paths to check
+---@param files string|table<number, string|nil> # the list of files to check
+---@return string|nil # the first found file or nil if none exists
+function vim.fs.first_found_file(base_paths, files)
+    base_paths = vim.to_list(base_paths)
+    files = vim.to_list(files)
+
+    for _, path in ipairs(base_paths) do
+        for _, file in ipairs(files) do
+            local full = vim.fs.join_paths(path, file)
+            if full and vim.fs.file_exists(full) then
+                return vim.fs.join_paths(path, file)
+            end
+        end
+    end
+
+    return nil
+end
+
+---@type table<string, string>
+local file_to_file_type = {}
+
+--- Gets the file type of a file
+---@param path string # the path to the file to get the type for
+---@return string|nil # the file type or nil if the file type could not be determined
+function vim.fs.file_type(path)
+    assert(type(path) == 'string' and path ~= '')
+
+    ---@type string|nil
+    local file_type = file_to_file_type[path]
+    if file_type then
+        return file_type
+    end
+
+    file_type = vim.filetype.match { filename = path }
+    if not file_type then
+        for _, buf in ipairs(vim.fn.getbufinfo()) do
+            if vim.fn.fnamemodify(buf.name, ':p') == path then
+                return vim.filetype.match { buf = buf.bufnr }
+            end
+        end
+
+        local bufn = vim.fn.bufadd(path)
+        vim.fn.bufload(bufn)
+
+        file_type = vim.filetype.match { buf = bufn }
+
+        vim.api.nvim_buf_delete(bufn, { force = true })
+    end
+
+    file_to_file_type[path] = file_type
+
+    return file_type
+end
+
+--- Simplifies a path by making it relative to another path and adding ellipsis
+---@param prefix string # the prefix to make the path relative to
+---@param path string # the path to simplify
+---@return string # the simplified path
+function vim.fs.format_relative_path(prefix, path)
+    assert(type(prefix) == 'string')
+    assert(type(path) == 'string')
+
+    for _, p in ipairs { prefix, vim.env.HOME } do
+        p = p:sub(-1) == '/' and p or p .. '/'
+
+        if path:find(p, 1, true) == 1 then
+            return '…/' .. path:sub(#p + 1)
+        end
+    end
+
+    return path
+end
+
+---@class (exact) vim.PathComponents # The components of a path
+---@field dir_name string # the directory name
+---@field base_name string # the base name
+---@field extension string # the extension
+---@field compound_extension string # the compound extension
+
+--- Splits a file path into its components
+---@param path string # the path to split
+---@return vim.PathComponents # the components of the path
+function vim.fs.split_path(path)
+    assert(type(path) == 'string' and path ~= '')
+
+    local dir_name = vim.fn.fnamemodify(path, ':h')
+    local base_name = vim.fn.fnamemodify(path, ':t')
+    local extension = vim.fn.fnamemodify(path, ':e')
+    local compound_extension = extension
+
+    local parts = vim.split(base_name, '%.')
+    if #parts > 2 then
+        compound_extension = table.concat(vim.list_slice(parts, #parts - 1), '.')
+    end
+
+    return {
+        dir_name = dir_name,
+        base_name = base_name,
+        extension = extension,
+        compound_extension = compound_extension,
+    }
+end
+
+--- Checks if a mode is visual
+---@param mode string|nil # the mode to check or the current mode if nil
+---@return boolean # true if the mode is visual, false otherwise
+function vim.fn.is_visual_mode(mode)
+    mode = mode or vim.api.nvim_get_mode().mode
+
+    return mode == 'v' or mode == 'V' or mode == ''
+end

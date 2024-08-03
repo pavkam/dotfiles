@@ -31,7 +31,7 @@ function M.swap_custom_dictionary(target)
     local base_lang = vim.opt.spelllang:get()[1] or 'en'
 
     ---@type string|nil
-    local spl_file = utils.join_paths(path, base_lang .. '.add')
+    local spl_file = vim.fs.join_paths(path, base_lang .. '.add')
 
     if current_file == spl_file then
         return

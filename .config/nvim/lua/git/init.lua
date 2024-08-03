@@ -30,7 +30,7 @@ function M.tracked(dir, callback)
         if code == 0 then
             local paths = {}
             for _, path in ipairs(res) do
-                path = utils.join_paths(dir, path) --[[@as string]]
+                path = vim.fs.join_paths(dir, path) --[[@as string]]
                 if vim.fn.filereadable(path) == 1 then
                     table.insert(paths, path)
                 end

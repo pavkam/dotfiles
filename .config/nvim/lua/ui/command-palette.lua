@@ -34,7 +34,7 @@ local function get_commands(opts)
     ---@type vim.CommandDesc[]
     local buffer_commands = vim.tbl_values(vim.api.nvim_buf_get_commands(opts.buffer, {}))
 
-    local is_visual = utils.is_visual_mode(opts.mode)
+    local is_visual = utivim.fns.is_visual_mode(opts.mode)
 
     ---@type vim.CommandDesc[]
     local all = vim.iter(vim.list_extend(commands, buffer_commands))
@@ -259,7 +259,7 @@ local function show_command_palette(opts)
                         end
 
                         vim.cmd.stopinsert()
-                        if utils.is_visual_mode(opts.mode) then
+                        if vim.fn.is_visual_mode(opts.mode) then
                             keys.feed 'gv'
                         end
 
@@ -287,7 +287,7 @@ function M.show_command_palette(opts)
     opts.column_separator = opts.column_separator or (' ' .. icons.Symbols.ColumnSeparator .. ' ')
     opts.mode = opts.mode or vim.fn.mode()
 
-    if utils.is_visual_mode(opts.mode) then
+    if vim.fn.is_visual_mode(opts.mode) then
         keys.feed '<esc>'
 
         vim.schedule(function()

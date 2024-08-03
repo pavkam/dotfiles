@@ -35,7 +35,7 @@ end
 ---@param target core.utils.Target # the target to read the package.json for
 ---@return table<string, any>|nil # the parsed package.json
 local function read_package_json(target)
-    local full_name = utils.first_found_file(M.roots(target), 'package.json')
+    local full_name = vim.fs.first_found_file(M.roots(target), 'package.json')
 
     local json_content = full_name and vim.fn.join(vim.fn.readfile(full_name), '\n')
     return json_content and vim.json.decode(json_content)
@@ -59,7 +59,7 @@ end
 ---@param target core.utils.Target # the target to get the type for
 ---@return string|nil # the type of the project
 local function go_type(target)
-    if utils.first_found_file(M.roots(target), { 'go.mod', 'go.sum' }) then
+    if vim.fs.first_found_file(M.roots(target), { 'go.mod', 'go.sum' }) then
         return 'go'
     end
 
@@ -78,7 +78,7 @@ local python_root_patterns = {
 ---@param target core.utils.Target # the target to get the type for
 ---@return string|nil # the type of the project
 local function python_type(target)
-    if utils.first_found_file(M.roots(target), python_root_patterns) then
+    if vim.fs.first_found_file(M.roots(target), python_root_patterns) then
         return 'python'
     end
 
@@ -254,7 +254,7 @@ function M.format_relative(target)
     ---@type string|nil
     local root = M.root(target)
     local _, path = utils.expand_target(target)
-    return root and utils.format_relative_path(root, path) or path
+    return root and vim.fs.format_relative_path(root, path) or path
 end
 
 --- Returns the path to the Neovim settings directory for a given target
@@ -263,7 +263,7 @@ end
 function M.nvim_settings_path(target)
     ---@type string|nil
     local root = M.root(target)
-    return root and utils.join_paths(root, '.nvim') or nil
+    return root and vim.fs.join_paths(root, '.nvim') or nil
 end
 
 --- Returns the path to the launch.json file for a given target
@@ -271,8 +271,8 @@ end
 ---@return string|nil # the path to the launch.json file
 function M.get_launch_json(target)
     local path = M.nvim_settings_path(target)
-    return path and utils.join_paths(path, 'dap.json')
-        or utils.first_found_file(M.roots(target), { '.vscode/launch.json' })
+    return path and vim.fs.join_paths(path, 'dap.json')
+        or vim.fs.first_found_file(M.roots(target), { '.vscode/launch.json' })
 end
 
 --- Returns the type of the project
@@ -293,7 +293,7 @@ local golangci_root_patterns = {
 ---@param target core.utils.Target # the target to get the golangci file for
 ---@return string|nil # the path to the golangci file
 function M.get_golangci_config(target)
-    return utils.first_found_file(M.roots(target), golangci_root_patterns)
+    return vim.fs.first_found_file(M.roots(target), golangci_root_patterns)
 end
 
 --- Checks if a target has a dependency
@@ -316,10 +316,10 @@ end
 ---@param target core.utils.Target # the target to get the binary path for
 ---@param bin string|nil # the path of the binary
 function M.get_js_bin_path(target, bin)
-    local sub = utils.join_paths('node_modules', '.bin', bin)
+    local sub = vim.fs.join_paths('node_modules', '.bin', bin)
     ---@cast sub string
 
-    return utils.first_found_file(M.roots(target), sub)
+    return vim.fs.first_found_file(M.roots(target), sub)
 end
 
 local eslint_root_patterns = {
@@ -333,7 +333,7 @@ local eslint_root_patterns = {
 ---@param target core.utils.Target # the target to get the eslint config for
 ---@return string|nil # the path to the eslint config
 function M.get_eslint_config_path(target)
-    return utils.first_found_file(M.roots(target), eslint_root_patterns)
+    return vim.fs.first_found_file(M.roots(target), eslint_root_patterns)
 end
 
 settings.register_toggle('diagnostics_enabled', function(enabled, buffer)
