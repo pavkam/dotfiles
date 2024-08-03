@@ -5,14 +5,13 @@ return {
     },
     event = 'UIEnter',
     opts = function()
-        local utils = require 'core.utils'
         local lualine_sections = require 'ui.lualine-sections'
 
         --- Merge two tables
         ---@param base table
         ---@param add table
         local function with(base, add)
-            return utils.tbl_merge(base, add)
+            return vim.tbl_merge(base, add)
         end
 
         return {

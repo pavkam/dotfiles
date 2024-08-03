@@ -6,58 +6,7 @@
 -- URGENT: Do not use which key if there is no icon attached.
 -- MAYBE: Cross-tmux-session marks
 
---- Global function to quit the current process
-_G.quit = function()
-    vim.api.nvim_command 'cq1'
-end
-
---- Global debug function to help me debug (duh)
----@vararg any anything to debug
-_G.dbg = function(...)
-    local objects = {}
-    for _, v in pairs { ... } do
-        ---@type string
-        local val = 'nil'
-
-        if type(v) == 'string' then
-            val = v
-        elseif type(v) == 'number' or type(v) == 'boolean' then
-            val = tostring(v)
-        elseif type(v) == 'table' then
-            val = vim.inspect(v)
-        end
-
-        table.insert(objects, val)
-    end
-
-    local message = table.concat(objects, '\n')
-
-    vim.notify(message)
-
-    return ...
-end
-
---- Prints the call stack if a condition is met
----@param cond any # the condition to print the call stack
----@vararg any # anything to print
-_G.who = function(cond, ...)
-    if cond == nil or cond then
-        dbg(debug.traceback(nil, 2), ...)
-    end
-end
-
---- Global function to log a message as an error and quit
----@param message string the message to log
-_G.fatal = function(message)
-    assert(type(message) == 'string')
-
-    error(string.format('fatal error has occurred: %s', message))
-    error 'press any key to quit the process'
-
-    vim.fn.getchar()
-
-    vim.api.nvim_command 'cq1'
-end
+require 'extensions'
 
 if not vim.fn.executable 'git' then
     fatal 'git required'

@@ -284,7 +284,7 @@ local function get_entry_maker(displayer)
 
     ---@param entry ui.file_palette.Entry
     return function(entry)
-        return utils.tbl_merge(entry, {
+        return vim.tbl_merge(entry, {
             ordinal = entry.filename,
             display = make_display,
         })

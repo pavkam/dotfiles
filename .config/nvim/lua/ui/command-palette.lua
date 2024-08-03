@@ -201,7 +201,7 @@ local function get_entry_maker(displayer)
 
     ---@param entry ui.command_palette.Entry
     return function(entry)
-        return utils.tbl_merge(entry, {
+        return vim.tbl_merge(entry, {
             ordinal = entry.attrs .. ' ' .. entry.name,
             display = make_display,
         })

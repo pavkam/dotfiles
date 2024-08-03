@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local buffers = require 'core.buffers'
 local logging = require 'core.logging'
 local events = require 'core.events'
@@ -177,7 +176,7 @@ function M.register_toggle(option, toggle_fn, opts)
     assert(type(opts.name) == 'string' and opts.name ~= '')
     assert(type(toggle_fn) == 'function')
 
-    local scopes = assert(utils.to_list(opts.scope))
+    local scopes = assert(vim.to_list(opts.scope))
 
     for _, scope in ipairs(scopes) do
         assert(scope == 'buffer' or scope == 'global')

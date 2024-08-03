@@ -1,5 +1,5 @@
 local icons = require 'ui.icons'
-local buffers = require 'editor.buffers'
+local buffers = require 'core.buffers'
 
 return {
     'lukas-reineke/indent-blankline.nvim',

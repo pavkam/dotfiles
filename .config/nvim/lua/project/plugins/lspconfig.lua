@@ -326,13 +326,13 @@ return {
             -- setup progress
             local progress_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress]
             vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress] = function(_, msg, info)
-                events.trigger_user_event('LspProgress', utils.tbl_merge(msg, { client_id = info.client_id }))
+                events.trigger_user_event('LspProgress', vim.tbl_merge(msg, { client_id = info.client_id }))
                 progress_capability_handler(_, msg, info)
             end
 
             -- register nvim-cmp capabilities
             local cmp_nvim_lsp = require 'cmp_nvim_lsp'
-            local capabilities = utils.tbl_merge(
+            local capabilities = vim.tbl_merge(
                 vim.lsp.protocol.make_client_capabilities(),
                 cmp_nvim_lsp.default_capabilities(),
                 opts.capabilities
@@ -341,7 +341,7 @@ return {
             -- configure the servers
             local servers = opts.servers
             local function setup(server)
-                local server_opts = utils.tbl_merge({
+                local server_opts = vim.tbl_merge({
                     capabilities = vim.deepcopy(capabilities),
                     handlers = opts.handlers,
                 }, servers[server] or {})

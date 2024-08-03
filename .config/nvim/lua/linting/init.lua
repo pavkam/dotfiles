@@ -54,7 +54,7 @@ local function linting_status(buffer)
     local lint = require 'lint'
 
     ---@type table<integer, table<string, lint.LintProc>>
-    local tbl = utils.get_up_value(lint.try_lint, 'running_procs_by_buf')
+    local tbl = get_up_value(lint.try_lint, 'running_procs_by_buf')
     local running_linters = tbl and tbl[buffer] or {}
 
     for _, linter in pairs(running_linters) do
@@ -101,7 +101,7 @@ function M.apply(buffer)
 
     local lint = require 'lint'
 
-    utils.defer_unique(buffer, function()
+    vim.defer_unique(buffer, function()
         local do_lint = function()
             lint.try_lint(names, { cwd = project.root(buffer) })
             progress.update(progress_class, { buffer = buffer, prv = true, fn = linting_status, ctx = names })

@@ -103,25 +103,25 @@ function M.on_attach(callback, target)
 end
 
 --- Registers a callback for as long a buffer has a capability
----@param events string|string[] # the events to register the callback for
+---@param event string|string[] # the events to register the callback for
 ---@param capability string # the name of the capability
 ---@param buffer integer|nil # the buffer to register the callback for or 0 or nil for current
 ---@param callback function # the callback to register
 ---@param run_on_register boolean|nil # whether to run the callback on register
 ---@return string|nil # the name of the auto group
-function M.on_capability_event(events, capability, buffer, callback, run_on_register)
+function M.on_capability_event(event, capability, buffer, callback, run_on_register)
     assert(type(callback) == 'function')
     assert(type(capability) == 'string' and capability ~= '')
 
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    events = utils.to_list(events)
+    event = vim.to_list(event)
 
     if not M.buffer_has_capability(buffer, capability) then
         return
     end
 
-    local auto_group_name = table.concat({ 'pavkam', 'buf', 'cap', buffer, unpack(events), capability }, '_')
+    local auto_group_name = table.concat({ 'pavkam', 'buf', 'cap', buffer, unpack(event), capability }, '_')
     ---@cast auto_group_name string
 
     if vim.fn.exists('#' .. auto_group_name) == 1 then
@@ -134,7 +134,7 @@ function M.on_capability_event(events, capability, buffer, callback, run_on_regi
 
     vim.api.nvim_create_augroup(auto_group_name, { clear = true })
 
-    vim.api.nvim_create_autocmd(events, {
+    vim.api.nvim_create_autocmd(event, {
         callback = function()
             if not M.buffer_has_capability(buffer, capability) then
                 if vim.api.nvim_buf_is_valid(buffer) and vim.api.nvim_buf_is_loaded(buffer) then
@@ -292,7 +292,7 @@ function M.clear_diagnostics(sources, buffer)
 
     local ns = vim.diagnostic.get_namespaces()
 
-    for _, source in ipairs(utils.to_list(sources)) do
+    for _, source in ipairs(vim.to_list(sources)) do
         assert(type(source) == 'string' and source)
         for id, n in pairs(ns) do
             if n.name == source or n.name:find('vim.lsp.' .. source, 1, true) then

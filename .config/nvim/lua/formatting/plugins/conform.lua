@@ -5,7 +5,6 @@ return {
         vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
     end,
     opts = function()
-        local utils = require 'core.utils'
         local project = require 'project'
 
         return {
@@ -44,7 +43,7 @@ return {
                         return project.root(ctx.buf or ctx.filename)
                     end,
                 },
-                golines = utils.tbl_merge(require 'conform.formatters.golines', {
+                golines = vim.tbl_merge(require 'conform.formatters.golines', {
                     args = { '-m', '180', '--no-reformat-tags', '--base-formatter', 'gofumpt' },
                 }),
                 prisma = {

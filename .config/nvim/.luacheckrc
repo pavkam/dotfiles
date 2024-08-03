@@ -11,6 +11,7 @@ std = {
         'fatal',
         'dbg',
         'who',
+        'get_trace_back',
         'assert',
         'require',
         'package',
@@ -23,5 +24,6 @@ std = {
         'tonumber',
         'coroutine',
         'setmetatable',
+        'select',
     },
 }

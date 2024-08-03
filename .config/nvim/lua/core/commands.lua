@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local logging = require 'core.logging'
 
 --- @class (strict) core.commands
@@ -99,7 +98,7 @@ function M.register_command(name, fn, opts)
             name,
             ---@param args vim.CommandCallbackArgs
             function(args)
-                fn(utils.tbl_merge(args, { split_args = parse_command_args(args) }))
+                fn(vim.tbl_merge(args, { split_args = parse_command_args(args) }))
             end,
             {
                 desc = opts.desc,
@@ -112,7 +111,7 @@ function M.register_command(name, fn, opts)
             name,
             ---@param args vim.CommandCallbackArgs
             function(args)
-                fn.fn(utils.tbl_merge(args, {
+                fn.fn(vim.tbl_merge(args, {
                     split_args = parse_command_args(args),
                     lines = fn.range and extract_command_lines(args) or nil,
                 }))
@@ -156,7 +155,7 @@ function M.register_command(name, fn, opts)
                 local func = type(func_or_spec) == 'function' and func_or_spec or func_or_spec.fn
 
                 if func then
-                    func(utils.tbl_merge(args, {
+                    func(vim.tbl_merge(args, {
                         split_args = parse_command_args(args),
                         lines = type(func_or_spec) == 'table' and func_or_spec.range and extract_command_lines(args)
                             or nil,

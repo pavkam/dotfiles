@@ -39,7 +39,7 @@ local function sexify(prefix, list, len_max, collapse_max)
     end
 
     return delongify(
-        icons.fit(prefix, 2) .. table.concat(utils.to_list(list), ' ' .. icons.fit(icons.TUI.ListSeparator, 2)),
+        icons.fit(prefix, 2) .. table.concat(vim.to_list(list), ' ' .. icons.fit(icons.TUI.ListSeparator, 2)),
         len_max
     )
 end

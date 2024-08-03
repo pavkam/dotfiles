@@ -12,11 +12,11 @@ local group_registry = {}
 local function on_event(events, callback, target)
     assert(type(callback) == 'function')
 
-    events = M.to_list(events)
-    target = M.to_list(target)
+    events = vim.to_list(events)
+    target = vim.to_list(target)
 
     -- create/update group
-    local group_name = M.get_trace_back(3)[1].file
+    local group_name = get_trace_back(3)[1].file
     local group = group_registry[group_name]
     if not group then
         group = group or vim.api.nvim_create_augroup(group_name, { clear = true })
@@ -57,7 +57,7 @@ end
 ---@param callback function # the callback to call when the event is triggered
 ---@return number # the group id of the created group
 function M.on_user_event(events, callback)
-    events = M.to_list(events)
+    events = vim.to_list(events)
     return on_event('User', function(evt)
         callback(evt.match, evt)
     end, events)

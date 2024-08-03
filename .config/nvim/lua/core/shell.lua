@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local logging = require 'core.logging'
 local progress = require 'ui.progress'
 local markdown = require 'extras.markdown'
@@ -19,7 +18,7 @@ function M.floating(cmd, opts)
 
     local cwd = vim.uv.cwd()
 
-    opts = utils.tbl_merge({
+    opts = vim.tbl_merge({
         ft = 'lazyterm',
         size = { width = 0.9, height = 0.9 },
         cwd = cwd and vim.uv.fs_realpath(cwd),
@@ -219,7 +218,7 @@ function M.async_cmd(cmd, args, input, callback, opts)
     opts = opts or {}
     args = args or {}
 
-    local ignore_codes = opts.ignore_codes and utils.to_list(opts.ignore_codes) or { 0 }
+    local ignore_codes = opts.ignore_codes and vim.to_list(opts.ignore_codes) or { 0 }
 
     async_cmd(cmd, args, input, function(code, stdout, stderr)
         if not opts.no_checktime then

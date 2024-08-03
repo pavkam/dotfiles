@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local M = {}
 
 --- Extracts the color and attributes from a highlight group.
@@ -55,7 +54,7 @@ function M.make_hl(name, ...)
     end
 
     -- merge and cleanup the final table
-    local merged = utils.tbl_merge(unpack(hls))
+    local merged = vim.tbl_merge(unpack(hls))
     vim.api.nvim_set_hl(0, name, merged)
 end
 

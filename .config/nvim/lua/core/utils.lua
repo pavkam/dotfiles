@@ -5,129 +5,6 @@ local M = {}
 
 math.randomseed(os.time())
 
---- Converts a value to a list
----@param value any # any value that will be converted to a list
----@return any[] # the listified version of the value
-function M.to_list(value)
-    if value == nil then
-        return {}
-    elseif vim.islist(value) then
-        return value
-    elseif type(value) == 'table' then
-        local list = {}
-        for _, item in ipairs(value) do
-            table.insert(list, item)
-        end
-
-        return list
-    else
-        return { value }
-    end
-end
-
---- Inflates a list to a table
----@generic T: table
----@param list T[] # the list to inflate
----@param key_fn fun(value: T): string # the function to get the key from the value
----@return table<string, T> # the inflated table
-function M.inflate_list(key_fn, list)
-    assert(vim.islist(list) and type(key_fn) == 'function')
-
-    ---@type table<string, table>
-    local result = {}
-
-    for _, value in ipairs(list) do
-        local key = key_fn(value)
-        result[key] = value
-    end
-
-    return result
-end
-
---- Merges multiple tables into one
----@vararg table|nil # the tables to merge
----@return table # the merged table
-function M.tbl_merge(...)
-    local all = {}
-
-    for _, a in ipairs { ... } do
-        if a then
-            table.insert(all, a)
-        end
-    end
-
-    if #all == 0 then
-        return {}
-    elseif #all == 1 then
-        return all[1]
-    else
-        return vim.tbl_deep_extend('force', unpack(all))
-    end
-end
-
---- Gets the value of an up-value of a function
----@param fn function # the function to get the up-value from
----@param name string # the name of the up-value to get
----@return any # the value of the up-value or nil if it does not exist
-function M.get_up_value(fn, name)
-    local i = 1
-    while true do
-        local n, v = debug.getupvalue(fn, i)
-        if n == nil then
-            break
-        end
-
-        if n == name then
-            return v
-        end
-
-        i = i + 1
-    end
-
-    return nil
-end
-
----@class (exact) core.utils.TraceBackEntry # a trace-back entry
----@field file string # the file of the entry
----@field line integer # the line of the entry
----@field fn_name string # the name of the function
-
---- Gets the trace-back of the current function
----@param level integer|nil # the level of the trace-back to get
----@return core.utils.TraceBackEntry[] # the trace-back entries
-function M.get_trace_back(level)
-    local trace = level and debug.traceback('', level) or debug.traceback()
-
-    -- split trace by new-line into an array
-    local lines = vim.split(trace, '\n', { plain = true, trimempty = true })
-
-    ---@type core.utils.TraceBackEntry[]
-    local result = {}
-    for _, line in pairs(lines) do
-        line = line:gsub('\t', '')
-        local file, file_line, fn_name = line:match '([^:]+):(%d+): in (.+)'
-
-        if fn_name == 'main chunk' then
-            fn_name = 'module'
-        else
-            fn_name = fn_name and fn_name:match "function '(.+)'" or ''
-            if fn_name == '' then
-                fn_name = 'anonymous'
-            end
-        end
-
-        if file and file_line then
-            table.insert(result, {
-                file = file,
-                line = tonumber(file_line),
-                fn_name = fn_name,
-            })
-        end
-    end
-
-    return result
-end
-
 ---@type table<integer, uv_timer_t>
 local deferred_buffer_timers = {}
 
@@ -165,7 +42,7 @@ function M.defer_unique(buffer, fn, timeout)
     )
 
     if res ~= 0 then
-        M.error(string.format('Failed to start defer timer for buffer %d', buffer))
+        require('core.logging').error(string.format('Failed to start defer timer for buffer %d', buffer))
     end
 end
 
@@ -229,8 +106,8 @@ end
 ---@param files string|table<number, string|nil> # the list of files to check
 ---@return string|nil # the first found file or nil if none exists
 function M.first_found_file(base_paths, files)
-    base_paths = M.to_list(base_paths)
-    files = M.to_list(files)
+    base_paths = vim.to_list(base_paths)
+    files = vim.to_list(files)
 
     for _, path in ipairs(base_paths) do
         for _, file in ipairs(files) do

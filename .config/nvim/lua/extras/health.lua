@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local keys = require 'core.keys'
 local markdown = require 'extras.markdown'
 local sessions = require 'core.sessions'
@@ -119,7 +118,7 @@ local function show_for_buffer(buffer)
     local dap_info = md(package.loaded['dap'] and debugging.configurations(buffer))
 
     local lsp_info = md {
-        LSP = utils.inflate_list(
+        LSP = vim.inflate_list(
             function(client)
                 return client.name
             end,

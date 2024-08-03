@@ -89,7 +89,6 @@ return {
         }
     end,
     config = function(_, opts)
-        local utils = require 'core.utils'
         local lint = require 'lint'
 
         -- apply user options to the default config
@@ -104,7 +103,7 @@ return {
                 end
 
                 ---@cast linter_def lint.Linter
-                lint.linters[name] = utils.tbl_merge(linter_def, linter)
+                lint.linters[name] = vim.tbl_merge(linter_def, linter)
 
                 if args then
                     lint.linters[name].args = args
