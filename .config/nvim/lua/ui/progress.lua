@@ -145,7 +145,7 @@ local function ensure_polling()
                 spinner_index = (spinner_index or 0) + 1
             end
 
-            utils.trigger_status_update_event()
+            require('core.events').trigger_status_update_event()
         end)
     )
 

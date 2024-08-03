@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local project = require 'project'
 local progress = require 'ui.progress'
 local settings = require 'core.settings'
@@ -137,7 +138,7 @@ end, {
 
 if utils.has_plugin 'nvim-lint' then
     -- setup auto-commands
-    utils.on_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(evt)
+    events.on_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(evt)
         if M.enabled(evt.buf) then
             require('linting').apply(evt.buf)
         end

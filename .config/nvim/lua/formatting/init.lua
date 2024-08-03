@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local keys = require 'core.keys'
 local progress = require 'ui.progress'
 local settings = require 'core.settings'
@@ -110,7 +111,7 @@ if utils.has_plugin 'conform.nvim' then
         require('formatting').apply()
     end, { desc = 'Format buffer/selection' })
 
-    utils.on_event('BufWritePre', function(evt)
+    events.on_event('BufWritePre', function(evt)
         if M.enabled(evt.buf) then
             require('formatting').apply(evt.buf)
         end

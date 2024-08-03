@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local keys = require 'core.keys'
 local settings = require 'core.settings'
 local git = require 'git'
@@ -128,14 +129,14 @@ keys.map('n', '<M-]>', '<C-i>', { icon = icons.UI.Next, desc = 'Next location' }
 keys.map('n', '<M-[>', '<C-o>', { icon = icons.UI.Prev, desc = 'Previous location' })
 
 -- Fix telescope modified buffers when closing window
-utils.on_event({ 'BufModifiedSet' }, function(evt)
+events.on_event({ 'BufModifiedSet' }, function(evt)
     if vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'TelescopePrompt' then
         vim.api.nvim_set_option_value('modified', false, { buf = evt.buf })
     end
 end)
 
 -- configure special buffers
-utils.on_event({ 'BufWinEnter' }, function(evt)
+events.on_event({ 'BufWinEnter' }, function(evt)
     local ignored_fts = { '', 'neo-tree' }
     local win = vim.api.nvim_get_current_win()
 
@@ -147,7 +148,7 @@ utils.on_event({ 'BufWinEnter' }, function(evt)
     end
 end)
 
-utils.on_event('FileType', function(evt)
+events.on_event('FileType', function(evt)
     if utils.is_special_buffer(evt.buf) then
         vim.bo[evt.buf].buflisted = false
     elseif
@@ -159,7 +160,7 @@ utils.on_event('FileType', function(evt)
 end)
 
 -- file detection commands
-utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
+events.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     local current_file = vim.api.nvim_buf_get_name(evt.buf)
 
     -- if custom events have been triggered, bail
@@ -168,11 +169,11 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     end
 
     if not utils.is_special_buffer(evt.buf) then
-        utils.trigger_user_event 'NormalFile'
+        events.trigger_user_event 'NormalFile'
 
         git.check_tracked(vim.uv.fs_realpath(current_file) or current_file, function(yes)
             if yes then
-                utils.trigger_user_event 'GitFile'
+                events.trigger_user_event 'GitFile'
             end
         end)
     end
@@ -184,15 +185,15 @@ utils.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
 end)
 
 -- resize splits if window got resized
-utils.on_event('VimResized', function()
+events.on_event('VimResized', function()
     vim.schedule(function()
         utils.refresh_ui()
-        utils.trigger_status_update_event()
+        events.trigger_status_update_event()
     end)
 end)
 
 --- Macro tracking
-utils.on_event({ 'RecordingEnter' }, function()
+events.on_event({ 'RecordingEnter' }, function()
     utils.info(
         string.format(
             'Started recording macro into register `%s`',
@@ -211,7 +212,7 @@ utils.on_event({ 'RecordingEnter' }, function()
     })
 end)
 
-utils.on_event({ 'RecordingLeave' }, function()
+events.on_event({ 'RecordingLeave' }, function()
     utils.info(
         string.format(
             'Stopped recording macro into register `%s`',

@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local progress = require 'ui.progress'
 
 local progress_class = 'lsp'
@@ -9,7 +10,7 @@ local M = {}
 ---@type table<string, any>
 local lsp_tasks = {}
 
-utils.on_event('LspDetach', function(evt)
+events.on_event('LspDetach', function(evt)
     local client = vim.lsp.get_client_by_id(evt.data.client_id)
     if not client or M.is_special(client) then
         return
@@ -92,7 +93,7 @@ end
 function M.on_attach(callback, target)
     assert(type(callback) == 'function' and callback)
 
-    return utils.on_event('LspAttach', function(evt)
+    return events.on_event('LspAttach', function(evt)
         local client = vim.lsp.get_client_by_id(evt.data.client_id)
         if client then
             callback(client, evt.buf)

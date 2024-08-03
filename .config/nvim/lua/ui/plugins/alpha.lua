@@ -44,20 +44,20 @@ return {
         return dashboard
     end,
     config = function(_, dashboard)
-        local utils = require 'core.utils'
+        local events = require 'core.events'
         local icons = require 'ui.icons'
 
         if vim.o.filetype == 'lazy' then
             vim.cmd.close()
 
-            utils.on_user_event('AlphaReady', function()
+            events.on_user_event('AlphaReady', function()
                 require('lazy').show()
             end)
         end
 
         require('alpha').setup(dashboard.opts)
 
-        utils.on_user_event('LazyVimStarted', function()
+        events.on_user_event('LazyVimStarted', function()
             local stats = require('lazy').stats()
             local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
 

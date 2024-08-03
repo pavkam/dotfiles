@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
 
@@ -416,11 +417,11 @@ function M.import(settings)
 end
 
 -- Clear the options for a buffer
-utils.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost', 'BufEnter', 'VimResized' }, function()
-    vim.schedule(utils.trigger_status_update_event)
+events.on_event({ 'LspDetach', 'LspAttach', 'BufWritePost', 'BufEnter', 'VimResized' }, function()
+    vim.schedule(events.trigger_status_update_event)
 end)
 
-utils.on_event('BufReadPost', function(evt)
+events.on_event('BufReadPost', function(evt)
     -- copy the settings from the file to the buffer
     local settings = file_permanent_settings[vim.api.nvim_buf_get_name(evt.buf)]
 
@@ -439,14 +440,14 @@ utils.on_event('BufReadPost', function(evt)
     end
 end)
 
-utils.on_event('BufDelete', function(evt)
+events.on_event('BufDelete', function(evt)
     -- clear the settings for the buffer
     buffer_transient_settings[evt.buf] = nil
     buffer_instance_settings[evt.buf] = nil
     buffer_permanent_settings[evt.buf] = nil
 end)
 
-utils.on_status_update_event(function(evt)
+events.on_status_update_event(function(evt)
     buffer_transient_settings[evt.buf] = nil
 
     -- refresh the status showing components

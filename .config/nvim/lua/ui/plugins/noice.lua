@@ -166,8 +166,7 @@ return {
         },
     },
     init = function()
-        local utils = require 'core.utils'
-        utils.on_event('FileType', function(evt)
+        require('core.events').on_event('FileType', function(evt)
             require('extras.health').register_stack_trace_highlights(evt.buf)
         end, 'noice')
     end,

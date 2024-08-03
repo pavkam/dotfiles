@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local icons = require 'ui.icons'
 local settings = require 'core.settings'
 local qf = require 'ui.qf'
@@ -170,7 +171,7 @@ local function swap_sessions(old_name, new_name)
     end
 end
 
-utils.on_event('VimLeavePre', function()
+events.on_event('VimLeavePre', function()
     local current = M.current()
     if current then
         M.save_session(current)

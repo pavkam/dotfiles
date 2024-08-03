@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local keys = require 'core.keys'
 
 local group = 'pavkam_marks'
@@ -123,7 +124,7 @@ keys.attach(nil, function(set)
     end, { desc = 'Remove mark from the current line' })
 end, true)
 
-utils.on_event('BufEnter', function(evt)
+events.on_event('BufEnter', function(evt)
     if utils.is_special_buffer(evt.buf) then
         return
     end
@@ -134,7 +135,7 @@ utils.on_event('BufEnter', function(evt)
 end)
 
 -- restore marks after reloading a file
-utils.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
+events.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
     if utils.is_special_buffer(evt.buf) or utils.is_transient_buffer(evt.buf) then
         return
     end
@@ -146,7 +147,7 @@ utils.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
     end
 end)
 
-utils.on_event('CmdlineLeave', function(evt)
+events.on_event('CmdlineLeave', function(evt)
     vim.schedule(function()
         local last_cmd = vim.fn.getreg ':'
         if last_cmd:match '^delm' then

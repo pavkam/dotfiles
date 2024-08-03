@@ -5,6 +5,7 @@ local actions = require 'telescope.actions'
 local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
 local utils = require 'core.utils'
+local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
 local project = require 'project'
@@ -21,7 +22,7 @@ local project = require 'project'
 ---@type table<string, boolean>
 local session_open_files = {}
 
-utils.on_event('BufRead', function(evt)
+events.on_event('BufRead', function(evt)
     local path = utils.is_regular_buffer(evt.buf) and vim.api.nvim_buf_get_name(evt.buf)
     if not path or not utils.file_exists(path) then
         return

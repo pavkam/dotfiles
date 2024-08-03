@@ -147,91 +147,6 @@ function M.get_trace_back(level)
     return result
 end
 
----@type table<string, integer>
-local group_registry = {}
-
---- Creates an auto command that triggers on a given list of events
----@param events string|string[] # the list of events to trigger on
----@param callback function # the callback to call when the event is triggered
----@param target table|string|number|nil # the target to trigger on
----@return number # the group id of the created group
-local function on_event(events, callback, target)
-    assert(type(callback) == 'function')
-
-    events = M.to_list(events)
-    target = M.to_list(target)
-
-    -- create/update group
-    local group_name = M.get_trace_back(3)[1].file
-    local group = group_registry[group_name]
-    if not group then
-        group = group or vim.api.nvim_create_augroup(group_name, { clear = true })
-        group_registry[group_name] = group
-    end
-
-    local opts = {
-        callback = function(evt)
-            callback(evt, group)
-        end,
-        group = group,
-    }
-
-    -- decide on the target
-    if type(target) == 'number' then
-        opts.buffer = target
-    elseif target then
-        opts.pattern = target
-    end
-
-    -- create auto command
-    vim.api.nvim_create_autocmd(events, opts)
-
-    return group
-end
-
---- Creates an auto command that triggers on a given list of events
----@param events string|string[] # the list of events to trigger on
----@param callback function # the callback to call when the event is triggered
----@param target table|string|number|nil # the target to trigger on
----@return number # the group id of the created group
-function M.on_event(events, callback, target)
-    return on_event(events, callback, target)
-end
-
---- Creates an auto command that triggers on a given list of user events
----@param events string|table # the list of events to trigger on
----@param callback function # the callback to call when the event is triggered
----@return number # the group id of the created group
-function M.on_user_event(events, callback)
-    events = M.to_list(events)
-    return on_event('User', function(evt)
-        callback(evt.match, evt)
-    end, events)
-end
-
---- Creates an auto command that triggers on focus gained
----@param callback function # the callback to call when the event is triggered
-function M.on_focus_gained(callback)
-    assert(type(callback) == 'function')
-
-    on_event({ 'FocusGained', 'TermClose', 'TermLeave' }, callback)
-    on_event({ 'DirChanged' }, callback, 'global')
-end
-
---- Creates an auto command that triggers on global status update event
----@param callback function # the callback to call when the event is triggered
----@return number # the group id of the created group
-function M.on_status_update_event(callback)
-    return on_event('User', callback, 'StatusUpdate')
-end
-
---- Trigger a user event
----@param event string # the name of the event to trigger
----@param data any # the data to pass to the event
-function M.trigger_user_event(event, data)
-    vim.api.nvim_exec_autocmds('User', { pattern = event, modeline = false, data = data })
-end
-
 ---@class core.utils.RegisterCommandOpts
 ---@field desc string # the description of the command
 ---@field nargs integer|'*'|'?'|'+'|nil # the number of arguments the command takes
@@ -411,11 +326,6 @@ function M.register_command(name, fn, opts)
     end
 end
 
---- Trigger a status update event
-function M.trigger_status_update_event()
-    M.trigger_user_event 'StatusUpdate'
-end
-
 ---@class core.utils.NotifyOpts # the options to pass to the notification
 ---@field prefix_icon string|nil # the icon to prefix the message with
 ---@field suffix_icon string|nil # the icon to suffix the message with
@@ -472,13 +382,13 @@ function M.hint(msg, opts)
 end
 
 ---@type table<integer, uv_timer_t>
-local differed_buffer_timers = {}
+local deferred_buffer_timers = {}
 
-M.on_event('BufDelete', function(evt)
-    local timer = differed_buffer_timers[evt.buf]
+require('core.events').on_event('BufDelete', function(evt)
+    local timer = deferred_buffer_timers[evt.buf]
     if timer then
         timer:stop()
-        differed_buffer_timers[evt.buf] = nil
+        deferred_buffer_timers[evt.buf] = nil
     end
 end)
 
@@ -490,10 +400,10 @@ end)
 function M.defer_unique(buffer, fn, timeout)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local timer = differed_buffer_timers[buffer]
+    local timer = deferred_buffer_timers[buffer]
     if not timer then
         timer = vim.uv.new_timer()
-        differed_buffer_timers[buffer] = timer
+        deferred_buffer_timers[buffer] = timer
     else
         timer:stop()
     end

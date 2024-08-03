@@ -1,5 +1,3 @@
-local utils = require 'core.utils'
-
 require 'core.options'
 require 'core.shell'
 require 'core.sessions'
@@ -13,6 +11,6 @@ vim.cmd.cnoreabbrev('Bd', 'bd')
 vim.cmd.cnoreabbrev('bD', 'bd')
 
 -- check if the file has been changed outside of Neovim
-utils.on_focus_gained(function()
+require('core.events').on_focus_gained(function()
     vim.cmd.checktime()
 end)

@@ -160,17 +160,17 @@ return {
             lsp.notify_file_renamed(data.source, data.destination)
         end
 
-        local events = require 'neo-tree.events'
+        local neo_events = require 'neo-tree.events'
         opts.event_handlers = opts.event_handlers or {}
 
         vim.list_extend(opts.event_handlers, {
-            { event = events.FILE_MOVED, handler = on_move },
-            { event = events.FILE_RENAMED, handler = on_move },
+            { event = neo_events.FILE_MOVED, handler = on_move },
+            { event = neo_events.FILE_RENAMED, handler = on_move },
         })
 
         require('neo-tree').setup(opts)
 
-        utils.on_focus_gained(function()
+        require('core.events').on_focus_gained(function()
             local ok, manager = pcall(require, 'neo-tree.sources.manager')
             if ok then
                 for _, source in ipairs { 'filesystem', 'git_status', 'document_symbols' } do

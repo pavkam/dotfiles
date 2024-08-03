@@ -1,11 +1,12 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local keys = require 'core.keys'
 
 require 'extras.health'
 require 'extras.notes'
 
 -- File manipulation (delete, rename)
-utils.on_user_event('NormalFile', function(_, evt)
+events.on_user_event('NormalFile', function(_, evt)
     local function delete_buffer(buffer)
         if package.loaded['mini.bufremove'] then
             require('mini.bufremove').delete(buffer, true)

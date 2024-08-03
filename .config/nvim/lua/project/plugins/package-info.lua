@@ -12,8 +12,7 @@ return {
 
         pi.setup(opts)
 
-        local utils = require 'core.utils'
-        utils.on_event('BufReadPre', function(args)
+        require('core.events').on_event('BufReadPre', function(args)
             keys.map('n', '<leader>p', function()
                 require('ui.select').command({
                     {

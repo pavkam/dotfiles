@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local lsp = require 'project.lsp'
 local progress = require 'ui.progress'
 
@@ -64,7 +65,7 @@ local function check_file(client, files, index)
     assert(vim.islist(files))
 
     indexing_in_progress = index <= #files
-    utils.trigger_status_update_event()
+    events.trigger_status_update_event()
 
     if not indexing_in_progress then
         return

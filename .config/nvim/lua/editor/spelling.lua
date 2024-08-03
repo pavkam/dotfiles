@@ -1,4 +1,5 @@
 local utils = require 'core.utils'
+local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
 local settings = require 'core.settings'
@@ -55,7 +56,7 @@ settings.register_toggle('spelling', function(enabled)
     ---@diagnostic disable-next-line: undefined-field
 end, { icon = icons.UI.SpellCheck, name = 'Spell checking', default = vim.opt.spell:get(), scope = 'global' })
 
-utils.on_event({ 'BufWinEnter' }, function(evt)
+events.on_event({ 'BufWinEnter' }, function(evt)
     local ignored_fts = { '', 'neo-tree' }
     local win = vim.api.nvim_get_current_win()
 
@@ -67,7 +68,7 @@ utils.on_event({ 'BufWinEnter' }, function(evt)
     end
 end)
 
-utils.on_event('FileType', function(evt)
+events.on_event('FileType', function(evt)
     if utils.is_special_buffer(evt.buf) then
         vim.opt_local.spell = false
     elseif
@@ -78,7 +79,7 @@ utils.on_event('FileType', function(evt)
     end
 end)
 
-utils.on_event({ 'UIEnter', 'LspAttach', 'LspDetach' }, function()
+events.on_event({ 'UIEnter', 'LspAttach', 'LspDetach' }, function()
     M.swap_custom_dictionary()
 end)
 

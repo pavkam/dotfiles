@@ -282,6 +282,7 @@ return {
             require('lspconfig.ui.windows').default_options.border = vim.g.border_style
 
             local utils = require 'core.utils'
+            local events = require 'core.events'
             local lsp = require 'project.lsp'
             local features = require 'project.features'
 
@@ -324,7 +325,7 @@ return {
             -- setup progress
             local progress_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress]
             vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress] = function(_, msg, info)
-                utils.trigger_user_event('LspProgress', utils.tbl_merge(msg, { client_id = info.client_id }))
+                events.trigger_user_event('LspProgress', utils.tbl_merge(msg, { client_id = info.client_id }))
                 progress_capability_handler(_, msg, info)
             end
 
