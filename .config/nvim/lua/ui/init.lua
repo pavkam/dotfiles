@@ -1,6 +1,5 @@
 local utils = require 'core.utils'
 local buffers = require 'core.buffers'
-local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local settings = require 'core.settings'
@@ -138,14 +137,13 @@ events.on_event({ 'BufModifiedSet' }, function(evt)
 end)
 
 -- configure special buffers
+-- TODO: find other buffers which are funky, extract this functionality
+-- into a helper function `vim.pin_buffer(file_type)`
 events.on_event({ 'BufWinEnter' }, function(evt)
-    local ignored_fts = { '', 'neo-tree' }
+    local fixed_buffers = { 'qf' }
     local win = vim.api.nvim_get_current_win()
 
-    if
-        buffers.is_special_buffer(evt.buf)
-        and not vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf }))
-    then
+    if vim.tbl_contains(fixed_buffers, vim.api.nvim_get_option_value('filetype', { buf = evt.buf })) then
         vim.wo[win].winfixbuf = true
     end
 end)
@@ -196,7 +194,7 @@ end)
 
 --- Macro tracking
 events.on_event({ 'RecordingEnter' }, function()
-    logging.info(
+    vim.info(
         string.format(
             'Started recording macro into register `%s`',
             vim.fn.reg_recording(),
@@ -215,7 +213,7 @@ events.on_event({ 'RecordingEnter' }, function()
 end)
 
 events.on_event({ 'RecordingLeave' }, function()
-    logging.info(
+    vim.info(
         string.format(
             'Stopped recording macro into register `%s`',
             vim.fn.reg_recording(),

@@ -1,6 +1,4 @@
-local utils = require 'core.utils'
 local buffers = require 'core.buffers'
-local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
@@ -20,7 +18,7 @@ function M.swap_custom_dictionary(target)
 
     if not path then
         if current_file then
-            logging.hint 'Disabling custom spelling dictionary'
+            vim.hint 'Disabling custom spelling dictionary'
         end
 
         vim.opt.spellfile = nil
@@ -37,7 +35,7 @@ function M.swap_custom_dictionary(target)
         return
     end
 
-    logging.hint(string.format('Selecting spelling dictionary to `%s` for buffer', project.format_relative(spl_file)))
+    vim.hint(string.format('Selecting spelling dictionary to `%s` for buffer', project.format_relative(spl_file)))
     vim.opt.spellfile = spl_file
 end
 

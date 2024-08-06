@@ -1,15 +1,13 @@
-local logging = require 'core.logging'
-
---- @class (strict) core.commands
+--- @class core.commands
 local M = {}
 
----@class (strict) core.commands.RegisterCommandOpts
+---@class (exact) core.commands.RegisterCommandOpts
 ---@field desc string # the description of the command
 ---@field nargs integer|'*'|'?'|'+'|nil # the number of arguments the command takes
 ---@field bang boolean|nil # whether the command takes a bang argument
 ---@field default_fn string|nil # the default function if none supplied
 
----@class (strict) vim.CommandCallbackArgs
+---@class (exact) vim.CommandCallbackArgs
 ---@field name string # the name of the command
 ---@field args string # the arguments passed to the command
 ---@field fargs string[] # the arguments split by un-escaped white-space
@@ -23,7 +21,7 @@ local M = {}
 ---@field mods string # the command modifiers, if any
 ---@field smods table # the command modifiers in a structured format
 
----@class (strict) core.commands.CommandCallbackArgs: vim.CommandCallbackArgs
+---@class (exact) core.commands.CommandCallbackArgs: vim.CommandCallbackArgs
 ---@field split_args string[] # the arguments split by escaped white-space
 ---@field lines string[] # the lines of the buffer
 
@@ -148,7 +146,7 @@ function M.register_command(name, fn, opts)
             function(args)
                 local func_or_spec = fn[args.fargs[1] or opts.default_fn]
                 if not func_or_spec then
-                    logging.error(string.format('Unknown function `%s`', args.args))
+                    vim.error(string.format('Unknown function `%s`', args.args))
                     return
                 end
 

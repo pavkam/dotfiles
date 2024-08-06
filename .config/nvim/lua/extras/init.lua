@@ -1,5 +1,3 @@
-local utils = require 'core.utils'
-local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 
@@ -32,7 +30,7 @@ events.on_user_event('NormalFile', function(_, evt)
 
             local ok, _, msg = vim.uv.fs_rename(old_path, new_path)
             if not ok then
-                logging.error(string.format('Failed to rename file: **%s**', msg))
+                vim.error(string.format('Failed to rename file: **%s**', msg))
                 return
             end
 
@@ -75,7 +73,7 @@ events.on_user_event('NormalFile', function(_, evt)
 
         local ok, _, msg = vim.uv.fs_unlink(path)
         if not ok then
-            logging.error(string.format('Failed to delete file: **%s**', msg))
+            vim.error(string.format('Failed to delete file: **%s**', msg))
             return
         end
 

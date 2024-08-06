@@ -40,7 +40,7 @@ function M.defer_unique(buffer, fn, timeout)
     )
 
     if res ~= 0 then
-        require('core.logging').error(string.format('Failed to start defer timer for buffer %d', buffer))
+        error(string.format('Failed to start defer timer for buffer %d', buffer))
     end
 end
 
@@ -117,19 +117,6 @@ function M.get_selected_text()
 
     local res, _ = original_selection:gsub('/', '\\/'):gsub('\n', '\\n')
     return res
-end
-
---- Checks if a plugin is available
----@param name string # the name of the plugin
----@return boolean # true if the plugin is available, false otherwise
-function M.has_plugin(name)
-    assert(type(name) == 'string' and name ~= '')
-
-    if package.loaded['lazy'] then
-        return require('lazy.core.config').spec.plugins[name] ~= nil
-    end
-
-    return false
 end
 
 --- Runs a function with the current visual selection

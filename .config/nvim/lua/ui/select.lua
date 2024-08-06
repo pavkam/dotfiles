@@ -6,7 +6,6 @@ local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
 local strings = require 'plenary.strings'
 local config = require('telescope.config').values
-local logging = require 'core.logging'
 local icons = require 'ui.icons'
 
 local M = {}
@@ -22,7 +21,7 @@ local M = {}
 ---@alias ui.select.SelectHighlighter
 ---| fun(entry: ui.select.SelectEntry, index: integer, col_index: number): string|nil # The highlighter to use for entry
 
----@class ui.select.SelectOpts # The options for the select
+---@class (exact) ui.select.SelectOpts # The options for the select
 ---@field prompt string|nil # The prompt to display
 ---@field at_cursor boolean|nil # Whether to display the select at the cursor
 ---@field separator string|nil # The separator to use between columns
@@ -43,7 +42,7 @@ function M.advanced(items, opts)
 
     local callback = opts.callback
         or function(entry)
-            logging.warn('No handler defined, selected: ' .. vim.inspect(entry))
+            vim.warn('No handler defined, selected: ' .. vim.inspect(entry))
         end
     opts.callback = nil
 

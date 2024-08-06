@@ -1,5 +1,4 @@
 local buffers = require 'core.buffers'
-local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
@@ -143,7 +142,7 @@ end
 
 ---@alias core.settings.ToggleScope 'buffer' | 'global' # the scope of the toggle
 
----@class core.settings.ManagedToggle # A managed toggle
+---@class (exact) core.settings.ManagedToggle # A managed toggle
 ---@field name string # the name of the option
 ---@field option string # the name of the option variable
 ---@field value_fn fun(buffer: integer|nil): boolean # the function to get the value of the option
@@ -153,7 +152,7 @@ end
 ---@type core.settings.ManagedToggle[]
 local managed_toggles = {}
 
----@class core.settings.RegisterToggleOpts # The options for registering a toggle
+---@class (exact) core.settings.RegisterToggleOpts # The options for registering a toggle
 ---@field name string|nil # the name of the option
 ---@field icon string|nil # the icon of the option
 ---@field scope core.settings.ToggleScope|core.settings.ToggleScope[] # the scope of the option
@@ -194,7 +193,7 @@ function M.register_toggle(option, toggle_fn, opts)
 
             if buffer ~= nil then
                 local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
-                logging.hint(
+                vim.hint(
                     string.format(
                         'Turning **%s** `%s` for `%s`.',
                         enabled and 'off' or 'on',
@@ -204,7 +203,7 @@ function M.register_toggle(option, toggle_fn, opts)
                     { prefix_icon = icons.UI.Toggle }
                 )
             else
-                logging.hint(
+                vim.hint(
                     string.format(
                         'Turning **%s** %s `%s` globally.',
                         enabled and 'off' or 'on',

@@ -89,7 +89,7 @@ function M.resolve(window, file_type)
     return result
 end
 
----@class editor.comments.CommentOptions # The comment options for the given window.
+---@class (exact) editor.comments.CommentOptions # The comment options for the given window.
 ---@field single_line string # The single line comment string.
 ---@field multi_line_start string # The multi line comment start string.
 ---@field multi_line_end string # The multi line comment end string.

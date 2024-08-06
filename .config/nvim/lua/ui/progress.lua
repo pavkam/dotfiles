@@ -1,6 +1,5 @@
 local icons = require 'ui.icons'
 local buffers = require 'core.buffers'
-local logging = require 'core.logging'
 
 ---@class utils.progress
 local M = {}
@@ -97,11 +96,11 @@ local function update_tasks(interval)
             task.ttl = task.ttl - interval
 
             if task.ttl <= 0 then
-                logging.warn('Task "' .. class .. '" is still running')
+                vim.warn('Task "' .. class .. '" is still running')
                 tasks[class].ttl = tasks[class].timeout
             else
                 if task.fn and not task.fn(buffer) then
-                    logging.hint('Task "' .. class .. '" has finished')
+                    vim.hint('Task "' .. class .. '" has finished')
                     tasks[class] = nil
                 else
                     tasks[class] = task

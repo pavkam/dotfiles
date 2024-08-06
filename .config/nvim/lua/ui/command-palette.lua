@@ -4,8 +4,6 @@ local conf = require('telescope.config').values
 local actions = require 'telescope.actions'
 local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
-local utils = require 'core.utils'
-local logging = require 'core.logging'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
 
@@ -34,7 +32,7 @@ local function get_commands(opts)
     ---@type vim.CommandDesc[]
     local buffer_commands = vim.tbl_values(vim.api.nvim_buf_get_commands(opts.buffer, {}))
 
-    local is_visual = utivim.fns.is_visual_mode(opts.mode)
+    local is_visual = vim.fn.is_visual_mode(opts.mode)
 
     ---@type vim.CommandDesc[]
     local all = vim.iter(vim.list_extend(commands, buffer_commands))
@@ -242,7 +240,7 @@ local function show_command_palette(opts)
                     local selection = action_state.get_selected_entry()
                     ---@cast selection ui.command_palette.Entry|nil
                     if selection == nil then
-                        logging.warn 'Nothing has been selected'
+                        vim.warn 'Nothing has been selected'
                         return
                     end
 

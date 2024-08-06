@@ -1,6 +1,4 @@
-local utils = require 'core.utils'
 local buffers = require 'core.buffers'
-local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 
@@ -9,12 +7,12 @@ local group = 'pavkam_marks'
 ---@class ui.marks
 local M = {}
 
----@class ui.marks.Mark
+---@class (exact) ui.marks.Mark
 ---@field mark string # the mark name
 ---@field pos number[] # the position of the mark
 ---@field file string|nil # the file of the mark
 
----@class ui.marks.SerializedMark
+---@class (exact) ui.marks.SerializedMark
 ---@field mark string # the mark name
 ---@field lnum number # the line number of the mark
 ---@field col number # the column number of the mark
@@ -100,7 +98,7 @@ keys.attach(nil, function(set)
             local r, c = unpack(vim.api.nvim_win_get_cursor(0))
 
             vim.api.nvim_buf_set_mark(0, key, r, c, {})
-            logging.info(string.format('Marked position **%d:%d** as `%s`.', r, c, key))
+            vim.info(string.format('Marked position **%d:%d** as `%s`.', r, c, key))
 
             update_signs()
         end, { desc = string.format('Set mark "%s" at current line', key) })
@@ -112,7 +110,7 @@ keys.attach(nil, function(set)
         for _, mark in pairs(get_marks()) do
             if mark.pos[2] == r then
                 local key = mark_key(mark)
-                logging.info(string.format('Unmarked position **%d:%d** as `%s`.', r, c, key))
+                vim.info(string.format('Unmarked position **%d:%d** as `%s`.', r, c, key))
 
                 if is_buffer_mark(key) then
                     vim.api.nvim_buf_del_mark(0, key)

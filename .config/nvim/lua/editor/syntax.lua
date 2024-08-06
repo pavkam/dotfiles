@@ -1,7 +1,7 @@
 ---@class editor.syntax
 local M = {}
 
----@class editor.syntax.GetNodeAtCursorOpts
+---@class (exact) editor.syntax.GetNodeAtCursorOpts
 ---@field ignore_injections boolean|nil # Whether to include injected languages or not.
 ---@field ignore_indent boolean|nil # Whether to ignore the indentation or not.
 ---@field lang string|nil # The language to get the node at the cursor for.
@@ -228,7 +228,7 @@ function M.increment_node_under_cursor(window, value)
     return false
 end
 
----@class editor.syntax.RenameOpts
+---@class (exact) editor.syntax.RenameOpts
 ---@field whole_word boolean|nil # Whether to match the whole word or not.
 ---@field orig string|nil # The original text to replace if not supplied, uses the '<C-r><C-w>' command keys.
 ---@field new string|nil # The new text to replace with (if not supplied, uses the orig).

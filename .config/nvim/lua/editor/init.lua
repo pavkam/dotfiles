@@ -100,24 +100,6 @@ keys.map({ 'x' }, '<S-PageDown>', function()
     page_expr 'j'
 end, { desc = 'Page down' })
 
--- Shift-Arrows (when which-key is enabled)
-if utils.has_plugin 'which-key.nvim' then
-    keys.map('n', '<S-Up>', 'vk', { desc = 'Start visual mode and select up' })
-    keys.map('n', '<S-Down>', 'vj', { desc = 'Start visual mode and select down' })
-    keys.map('n', '<S-Left>', 'vh', { desc = 'Start visual mode and select left' })
-    keys.map('n', '<S-Right>', 'vl', { desc = 'Start visual mode and select right' })
-    keys.map('n', '<S-End>', 'v$', { desc = 'Start visual mode and select to end of line' })
-    keys.map('n', '<S-Home>', 'v^', { desc = 'Start visual mode and select to start of line' })
-    keys.map('n', '<S-PageDown>', function()
-        vim.cmd 'normal! v'
-        page_expr 'j'
-    end, { desc = 'Start visual mode and select one page down' })
-    keys.map('n', '<S-PageUp>', function()
-        vim.cmd 'normal! v'
-        page_expr 'K'
-    end, { desc = 'Start visual mode and select one page up' })
-end
-
 -- Disable the annoying yank on change
 keys.map({ 'n', 'x' }, 'c', [["_c]], { desc = 'Change' })
 keys.map({ 'n', 'x' }, 'C', [["_C]], { desc = 'Change' })

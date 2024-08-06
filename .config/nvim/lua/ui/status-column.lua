@@ -1,9 +1,9 @@
 local buffers = require 'core.buffers'
 
----@class ui.status-column.Sign # Defines a sign
----@field name string # The name of the sign
+---@class (exact) ui.status-column.Sign # Defines a sign
+---@field name string|nil # The name of the sign
 ---@field text string # The text of the sign
----@field texthl string # The highlight group of the text
+---@field texthl string|nil # The highlight group of the text
 ---@field priority number # The priority of the sign
 
 --- Gets the icon for a sign

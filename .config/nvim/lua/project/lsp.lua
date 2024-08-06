@@ -1,5 +1,4 @@
 local utils = require 'core.utils'
-local logging = require 'core.logging'
 local events = require 'core.events'
 local progress = require 'ui.progress'
 
@@ -138,7 +137,7 @@ function M.on_capability_event(event, capability, buffer, callback, run_on_regis
         callback = function()
             if not M.buffer_has_capability(buffer, capability) then
                 if vim.api.nvim_buf_is_valid(buffer) and vim.api.nvim_buf_is_loaded(buffer) then
-                    logging.warn('Buffer lost capability `' .. capability .. '`')
+                    vim.warn('Buffer lost capability `' .. capability .. '`')
                 end
 
                 vim.api.nvim_del_augroup_by_name(auto_group_name)
@@ -225,13 +224,13 @@ function M.restart_all_for_buffer(buffer)
         :totable()
 
     if #clients == 0 then
-        logging.warn 'No active clients to restart. Starting all.'
+        vim.warn 'No active clients to restart. Starting all.'
         vim.cmd 'LspStart'
         return
     end
 
     for _, client in ipairs(clients) do
-        logging.warn('Restarting client ' .. client.name .. '...')
+        vim.warn('Restarting client ' .. client.name .. '...')
         vim.cmd(string.format('LspRestart %s', client.name))
     end
 end

@@ -1,5 +1,3 @@
-local utils = require 'core.utils'
-local logging = require 'core.logging'
 local commands = require 'core.commands'
 local project = require 'project'
 
@@ -26,7 +24,7 @@ local function grep(global)
     local telescope = require 'telescope.builtin'
     local root = get_notes_root(global)
     if vim.fn.isdirectory(root) == 0 then
-        logging.info 'No notes saved'
+        vim.info 'No notes saved'
         return
     end
 
@@ -44,7 +42,7 @@ local function find(global)
     local telescope = require 'telescope.builtin'
     local root = get_notes_root(global)
     if vim.fn.isdirectory(root) == 0 then
-        logging.info 'No notes saved'
+        vim.info 'No notes saved'
         return
     end
 
@@ -93,7 +91,7 @@ commands.register_command('Note', {
         ---@param args core.commands.CommandCallbackArgs
         fn = function(args)
             if not args.lines or #args.lines == 0 then
-                logging.error 'No lines selected'
+                vim.error 'No lines selected'
             else
                 local title
                 if args.range == 2 then

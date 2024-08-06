@@ -18,7 +18,7 @@ return {
 
             local names = {
                 reset_hunk = 'Reset hunk',
-                preview_hunk = 'Preview hunk',
+                preview_hunk_inline = 'Preview hunk', -- URGENT, why preview hunk is not appreaing if not inline?
                 stage_hunk = 'Stage hunk',
                 undo_stage_hunk = 'Unstage hunk',
                 blame_line = 'Blame line',

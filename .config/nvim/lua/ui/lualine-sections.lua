@@ -242,7 +242,7 @@ local copilot_colors = {
 }
 
 --- The section that shows the status of the copilot
-M.copilot = utils.has_plugin 'copilot.lua'
+M.copilot = vim.has_plugin 'copilot.lua'
         and {
             settings.transient(function()
                 return sexify(icons.Symbols.Copilot, require('copilot.api').status.data.message or '')

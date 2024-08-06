@@ -4,9 +4,7 @@ local conf = require('telescope.config').values
 local actions = require 'telescope.actions'
 local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
-local utils = require 'core.utils'
 local buffers = require 'core.buffers'
-local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
@@ -318,7 +316,7 @@ local function show_file_palette(opts)
                     local selection = action_state.get_selected_entry()
                     ---@cast selection ui.file_palette.Entry|nil
                     if selection == nil then
-                        logging.warn 'Nothing has been selected'
+                        vim.warn 'Nothing has been selected'
                         return
                     end
 

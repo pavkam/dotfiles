@@ -1,4 +1,3 @@
-local logging = require 'core.logging'
 local progress = require 'ui.progress'
 local markdown = require 'extras.markdown'
 local progress_class = 'shell'
@@ -133,7 +132,7 @@ local function async_cmd(cmd, args, input, callback, opts)
 
     if not handle then
         cleanup()
-        logging.error(
+        vim.error(
             string.format(
                 'Failed to spawn command *"%s"* with arguments *"%s"*: **%s**!',
                 markdown.escape(cmd),
@@ -193,7 +192,7 @@ local function async_cmd(cmd, args, input, callback, opts)
 
     if (stdin and not stdin_write_success) or not stdout_read_success or not stderr_read_success then
         cleanup()
-        logging.error(
+        vim.error(
             string.format(
                 'Failed to read/write from/to pipes for command *"%s"*: **%s**!',
                 markdown.escape(cmd),
@@ -242,7 +241,7 @@ function M.async_cmd(cmd, args, input, callback, opts)
             end
 
             if message then
-                logging.error(
+                vim.error(
                     string.format(
                         'Error running command `%s %s` (error: **%s**):\n\n```\n%s\n```',
                         markdown.escape(cmd),
@@ -252,7 +251,7 @@ function M.async_cmd(cmd, args, input, callback, opts)
                     )
                 )
             else
-                logging.error(
+                vim.error(
                     string.format(
                         'Error running command `%s %s` (error: **%s**)',
                         markdown.escape(cmd),
@@ -319,7 +318,7 @@ require('core.commands').register_command('Run', {
             if not args.bang then
                 if #output > 0 then
                     local message = markdown.escape(table.concat(output, '\n'))
-                    logging.info(
+                    vim.info(
                         string.format(
                             'Command "%s" finished:\n\n```sh\n%s\n```',
                             markdown.escape(cmd_line_desc),
@@ -327,7 +326,7 @@ require('core.commands').register_command('Run', {
                         )
                     )
                 else
-                    logging.info(string.format('Command "%s" finished', markdown.escape(cmd_line_desc)))
+                    vim.info(string.format('Command "%s" finished', markdown.escape(cmd_line_desc)))
                 end
             else
                 if args.range == 2 then

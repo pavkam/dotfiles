@@ -1,6 +1,4 @@
-local utils = require 'core.utils'
 local buffers = require 'core.buffers'
-local logging = require 'core.logging'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local progress = require 'ui.progress'
@@ -18,7 +16,7 @@ local progress_class = 'formatting'
 local function formatters(buffer)
     assert(type(buffer) == 'number' and buffer)
 
-    if not utils.has_plugin 'conform.nvim' then
+    if not vim.has_plugin 'conform.nvim' then
         return {}
     end
 
@@ -71,7 +69,7 @@ end
 ---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
 function M.apply(buffer)
     if not package.loaded['conform'] then
-        logging.warn 'Conform plugin is not installed!'
+        vim.warn 'Conform plugin is not installed!'
         return
     end
 
@@ -85,7 +83,14 @@ function M.apply(buffer)
     local names = formatters(buffer)
     if #names > 0 then
         table.insert(names, 'injected')
-        conform.format { bufnr = buffer, formatters = names, quiet = false, lsp_format = 'fallback', timeout_ms = 5000 }
+        conform.format {
+            bufnr = buffer,
+            formatters = names,
+            quiet = false,
+            lsp_format = 'fallback',
+            timeout_ms = 5000,
+            stop_after_first = true,
+        }
 
         progress.update(progress_class, { buffer = buffer, prv = true, fn = formatting_status, ctx = names })
     end
@@ -108,7 +113,7 @@ settings.register_toggle(setting_name, function(enabled, buffer)
     end
 end, { icon = icons.UI.Format, name = 'Auto-formatting', scope = { 'buffer', 'global' } })
 
-if utils.has_plugin 'conform.nvim' then
+if vim.has_plugin 'conform.nvim' then
     keys.map({ 'n', 'x' }, '=', function()
         require('formatting').apply()
     end, { desc = 'Format buffer/selection' })

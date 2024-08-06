@@ -1,5 +1,3 @@
-local utils = require 'core.utils'
-local logging = require 'core.logging'
 local icons = require 'ui.icons'
 local keys = require 'core.keys'
 local project = require 'project'
@@ -43,7 +41,7 @@ function M.continue(target)
     local current_session = dap.session()
     if not current_session then
         if not setup(target) then
-            logging.error 'No debugging configuration found for this project type.'
+            vim.error 'No debugging configuration found for this project type.'
             return
         end
     end
@@ -54,13 +52,13 @@ function M.continue(target)
             return i.name
         end, function(configuration)
             if configuration then
-                logging.info("Starting debugging session '" .. configuration.name .. "' ...")
+                vim.info("Starting debugging session '" .. configuration.name .. "' ...")
 
                 dap.run(configuration, { filetype = project_type })
             end
         end)
     elseif current_session then
-        logging.info("Resuming debugging session '" .. current_session.config.name .. "' ...")
+        vim.info("Resuming debugging session '" .. current_session.config.name .. "' ...")
         dap.continue()
     end
 end

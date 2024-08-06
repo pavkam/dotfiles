@@ -69,7 +69,7 @@ function M.remove_buffer(buffer)
         require('mini.bufremove').delete(buffer, true)
 
         -- Special code to manage alpha
-        if utils.has_plugin 'alpha-nvim' then
+        if vim.has_plugin 'alpha-nvim' then
             if #buffers == 1 and buffers[1] == buffer then
                 require('alpha').start()
                 vim.schedule(function()

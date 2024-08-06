@@ -1,5 +1,7 @@
 return {
     'goolord/alpha-nvim',
+    -- URGENT: alpha is failing
+    cond = false,
     dependencies = {
         'nvim-tree/nvim-web-devicons',
     },

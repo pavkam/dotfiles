@@ -363,3 +363,105 @@ function vim.fn.is_visual_mode(mode)
 
     return mode == 'v' or mode == 'V' or mode == ''
 end
+
+--- Checks if a plugin is available
+---@param name string # the name of the plugin
+---@return boolean # true if the plugin is available, false otherwise
+function vim.has_plugin(name)
+    assert(type(name) == 'string' and name ~= '')
+
+    if package.loaded['lazy'] then
+        return require('lazy.core.config').spec.plugins[name] ~= nil
+    end
+
+    return false
+end
+
+---Converts a value to a string
+---@param value any # any value that will be converted to a string
+---@return string|nil # the stringified version of the value
+function vim.stringify(value)
+    if value == nil then
+        return nil
+    elseif type(value) == 'string' then
+        return value
+    elseif vim.islist(value) then
+        return table.concat(value, ', ')
+    elseif type(value) == 'table' then
+        return vim.inspect(value)
+    elseif type(value) == 'function' then
+        return vim.stringify(value())
+    else
+        return tostring(value)
+    end
+end
+
+---@class (exact) vim.NotifyOpts # the options to pass to the notification
+---@field prefix_icon string|nil # the icon to prefix the message with
+---@field suffix_icon string|nil # the icon to suffix the message with
+---@field title string|nil # the title of the notification
+
+--- Shows a notification
+---@param msg any # the message to show
+---@param level integer # the level of the notification
+---@param opts vim.NotifyOpts|nil # the options to pass to the notification
+local function notify(msg, level, opts)
+    msg = vim.stringify(msg) or ''
+
+    if opts and opts.prefix_icon then
+        msg = opts.prefix_icon .. ' ' .. msg
+    end
+
+    if opts and opts.suffix_icon then
+        msg = msg .. ' ' .. opts.suffix_icon
+    end
+
+    local title = opts and opts.title or 'NeoVim'
+
+    if vim.v.exiting ~= vim.NIL or vim.v.dying > 0 then
+        if level == vim.log.levels.ERROR then
+            vim.api.nvim_err_writeln(string.format('[%s] %s', title, msg))
+        else
+            vim.api.nvim_out_write(string.format('[%s] %s\n', title, msg))
+        end
+
+        return
+    end
+
+    if vim.in_fast_event() then
+        vim.notify(msg, level, { title = title })
+        return
+    end
+
+    vim.schedule(function()
+        vim.notify(msg, level, { title = title })
+    end)
+end
+
+--- Shows a notification with the INFO type
+---@param msg any # the message to show
+---@param opts vim.NotifyOpts|nil # the options to pass to the notification
+function vim.info(msg, opts)
+    notify(msg, vim.log.levels.INFO, opts)
+end
+
+--- Shows a notification with the WARN type
+---@param msg any # the message to show
+---@param opts vim.NotifyOpts|nil # the options to pass to the notification
+function vim.warn(msg, opts)
+    notify(msg, vim.log.levels.WARN, opts)
+end
+
+--- Shows a notification with the ERROR type
+---@param msg any # the message to show
+---@param opts vim.NotifyOpts|nil # the options to pass to the notification
+function vim.error(msg, opts)
+    notify(msg, vim.log.levels.ERROR, opts)
+end
+
+--- Shows a notification with the HINT type
+---@param msg any # the message to show
+---@param opts vim.NotifyOpts|nil # the options to pass to the notification
+function vim.hint(msg, opts)
+    notify(msg, vim.log.levels.DEBUG, opts)
+end

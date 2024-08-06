@@ -1,4 +1,3 @@
-local logging = require 'core.logging'
 local diagnostics = require 'project.diagnostics'
 local lsp = require 'project.lsp'
 
@@ -22,7 +21,7 @@ local function hover()
     elseif lsp.buffer_has_capability(0, 'hover') then
         vim.lsp.buf.hover()
     else
-        logging.info 'No hover information available!'
+        vim.info 'No hover information available!'
     end
 end
 

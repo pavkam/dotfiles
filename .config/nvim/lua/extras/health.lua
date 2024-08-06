@@ -4,7 +4,7 @@ local sessions = require 'core.sessions'
 
 local M = {}
 
----@class extras.health.ShowOpts
+---@class (exact) extras.health.ShowOpts
 ---@field public height number|nil
 ---@field public width number|nil
 

@@ -101,7 +101,7 @@ function M.apply(buffer)
 
     local lint = require 'lint'
 
-    vim.defer_unique(buffer, function()
+    utils.defer_unique(buffer, function()
         local do_lint = function()
             lint.try_lint(names, { cwd = project.root(buffer) })
             progress.update(progress_class, { buffer = buffer, prv = true, fn = linting_status, ctx = names })
@@ -135,7 +135,7 @@ end, {
     scope = { 'buffer', 'global' },
 })
 
-if utils.has_plugin 'nvim-lint' then
+if vim.has_plugin 'nvim-lint' then
     -- setup auto-commands
     events.on_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(evt)
         if M.enabled(evt.buf) then

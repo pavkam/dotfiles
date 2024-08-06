@@ -21,7 +21,7 @@ return {
             local cmp = require 'cmp'
             local icons = require 'ui.icons'
             local compare = require 'cmp.config.compare'
-            local copilot = utils.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
+            local copilot = vim.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
             local settings = require 'core.settings'
             local luasnip = require 'luasnip'
 
@@ -172,7 +172,7 @@ return {
                 },
                 sources = cmp.config.sources {
                     { name = 'nvim_lsp', priority = 100 },
-                    utils.has_plugin 'lazydev.nvim' and { name = 'lazydev', group_index = 0, priority = 90 } or nil,
+                    vim.has_plugin 'lazydev.nvim' and { name = 'lazydev', group_index = 0, priority = 90 } or nil,
                     {
                         name = 'buffer',
                         option = {
@@ -217,7 +217,7 @@ return {
 
             cmp.setup(opts)
 
-            if not utils.has_plugin 'cmp-dap' then
+            if not vim.has_plugin 'cmp-dap' then
                 ---@diagnostic disable-next-line: missing-fields
                 cmp.setup.filetype({ 'dap-repl', 'dapui_watches', 'dapui_hover' }, {
                     sources = {

@@ -1,5 +1,3 @@
-local utils = require 'core.utils'
-local logging = require 'core.logging'
 local keys = require 'core.keys'
 local shell = require 'core.shell'
 local select = require 'ui.select'
@@ -38,7 +36,7 @@ local function find_git_enabled_dirs(root, collected)
     return collected
 end
 
----@class ui.tmux.SessionItem # The session item
+---@class (exact) ui.tmux.SessionItem # The session item
 ---@field root string # the root directory of the session
 ---@field cwd string|nil # the current working directory of the session
 ---@field session string|nil # the session name
@@ -72,7 +70,7 @@ end
 ---@param session string|nil # the session to switch to
 local function switch_to_session(session)
     shell.async_cmd('tmux', { 'switch', '-t', session }, nil, function(_, _)
-        logging.info(string.format('Switched to session *%s*', session))
+        vim.info(string.format('Switched to session *%s*', session))
     end)
 end
 
@@ -250,7 +248,7 @@ local function change_win(direction)
 
     local ok = pcall(vim.cmd.wincmd, direction)
     if not ok then
-        logging.hint('Cannot navigate to the ' .. direction .. ' window')
+        vim.hint('Cannot navigate to the ' .. direction .. ' window')
     end
 
     return current_window ~= vim.api.nvim_get_current_win()

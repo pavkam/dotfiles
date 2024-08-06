@@ -1,4 +1,3 @@
-local logging = require 'core.logging'
 local qf = require 'ui.qf'
 
 --- Handles the result of a rename request
@@ -47,7 +46,7 @@ local function handle_post_rename(result)
     end
 
     -- notify and fill QF
-    logging.info(notification)
+    vim.info(notification)
     if #entries > 0 then
         qf.add_items('c', entries)
     end

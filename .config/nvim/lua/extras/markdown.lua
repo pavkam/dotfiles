@@ -23,7 +23,7 @@ local essential_markdown_substitutions = {
     { '\n', ' ' },
 }
 
----@class extra.markdown.EscapeMarkdownOpts
+---@class (exact) extra.markdown.EscapeMarkdownOpts
 ---@field use_nil boolean|nil # Whether to use 'nil' for nil values (default: true)
 ---@field full boolean|nil # Whether to escape all characters (default: false)
 
@@ -172,7 +172,7 @@ local function from_value(value, indent, max_length)
     return markdown_str
 end
 
----@class extra.markdown.FromValueOpts
+---@class (exact) extra.markdown.FromValueOpts
 ---@field max_length number|nil # The maximum length of an expanded list (default: 60)
 
 --- Converts a value to a markdown string
