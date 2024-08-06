@@ -2,8 +2,6 @@
 -- LOW: show the number of failed/total tests in the status-line
 -- TODO: the typos lsp is not dying correctly when disabled
 -- TODO: fixwin fails in many cases, probably need to be very specific,
--- TODO: Alpha appears when it should not
--- URGENT: Do not use which key if there is no icon attached.
 -- MAYBE: Cross-tmux-session marks
 
 require 'extensions'
