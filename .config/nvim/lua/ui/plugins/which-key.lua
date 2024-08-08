@@ -8,8 +8,9 @@ return {
             { '<auto>', mode = 'nisotc' },
             { 'a', mode = 'v' },
             { 'i', mode = 'v' },
+            { 'g', mode = 'v' },
+            { 'z', mode = 'v' },
             { '<leader>', mode = 'v' },
-            { 'd', mode = 'v' },
         },
         icons = {
             group = '',

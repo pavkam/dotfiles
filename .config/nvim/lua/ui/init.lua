@@ -187,7 +187,7 @@ end)
 -- resize splits if window got resized
 events.on_event('VimResized', function()
     vim.schedule(function()
-        utils.refresh_ui()
+        vim.refresh_ui()
         events.trigger_status_update_event()
     end)
 end)

@@ -1,3 +1,0 @@
-return {
-    'rcarriga/cmp-dap',
-}

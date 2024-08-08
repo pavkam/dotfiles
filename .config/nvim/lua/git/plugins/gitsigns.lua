@@ -13,48 +13,28 @@ return {
             untracked = { text = icons.Git.Signs.Untracked },
         },
         on_attach = function(buffer)
+            local keys = require 'core.keys'
             local gs = require 'gitsigns'
-            local gsa = require 'gitsigns.actions'
 
-            local names = {
-                reset_hunk = 'Reset hunk',
-                preview_hunk_inline = 'Preview hunk', -- URGENT, why preview hunk is not appreaing if not inline?
-                stage_hunk = 'Stage hunk',
-                undo_stage_hunk = 'Unstage hunk',
-                blame_line = 'Blame line',
-                select_hunk = 'Select hunk',
+            local actions = {
+                reset_hunk = { 'Reset hunk', 'r' },
+                preview_hunk_inline = { 'Preview hunk', 'h' },
+                stage_hunk = { 'Stage hunk', 's' },
+                undo_stage_hunk = { 'Unstage hunk', 'u' },
+                blame_line = { 'Blame line', 'b' },
+                select_hunk = { 'Select hunk', 'x' },
+                stage_buffer = { 'Stage buffer', 'S' },
+                reset_buffer = { 'Reset buffer', 'R' },
             }
 
-            vim.keymap.set('n', 'gh', function()
-                local actions = gsa.get_actions()
-
-                if actions == nil or not next(actions) then
-                    return
-                end
-
-                -- TODO: not working for preview (the popup gets closed)
-                local items = {}
-                for name, action in pairs(actions) do
-                    table.insert(items, {
-                        name = names[name] or name,
-                        desc = 'Gitsigns ' .. name,
-                        command = action,
-                    })
-                end
-
-                table.insert(items, {
-                    name = 'Stage buffer',
-                    command = 'Gitsigns stage_buffer',
-                    hl = 'SpecialMenuItem',
-                })
-                table.insert(items, {
-                    name = 'Reset buffer',
-                    command = 'Gitsigns reset_buffer',
-                    hl = 'SpecialMenuItem',
-                })
-
-                require('ui.select').command(items, { at_cursor = true })
-            end, { buffer = buffer, desc = 'Inspect change' })
+            for name, details in pairs(actions) do
+                keys.map(
+                    'n',
+                    'gh' .. details[2],
+                    '<cmd>Gitsigns ' .. name .. '<CR>',
+                    { buffer = buffer, desc = details[1] }
+                )
+            end
 
             vim.keymap.set('n', ']h', gs.next_hunk, { buffer = buffer, desc = 'Next hunk' })
             vim.keymap.set('n', '[h', gs.prev_hunk, { buffer = buffer, desc = 'Prev hunk' })

@@ -364,6 +364,23 @@ function vim.fn.is_visual_mode(mode)
     return mode == 'v' or mode == 'V' or mode == ''
 end
 
+--- Gets the selected text from the current buffer in visual mode
+---@return string # the selected text
+function vim.fn.visual_selected_text()
+    if not vim.fn.is_visual_mode() then
+        error 'Not in visual mode'
+    end
+
+    local old = vim.fn.getreg 'a'
+    vim.cmd [[silent! normal! "aygv]]
+
+    local original_selection = vim.fn.getreg 'a'
+    vim.fn.setreg('a', old)
+
+    local res, _ = original_selection:gsub('/', '\\/'):gsub('\n', '\\n')
+    return res
+end
+
 --- Checks if a plugin is available
 ---@param name string # the name of the plugin
 ---@return boolean # true if the plugin is available, false otherwise
@@ -464,4 +481,80 @@ end
 ---@param opts vim.NotifyOpts|nil # the options to pass to the notification
 function vim.hint(msg, opts)
     notify(msg, vim.log.levels.DEBUG, opts)
+end
+
+---@alias vim.DebounedFn fun(buffer: integer, ...) # A debounced function
+
+--- Defers a function call for buffer in LIFO mode. If the function is called again before the timeout, the
+--- timer is reset.
+---@param fn vim.DebounedFn # the function to call
+---@param timeout integer # the timeout in milliseconds
+---@return vim.DebounedFn # the debounced function
+function vim.debounce_fn(fn, timeout)
+    ---@type table<integer, uv_timer_t>
+    local timers = {}
+
+    ---@type vim.DebounedFn
+    return function(buffer, ...)
+        buffer = buffer or vim.api.nvim_get_current_buf()
+
+        assert(vim.api.nvim_buf_is_valid(buffer))
+
+        local timer = timers[buffer]
+        if not timer then
+            timer = vim.uv.new_timer()
+            timers[buffer] = timer
+        else
+            timer:stop()
+        end
+
+        local args = { ... }
+        assert(timer:start(
+            timeout,
+            0,
+            vim.schedule_wrap(function()
+                timer:stop()
+
+                if vim.api.nvim_buf_is_valid(buffer) then
+                    vim.api.nvim_buf_call(buffer, function()
+                        fn(buffer, unpack(args))
+                    end)
+                end
+            end)
+        ))
+    end
+end
+
+--- Refreshes the UI
+function vim.refresh_ui()
+    vim.cmd.resize()
+    local current_tab = vim.fn.tabpagenr()
+    vim.cmd 'tabdo wincmd ='
+    vim.cmd('tabnext ' .. current_tab)
+    vim.cmd 'redraw!'
+end
+
+--- Confirms an operation that requires the buffer to be saved
+---@param buffer integer|nil # the buffer to confirm for or the current buffer if 0 or nil
+---@param reason string|nil # the reason for the confirmation
+---@return boolean # true if the buffer was saved or false if the operation was cancelled
+function vim.fn.confirm_saved(buffer, reason)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    if vim.bo[buffer].modified then
+        local message = reason and 'Save changes to "%q" before %s?' or 'Save changes to "%q"?'
+        local choice = vim.fn.confirm(
+            string.format(message, vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t'), reason),
+            '&Yes\n&No\n&Cancel'
+        )
+
+        if choice == 0 or choice == 3 then -- Cancel
+            return false
+        end
+
+        if choice == 1 then -- Yes
+            vim.api.nvim_buf_call(buffer, vim.cmd.write)
+        end
+    end
+
+    return true
 end

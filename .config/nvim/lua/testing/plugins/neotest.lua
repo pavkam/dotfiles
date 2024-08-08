@@ -65,7 +65,7 @@ return {
         }, neotest_ns)
 
         local function confirm_saved(buffer)
-            return require('core.utils').confirm_saved(buffer, 'running tests')
+            return vim.fn.confirm_saved(buffer, 'running tests')
         end
 
         -- register neotest mappings

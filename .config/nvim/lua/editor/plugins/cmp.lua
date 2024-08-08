@@ -199,11 +199,11 @@ return {
                 },
                 sorting = {
                     comparators = {
+                        compare.kind,
                         compare.offset,
                         compare.recently_used,
                         compare.score,
                         compare.exact,
-                        compare.kind,
                         compare.locality,
                         compare.length,
                         compare.order,
@@ -213,7 +213,6 @@ return {
         end,
         config = function(_, opts)
             local cmp = require 'cmp'
-            local utils = require 'core.utils'
 
             cmp.setup(opts)
 

@@ -1,4 +1,3 @@
--- LOW: figure out why TODOs don't get highlighted
 -- LOW: show the number of failed/total tests in the status-line
 -- TODO: the typos lsp is not dying correctly when disabled
 -- TODO: fixwin fails in many cases, probably need to be very specific,

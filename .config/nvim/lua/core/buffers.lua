@@ -62,7 +62,7 @@ end
 function M.remove_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    local should_remove = utils.confirm_saved(0, 'closing')
+    local should_remove = vim.fn.confirm_saved(buffer, 'closing')
     if should_remove then
         require('mini.bufremove').delete(buffer, true)
     end

@@ -136,7 +136,7 @@ function M.restore_session(name)
             -- URGENT: this session management is crap:  error_call('vim session', name, vim.cmd.source, session_file)
 
             vim.schedule(function()
-                utils.refresh_ui()
+                vim.refresh_ui()
                 vim.hint(string.format('Restored session `%s`', name), { prefix_icon = icons.UI.SessionSave })
             end)
         end)

@@ -53,7 +53,7 @@ local function handle_post_rename(result)
 end
 
 --- Handles a rename request
----@param ... any # the arguments passed to the handler
+---@varargs ... any # the arguments passed to the handler
 return function(...)
     local result = select(2, ...)
     local ctx = select(3, ...)

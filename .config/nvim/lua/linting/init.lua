@@ -85,6 +85,16 @@ function M.active(buffer)
     return linters(buffer)
 end
 
+local debounced_lint = vim.debounce_fn(
+    ---@param buffer integer
+    ---@param names string[]
+    function(buffer, names)
+        require('lint').try_lint(names, { cwd = project.root(buffer) })
+        progress.update(progress_class, { buffer = buffer, prv = true, fn = linting_status, ctx = names })
+    end,
+    100
+)
+
 --- Applies all active linters to a buffer
 ---@param buffer integer|nil # the buffer to apply the linters to or 0 or nil for current
 function M.apply(buffer)
@@ -99,18 +109,7 @@ function M.apply(buffer)
         return
     end
 
-    local lint = require 'lint'
-
-    utils.defer_unique(buffer, function()
-        local do_lint = function()
-            lint.try_lint(names, { cwd = project.root(buffer) })
-            progress.update(progress_class, { buffer = buffer, prv = true, fn = linting_status, ctx = names })
-        end
-
-        if vim.api.nvim_buf_is_valid(buffer) then
-            vim.api.nvim_buf_call(buffer, do_lint)
-        end
-    end, 100)
+    debounced_lint(buffer, names)
 end
 
 local setting_name = 'auto_linting_enabled'

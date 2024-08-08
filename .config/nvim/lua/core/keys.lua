@@ -2,12 +2,13 @@ local icons = require 'ui.icons'
 local events = require 'core.events'
 local buffers = require 'core.buffers'
 
----@class (strict) core.keys
+---@class core.keys
 local M = {}
 
 ---@alias core.keys.KeyMapMode 'n' | 'v' | 'V' | 'c' | 's' | 'x' | 'i' | 'o' | 't' # the mode to map the key in
+---@alias core.keys.EnableKeyCondFunc fun(buffer: integer): boolean # the condition to check before enabling the key
 
----@class (strict) core.keys.KeyMapOpts # the options to pass to the keymap
+---@class (exact) core.keys.KeyMapOpts # the options to pass to the keymap
 ---@field buffer integer|nil # whether the keymap is buffer-local
 ---@field silent boolean|nil # whether the keymap is silent
 ---@field expr boolean|nil # whether the keymap is an expression
@@ -23,9 +24,8 @@ local M = {}
 --- @param opts core.keys.KeyMapOpts|nil # the options to pass to the keymap
 function M.map(mode, key, action, opts)
     opts = opts or {}
-    local using_which_key = package.loaded['lazy'] and require('lazy.core.config').spec.plugins['which-key.nvim'] ~= nil
 
-    if using_which_key and mode ~= 'c' and opts.icon then
+    if vim.has_plugin 'which-key.nvim' and mode ~= 'c' then
         local wk = require 'which-key'
         wk.add {
             key,
