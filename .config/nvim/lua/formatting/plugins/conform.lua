@@ -6,31 +6,61 @@ return {
     end,
     opts = function()
         local project = require 'project'
+        local conform = require 'conform'
 
+        --- Creates a group of formatters
+        ---@param ... string[] # the formatters to group
+        local function select(...)
+            local formatter_groups = { ... }
+
+            return function(buffer)
+                local formatters = vim.iter(formatter_groups)
+                    :map(
+                        ---@param group string[]
+                        function(group)
+                            for _, formatter in pairs(group) do
+                                if conform.get_formatter_info(formatter, buffer).available then
+                                    return formatter
+                                end
+                            end
+                            return nil
+                        end
+                    )
+                    :filter(function(formatter)
+                        return formatter
+                    end)
+                    :totable()
+
+                vim.list_extend(formatters, { 'injected' })
+                return formatters
+            end
+        end
+
+        local prettier = select { 'prettier', 'prettierd' }
         return {
             formatters_by_ft = {
-                lua = { 'stylua' },
-                sh = { 'shfmt' },
-                javascript = { 'prettier', 'prettierd' },
-                javascriptreact = { 'prettier', 'prettierd' },
-                typescript = { 'prettier', 'prettierd' },
-                typescriptreact = { 'prettier', 'prettierd' },
-                go = { 'goimports-reviser', 'goimports', 'golines', 'gofumpt' },
-                csharp = { 'csharpier' },
-                python = { 'black', 'isort' },
-                proto = { 'buf' },
-                markdown = { 'prettier', 'prettierd' },
-                html = { 'prettier', 'prettierd' },
-                css = { 'prettier', 'prettierd' },
-                scss = { 'prettier', 'prettierd' },
-                less = { 'prettier', 'prettierd' },
-                vue = { 'prettier', 'prettierd' },
-                json = { 'prettier', 'prettierd' },
-                jsonc = { 'prettier', 'prettierd' },
-                yaml = { 'prettier', 'prettierd' },
-                graphql = { 'prettier', 'prettierd' },
-                handlebars = { 'prettier', 'prettierd' },
-                prisma = { 'prisma' },
+                lua = select { 'stylua' },
+                sh = select { 'shfmt' },
+                javascript = prettier,
+                javascriptreact = prettier,
+                typescript = prettier,
+                typescriptreact = prettier,
+                go = select({ 'goimports-reviser', 'goimports' }, { 'golines', 'gofumpt' }),
+                csharp = select { 'csharpier' },
+                python = select({ 'black' }, { 'isort' }),
+                proto = select { 'buf' },
+                markdown = prettier,
+                html = prettier,
+                css = prettier,
+                scss = prettier,
+                less = prettier,
+                vue = prettier,
+                json = prettier,
+                jsonc = prettier,
+                yaml = prettier,
+                graphql = prettier,
+                handlebars = prettier,
+                prisma = select { 'prisma' },
             },
             formatters = {
                 ['goimports-reviser'] = {

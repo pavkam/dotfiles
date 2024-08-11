@@ -1,6 +1,8 @@
 ---@class project.highlight-navigation
 local M = {}
 
+-- TODO: do not ask for highlights until LSP is connected.
+
 ---@class vim.lsp.Position # A position in a text document expressed as zero-based line and character offset.
 ---@field line integer # Line position in a document (zero-based).
 ---@field character integer # Character offset on a line in a document (zero-based).

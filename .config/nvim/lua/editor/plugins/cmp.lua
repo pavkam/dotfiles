@@ -197,18 +197,19 @@ return {
                         ellipsis_char = icons.TUI.Ellipsis,
                     },
                 },
-                sorting = {
-                    comparators = {
-                        compare.kind,
-                        compare.offset,
-                        compare.recently_used,
-                        compare.score,
-                        compare.exact,
-                        compare.locality,
-                        compare.length,
-                        compare.order,
-                    },
-                },
+                -- LOW: why is this so complicated?
+                -- sorting = {
+                --     comparators = {
+                --         compare.kind,
+                --         compare.offset,
+                --         compare.recently_used,
+                --         compare.score,
+                --         compare.exact,
+                --         compare.locality,
+                --         compare.length,
+                --         compare.order,
+                --     },
+                -- },
             }
         end,
         config = function(_, opts)

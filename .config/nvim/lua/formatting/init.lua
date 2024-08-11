@@ -82,14 +82,12 @@ function M.apply(buffer)
 
     local names = formatters(buffer)
     if #names > 0 then
-        table.insert(names, 'injected')
         conform.format {
             bufnr = buffer,
             formatters = names,
             quiet = false,
             lsp_format = 'fallback',
             timeout_ms = 5000,
-            stop_after_first = true,
         }
 
         progress.update(progress_class, { buffer = buffer, prv = true, fn = formatting_status, ctx = names })
