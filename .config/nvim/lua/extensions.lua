@@ -239,16 +239,50 @@ function vim.fs.join_paths(...)
     return acc
 end
 
---- URGENT: can this be simplified?
+--- Expands a path to its canonical form
+---@param path string # the path to check
+---@return string|nil # the expanded path or nil if the path could not be expanded
+function vim.fs.expand_path(path)
+    assert(type(path) == 'string' and path ~= '')
+
+    local real_path, err = vim.uv.fs_realpath(vim.fn.expand(path))
+
+    if not err and real_path then
+        return real_path
+    end
+end
+
+---@alias vim.FsObjType "file" | "directory" | "link" | "fifo" | "socket" | "char" | "block"
+
+--- Gets the type of file identified by path
+---@param path string # the path to check
+---@return vim.FsObjType | nil # the type of the file system object or nil
+---if the file does not exist
+function vim.fs.path_type(path)
+    local stat, err = vim.uv.fs_stat(vim.fn.expand(path))
+
+    return not err and stat and stat.type or nil
+end
+
+--- Checks if a directory exists
+---@param path string # the path to check
+---@return boolean # true if the file exists, false otherwise
+function vim.fs.dir_exists(path)
+    return vim.fs.path_type(path) == 'directory'
+end
+
 --- Checks if a file exists
 ---@param path string # the path to check
 ---@return boolean # true if the file exists, false otherwise
 function vim.fs.file_exists(path)
-    assert(type(path) == 'string')
-
-    local stat = vim.uv.fs_stat(vim.fn.expand(path))
-    return stat and stat.type == 'file' or false
+    return vim.fs.path_type(path) == 'file'
 end
+
+--- The data directory of NeoVim
+vim.fs.data_dir = vim.fs.expand_path(vim.fn.stdpath 'data' --[[@as string]])
+
+--- The config directory of NeoVim
+vim.fs.config_dir = vim.fs.expand_path(vim.fn.stdpath 'config' --[[@as string]])
 
 --- Checks if files exist in a given directory and returns the first one that exists
 ---@param base_paths string|table<number, string|nil> # the list of base paths to check
@@ -558,3 +592,45 @@ function vim.fn.confirm_saved(buffer, reason)
 
     return true
 end
+
+local pinned_file_type_buffers = {}
+
+--- Returns the list of pinned file types
+---@return string[] # the list of pinned file types
+function vim.filetype.pinned()
+    return vim.tbl_keys(pinned_file_type_buffers)
+end
+
+--- Pins a buffer of a given file type to its current window
+---@param file_type string|string[] # the file type to pin
+function vim.filetype.pin_to_window(file_type)
+    if type(file_type) == 'table' and vim.islist(file_type) then
+        for _, ft in ipairs(file_type) do
+            vim.filetype.pin_to_window(ft)
+        end
+
+        return
+    end
+
+    assert(type(file_type) == 'string' and file_type ~= '')
+
+    pinned_file_type_buffers[file_type] = true
+
+    -- search all windows, their shown buffer and pin if necessary
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+        local buffer = vim.api.nvim_win_get_buf(win)
+        if vim.api.nvim_get_option_value('filetype', { buf = buffer }) == file_type then
+            vim.wo[win].winfixbuf = true
+        end
+    end
+end
+
+vim.api.nvim_create_autocmd('FileType', {
+    callback = function(evt)
+        local win = vim.api.nvim_get_current_win()
+
+        if pinned_file_type_buffers[vim.api.nvim_get_option_value('filetype', { buf = evt.buf })] then
+            vim.wo[win].winfixbuf = true
+        end
+    end,
+})

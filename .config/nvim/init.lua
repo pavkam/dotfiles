@@ -1,6 +1,5 @@
 -- LOW: show the number of failed/total tests in the status-line
 -- TODO: the typos lsp is not dying correctly when disabled
--- TODO: fixwin fails in many cases, probably need to be very specific,
 -- MAYBE: Cross-tmux-session marks
 
 require 'extensions'
@@ -31,7 +30,7 @@ local modules = {
 require 'core.options'
 
 -- Setup the Lazy plugin manager
-local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
+local lazypath = vim.fs.joinpath(vim.fs.data_dir, 'lazy', 'lazy.nvim')
 if not vim.uv.fs_stat(lazypath) then
     vim.fn.system {
         'git',
@@ -46,20 +45,18 @@ end
 ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
-local config_path = vim.fn.stdpath 'config'
-
 ---@type string[]
 local plugin_dirs = vim.iter(modules)
     :map(
         ---@param module string
         function(module)
-            return module .. '/plugins'
+            return vim.fs.joinpath(module, 'plugins')
         end
     )
     :filter(
         ---@param dir string
         function(dir)
-            return vim.fn.isdirectory(config_path .. '/lua/' .. dir) == 1
+            return vim.fs.dir_exists(vim.fs.joinpath(vim.fs.config_dir, 'lua', dir))
         end
     )
     :totable()
@@ -119,25 +116,18 @@ for _, module in ipairs(modules) do
     end
 end
 
--- For any errors, print them out after the editor has started
-if next(load_errors) then
-    vim.api.nvim_create_autocmd('User', {
-        pattern = 'LazyVimStarted',
-        callback = function()
-            for module, err in pairs(load_errors) do
-                vim.api.nvim_err_writeln('Error loading "' .. module .. '": ' .. vim.inspect(err))
-            end
-        end,
-    })
-end
+-- Post-load hook
+vim.api.nvim_create_autocmd('User', {
+    pattern = 'LazyVimStarted',
+    callback = function()
+        for module, err in pairs(load_errors) do
+            vim.api.nvim_err_writeln('Error loading "' .. module .. '": ' .. vim.inspect(err))
+        end
 
--- open neo-tree if opening a directory
-local opening_a_dir = vim.fn.argc() == 1 and vim.fn.isdirectory(vim.fn.argv(0) --[[@as string]]) == 1
-if opening_a_dir then
-    vim.api.nvim_create_autocmd('User', {
-        pattern = 'LazyVimStarted',
-        callback = function()
+        local opening_a_dir = vim.fn.argc() == 1 and vim.fs.dir_exists(vim.fn.argv(0) --[[@as string]])
+
+        if opening_a_dir then
             require 'neo-tree'
-        end,
-    })
-end
+        end
+    end,
+})

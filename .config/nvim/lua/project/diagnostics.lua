@@ -81,7 +81,6 @@ local function check_file(client, files, index)
             textDocument = {
                 uri = vim.uri_from_fname(path),
                 version = 0,
-                -- URGENT: this can go to `fs`
                 text = vim.fn.join(vim.fn.readfile(path), '\n'),
                 languageId = vim.fs.file_type(path),
             },
@@ -106,7 +105,7 @@ end
 
 --- Forces the LSP client to check all files in the workspace for diagnostics
 ---@param client vim.lsp.Client table # the LSP client
----@param target string|integer|nil # the target to get the root for
+---@param target core.utils.Target # the target to check
 function M.check_workspace(client, target)
     if not client.server_capabilities.textDocumentSync.openClose then
         return

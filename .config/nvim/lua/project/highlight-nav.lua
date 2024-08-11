@@ -1,8 +1,6 @@
 ---@class project.highlight-navigation
 local M = {}
 
--- TODO: do not ask for highlights until LSP is connected.
-
 ---@class vim.lsp.Position # A position in a text document expressed as zero-based line and character offset.
 ---@field line integer # Line position in a document (zero-based).
 ---@field character integer # Character offset on a line in a document (zero-based).
@@ -30,6 +28,11 @@ local function jump(window, forward)
 
     window = window or vim.api.nvim_get_current_win()
     local buffer = vim.api.nvim_win_get_buf(window)
+
+    local attached = vim.lsp.get_clients { bufnr = buffer }
+    if not attached or #attached == 0 then
+        return false
+    end
 
     ---@type vim.lsp.ClientDocumentHighlightResponse|nil, string|nil
     local reply, err = vim.lsp.buf_request_sync(

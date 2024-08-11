@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local buffers = require 'core.buffers'
 local events = require 'core.events'
 local keys = require 'core.keys'
@@ -13,7 +12,8 @@ require 'ui.marks'
 require 'ui.qf'
 require 'ui.tmux'
 require 'ui.file-palette'
-require 'ui.command-palette'
+
+vim.filetype.pin_to_window 'help'
 
 keys.group { lhs = 'g', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Go-to' }
 keys.group { lhs = ']', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Next' }
@@ -133,18 +133,6 @@ keys.map('n', '<M-[>', '<C-o>', { icon = icons.UI.Prev, desc = 'Previous locatio
 events.on_event({ 'BufModifiedSet' }, function(evt)
     if vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'TelescopePrompt' then
         vim.api.nvim_set_option_value('modified', false, { buf = evt.buf })
-    end
-end)
-
--- configure special buffers
--- TODO: find other buffers which are funky, extract this functionality
--- into a helper function `vim.pin_buffer(file_type)`
-events.on_event({ 'BufWinEnter' }, function(evt)
-    local fixed_buffers = { 'qf' }
-    local win = vim.api.nvim_get_current_win()
-
-    if vim.tbl_contains(fixed_buffers, vim.api.nvim_get_option_value('filetype', { buf = evt.buf })) then
-        vim.wo[win].winfixbuf = true
     end
 end)
 

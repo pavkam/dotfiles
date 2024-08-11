@@ -63,6 +63,13 @@ function M.remove_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local should_remove = vim.fn.confirm_saved(buffer, 'closing')
+
+    if vim.list_contains(vim.filetype.pinned(), vim.api.nvim_get_option_value('filetype', { buf = buffer })) then
+        for _, window in ipairs(vim.fn.getbufinfo(buffer)[1].windows) do
+            vim.api.nvim_win_close(window, true)
+        end
+    end
+
     if should_remove then
         require('mini.bufremove').delete(buffer, true)
     end

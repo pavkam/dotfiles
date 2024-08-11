@@ -172,7 +172,7 @@ local dev_icons_available = nil
 ---@param path string # The name of the file
 ---@return string, string # The icon and highlight
 function M.get_file_icon(path)
-    if vim.fn.isdirectory(path) == 1 then
+    if vim.fs.dir_exists(path) then
         return M.Files.ClosedFolder, 'Normal'
     end
 

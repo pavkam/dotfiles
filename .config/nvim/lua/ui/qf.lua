@@ -1,6 +1,8 @@
 local icons = require 'ui.icons'
 local keys = require 'core.keys'
 
+vim.filetype.pin_to_window 'qf'
+
 ---@class ui.qf`
 local M = {}
 
