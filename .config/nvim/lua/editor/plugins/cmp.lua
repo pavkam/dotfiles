@@ -20,7 +20,6 @@ return {
             local utils = require 'core.utils'
             local cmp = require 'cmp'
             local icons = require 'ui.icons'
-            local compare = require 'cmp.config.compare'
             local copilot = vim.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
             local settings = require 'core.settings'
             local luasnip = require 'luasnip'

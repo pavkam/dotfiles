@@ -71,6 +71,28 @@ function vim.to_list(value)
     end
 end
 
+--- Returns a new list that contains only unique values
+---@param list any[] # the list to make unique
+---@param key_fn (fun(value: any): any)|nil # the function to get the key from the value
+---@return any[] # the list with unique values
+function vim.list_uniq(list, key_fn)
+    assert(vim.islist(list))
+    assert(key_fn == nil or type(key_fn) == 'function')
+
+    local seen = {}
+    local result = {}
+
+    for _, item in ipairs(list) do
+        local key = key_fn and key_fn(item) or item
+        if not seen[key] then
+            table.insert(result, item)
+            seen[key] = true
+        end
+    end
+
+    return result
+end
+
 --- Inflates a list to a table
 ---@generic T: table
 ---@param list T[] # the list to inflate

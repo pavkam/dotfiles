@@ -78,11 +78,6 @@ local function update_signs(buffer)
         vim.fn.sign_define(signName, { text = key, texthl = 'MarkSign' })
         vim.fn.sign_place(0, group, signName, buffer, { lnum = mark.pos[2], priority = -100 + i })
     end
-
-    if package.loaded['satellite'] then
-        local s = require 'satellite.view'
-        s.refresh_bars()
-    end
 end
 
 ---@type string[]

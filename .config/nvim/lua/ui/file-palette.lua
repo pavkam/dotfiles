@@ -34,10 +34,13 @@ end)
 --- Get all listed buffers
 ---@return ui.file_palette.File[] # List of files
 local function get_listed_buffers()
-    return vim.iter(buffers.get_listed_buffers { loaded = false, listed = false })
+    local all = buffers.get_listed_buffers()
+    vim.list_extend(all, buffers.get_listed_buffers { loaded = false, listed = false })
+
+    return vim.iter(vim.list_uniq(all))
         :map(function(buffer)
             return {
-                file = vim.api.nvim_buf_get_name(buffer),
+                file = vim.api.nvim_buf_get_name(buffer) or 'unnamed',
                 type = 'buffer',
                 line = vim.api.nvim_buf_get_mark(buffer, [["]])[1],
             }
@@ -206,10 +209,7 @@ local function get_items(opts)
     vim.list_extend(all, get_marked_buffer(opts.buffer))
     vim.list_extend(all, get_global_marked_files())
 
-    ---@type table<string, boolean>
-    local seen = {}
-
-    return vim.iter(all)
+    local mapped = vim.iter(all)
         :map(
             ---@param file ui.file_palette.File
             function(file)
@@ -218,21 +218,6 @@ local function get_items(opts)
                     line = file.line,
                     type = file.type,
                 }
-            end
-        )
-        :filter(
-            ---@param file ui.file_palette.File
-            function(file)
-                if file.file == '' then
-                    return false
-                end
-
-                if seen[file.file] then
-                    return false
-                end
-
-                seen[file.file] = true
-                return true
             end
         )
         :map(
@@ -247,6 +232,14 @@ local function get_items(opts)
             end
         )
         :totable()
+
+    return vim.list_uniq(
+        mapped,
+        ---@param file ui.file_palette.Entry
+        function(file)
+            return file.filename
+        end
+    )
 end
 
 --- Gets the displayer
