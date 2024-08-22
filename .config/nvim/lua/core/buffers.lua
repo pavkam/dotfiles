@@ -55,12 +55,17 @@ function M.get_buffer_by_index(index)
     return nil
 end
 
+---@class (exact) core.buffers.DeleteBufferOpts # options for deleting a buffer
+---@field force boolean|nil # whether to force the deletion of the buffer
+
 --- Removes a buffer
 ---@param buffer integer|nil # the buffer to remove or the current buffer if 0 or nil
-function M.remove_buffer(buffer)
+---@param opts core.buffers.DeleteBufferOpts|nil # the options for deleting the buffer
+function M.remove_buffer(buffer, opts)
     buffer = buffer or vim.api.nvim_get_current_buf()
+    opts = opts or {}
 
-    local should_remove = vim.fn.confirm_saved(buffer, 'closing')
+    local should_remove = opts.force or vim.fn.confirm_saved(buffer, 'closing')
 
     if vim.list_contains(vim.filetype.pinned(), vim.api.nvim_get_option_value('filetype', { buf = buffer })) then
         for _, window in ipairs(vim.fn.getbufinfo(buffer)[1].windows) do
@@ -69,7 +74,34 @@ function M.remove_buffer(buffer)
     end
 
     if should_remove then
-        require('mini.bufremove').delete(buffer, true)
+        for _, win in ipairs(vim.fn.win_findbuf(buffer)) do
+            vim.api.nvim_win_call(win, function()
+                if not vim.api.nvim_win_is_valid(win) or vim.api.nvim_win_get_buf(win) ~= buffer then
+                    return
+                end
+
+                -- Try using alternate buffer
+                local alt = vim.fn.bufnr '#'
+                if alt ~= buffer and vim.fn.buflisted(alt) == 1 then
+                    vim.api.nvim_win_set_buf(win, alt)
+                    return
+                end
+
+                -- Try using previous buffer
+                local has_previous = pcall(vim.cmd --[[@as function]], 'bprevious')
+                if has_previous and buffer ~= vim.api.nvim_win_get_buf(win) then
+                    return
+                end
+
+                -- Create new listed buffer
+                local new_buf = vim.api.nvim_create_buf(true, false)
+                vim.api.nvim_win_set_buf(win, new_buf)
+            end)
+        end
+
+        if vim.api.nvim_buf_is_valid(buffer) then
+            pcall(vim.cmd --[[@as function]], 'bdelete! ' .. buffer)
+        end
     end
 end
 

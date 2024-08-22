@@ -54,13 +54,7 @@ return {
                     lualine_sections.shell,
                     lualine_sections.workspace_diagnostics,
                 },
-                lualine_x = {
-                    {
-                        function()
-                            return vim.uv.cwd()
-                        end,
-                    },
-                },
+                lualine_x = {},
                 lualine_y = {
                     lualine_sections.debugger,
                 },

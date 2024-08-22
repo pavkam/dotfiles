@@ -77,7 +77,7 @@ o.foldcolumn = '1'
 o.foldenable = true
 o.foldmethod = 'expr'
 o.foldexpr = [[v:lua.vim.treesitter.foldexpr()]]
-o.foldtext = [[v:lua.require'core.utils'.fold_text()]]
+o.foldtext = ''
 
 -- file management
 g.huge_file_lines = 10000

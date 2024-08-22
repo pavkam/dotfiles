@@ -1,5 +1,3 @@
-local icons = require 'ui.icons'
-
 ---@class core.utils
 local M = {}
 
@@ -37,24 +35,6 @@ function M.expand_target(target)
     else
         error 'Invalid target type'
     end
-end
-
---- Helper function that calculates folds
-function M.fold_text()
-    local ok = pcall(vim.treesitter.get_parser, vim.api.nvim_get_current_buf())
-    ---@diagnostic disable-next-line: undefined-field
-    local ret = ok and vim.treesitter.foldtext and vim.treesitter.foldtext() or nil
-    if not ret then
-        ret = {
-            {
-                vim.api.nvim_buf_get_lines(0, vim.v.lnum - 1, vim.v.lnum, false)[1],
-                {},
-            },
-        }
-    end
-
-    table.insert(ret, { ' ' .. icons.TUI.Ellipsis })
-    return ret
 end
 
 local undo_command = vim.api.nvim_replace_termcodes('<c-G>u', true, true, true)
