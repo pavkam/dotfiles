@@ -37,12 +37,23 @@ local function get_listed_buffers()
     local all = buffers.get_listed_buffers()
     vim.list_extend(all, buffers.get_listed_buffers { loaded = false, listed = false })
 
-    return vim.iter(vim.list_uniq(all))
+    all = vim.list_uniq(all)
+    table.sort(
+        all,
+        ---@param a integer
+        ---@param b integer
+        function(a, b)
+            return vim.fn.getbufinfo(a)[1].lastused > vim.fn.getbufinfo(b)[1].lastused
+        end
+    )
+
+    return vim.iter(all)
         :map(function(buffer)
+            local name = vim.api.nvim_buf_get_name(buffer)
             return {
-                file = vim.api.nvim_buf_get_name(buffer) or 'unnamed',
+                file = name and name ~= '' and name or '[No Name]',
                 type = 'buffer',
-                line = vim.api.nvim_buf_get_mark(buffer, [["]])[1],
+                line = buffers.cursor_line(buffer),
             }
         end)
         :totable()
@@ -214,16 +225,6 @@ local function get_items(opts)
             ---@param file ui.file_palette.File
             function(file)
                 return {
-                    file = vim.fn.expand(file.file),
-                    line = file.line,
-                    type = file.type,
-                }
-            end
-        )
-        :map(
-            ---@param file ui.file_palette.File
-            function(file)
-                return {
                     short_name = project.format_relative(file.file),
                     filename = file.file,
                     lnum = file.line,
@@ -248,7 +249,7 @@ local function get_displayer(opts)
     return entry_display.create {
         separator = opts.column_separator,
         items = {
-            { width = 2 },
+            { width = 3 },
             { remaining = true },
         },
     }
@@ -269,7 +270,7 @@ local function get_entry_maker(displayer)
         local icon, hl = icons.get_file_icon(entry.filename)
         return displayer {
             { icon, hl },
-            { entry.short_name .. ' : ' .. entry.lnum, hl_map[entry.type] or hl_map['*'] },
+            { entry.short_name .. ':' .. entry.lnum, hl_map[entry.type] or hl_map['*'] },
         }
     end
 

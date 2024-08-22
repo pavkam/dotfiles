@@ -5,7 +5,7 @@ return {
         preset = 'helix',
         plugins = { spelling = false },
         triggers = {
-            { '<auto>', mode = 'nisotc' },
+            { '<auto>', mode = 'nisoc' },
             { 'a', mode = 'v' },
             { 'i', mode = 'v' },
             { 'g', mode = 'v' },

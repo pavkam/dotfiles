@@ -7,14 +7,35 @@ local M = {}
 
 --- Expands a target of any command to a buffer and a path
 ---@param target core.utils.Target # the target to expand
----@return integer, string # the buffer and the path
+---@return integer, string, boolean # the buffer and the path and whether the buffer corresponds to the path
 function M.expand_target(target)
     if type(target) == 'number' or target == nil then
         target = target or vim.api.nvim_get_current_buf()
-        return target, vim.api.nvim_buf_get_name(target)
+
+        local path = vim.api.nvim_buf_get_name(target)
+        if not path or path == '' then
+            return target, '', false
+        end
+
+        return target, vim.fs.expand_path(path) or path, true
+    elseif type(target) == 'string' then
+        ---@cast target string
+        if target == '' then
+            return vim.api.nvim_get_current_buf(), '', false
+        end
+
+        local path = vim.fs.expand_path(target) or target
+
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            local buf_path = vim.api.nvim_buf_get_name(buf)
+            if buf_path and buf_path ~= '' and vim.fs.expand_path(buf_path) == path then
+                return buf, path, true
+            end
+        end
+
+        return vim.api.nvim_get_current_buf(), path, false
     else
-        local path = vim.fn.expand(target --[[@as string]])
-        return vim.api.nvim_get_current_buf(), vim.uv.fs_realpath(vim.fn.expand(path)) or path
+        error 'Invalid target type'
     end
 end
 

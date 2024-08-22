@@ -1,5 +1,3 @@
-local utils = require 'core.utils'
-
 ---@class core.buffers
 local M = {}
 
@@ -172,6 +170,19 @@ end
 function M.is_regular_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     return vim.api.nvim_buf_is_valid(buffer) and not M.is_special_buffer(buffer) and not M.is_transient_buffer(buffer)
+end
+
+--- Get the line of the buffer in whatever window it is displayed
+---@param buffer integer|nil # the buffer to get the line of, or the current buffer if 0 or nil
+function M.cursor_line(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local win = vim.fn.bufwinid(buffer)
+    if not vim.api.nvim_win_is_valid(win) then
+        return vim.api.nvim_buf_get_mark(buffer, [["]])[1]
+    end
+
+    return vim.api.nvim_win_get_cursor(win)[1]
 end
 
 return M

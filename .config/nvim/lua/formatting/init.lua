@@ -10,6 +10,9 @@ local M = {}
 
 local progress_class = 'formatting'
 
+---@type table<integer, integer>
+local running_jobs = {}
+
 --- Gets the names of all active formatters for a buffer
 ---@param buffer integer # the buffer to get the formatters for
 ---@return string[] # the names of the active formatters
@@ -36,18 +39,6 @@ local function formatters(buffer)
             return v.name
         end)
         :totable()
-end
-
---- Checks the status of the formatting operation for the buffer
----@param buffer integer # the buffer to monitor the formatter for
----@return boolean # whether formatting is running
-local function formatting_status(buffer)
-    assert(type(buffer) == 'number')
-
-    local jid = vim.b[buffer].conform_jid
-    local running = not jid or vim.fn.jobwait({ jid }, 0)[0] == -1
-
-    return running
 end
 
 --- Gets the progress of a formatter for a buffer
@@ -82,15 +73,25 @@ function M.apply(buffer)
 
     local names = formatters(buffer)
     if #names > 0 then
-        conform.format {
+        running_jobs[buffer] = (running_jobs[buffer] or 0) + 1
+        conform.format({
             bufnr = buffer,
             formatters = names,
             quiet = false,
             lsp_format = 'fallback',
             timeout_ms = 5000,
-        }
+        }, function()
+            running_jobs[buffer] = (running_jobs[buffer] or 0) - 1
+        end)
 
-        progress.update(progress_class, { buffer = buffer, prv = true, fn = formatting_status, ctx = names })
+        progress.update(progress_class, {
+            buffer = buffer,
+            prv = true,
+            fn = function(b)
+                return b and running_jobs[b] and running_jobs[b] > 0 or false
+            end,
+            ctx = names,
+        })
     end
 end
 

@@ -205,11 +205,11 @@ function M.register_toggle(option, toggle_fn, opts)
             else
                 vim.hint(
                     string.format(
-                        'Turning **%s** %s `%s` globally.',
+                        'Turning **%s** `%s` globally.',
                         enabled and 'off' or 'on',
-                        icons.iconify(opts.icon, opts.name),
-                        { prefix_icon = icons.UI.Toggle }
-                    )
+                        icons.iconify(opts.icon, opts.name)
+                    ),
+                    { prefix_icon = icons.UI.Toggle }
                 )
             end
 

@@ -160,12 +160,12 @@ M.root_patterns = {
 ---@param target core.utils.Target # the target to get the roots for
 ---@return string[] # the list of roots
 function M.roots(target)
-    local buffer, path = utils.expand_target(target)
+    local buffer, path, is_real = utils.expand_target(target)
 
     local setting_name = 'root_paths'
 
     -- check for cached roots
-    local roots = settings.get(setting_name, { buffer = buffer, scope = 'transient' })
+    local roots = is_real and settings.get(setting_name, { buffer = buffer, scope = 'transient' })
     ---@cast roots string[]
     if roots then
         return roots
@@ -209,7 +209,10 @@ function M.roots(target)
     end)
 
     -- cache the roots for buffer
-    settings.set(setting_name, roots, { buffer = buffer, scope = 'transient' })
+    if is_real then
+        settings.set(setting_name, roots, { buffer = buffer, scope = 'transient' })
+    end
+
     return roots
 end
 

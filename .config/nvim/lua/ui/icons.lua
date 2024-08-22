@@ -170,10 +170,19 @@ local dev_icons_available = nil
 
 --- Get the icon and highlight for a file
 ---@param path string # The name of the file
+---@param width number|nil # The width to fit the icon to
+---@param ltr boolean|nil # Whether or not the icon should be left-to-right
 ---@return string, string # The icon and highlight
-function M.get_file_icon(path)
+function M.get_file_icon(path, width, ltr)
+    ---@type fun(icon: string): string
+    local fit = width ~= nil and function(icon)
+        return M.fit(icon, width, ltr)
+    end or function(icon)
+        return icon
+    end
+
     if vim.fs.dir_exists(path) then
-        return M.Files.ClosedFolder, 'Normal'
+        return fit(M.Files.ClosedFolder), 'Normal'
     end
 
     if dev_icons_available == nil then
@@ -199,9 +208,9 @@ function M.get_file_icon(path)
             icon = icon or M.Files.Normal
         end
 
-        return icon, icon_highlight
+        return fit(icon), icon_highlight
     else
-        return M.Files.Normal, 'Normal'
+        return fit(M.Files.Normal), 'Normal'
     end
 end
 

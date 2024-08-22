@@ -225,7 +225,7 @@ events.on_event('TextYankPost', function()
 end)
 
 local folds_in_session = vim.list_contains(vim.opt.sessionoptions:get(), 'folds')
-if folds_in_session then
+if not folds_in_session then
     -- Turn on view generation and loading only if session management is not enabled
     events.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
         if settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
