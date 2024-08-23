@@ -17,7 +17,6 @@ return {
             },
         },
         opts = function()
-            local utils = require 'core.utils'
             local cmp = require 'cmp'
             local icons = require 'ui.icons'
             local copilot = vim.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
@@ -48,7 +47,7 @@ return {
 
                 return function(fallback)
                     if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
-                        utils.create_undo_point()
+                        vim.fn.create_undo_point()
                         if cmp.confirm(opts) then
                             return
                         end

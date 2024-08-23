@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local keys = require 'core.keys'
 local syntax = require 'editor.syntax'
 local lsp = require 'project.lsp'

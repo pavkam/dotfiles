@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local buffers = require 'core.buffers'
 local events = require 'core.events'
 local keys = require 'core.keys'
@@ -309,7 +308,7 @@ events.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
     end
 
     require('ui.marks').forget(file)
-    require('core.old_files').forget(file)
+    vim.fn.forget_oldfile(file)
     require('ui.qf').forget(file)
 
     if evt.event ~= 'BufDelete' then

@@ -104,7 +104,6 @@ return {
             --- @param opts table|nil
             --- @return table
             local function wrap(opts)
-                local utils = require 'core.utils'
                 local ui = require 'ui'
 
                 local show_hidden = not ui.ignore_hidden_files.active()

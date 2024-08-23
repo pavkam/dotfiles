@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local events = require 'core.events'
 local icons = require 'ui.icons'
 local settings = require 'core.settings'

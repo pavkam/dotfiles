@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local buffers = require 'core.buffers'
 local events = require 'core.events'
 local project = require 'project'

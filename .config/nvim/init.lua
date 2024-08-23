@@ -2,7 +2,7 @@
 -- TODO: the typos lsp is not dying correctly when disabled
 -- MAYBE: Cross-tmux-session marks
 
-require 'extensions'
+require 'api'
 
 if not vim.fn.executable 'git' then
     fatal 'git required'

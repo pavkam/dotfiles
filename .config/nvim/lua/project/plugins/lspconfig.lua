@@ -281,7 +281,6 @@ return {
             -- set the border for the UI
             require('lspconfig.ui.windows').default_options.border = vim.g.border_style
 
-            local utils = require 'core.utils'
             local buffers = require 'core.buffers'
             local events = require 'core.events'
             local lsp = require 'project.lsp'

@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local events = require 'core.events'
 local progress = require 'ui.progress'
 
@@ -240,7 +239,7 @@ end
 ---@param sort boolean|nil # whether to sort the roots by length
 ---@return string[] # the root directories of the active clients
 function M.roots(target, sort)
-    local buffer, path = utils.expand_target(target)
+    local buffer, path = vim.fn.expand_target(target)
 
     local roots = {}
     if path then

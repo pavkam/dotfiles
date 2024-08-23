@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local icons = require 'ui.icons'
 local lsp = require 'project.lsp'
 local format = require 'formatting'

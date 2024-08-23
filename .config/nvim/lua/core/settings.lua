@@ -455,6 +455,8 @@ events.on_status_update_event(function(evt)
 
         ---@diagnostic disable-next-line: param-type-mismatch
         pcall(refresh)
+    else
+        vim.cmd.redrawstatus()
     end
 end)
 

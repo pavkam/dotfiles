@@ -1,4 +1,3 @@
-local utils = require 'core.utils'
 local keys = require 'core.keys'
 local settings = require 'core.settings'
 local lsp = require 'project.lsp'
@@ -160,7 +159,7 @@ M.root_patterns = {
 ---@param target core.utils.Target # the target to get the roots for
 ---@return string[] # the list of roots
 function M.roots(target)
-    local buffer, path, is_real = utils.expand_target(target)
+    local buffer, path, is_real = vim.fn.expand_target(target)
 
     local setting_name = 'root_paths'
 
@@ -240,7 +239,7 @@ end
 function M.path_components(target)
     local root = M.root(target)
     if not root then
-        _, root = utils.expand_target(target)
+        _, root = vim.fn.expand_target(target)
     end
 
     local head = vim.fn.fnamemodify(root, ':p:h')
@@ -256,7 +255,7 @@ end
 function M.format_relative(target)
     ---@type string|nil
     local root = M.root(target)
-    local _, path = utils.expand_target(target)
+    local _, path = vim.fn.expand_target(target)
     return root and vim.fs.format_relative_path(root, path) or path
 end
 

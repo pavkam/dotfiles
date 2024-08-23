@@ -1,5 +1,4 @@
 local shell = require 'core.shell'
-local utils = require 'core.utils'
 
 ---@class git
 local M = {}
