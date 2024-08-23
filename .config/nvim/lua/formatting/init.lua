@@ -22,7 +22,7 @@ local function formatters(buffer)
         return {}
     end
 
-    if not vim.buf.is_regular_buffer(buffer) then
+    if not vim.buf.is_regular(buffer) then
         return {}
     end
 
@@ -66,7 +66,7 @@ function M.apply(buffer)
     local conform = require 'conform'
 
     buffer = buffer or vim.api.nvim_get_current_buf()
-    if not vim.buf.is_regular_buffer(buffer) then
+    if not vim.buf.is_regular(buffer) then
         return
     end
 

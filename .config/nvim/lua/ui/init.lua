@@ -33,13 +33,13 @@ keys.map('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
 
 -- buffer management
 keys.map('n', '<leader><leader>', function()
-    if not vim.buf.is_special_buffer() then
+    if not vim.buf.is_special() then
         pcall(vim.cmd.edit, '#')
     end
 end, { icon = icons.UI.Switch, desc = 'Switch buffer', silent = true })
 
-keys.map('n', '<leader>c', vim.buf.remove_buffer, { icon = icons.UI.Close, desc = 'Close buffer' })
-keys.map('n', '<leader>C', vim.buf.remove_other_buffers, { icon = icons.UI.Close, desc = 'Close other buffers' })
+keys.map('n', '<leader>c', vim.buf.delete, { icon = icons.UI.Close, desc = 'Close buffer' })
+keys.map('n', '<leader>C', vim.buf.delete_others, { icon = icons.UI.Close, desc = 'Close other buffers' })
 
 for i = 1, 9 do
     keys.map('n', '<M-' .. i .. '>', function()
@@ -136,10 +136,10 @@ events.on_event({ 'BufModifiedSet' }, function(evt)
 end)
 
 events.on_event('FileType', function(evt)
-    if vim.buf.is_special_buffer(evt.buf) then
+    if vim.buf.is_special(evt.buf) then
         vim.bo[evt.buf].buflisted = false
     elseif
-        vim.buf.is_transient_buffer(evt.buf)
+        vim.buf.is_transient(evt.buf)
         or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown'
     then
         vim.opt_local.wrap = true
@@ -155,7 +155,7 @@ events.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
         return
     end
 
-    if not vim.buf.is_special_buffer(evt.buf) then
+    if not vim.buf.is_special(evt.buf) then
         events.trigger_user_event 'NormalFile'
 
         git.check_tracked(vim.uv.fs_realpath(current_file) or current_file, function(yes)

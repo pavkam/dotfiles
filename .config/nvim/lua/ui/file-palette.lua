@@ -22,7 +22,7 @@ local project = require 'project'
 local session_open_files = {}
 
 events.on_event('BufRead', function(evt)
-    local path = vim.buf.is_regular_buffer(evt.buf) and vim.api.nvim_buf_get_name(evt.buf)
+    local path = vim.buf.is_regular(evt.buf) and vim.api.nvim_buf_get_name(evt.buf)
     if not path or not vim.fs.file_exists(path) then
         return
     end
@@ -113,7 +113,7 @@ end
 --- Get all local file marks
 ---@return ui.file_palette.File[] # List of files
 local function get_marked_buffer(buffer)
-    if not vim.buf.is_regular_buffer(buffer) then
+    if not vim.buf.is_regular(buffer) then
         return {}
     end
 
@@ -162,7 +162,7 @@ local function get_jump_list_files()
     -- Get the jump-list and sort it so that the most recent files come first
     for i = #jumplist, 1, -1 do
         local buffer = jumplist[i].bufnr
-        local path = vim.buf.is_regular_buffer(buffer) and vim.api.nvim_buf_get_name(buffer)
+        local path = vim.buf.is_regular(buffer) and vim.api.nvim_buf_get_name(buffer)
 
         if path and vim.fs.file_exists(path) then
             table.insert(results, {

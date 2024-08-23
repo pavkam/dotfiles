@@ -60,7 +60,7 @@ events.on_event({ 'BufWinEnter' }, function(evt)
     local win = vim.api.nvim_get_current_win()
 
     if
-        vim.buf.is_special_buffer(evt.buf)
+        vim.buf.is_special(evt.buf)
         and not vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf }))
     then
         vim.wo[win].spell = false
@@ -68,10 +68,10 @@ events.on_event({ 'BufWinEnter' }, function(evt)
 end)
 
 events.on_event('FileType', function(evt)
-    if vim.buf.is_special_buffer(evt.buf) then
+    if vim.buf.is_special(evt.buf) then
         vim.opt_local.spell = false
     elseif
-        vim.buf.is_transient_buffer(evt.buf)
+        vim.buf.is_transient(evt.buf)
         or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown'
     then
         vim.opt_local.spell = true

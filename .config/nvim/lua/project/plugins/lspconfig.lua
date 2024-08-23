@@ -296,7 +296,7 @@ return {
 
             -- on attach work
             lsp.on_attach(function(client, buffer)
-                if vim.buf.is_special_buffer(buffer) then
+                if vim.buf.is_special(buffer) then
                     vim.schedule(function()
                         vim.lsp.buf_detach_client(buffer, client.id)
                     end)
