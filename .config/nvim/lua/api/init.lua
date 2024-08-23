@@ -1,4 +1,5 @@
 require 'api.vim'
+require 'api.buf'
 
 --- Global function to quit the current process
 function _G.quit()

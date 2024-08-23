@@ -1,5 +1,4 @@
 local icons = require 'ui.icons'
-local buffers = require 'core.buffers'
 
 ---@class utils.progress
 local M = {}
@@ -84,7 +83,7 @@ local function update_tasks(interval)
 
     for _, key in ipairs(keys) do
         local buffer = key ~= 'global' and key or nil
-        if buffer and not buffers.buffer_is_loaded(buffer) then
+        if buffer and not vim.api.nvim_buf_is_loaded(buffer) then
             tasks_by_owner[key] = {}
         end
 

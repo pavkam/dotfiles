@@ -1,4 +1,3 @@
-local buffers = require 'core.buffers'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local progress = require 'ui.progress'
@@ -23,7 +22,7 @@ local function formatters(buffer)
         return {}
     end
 
-    if not buffers.is_regular_buffer(buffer) then
+    if not vim.buf.is_regular_buffer(buffer) then
         return {}
     end
 
@@ -67,7 +66,7 @@ function M.apply(buffer)
     local conform = require 'conform'
 
     buffer = buffer or vim.api.nvim_get_current_buf()
-    if not buffers.is_regular_buffer(buffer) then
+    if not vim.buf.is_regular_buffer(buffer) then
         return
     end
 

@@ -1,6 +1,5 @@
 local icons = require 'ui.icons'
 local events = require 'core.events'
-local buffers = require 'core.buffers'
 
 ---@class core.keys
 local M = {}
@@ -88,7 +87,7 @@ function M.attach(file_types, callback, force)
     end
 
     return events.on_event('FileType', function(evt)
-        if file_types == '*' and buffers.is_special_buffer(evt.buf) then
+        if file_types == '*' and vim.buf.is_special_buffer(evt.buf) then
             return
         end
 

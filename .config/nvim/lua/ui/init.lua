@@ -1,4 +1,3 @@
-local buffers = require 'core.buffers'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local settings = require 'core.settings'
@@ -34,17 +33,17 @@ keys.map('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
 
 -- buffer management
 keys.map('n', '<leader><leader>', function()
-    if not buffers.is_special_buffer() then
+    if not vim.buf.is_special_buffer() then
         pcall(vim.cmd.edit, '#')
     end
 end, { icon = icons.UI.Switch, desc = 'Switch buffer', silent = true })
 
-keys.map('n', '<leader>c', buffers.remove_buffer, { icon = icons.UI.Close, desc = 'Close buffer' })
-keys.map('n', '<leader>C', buffers.remove_other_buffers, { icon = icons.UI.Close, desc = 'Close other buffers' })
+keys.map('n', '<leader>c', vim.buf.remove_buffer, { icon = icons.UI.Close, desc = 'Close buffer' })
+keys.map('n', '<leader>C', vim.buf.remove_other_buffers, { icon = icons.UI.Close, desc = 'Close other buffers' })
 
 for i = 1, 9 do
     keys.map('n', '<M-' .. i .. '>', function()
-        local buffer = buffers.get_buffer_by_index(i)
+        local buffer = vim.buf.get_listed_buffers({ loaded = false })[i]
         if buffer then
             vim.cmd.buffer(buffer)
         end
@@ -115,7 +114,7 @@ keys.map('c', '<Right>', function()
 end, { expr = true })
 
 -- Add "q" to special windows
-keys.attach(buffers.special_file_types, function(set)
+keys.attach(vim.buf.special_file_types, function(set)
     set('n', 'q', '<cmd>close<cr>', { silent = true })
     set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
 end)
@@ -137,10 +136,10 @@ events.on_event({ 'BufModifiedSet' }, function(evt)
 end)
 
 events.on_event('FileType', function(evt)
-    if buffers.is_special_buffer(evt.buf) then
+    if vim.buf.is_special_buffer(evt.buf) then
         vim.bo[evt.buf].buflisted = false
     elseif
-        buffers.is_transient_buffer(evt.buf)
+        vim.buf.is_transient_buffer(evt.buf)
         or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown'
     then
         vim.opt_local.wrap = true
@@ -156,7 +155,7 @@ events.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
         return
     end
 
-    if not buffers.is_special_buffer(evt.buf) then
+    if not vim.buf.is_special_buffer(evt.buf) then
         events.trigger_user_event 'NormalFile'
 
         git.check_tracked(vim.uv.fs_realpath(current_file) or current_file, function(yes)

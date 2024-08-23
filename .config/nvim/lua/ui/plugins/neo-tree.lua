@@ -13,7 +13,7 @@ return {
     end,
     opts = {
         sources = { 'filesystem' },
-        open_files_do_not_replace_types = require('core.buffers').special_file_types,
+        open_files_do_not_replace_types = vim.buf.special_file_types,
         enable_diagnostics = true,
         enable_git_status = true,
         enable_modified_markers = true,

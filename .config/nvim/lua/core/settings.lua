@@ -1,4 +1,3 @@
-local buffers = require 'core.buffers'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
@@ -220,7 +219,7 @@ function M.register_toggle(option, toggle_fn, opts)
                 toggle_fn(enabled, nil)
 
                 if vim.tbl_contains(scopes, 'buffer') then
-                    for _, b in ipairs(buffers.get_listed_buffers()) do
+                    for _, b in ipairs(vim.buf.get_listed_buffers()) do
                         toggle_fn(
                             enabled and M.get(option, { buffer = b, default = opts.default, scope = 'permanent' }),
                             b

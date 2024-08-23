@@ -1,4 +1,3 @@
-local buffers = require 'core.buffers'
 local events = require 'core.events'
 local keys = require 'core.keys'
 
@@ -120,7 +119,7 @@ keys.attach(nil, function(set)
 end, true)
 
 events.on_event('BufEnter', function(evt)
-    if buffers.is_special_buffer(evt.buf) then
+    if vim.buf.is_special_buffer(evt.buf) then
         return
     end
 
@@ -131,7 +130,7 @@ end)
 
 -- restore marks after reloading a file
 events.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
-    if buffers.is_special_buffer(evt.buf) or buffers.is_transient_buffer(evt.buf) then
+    if vim.buf.is_special_buffer(evt.buf) or vim.buf.is_transient_buffer(evt.buf) then
         return
     end
 

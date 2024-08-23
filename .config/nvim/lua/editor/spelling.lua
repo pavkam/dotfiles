@@ -1,4 +1,3 @@
-local buffers = require 'core.buffers'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
@@ -61,7 +60,7 @@ events.on_event({ 'BufWinEnter' }, function(evt)
     local win = vim.api.nvim_get_current_win()
 
     if
-        buffers.is_special_buffer(evt.buf)
+        vim.buf.is_special_buffer(evt.buf)
         and not vim.tbl_contains(ignored_fts, vim.api.nvim_get_option_value('filetype', { buf = evt.buf }))
     then
         vim.wo[win].spell = false
@@ -69,10 +68,10 @@ events.on_event({ 'BufWinEnter' }, function(evt)
 end)
 
 events.on_event('FileType', function(evt)
-    if buffers.is_special_buffer(evt.buf) then
+    if vim.buf.is_special_buffer(evt.buf) then
         vim.opt_local.spell = false
     elseif
-        buffers.is_transient_buffer(evt.buf)
+        vim.buf.is_transient_buffer(evt.buf)
         or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown'
     then
         vim.opt_local.spell = true

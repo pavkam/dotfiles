@@ -1,4 +1,3 @@
-local buffers = require 'core.buffers'
 local events = require 'core.events'
 local project = require 'project'
 local progress = require 'ui.progress'
@@ -19,7 +18,7 @@ local function linters(buffer)
     end
 
     buffer = buffer or vim.api.nvim_get_current_buf()
-    if not buffers.is_regular_buffer(buffer) then
+    if not vim.buf.is_regular_buffer(buffer) then
         return {}
     end
 
@@ -98,7 +97,7 @@ local debounced_lint = vim.debounce_fn(
 ---@param buffer integer|nil # the buffer to apply the linters to or 0 or nil for current
 function M.apply(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
-    if not buffers.is_regular_buffer(buffer) then
+    if not vim.buf.is_regular_buffer(buffer) then
         return
     end
 

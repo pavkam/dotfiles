@@ -1,14 +1,14 @@
----@class core.buffers
-local M = {}
+---@class vim.buf
+vim.buf = {}
 
----@class (exact) core.buffers.GetListedBufferOpts
+---@class (exact) vim.buf.GetListedBufferOpts
 ---@field loaded boolean|nil # whether to get only loaded buffers (default) true
 ---@field listed boolean|nil # whether to get only listed buffers (default) true
 
 --- Gets the list of listed file buffers
----@param opts core.buffers.GetListedBufferOpts|nil # the options to get the buffers
+---@param opts vim.buf.GetListedBufferOpts|nil # the options to get the buffers
 ---@return integer[] # the list of buffers
-function M.get_listed_buffers(opts)
+function vim.buf.get_listed_buffers(opts)
     opts = opts or {}
     opts.loaded = opts.loaded == nil and true or opts.loaded
     opts.listed = opts.listed == nil and true or opts.listed
@@ -33,35 +33,13 @@ function M.get_listed_buffers(opts)
         :totable()
 end
 
---- Checks if a buffer is loaded
---- @param buffer integer|nil # the buffer to check or the current buffer if 0 or nil
-function M.buffer_is_loaded(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-    return vim.api.nvim_buf_is_valid(buffer) and vim.api.nvim_buf_is_loaded(buffer)
-end
-
---- Gets the buffer by its index in the list of listed buffers
----@param index integer # the index of the buffer to get
----@return integer|nil # the index of the buffer in the list of listed buffers or nil if the buffer is not listed
-function M.get_buffer_by_index(index)
-    assert(type(index) == 'number' and index > 0)
-
-    for i, b in ipairs(M.get_listed_buffers { loaded = false }) do
-        if i == index then
-            return b
-        end
-    end
-
-    return nil
-end
-
----@class (exact) core.buffers.DeleteBufferOpts # options for deleting a buffer
+---@class (exact) vim.buf.DeleteBufferOpts # options for deleting a buffer
 ---@field force boolean|nil # whether to force the deletion of the buffer
 
 --- Removes a buffer
 ---@param buffer integer|nil # the buffer to remove or the current buffer if 0 or nil
----@param opts core.buffers.DeleteBufferOpts|nil # the options for deleting the buffer
-function M.remove_buffer(buffer, opts)
+---@param opts vim.buf.DeleteBufferOpts|nil # the options for deleting the buffer
+function vim.buf.remove_buffer(buffer, opts)
     buffer = buffer or vim.api.nvim_get_current_buf()
     opts = opts or {}
 
@@ -107,17 +85,17 @@ end
 
 --- Removes other buffers (except the current one)
 ---@param buffer integer|nil # the buffer to remove or the current buffer if 0 or nil
-function M.remove_other_buffers(buffer)
+function vim.buf.remove_other_buffers(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    for _, b in ipairs(M.get_listed_buffers { loaded = false }) do
+    for _, b in ipairs(vim.buf.get_listed_buffers { loaded = false }) do
         if b ~= buffer then
-            M.remove_buffer(b)
+            vim.buf.remove_buffer(b)
         end
     end
 end
 
-M.special_file_types = {
+vim.buf.special_file_types = {
     'neo-tree',
     'dap-float',
     'dap-repl',
@@ -149,19 +127,19 @@ M.special_file_types = {
     'TelescopeResults',
 }
 
-M.special_buffer_types = {
+vim.buf.special_buffer_types = {
     'prompt',
     'nofile',
     'terminal',
     'help',
 }
 
-M.transient_buffer_types = {
+vim.buf.transient_buffer_types = {
     'nofile',
     'terminal',
 }
 
-M.transient_file_types = {
+vim.buf.transient_file_types = {
     'gitcommit',
     'gitrebase',
     'hgcommit',
@@ -170,20 +148,23 @@ M.transient_file_types = {
 --- Checks if a buffer is a special buffer
 ---@param buffer integer|nil # the buffer to check or the current buffer if 0 or nil
 ---@return boolean # true if the buffer is a special buffer, false otherwise
-function M.is_special_buffer(buffer)
+function vim.buf.is_special_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local filetype = vim.api.nvim_get_option_value('filetype', { buf = buffer })
     local buftype = vim.api.nvim_get_option_value('buftype', { buf = buffer })
 
     return buftype ~= ''
-        and (vim.tbl_contains(M.special_buffer_types, buftype) or vim.tbl_contains(M.special_file_types, filetype))
+        and (
+            vim.tbl_contains(vim.buf.special_buffer_types, buftype)
+            or vim.tbl_contains(vim.buf.special_file_types, filetype)
+        )
 end
 
 --- Checks if a buffer is a transient buffer (a file which we should not deal with)
 ---@param buffer integer|nil # the buffer to check or the current buffer if 0 or nil
 ---@return boolean # true if the buffer is a transient buffer, false otherwise
-function M.is_transient_buffer(buffer)
+function vim.buf.is_transient_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local filetype = vim.api.nvim_get_option_value('filetype', { buf = buffer })
@@ -193,20 +174,25 @@ function M.is_transient_buffer(buffer)
         return true
     end
 
-    return (vim.tbl_contains(M.transient_buffer_types, buftype) or vim.tbl_contains(M.transient_file_types, filetype))
+    return (
+        vim.tbl_contains(vim.buf.transient_buffer_types, buftype)
+        or vim.tbl_contains(vim.buf.transient_file_types, filetype)
+    )
 end
 
 --- Checks whether a buffer is a regular buffer (normal file)
 ---@param buffer integer|nil # the buffer to check, or the current buffer if 0 or nil
 ---@return boolean # whether the buffer is valid for formatting
-function M.is_regular_buffer(buffer)
+function vim.buf.is_regular_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
-    return vim.api.nvim_buf_is_valid(buffer) and not M.is_special_buffer(buffer) and not M.is_transient_buffer(buffer)
+    return vim.api.nvim_buf_is_valid(buffer)
+        and not vim.buf.is_special_buffer(buffer)
+        and not vim.buf.is_transient_buffer(buffer)
 end
 
 --- Get the line of the buffer in whatever window it is displayed
 ---@param buffer integer|nil # the buffer to get the line of, or the current buffer if 0 or nil
-function M.cursor_line(buffer)
+function vim.buf.cursor_line(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local win = vim.fn.bufwinid(buffer)
@@ -216,5 +202,3 @@ function M.cursor_line(buffer)
 
     return vim.api.nvim_win_get_cursor(win)[1]
 end
-
-return M

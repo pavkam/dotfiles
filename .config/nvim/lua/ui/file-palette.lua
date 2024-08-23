@@ -4,7 +4,6 @@ local conf = require('telescope.config').values
 local actions = require 'telescope.actions'
 local action_state = require 'telescope.actions.state'
 local entry_display = require 'telescope.pickers.entry_display'
-local buffers = require 'core.buffers'
 local events = require 'core.events'
 local keys = require 'core.keys'
 local icons = require 'ui.icons'
@@ -23,7 +22,7 @@ local project = require 'project'
 local session_open_files = {}
 
 events.on_event('BufRead', function(evt)
-    local path = buffers.is_regular_buffer(evt.buf) and vim.api.nvim_buf_get_name(evt.buf)
+    local path = vim.buf.is_regular_buffer(evt.buf) and vim.api.nvim_buf_get_name(evt.buf)
     if not path or not vim.fs.file_exists(path) then
         return
     end
@@ -34,8 +33,8 @@ end)
 --- Get all listed buffers
 ---@return ui.file_palette.File[] # List of files
 local function get_listed_buffers()
-    local all = buffers.get_listed_buffers()
-    vim.list_extend(all, buffers.get_listed_buffers { loaded = false, listed = false })
+    local all = vim.buf.get_listed_buffers()
+    vim.list_extend(all, vim.buf.get_listed_buffers { loaded = false, listed = false })
 
     all = vim.list_uniq(all)
     table.sort(
@@ -53,7 +52,7 @@ local function get_listed_buffers()
             return {
                 file = name and name ~= '' and name or '[No Name]',
                 type = 'buffer',
-                line = buffers.cursor_line(buffer),
+                line = vim.buf.cursor_line(buffer),
             }
         end)
         :totable()
@@ -114,7 +113,7 @@ end
 --- Get all local file marks
 ---@return ui.file_palette.File[] # List of files
 local function get_marked_buffer(buffer)
-    if not buffers.is_regular_buffer(buffer) then
+    if not vim.buf.is_regular_buffer(buffer) then
         return {}
     end
 
@@ -163,7 +162,7 @@ local function get_jump_list_files()
     -- Get the jump-list and sort it so that the most recent files come first
     for i = #jumplist, 1, -1 do
         local buffer = jumplist[i].bufnr
-        local path = buffers.is_regular_buffer(buffer) and vim.api.nvim_buf_get_name(buffer)
+        local path = vim.buf.is_regular_buffer(buffer) and vim.api.nvim_buf_get_name(buffer)
 
         if path and vim.fs.file_exists(path) then
             table.insert(results, {
