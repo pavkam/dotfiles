@@ -8,7 +8,7 @@ local project = require 'project'
 local M = {}
 
 --- Load a custom dictionary for a given target
----@param target core.utils.Target # the target to load the dictionary for
+---@param target vim.fn.Target # the target to load the dictionary for
 function M.swap_custom_dictionary(target)
     local path = project.nvim_settings_path(target)
 

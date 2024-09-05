@@ -1,7 +1,8 @@
 -- LOW: show the number of failed/total tests in the status-line
 -- TODO: the typos lsp is not dying correctly when disabled
 -- MAYBE: Cross-tmux-session marks
-
+-- URGENT: configure eslint with fix all on save
+--
 require 'api'
 
 if not vim.fn.executable 'git' then

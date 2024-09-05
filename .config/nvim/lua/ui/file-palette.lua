@@ -304,22 +304,6 @@ local function show_file_palette(opts)
             },
             sorter = conf.generic_sorter(opts),
             previewer = conf.grep_previewer(opts),
-            attach_mappings = function(prompt_bufnr)
-                actions.select_default:replace(function()
-                    local selection = action_state.get_selected_entry()
-                    ---@cast selection ui.file_palette.Entry|nil
-                    if selection == nil then
-                        vim.warn 'Nothing has been selected'
-                        return
-                    end
-
-                    actions.close(prompt_bufnr)
-
-                    vim.cmd('edit +' .. selection.lnum .. ' ' .. selection.filename)
-                end)
-
-                return true
-            end,
         })
         :find()
 end

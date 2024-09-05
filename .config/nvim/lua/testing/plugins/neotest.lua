@@ -13,7 +13,8 @@ return {
         'nvim-treesitter/nvim-treesitter',
         'nvim-neotest/neotest-jest',
         'marilari88/neotest-vitest',
-        'nvim-neotest/neotest-go',
+        'fredrikaverpil/neotest-golang',
+        -- TODO: cleanup after validation 'nvim-neotest/neotest-go',
     },
     opts = function(_, opts)
         local project = require 'project'
@@ -38,8 +39,10 @@ return {
             end,
         }
 
+        local go_lang = require 'neotest-golang'
+
         opts.adapters = {
-            require 'neotest-go',
+            go_lang,
             vitest,
             jest,
         }

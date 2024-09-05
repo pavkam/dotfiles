@@ -3,6 +3,20 @@ local syntax = require 'editor.syntax'
 ---@class editor.comments
 local M = {}
 
+-- URGENT: fix this
+--[[
+E5108: Error executing lua /Users/alex/.config/nvim/lua/editor/comments.lua:72: attempt to index local 'spec' (a nil value)
+stack traceback:
+	/Users/alex/.config/nvim/lua/editor/comments.lua:72: in function 'resolve'
+	/Users/alex/.config/nvim/lua/editor/comments.lua:141: in function 'select_matching'
+	/Users/alex/.config/nvim/lua/editor/comments.lua:190: in function 'get_option'
+	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:38: in function 'traverse'
+	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:48: in function 'get_commentstring'
+	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:57: in function 'get_comment_parts'
+	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:183: in function 'toggle_lines'
+	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:233: in function <...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:212>
+]]
+
 ---@alias editor.comments.CommentSpec { prefix: string, suffix?: string }
 
 ---@type editor.comments.CommentSpec

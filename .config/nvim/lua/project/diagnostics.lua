@@ -105,7 +105,7 @@ end
 
 --- Forces the LSP client to check all files in the workspace for diagnostics
 ---@param client vim.lsp.Client table # the LSP client
----@param target core.utils.Target # the target to check
+---@param target vim.fn.Target # the target to check
 function M.check_workspace(client, target)
     if not client.server_capabilities.textDocumentSync.openClose then
         return

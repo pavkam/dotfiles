@@ -31,7 +31,7 @@ local function parsed_package_json_has_dependency(parsed_json, dep_type, depende
 end
 
 --- Reads a package.json for a given target
----@param target core.utils.Target # the target to read the package.json for
+---@param target vim.fn.Target # the target to read the package.json for
 ---@return table<string, any>|nil # the parsed package.json
 local function read_package_json(target)
     local full_name = vim.fs.first_found_file(M.roots(target), 'package.json')
@@ -41,7 +41,7 @@ local function read_package_json(target)
 end
 
 --- Returns the type of the project
----@param target core.utils.Target # the target to get the type for
+---@param target vim.fn.Target # the target to get the type for
 ---@return string|nil # the type of the project
 local function dotnet_type(target)
     local root = M.root(target)
@@ -55,7 +55,7 @@ local function dotnet_type(target)
 end
 
 --- Returns the type of the project
----@param target core.utils.Target # the target to get the type for
+---@param target vim.fn.Target # the target to get the type for
 ---@return string|nil # the type of the project
 local function go_type(target)
     if vim.fs.first_found_file(M.roots(target), { 'go.mod', 'go.sum' }) then
@@ -74,7 +74,7 @@ local python_root_patterns = {
 }
 
 --- Returns the type of the project
----@param target core.utils.Target # the target to get the type for
+---@param target vim.fn.Target # the target to get the type for
 ---@return string|nil # the type of the project
 local function python_type(target)
     if vim.fs.first_found_file(M.roots(target), python_root_patterns) then
@@ -156,7 +156,7 @@ M.root_patterns = {
 }
 
 --- Returns the project roots for a given target
----@param target core.utils.Target # the target to get the roots for
+---@param target vim.fn.Target # the target to get the roots for
 ---@return string[] # the list of roots
 function M.roots(target)
     local buffer, path, is_real = vim.fn.expand_target(target)
@@ -216,7 +216,7 @@ function M.roots(target)
 end
 
 --- Returns the primary root for a given target
----@param target core.utils.Target # the target to get the root for
+---@param target vim.fn.Target # the target to get the root for
 ---@param deepest boolean|nil # whether to return the deepest or the shallowest root (default is deepest)
 ---@return string|nil # the root
 function M.root(target, deepest)
@@ -234,7 +234,7 @@ function M.root(target, deepest)
 end
 
 --- Returns the path components for a given target
----@param target core.utils.Target # the target to get the path components for
+---@param target vim.fn.Target # the target to get the path components for
 ---@return { work_space_path: string, file_path: string, work_space_name: string } # the path components
 function M.path_components(target)
     local root = M.root(target)
@@ -250,7 +250,7 @@ function M.path_components(target)
 end
 
 --- Formats a relative path to a given target
----@param target core.utils.Target # the target to get the settings path for
+---@param target vim.fn.Target # the target to get the settings path for
 ---@return string # the formatted relative path
 function M.format_relative(target)
     ---@type string|nil
@@ -260,7 +260,7 @@ function M.format_relative(target)
 end
 
 --- Returns the path to the Neovim settings directory for a given target
----@param target core.utils.Target # the target to get the settings path for
+---@param target vim.fn.Target # the target to get the settings path for
 ---@return string|nil # the path to the settings directory
 function M.nvim_settings_path(target)
     ---@type string|nil
@@ -269,7 +269,7 @@ function M.nvim_settings_path(target)
 end
 
 --- Returns the path to the launch.json file for a given target
----@param target core.utils.Target # the target to get the launch.json for
+---@param target vim.fn.Target # the target to get the launch.json for
 ---@return string|nil # the path to the launch.json file
 function M.get_launch_json(target)
     local path = M.nvim_settings_path(target)
@@ -278,7 +278,7 @@ function M.get_launch_json(target)
 end
 
 --- Returns the type of the project
----@param target core.utils.Target # the target to get the type for
+---@param target vim.fn.Target # the target to get the type for
 ---@return string|nil # the type of the project
 function M.type(target)
     return (js_type(target) or go_type(target) or python_type(target) or dotnet_type(target))
@@ -292,14 +292,14 @@ local golangci_root_patterns = {
 }
 
 --- Returns the path to the golangci file for a given target
----@param target core.utils.Target # the target to get the golangci file for
+---@param target vim.fn.Target # the target to get the golangci file for
 ---@return string|nil # the path to the golangci file
 function M.get_golangci_config(target)
     return vim.fs.first_found_file(M.roots(target), golangci_root_patterns)
 end
 
 --- Checks if a target has a dependency
----@param target core.utils.Target # the target to check the dependency for
+---@param target vim.fn.Target # the target to check the dependency for
 ---@param dependency string # the name of the dependency
 ---@return boolean # whether the dependency exists
 function M.js_has_dependency(target, dependency)
@@ -315,7 +315,7 @@ function M.js_has_dependency(target, dependency)
 end
 
 --- Gets the path to a binary for a given target
----@param target core.utils.Target # the target to get the binary path for
+---@param target vim.fn.Target # the target to get the binary path for
 ---@param bin string|nil # the path of the binary
 function M.get_js_bin_path(target, bin)
     local sub = vim.fs.join_paths('node_modules', '.bin', bin)
@@ -332,7 +332,7 @@ local eslint_root_patterns = {
 }
 
 --- Gets the path to the eslint config for a given target
----@param target core.utils.Target # the target to get the eslint config for
+---@param target vim.fn.Target # the target to get the eslint config for
 ---@return string|nil # the path to the eslint config
 function M.get_eslint_config_path(target)
     return vim.fs.first_found_file(M.roots(target), eslint_root_patterns)
