@@ -38,20 +38,43 @@ function M.swap_custom_dictionary(target)
     vim.opt.spellfile = spl_file
 end
 
+if vim.has_plugin 'nvim-lspconfig' then
+    local lspconfig = require 'lspconfig'
+    if lspconfig.typos_lsp then
+        lspconfig.typos_lsp.setup {
+            ---@param client vim.lsp.Client
+            ---@param buffer integer
+            on_attach = function(client, buffer)
+                if not settings.get_toggle 'spelling' then
+                    vim.lsp.buf_detach_client(buffer, client.id)
+                end
+            end,
+        }
+    end
+end
+
+--- Toggle the typos lsp client
+---@param enabled boolean # whether the client should be enabled or disabled
+local function toggle_typos_lsp(enabled)
+    local all = vim.lsp.get_clients { name = 'typos_lsp' }
+    if #all == 1 then
+        local client = all[1]
+
+        for _, buffer in ipairs(vim.buf.get_listed_buffers { loaded = true, listed = true }) do
+            if enabled then
+                vim.lsp.buf_attach_client(buffer, client.id)
+            else
+                vim.lsp.buf_detach_client(buffer, client.id)
+            end
+        end
+    end
+end
+
 settings.register_toggle('spelling', function(enabled)
     ---@diagnostic disable-next-line: undefined-field
     vim.opt.spell = enabled
 
-    local all = vim.lsp.get_clients { name = 'typos_lsp' }
-    if #all == 1 then
-        local client = all[1]
-        if enabled then
-            vim.lsp.buf_attach_client(0, client.id)
-        else
-            vim.lsp.stop_client(client.id, true)
-        end
-    end
-
+    toggle_typos_lsp(enabled)
     ---@diagnostic disable-next-line: undefined-field
 end, { icon = icons.UI.SpellCheck, name = 'Spell checking', default = vim.opt.spell:get(), scope = 'global' })
 

@@ -36,15 +36,17 @@ return {
             end
         end
 
-        local prettier = select { 'prettier', 'prettierd' }
+        local prettier = select { 'prettierd', 'prettier' }
+        local js = select({ 'prettierd', 'prettier' }, { 'eslint_d' })
+
         return {
             formatters_by_ft = {
                 lua = select { 'stylua' },
                 sh = select { 'shfmt' },
-                javascript = prettier,
-                javascriptreact = prettier,
-                typescript = prettier,
-                typescriptreact = prettier,
+                javascript = js,
+                javascriptreact = js,
+                typescript = js,
+                typescriptreact = js,
                 go = select({ 'goimports-reviser', 'goimports' }, { 'golines', 'gofumpt' }),
                 csharp = select { 'csharpier' },
                 python = select({ 'black' }, { 'isort' }),
@@ -54,7 +56,7 @@ return {
                 css = prettier,
                 scss = prettier,
                 less = prettier,
-                vue = prettier,
+                vue = js,
                 json = prettier,
                 jsonc = prettier,
                 yaml = prettier,

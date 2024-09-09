@@ -159,7 +159,7 @@ local managed_toggles = {}
 
 --- Registers a managed toggle setting
 ---@param option string # the name of the option
----@param toggle_fn fun(enabled: boolean, buffer?: integer) # the function to call when the toggle is triggered
+---@param toggle_fn fun(enabled: boolean, buffer: integer|nil) # the function to call when the toggle is triggered
 ---@param opts core.settings.RegisterToggleOpts|nil # the options for the toggle
 function M.register_toggle(option, toggle_fn, opts)
     opts = opts or {}

@@ -108,16 +108,76 @@ M.diagnostics = {
     end,
 }
 
+---@class ui.lualine.sections.neotest_summary
+---@field total number # The total number of tests
+---@field passed number # The number of tests that passed
+---@field failed number # The number of tests that failed
+---@field skipped number # The number of tests that were skipped
+
+--- Gets the counts of the tests in the given buffer
+---@param buffer number|nil # The buffer to get the counts for, or nil for all buffers
+---@return ui.lualine.sections.neotest_summary # The counts of the tests
+local function get_neotest_summary(buffer)
+    local neotest = require 'neotest'
+
+    local result = {
+        total = 0,
+        passed = 0,
+        failed = 0,
+        skipped = 0,
+    }
+
+    for _, adapter_id in ipairs(neotest.state.adapter_ids()) do
+        local counts = neotest.state.status_counts(adapter_id, { buffer = buffer })
+
+        if counts ~= nil then
+            for status, count in pairs(result) do
+                result[status] = count + counts[status]
+            end
+        end
+    end
+
+    return result
+end
+
 --- The section that shows the status of neo-test
 M.neotest = {
-    function()
+    settings.transient(function(buffer)
         local spinner, msg = progress.status 'neotest'
-        return spinner and sexify(spinner, msg)
-    end,
-    cond = settings.transient(function()
-        return progress.status 'neotest' ~= nil
+        if spinner then
+            return spinner and sexify(spinner, msg)
+        end
+
+        local summary = get_neotest_summary(buffer)
+        local config = require 'neotest.config'
+
+        msg = string.format('%s %d', icons.UI.Test, summary.total)
+        for status, count in pairs(summary) do
+            if count > 0 and status ~= 'total' then
+                msg = string.format('%s %s %s %d', msg, icons.TUI.ListSeparator, config.icons[status], count)
+            end
+        end
+
+        return msg
     end),
-    color = hl.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
+    cond = settings.transient(function(buffer)
+        return progress.status 'neotest' ~= nil or get_neotest_summary(buffer).total > 0
+    end),
+    color = settings.transient(function(buffer)
+        if progress.status 'neotest' ~= nil then
+            return hl.hl_fg_color_and_attrs 'AuxiliaryProgressStatus'
+        end
+
+        local summary = get_neotest_summary(buffer)
+
+        if summary.failed > 0 then
+            return hl.hl_fg_color_and_attrs 'NeotestFailed'
+        elseif summary.passed > 0 then
+            return hl.hl_fg_color_and_attrs 'NeotestPassed'
+        else
+            return hl.hl_fg_color_and_attrs 'NeotestTest'
+        end
+    end),
 }
 
 --- The section that shows the status of package-info

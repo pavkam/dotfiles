@@ -189,7 +189,6 @@ function vim.buf.is_regular(buffer)
     return vim.api.nvim_buf_is_valid(buffer) and not vim.buf.is_special(buffer) and not vim.buf.is_transient(buffer)
 end
 
--- LOW: this need to be moved out
 --- Get the line of the buffer in whatever window it is displayed
 ---@param buffer integer|nil # the buffer to get the line of, or the current buffer if 0 or nil
 function vim.buf.cursor_line(buffer)

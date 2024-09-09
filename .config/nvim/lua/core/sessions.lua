@@ -50,6 +50,23 @@ function M.files(name)
     return res .. '.vim', res .. '.shada', res .. '.json'
 end
 
+--- Call a function with error handling
+---@param what string # the name of the function
+---@param session string # the name of the session
+---@vararg any # the function and its arguments
+---@return boolean, any # the result of the function
+local function error_call(what, session, ...)
+    local ok, res_or_error = pcall(...)
+    if not ok then
+        vim.error(
+            string.format('%s Failed to %s for session `%s`:\n```%s```', what, session, vim.inspect(res_or_error)),
+            { prefix_icon = icons.UI.Disabled }
+        )
+    end
+
+    return ok, res_or_error
+end
+
 ---@class (exact) core.session.CustomData
 ---@field settings core.settings.Exported
 ---@field qf ui.qf.Exported
@@ -63,8 +80,8 @@ function M.save_session(name)
 
     vim.fn.mkdir(session_dir, 'p')
 
-    vim.cmd('mks! ' .. session_file)
-    vim.cmd('wshada! ' .. shada_file)
+    error_call('save session', name, vim.cmd, 'mks! ' .. session_file)
+    error_call('save shada', name, vim.cmd, 'wshada! ' .. shada_file)
 
     ---@type core.session.CustomData
     local custom = {
@@ -73,7 +90,7 @@ function M.save_session(name)
     }
 
     local json = vim.json.encode(custom) or '{}'
-    vim.fn.writefile({ json }, custom_file, 'bs')
+    error_call('save settings', name, vim.fn.writefile, { json }, custom_file, 'bs')
 
     vim.hint(string.format('Saved session `%s`', name), { prefix_icon = icons.UI.SessionSave })
 end
@@ -85,28 +102,6 @@ local function reset_ui()
     vim.cmd [[silent! %bw!]]
 
     vim.args = {}
-end
-
---- Call a function with error handling
----@param name string # the name of the function
----@param session string # the name of the session
----@vararg any # the function and its arguments
----@return boolean, any # the result of the function
-local function error_call(name, session, ...)
-    local ok, res_or_error = pcall(...)
-    if not ok then
-        vim.error(
-            string.format(
-                '%s Failed to restore %s for session `%s`:\n```%s```',
-                icons.UI.Disabled,
-                name,
-                session,
-                vim.inspect(res_or_error)
-            )
-        )
-    end
-
-    return ok, res_or_error
 end
 
 --- Restore a session
@@ -121,18 +116,18 @@ function M.restore_session(name)
         reset_ui()
 
         vim.schedule(function()
-            local ok, data = error_call('custom data', name, vim.fn.readfile, custom_file, 'b')
+            local ok, data = error_call('restore custom data', name, vim.fn.readfile, custom_file, 'b')
             if ok then
                 ---@type boolean, core.session.CustomData
-                ok, data = error_call('custom data', name, vim.json.decode, data[1])
+                ok, data = error_call('deserialize custom data', name, vim.json.decode, data[1])
                 if ok then
-                    error_call('settings', name, settings.import, data.settings)
-                    error_call('quickfix', name, qf.import, data.qf)
+                    error_call('apply settings', name, settings.import, data.settings)
+                    error_call('apply quickfix', name, qf.import, data.qf)
                 end
             end
 
-            error_call('shada', name, vim.cmd.rshada, shada_file)
-            -- URGENT: this session management is crap:  error_call('vim session', name, vim.cmd.source, session_file)
+            error_call('restore shada', name, vim.cmd.rshada, shada_file)
+            -- error_call('vim session', name, vim.cmd.source, session_file)
 
             vim.schedule(function()
                 vim.refresh_ui()

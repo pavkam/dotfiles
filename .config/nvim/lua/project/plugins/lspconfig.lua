@@ -159,7 +159,6 @@ return {
                         },
                     },
                 },
-                -- LOW: make sure emmet is not triggering outside JSX
                 vtsls = {
                     single_file_support = false,
                     settings = {

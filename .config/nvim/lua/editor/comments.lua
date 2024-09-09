@@ -3,20 +3,6 @@ local syntax = require 'editor.syntax'
 ---@class editor.comments
 local M = {}
 
--- URGENT: fix this
---[[
-E5108: Error executing lua /Users/alex/.config/nvim/lua/editor/comments.lua:72: attempt to index local 'spec' (a nil value)
-stack traceback:
-	/Users/alex/.config/nvim/lua/editor/comments.lua:72: in function 'resolve'
-	/Users/alex/.config/nvim/lua/editor/comments.lua:141: in function 'select_matching'
-	/Users/alex/.config/nvim/lua/editor/comments.lua:190: in function 'get_option'
-	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:38: in function 'traverse'
-	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:48: in function 'get_commentstring'
-	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:57: in function 'get_comment_parts'
-	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:183: in function 'toggle_lines'
-	...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:233: in function <...ar/neovim/0.10.1/share/nvim/runtime/lua/vim/_comment.lua:212>
-]]
-
 ---@alias editor.comments.CommentSpec { prefix: string, suffix?: string }
 
 ---@type editor.comments.CommentSpec
@@ -40,6 +26,8 @@ M.langs.xaml = markup_spec
 M.langs.cs_project = markup_spec
 M.langs.fsharp_project = markup_spec
 M.langs.html = markup_spec
+M.langs.sh = { prefix = '#' }
+M.langs.bash = M.langs.sh
 M.langs.c = c_spec
 M.langs.c_sharp = c_spec
 M.langs.cpp = c_spec
@@ -83,7 +71,7 @@ function M.resolve(window, file_type)
     ---@type string[]
     local result = {}
 
-    if spec.prefix then
+    if spec and spec.prefix then
         table.insert(result, spec)
     elseif vim.islist(spec) then
         for _, v in ipairs(spec) do

@@ -11,7 +11,7 @@ return {
             desc = 'Flash',
         },
         {
-            '<M-?>',
+            '<C-_>',
             mode = { 'n', 'o', 'x' },
             function()
                 require('flash').treesitter()

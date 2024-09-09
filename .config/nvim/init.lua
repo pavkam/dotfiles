@@ -1,8 +1,20 @@
--- LOW: show the number of failed/total tests in the status-line
--- TODO: the typos lsp is not dying correctly when disabled
 -- MAYBE: Cross-tmux-session marks
--- URGENT: configure eslint with fix all on save
---
+-- MAYBE: Write my own cmd line? (https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/cmdline.lua)
+-- MAYBE: jump to buf (https://github.com/catgoose/templ-goto-definition/blob/main/lua/templ-goto-definition/init.lua)
+-- LOW: Evaluate difftastic
+-- LOW: make sure emmet is not triggering outside JSX
+-- LOW: refactor the core module to be more modular
+-- LOW: Evaluate grug-far
+--      (https://www.reddit.com/r/neovim/comments/1f4al0o/grugfarnvim_update_multiline_input_and_telescope/)
+-- LOW: My own winbar? (https://github.com/MariaSolOs/dotfiles/blob/main/private_dot_config/nvim/lua/winbar.lua)
+-- LOW: My own statusline? (https://github.com/MariaSolOs/dotfiles/blob/main/private_dot_config/nvim/lua/statusline.lua)
+-- TODO: click on status column to toggle different things
+-- TODO: ability to select the root of the project
+-- TODO: the [No Name] is not getting the fuck out when I select a file
+-- URGENT: something is up with the file change detection on enter
+-- URGENT: typos lsp has issues when disabled. not sure how to deal with it at the moment.
+-- URGENT: fix session management, not sure why its all not saving not restoring and etc.
+
 require 'api'
 
 if not vim.fn.executable 'git' then

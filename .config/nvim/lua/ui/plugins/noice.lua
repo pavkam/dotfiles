@@ -53,7 +53,18 @@ return {
                     event = 'notify',
                     ---@param msg NoiceMessage
                     cond = function(msg)
-                        local title = msg.opts and msg.opts.title or ''
+                        local title = msg.title or msg.opts and msg.opts.title or ''
+                        return vim.tbl_contains({ 'package-info.nvim' }, title)
+                    end,
+                },
+                opts = { skip = true },
+            },
+            {
+                filter = {
+                    event = 'notify',
+                    ---@param msg NoiceMessage
+                    cond = function(msg)
+                        local title = msg.title or msg.opts and msg.opts.title or ''
                         return vim.tbl_contains({ 'mason' }, title)
                     end,
                 },

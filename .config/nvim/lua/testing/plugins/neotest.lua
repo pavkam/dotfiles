@@ -14,7 +14,6 @@ return {
         'nvim-neotest/neotest-jest',
         'marilari88/neotest-vitest',
         'fredrikaverpil/neotest-golang',
-        -- TODO: cleanup after validation 'nvim-neotest/neotest-go',
     },
     opts = function(_, opts)
         local project = require 'project'
