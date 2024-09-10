@@ -1,5 +1,6 @@
 return {
     'kevinhwang91/nvim-bqf',
+    cond = not vim.headless,
     ft = 'qf',
     opts = {
         func_map = {

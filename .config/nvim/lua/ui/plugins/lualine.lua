@@ -3,6 +3,7 @@ return {
     dependencies = {
         'nvim-tree/nvim-web-devicons',
     },
+    cond = not vim.headless,
     event = 'UIEnter',
     opts = function()
         local lualine_sections = require 'ui.lualine-sections'

@@ -1,5 +1,6 @@
 return {
     'folke/which-key.nvim',
+    cond = not vim.headless,
     event = 'VeryLazy',
     opts = {
         preset = 'helix',

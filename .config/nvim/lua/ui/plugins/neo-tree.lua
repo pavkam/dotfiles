@@ -2,6 +2,7 @@ local icons = require 'ui.icons'
 
 return {
     'nvim-neo-tree/neo-tree.nvim',
+    cond = not vim.headless,
     dependencies = {
         'nvim-lua/plenary.nvim',
         'nvim-tree/nvim-web-devicons',

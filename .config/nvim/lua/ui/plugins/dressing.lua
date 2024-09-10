@@ -7,6 +7,7 @@ return {
         'nvim-lua/plenary.nvim',
         'nvim-telescope/telescope.nvim',
     },
+    cond = not vim.headless,
     opts = {
         input = {
             default_prompt = icons.TUI.PromptPrefix,

@@ -11,9 +11,9 @@
 -- TODO: click on status column to toggle different things
 -- TODO: ability to select the root of the project
 -- TODO: the [No Name] is not getting the fuck out when I select a file
+-- TODO: fix session management, not sure why its all not saving not restoring and etc.
 -- URGENT: something is up with the file change detection on enter
--- URGENT: typos lsp has issues when disabled. not sure how to deal with it at the moment.
--- URGENT: fix session management, not sure why its all not saving not restoring and etc.
+-- URGENT: typos lsp has issues when disabled. Not sure how to deal with it at the moment.
 
 require 'api'
 
@@ -26,6 +26,8 @@ if not vim.fn.has 'nvim-0.10' then
     fatal 'minimum required Neovim version is 0.10'
     return
 end
+
+vim.headless = vim.list_contains(vim.api.nvim_get_vvar 'argv', '--headless') or #vim.api.nvim_list_uis() == 0
 
 local modules = {
     'core',

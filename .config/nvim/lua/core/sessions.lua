@@ -13,7 +13,7 @@ local setting_name = 'current_session_name'
 --- Check if the session support is enabled
 --- @return boolean # true if enabled, false otherwise
 local function enabled()
-    return vim.fn.argc() == 0
+    return vim.fn.argc() == 0 and not vim.headless
 end
 
 --- Get the current session name
@@ -80,7 +80,7 @@ function M.save_session(name)
 
     vim.fn.mkdir(session_dir, 'p')
 
-    error_call('save session', name, vim.cmd, 'mks! ' .. session_file)
+    error_call('save vim session', name, vim.cmd, 'mks! ' .. session_file)
     error_call('save shada', name, vim.cmd, 'wshada! ' .. shada_file)
 
     ---@type core.session.CustomData
@@ -127,7 +127,7 @@ function M.restore_session(name)
             end
 
             error_call('restore shada', name, vim.cmd.rshada, shada_file)
-            -- error_call('vim session', name, vim.cmd.source, session_file)
+            error_call('restore vim session', name, vim.cmd.source, session_file)
 
             vim.schedule(function()
                 vim.refresh_ui()
@@ -165,21 +165,6 @@ local function swap_sessions(old_name, new_name)
     end
 end
 
-events.on_event('VimLeavePre', function()
-    local current = M.current()
-    if current then
-        M.save_session(current)
-    end
-end)
-
-events.on_user_event('LazyVimStarted', function()
-    swap_sessions(nil, M.current())
-end)
-
-events.on_focus_gained(function()
-    swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
-end)
-
 --- Get the current session with a warning if session management is disabled
 ---@return string|nil # the current session name or nil if not enabled
 local function current_with_warning()
@@ -191,49 +176,26 @@ local function current_with_warning()
     return current
 end
 
-require('core.commands').register_command('Session', {
-    restore = function()
-        local current = current_with_warning()
-        if current then
-            swap_sessions(nil, current)
-        end
-    end,
-    save = function()
-        local current = current_with_warning()
-        if current then
-            swap_sessions(current, nil)
-        end
-    end,
-    delete = function()
-        local current = current_with_warning()
-        if not current then
-            return
-        end
-
-        if not M.saved(current) then
-            vim.warn(string.format('Session `%s` does not exist', current), { prefix_icon = icons.UI.SessionDelete })
-            return
-        end
-
-        local session_file, shada_file, custom_file = M.files(current)
-
-        local deleted = vim.fn.delete(session_file) - vim.fn.delete(shada_file) - vim.fn.delete(custom_file)
-
-        if deleted == 0 then
-            vim.warn(string.format('Deleted session `%s`', current), { prefix_icon = icons.UI.SessionDelete })
-        else
-            vim.error(string.format('Error(s) occurred while deleting session `%s`', current), {
-                prefix_icon = icons.UI.SessionSave,
-            })
-        end
-
-        reset_ui()
-    end,
-}, { desc = 'Manages sessions' })
-
 -- save session on a timer
-vim.defer_fn(function()
-    swap_sessions(M.current(), nil)
-end, 60000)
+if enabled() then
+    events.on_event('VimLeavePre', function()
+        local current = M.current()
+        if current then
+            M.save_session(current)
+        end
+    end)
+
+    events.on_user_event('LazyVimStarted', function()
+        swap_sessions(nil, M.current())
+    end)
+
+    events.on_focus_gained(function()
+        swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
+    end)
+
+    vim.defer_fn(function()
+        swap_sessions(M.current(), nil)
+    end, 60000)
+end
 
 return M
