@@ -1,6 +1,5 @@
 return {
     'lukas-reineke/headlines.nvim',
-
     cond = not vim.headless,
     opts = {},
     ft = { 'markdown' },

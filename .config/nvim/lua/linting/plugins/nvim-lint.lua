@@ -1,9 +1,9 @@
 return {
     'mfussenegger/nvim-lint',
+    cond = not vim.headless,
     event = 'User NormalFile',
     opts = function()
         local project = require 'project'
-
         local eslint_severities = {
             vim.diagnostic.severity.WARN,
             vim.diagnostic.severity.ERROR,

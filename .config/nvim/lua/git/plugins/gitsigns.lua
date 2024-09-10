@@ -2,6 +2,7 @@ local icons = require 'ui.icons'
 
 return {
     'lewis6991/gitsigns.nvim',
+    cond = not vim.headless,
     event = 'User GitFile',
     opts = {
         signs = {

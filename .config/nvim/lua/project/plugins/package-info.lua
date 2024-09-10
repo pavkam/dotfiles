@@ -1,5 +1,6 @@
 return {
     'vuki656/package-info.nvim',
+    cond = not vim.headless,
     event = 'BufRead package.json',
     dependencies = {
         'MunifTanjim/nui.nvim',
