@@ -11,7 +11,6 @@
 -- TODO: click on status column to toggle different things
 -- TODO: ability to select the root of the project
 -- TODO: the [No Name] is not getting the fuck out when I select a file
--- TODO: fix session management, not sure why its all not saving not restoring and etc.
 -- URGENT: something is up with the file change detection on enter
 -- URGENT: typos lsp has issues when disabled. Not sure how to deal with it at the moment.
 

@@ -38,20 +38,20 @@ function M.swap_custom_dictionary(target)
     vim.opt.spellfile = spl_file
 end
 
-if vim.has_plugin 'nvim-lspconfig' then
-    local lspconfig = require 'lspconfig'
-    if lspconfig.typos_lsp then
-        lspconfig.typos_lsp.setup {
-            ---@param client vim.lsp.Client
-            ---@param buffer integer
-            on_attach = function(client, buffer)
-                if not settings.get_toggle 'spelling' then
-                    vim.lsp.buf_detach_client(buffer, client.id)
-                end
-            end,
-        }
-    end
-end
+-- if vim.has_plugin 'nvim-lspconfig' then
+--     local lspconfig = require 'lspconfig'
+--     if lspconfig.typos_lsp then
+--         lspconfig.typos_lsp.setup {
+--             ---@param client vim.lsp.Client
+--             ---@param buffer integer
+--             on_attach = function(client, buffer)
+--                 if not settings.get_toggle 'spelling' then
+--                     vim.lsp.buf_detach_client(buffer, client.id)
+--                 end
+--             end,
+--         }
+--     end
+-- end
 
 --- Toggle the typos lsp client
 ---@param enabled boolean # whether the client should be enabled or disabled
