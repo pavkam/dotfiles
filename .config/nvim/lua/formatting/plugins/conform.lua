@@ -1,5 +1,6 @@
 return {
     'stevearc/conform.nvim',
+    cond = not vim.headless,
     cmd = 'ConformInfo',
     init = function()
         vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"

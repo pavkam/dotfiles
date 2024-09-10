@@ -2,6 +2,7 @@ local icons = require 'ui.icons'
 
 return {
     'williamboman/mason.nvim',
+    cond = not vim.headless,
     cmd = {
         'Mason',
         'MasonInstall',

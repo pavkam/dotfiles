@@ -1,5 +1,6 @@
 return {
     'mfussenegger/nvim-dap',
+    cond = not vim.headless,
     dependencies = {
         'rcarriga/nvim-dap-ui',
         'mxsdev/nvim-dap-vscode-js',

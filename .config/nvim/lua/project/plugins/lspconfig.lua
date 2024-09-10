@@ -3,6 +3,7 @@ local icons = require 'ui.icons'
 return {
     {
         'neovim/nvim-lspconfig',
+        cond = not vim.headless,
         event = 'User NormalFile',
         dependencies = {
             'williamboman/mason-lspconfig.nvim',
@@ -348,6 +349,9 @@ return {
     },
     {
         'b0o/SchemaStore.nvim',
+        dependencies = {
+            'neovim/nvim-lspconfig',
+        },
         version = false, -- last release is way too old
     },
 }
