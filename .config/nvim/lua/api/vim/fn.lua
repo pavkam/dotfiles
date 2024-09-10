@@ -83,7 +83,7 @@ function vim.fn.confirm_saved(buffer, reason)
 end
 
 --- Forget all a file in the oldfiles list
----@param file string|nil # the file to forget or nil to firget all files
+---@param file string|nil # the file to forget or nil to forget all files
 function vim.fn.forget_oldfile(file)
     if not file then
         vim.cmd [[

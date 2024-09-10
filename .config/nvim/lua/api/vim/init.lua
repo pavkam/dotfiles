@@ -186,18 +186,18 @@ function vim.hint(msg, opts)
     notify(msg, vim.log.levels.DEBUG, opts)
 end
 
----@alias vim.DebounedFn fun(buffer: integer, ...) # A debounced function
+---@alias vim.DebouncedFn fun(buffer: integer, ...) # A debounced function
 
 --- Defers a function call for buffer in LIFO mode. If the function is called again before the timeout, the
 --- timer is reset.
----@param fn vim.DebounedFn # the function to call
+---@param fn vim.DebouncedFn # the function to call
 ---@param timeout integer # the timeout in milliseconds
----@return vim.DebounedFn # the debounced function
+---@return vim.DebouncedFn # the debounced function
 function vim.debounce_fn(fn, timeout)
     ---@type table<integer, uv_timer_t>
     local timers = {}
 
-    ---@type vim.DebounedFn
+    ---@type vim.DebouncedFn
     return function(buffer, ...)
         buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -228,10 +228,32 @@ function vim.debounce_fn(fn, timeout)
     end
 end
 
+---@alias vim.PolledFn fun(...): boolean # A polled function
+
+--- Polls a function until it returns false
+---@param fn vim.PolledFn # the function to call
+---@param timeout integer # the timeout in milliseconds
+function vim.poll_fn(fn, timeout, ...)
+    local timer = vim.uv.new_timer()
+
+    local args = { ... }
+    assert(timer:start(
+        timeout,
+        timeout,
+        vim.schedule_wrap(function()
+            if not fn(unpack(args)) then
+                timer:stop()
+            end
+        end)
+    ))
+end
+
 --- Refreshes the UI
 function vim.refresh_ui()
     vim.cmd.resize()
+
     local current_tab = vim.fn.tabpagenr()
+
     vim.cmd 'tabdo wincmd ='
     vim.cmd('tabnext ' .. current_tab)
     vim.cmd 'redraw!'

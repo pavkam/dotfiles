@@ -66,3 +66,5 @@ idx
 qfbufnr
 winid
 NoiceMessage
+UUID
+oldfiles

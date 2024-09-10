@@ -10,7 +10,13 @@ vim.cmd.cnoreabbrev('Qa', 'qa')
 vim.cmd.cnoreabbrev('Bd', 'bd')
 vim.cmd.cnoreabbrev('bD', 'bd')
 
--- check if the file has been changed outside of Neovim
-require('core.events').on_focus_gained(function()
+local events = require 'core.events'
+
+-- Check if the file has been changed outside of Neovim
+events.on_focus_gained(function()
+    vim.cmd.checktime()
+end)
+
+events.on_event({ 'CursorHold', 'CursorHoldI' }, function()
     vim.cmd.checktime()
 end)
