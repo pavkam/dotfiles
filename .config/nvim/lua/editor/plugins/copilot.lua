@@ -1,6 +1,7 @@
 return {
     {
         'zbirenbaum/copilot.lua',
+        cond = not vim.headless,
         cmd = 'Copilot',
         build = ':Copilot auth',
         opts = {

@@ -1,5 +1,6 @@
 return {
     'folke/flash.nvim',
+    cond = not vim.headless,
     opts = {},
     keys = {
         {

@@ -1,5 +1,6 @@
 return {
     'iamcco/markdown-preview.nvim',
+    cond = not vim.headless,
     ft = { 'markdown' },
     cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
     build = function()

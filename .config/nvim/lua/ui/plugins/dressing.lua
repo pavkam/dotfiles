@@ -2,12 +2,12 @@ local icons = require 'ui.icons'
 
 return {
     'stevearc/dressing.nvim',
+    cond = not vim.headless,
     dependencies = {
         'MunifTanjim/nui.nvim',
         'nvim-lua/plenary.nvim',
         'nvim-telescope/telescope.nvim',
     },
-    cond = not vim.headless,
     opts = {
         input = {
             default_prompt = icons.TUI.PromptPrefix,

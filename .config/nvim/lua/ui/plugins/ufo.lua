@@ -1,5 +1,6 @@
 return {
     'kevinhwang91/nvim-ufo',
+    cond = not vim.headless,
     lazy = false,
     dependencies = { 'kevinhwang91/promise-async' },
     keys = {
