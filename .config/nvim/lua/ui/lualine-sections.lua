@@ -140,6 +140,12 @@ local function get_neotest_summary(buffer)
     return result
 end
 
+local neotest_colors = {
+    ['passed'] = 'StatusLineTestPassed',
+    ['failed'] = 'StatusLineTestFailed',
+    ['skipped'] = 'StatusLineTestSkipped',
+}
+
 --- The section that shows the status of neo-test
 M.neotest = {
     settings.transient(function(buffer)
@@ -154,7 +160,14 @@ M.neotest = {
         msg = string.format('%s %d', icons.UI.Test, summary.total)
         for status, count in pairs(summary) do
             if count > 0 and status ~= 'total' then
-                msg = string.format('%s %s %s %d', msg, icons.TUI.ListSeparator, config.icons[status], count)
+                msg = string.format(
+                    '%s %s %%#%s#%s %d',
+                    msg,
+                    icons.TUI.ListSeparator,
+                    neotest_colors[status],
+                    config.icons[status],
+                    count
+                )
             end
         end
 
@@ -163,21 +176,21 @@ M.neotest = {
     cond = settings.transient(function(buffer)
         return progress.status 'neotest' ~= nil or get_neotest_summary(buffer).total > 0
     end),
-    color = settings.transient(function(buffer)
-        if progress.status 'neotest' ~= nil then
-            return hl.hl_fg_color_and_attrs 'AuxiliaryProgressStatus'
-        end
-
-        local summary = get_neotest_summary(buffer)
-
-        if summary.failed > 0 then
-            return hl.hl_fg_color_and_attrs 'NeotestFailed'
-        elseif summary.passed > 0 then
-            return hl.hl_fg_color_and_attrs 'NeotestPassed'
-        else
-            return hl.hl_fg_color_and_attrs 'NeotestTest'
-        end
-    end),
+    -- color = settings.transient(function(buffer)
+    --     if progress.status 'neotest' ~= nil then
+    --         return hl.hl_fg_color_and_attrs 'AuxiliaryProgressStatus'
+    --     end
+    --
+    --     local summary = get_neotest_summary(buffer)
+    --
+    --     if summary.failed > 0 then
+    --         return hl.hl_fg_color_and_attrs 'NeotestFailed'
+    --     elseif summary.passed > 0 then
+    --         return hl.hl_fg_color_and_attrs 'NeotestPassed'
+    --     else
+    --         return hl.hl_fg_color_and_attrs 'NeotestTest'
+    --     end
+    -- end),
 }
 
 --- The section that shows the status of package-info

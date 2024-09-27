@@ -11,6 +11,7 @@ require 'ui.marks'
 require 'ui.qf'
 require 'ui.tmux'
 require 'ui.file-palette'
+require 'ui.mouse'
 
 vim.filetype.pin_to_window 'help'
 

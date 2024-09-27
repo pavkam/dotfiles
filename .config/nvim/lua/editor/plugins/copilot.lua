@@ -55,6 +55,29 @@ return {
             'zbirenbaum/copilot.lua',
             'nvim-lua/plenary.nvim',
         },
-        opts = {},
+        build = 'make tiktoken',
+        opts = {
+            auto_insert_mode = true,
+            window = {
+                layout = 'float',
+                width = 0.5,
+                height = 0.5,
+                border = vim.g.border_style,
+            },
+            mappings = {
+                close = {
+                    normal = 'q',
+                    insert = '<C-q>',
+                },
+                reset = {
+                    normal = '<C-c>',
+                    insert = '<C-c>',
+                },
+                submit_prompt = {
+                    normal = '<CR>',
+                    insert = '<C-CR>',
+                },
+            },
+        },
     },
 }

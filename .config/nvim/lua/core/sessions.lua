@@ -59,7 +59,7 @@ local function error_call(what, session, ...)
     local ok, res_or_error = pcall(...)
     if not ok then
         vim.error(
-            string.format('%s Failed to %s for session `%s`:\n```%s```', what, session, vim.inspect(res_or_error)),
+            string.format('Failed to %s for session `%s`:\n```%s```', what, session, vim.inspect(res_or_error)),
             { prefix_icon = icons.UI.Disabled }
         )
     end

@@ -86,6 +86,10 @@ local highlights = {
     FilePaletteJumpedFile = '@lsp.type.decorator',
     FilePaletteOldFile = '@lsp.type.number',
     FilePaletteMarkedFile = '@keyword',
+
+    StatusLineTestFailed = 'NeotestFailed',
+    StatusLineTestPassed = 'NeotestPassed',
+    StatusLineTestSkipped = 'NeotestSkipped',
 }
 
 for hl, def in pairs(highlights) do

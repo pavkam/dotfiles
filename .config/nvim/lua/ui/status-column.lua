@@ -54,6 +54,10 @@ local function get_ext_marks(buffer, lnum)
     return ext_marks
 end
 
+local function with_callback(cb, line)
+    return '%@v:lua.' .. cb .. '@' .. line .. '%T'
+end
+
 --- Gets the status column for the current buffer
 ---@return string # the status column
 local function status_column()
@@ -113,6 +117,10 @@ local function status_column()
     end
 
     return table.concat(components, '')
+end
+
+_G.stl_fold_cb = function(...)
+    dbg(...)
 end
 
 return status_column

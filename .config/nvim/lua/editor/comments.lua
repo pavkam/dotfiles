@@ -13,6 +13,8 @@ local c_line_spec = { prefix = '//' }
 local c_block_spec = { prefix = '/*', suffix = '*/' }
 ---@type editor.comments.CommentSpec[]
 local c_spec = { c_line_spec, c_block_spec }
+---@type editor.comments.CommentSpec
+local jsx_block_spec = { prefix = '{/*', suffix = '*/}' }
 
 ---@alias editor.comments.CommentSpecDef
 ---|editor.comments.CommentSpec
@@ -37,8 +39,8 @@ M.langs.ini = { prefix = ';' }
 M.langs.javascript = vim.tbl_extend('keep', M.langs.c, {
     call_expression = c_line_spec,
     jsx_attribute = c_line_spec,
-    jsx_element = c_block_spec,
-    jsx_fragment = c_block_spec,
+    jsx_element = jsx_block_spec,
+    jsx_fragment = jsx_block_spec,
     spread_element = c_line_spec,
     statement_block = c_line_spec,
 }) --[[@as table<string, editor.comments.CommentSpec[]>]]
