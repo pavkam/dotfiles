@@ -22,7 +22,6 @@ return {
         },
         opts = function()
             local cmp = require 'cmp'
-            local types = require 'cmp.types'
             local compare = require 'cmp.config.compare'
             local copilot = vim.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
             local settings = require 'core.settings'
@@ -75,7 +74,7 @@ return {
                         return false
                     end
 
-                    return not syntax.node_category() == 'comment'
+                    return syntax.node_category() ~= 'comment'
                 end,
                 completion = {
                     completeopt = 'menu,menuone,noinsert',
@@ -175,6 +174,7 @@ return {
                     end, { 'i', 's' }),
                 },
                 sources = cmp.config.sources {
+                    vim.has_plugin 'lazydev.nvim' and { name = 'lazydev', priority = 10 } or nil,
                     {
                         name = 'nvim_lsp',
                         ---@param entry cmp.Entry
@@ -185,9 +185,8 @@ return {
 
                             return true
                         end,
-                        priority = 0,
+                        priority = 9,
                     },
-                    vim.has_plugin 'lazydev.nvim' and { name = 'lazydev', group_index = 0, priority = 1 } or nil,
                     {
                         name = 'buffer',
                         option = {
@@ -196,29 +195,20 @@ return {
                         },
                         keyword_length = 3,
                         max_item_count = 4,
-                        priority = 2,
+                        priority = 4,
                     },
-
                     { name = 'luasnip', priority = 3 },
-                    { name = 'path', priority = 4 },
+                    { name = 'path', priority = 1 },
                 },
                 sorting = {
-                    priority_weight = 1,
-                    -- https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/config/compare.lua
+                    priority_weight = 5,
                     comparators = {
                         compare.offset,
-                        compare.recently_used,
-                        compare.kind,
-                        ---@param a cmp.Entry
-                        ---@param b cmp.Entry
-                        function(a, b)
-                            local t1 = a.completion_item.sortText
-                            local t2 = b.completion_item.sortText
-                            if t1 ~= nil and t2 ~= nil and t1 ~= t2 then
-                                return t1 < t2
-                            end
-                        end,
+                        compare.exact,
                         compare.score,
+                        compare.recently_used,
+                        compare.locality,
+                        compare.kind,
                         compare.order,
                     },
                 },
