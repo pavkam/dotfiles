@@ -1,3 +1,5 @@
+local icons = require 'ui.icons'
+
 require 'api.vim.fn'
 require 'api.vim.fs'
 require 'api.vim.filetype'
@@ -257,4 +259,36 @@ function vim.refresh_ui()
     vim.cmd 'tabdo wincmd ='
     vim.cmd('tabnext ' .. current_tab)
     vim.cmd 'redraw!'
+end
+
+---@class (exact) vim.AbbreviateOpts
+---@field max number|nil # The maximum length of the string (default: 40)
+---@field ellipsis string|nil # The ellipsis to append to the cut-off string (default: '...')
+
+--- Abbreviate a string with an optional maximum length and ellipsis
+---@param str string # The string to cut off
+---@param opts vim.AbbreviateOpts|nil # The options for the abbreviation
+---(if not provided, the default ellipsis is '...')
+---@return string # The cut-off string
+function vim.fn.abbreviate(str, opts)
+    if not str or str == '' then
+        return ''
+    end
+
+    assert(type(str) == 'string')
+
+    opts = opts or {}
+
+    local max = opts.max or 40
+    local ellipsis = opts.ellipsis or icons.TUI.Ellipsis
+
+    if #str > max then
+        if opts.ellipsis then
+            return str:sub(1, max - #ellipsis) .. ellipsis
+        else
+            return str:sub(1, max)
+        end
+    end
+
+    return str
 end

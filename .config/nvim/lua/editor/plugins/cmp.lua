@@ -217,13 +217,13 @@ return {
                     fields = { 'kind', 'menu', 'abbr' },
                     format = function(entry, vim_item)
                         vim_item.kind = lspkind.symbolic(vim_item.kind)
-                        vim_item.abbr = vim.fn.abbreviate(vim_item.abbr)
+                        vim_item.abbr = vim.abbreviate(vim_item.abbr)
 
                         if entry.source.source and entry.source.source.client and entry.source.source.client.name then
-                            vim_item.menu = vim.fn.abbreviate(entry.source.source.client.name)
+                            vim_item.menu = vim.abbreviate(entry.source.source.client.name)
                             vim_item.menu_hl_group = 'CmpItemKindKey'
                         else
-                            vim_item.menu = vim.fn.abbreviate(entry.source.name)
+                            vim_item.menu = vim.abbreviate(entry.source.name)
                             if entry.source.name ~= 'luasnip' then
                                 vim_item.menu_hl_group = 'CmpItemKindPackage'
                             else
