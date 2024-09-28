@@ -136,9 +136,16 @@ function M.register_command(name, fn, opts)
             end
         end
 
-        local supports_range = #vim.tbl_filter(function(f)
-            return type(f) == 'table' and f.range
-        end, fn) > 0
+        local supports_range = vim.iter(fn):any(
+            ---@param f core.commands.CommandFunctionSpec
+            function(f)
+                if type(f) == 'table' and f.range then
+                    return true
+                end
+
+                return false
+            end
+        )
 
         vim.api.nvim_create_user_command(
             name,

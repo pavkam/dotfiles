@@ -270,7 +270,7 @@ end
 ---@param opts vim.AbbreviateOpts|nil # The options for the abbreviation
 ---(if not provided, the default ellipsis is '...')
 ---@return string # The cut-off string
-function vim.fn.abbreviate(str, opts)
+function vim.abbreviate(str, opts)
     if not str or str == '' then
         return ''
     end
@@ -291,4 +291,43 @@ function vim.fn.abbreviate(str, opts)
     end
 
     return str
+end
+
+---@class (exact) vim.InvokeOnLineOpts # Options for invoking a function on a specific line
+---@field window number|nil # the window to use for the operation, if nil the current window is used.
+
+--- Invokes a function on a specific line without moving the cursor
+---@param fn fun()|string # the function to invoke (or the command to run)
+---@param line integer # the line to invoke the function on
+---@param opts vim.InvokeOnLineOpts|nil # the options for the operation
+function vim.invoke_on_line(fn, line, opts)
+    opts = opts or {}
+    opts.window = opts.window or vim.api.nvim_get_current_win()
+
+    assert(type(fn) == 'function' or type(fn) == 'string')
+    assert(type(line) == 'number' and line > 0)
+    assert(opts.window == nil or type(opts.window) == 'number')
+
+    if not vim.api.nvim_win_is_valid(opts.window) then
+        error 'Invalid window'
+    end
+
+    local current_pos = vim.api.nvim_win_get_cursor(opts.window)
+    vim.api.nvim_win_set_cursor(opts.window, { line, 0 })
+
+    ---@type boolean, any
+    local ok, err
+    if type(fn) == 'function' then
+        ok, err = pcall(fn)
+    else
+        ok, err = pcall(vim.cmd --[[@as function]], fn)
+    end
+
+    vim.api.nvim_win_call(opts.window, function()
+        vim.api.nvim_win_set_cursor(opts.window, current_pos)
+    end)
+
+    if not ok then
+        error(err)
+    end
 end

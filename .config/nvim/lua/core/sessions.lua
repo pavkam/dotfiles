@@ -165,17 +165,6 @@ local function swap_sessions(old_name, new_name)
     end
 end
 
---- Get the current session with a warning if session management is disabled
----@return string|nil # the current session name or nil if not enabled
-local function current_with_warning()
-    local current = M.current()
-    if not current then
-        vim.warn('Session management is disabled in this instance.', { prefix_icon = icons.UI.SessionDelete })
-    end
-
-    return current
-end
-
 -- save session on a timer
 if enabled() then
     events.on_event('VimLeavePre', function()

@@ -73,4 +73,32 @@ if vim.fn.executable 'lazygit' == 1 then
     end, { icon = require('ui.icons').UI.Git, desc = 'Lazygit' })
 end
 
+---@class (exact) git.HunkPreviewOpts # Options for dealing with hunk previews.
+---@field window number|nil # the window to use for the operation, if nil the current window is used.
+---@field line number|nil # the line number to use for the operation, if nil the current line is used.
+---@field inline boolean|nil # whether to show the hunk diff inline or not.
+
+--- Preview a hunk at a given line
+---@param opts git.HunkPreviewOpts|nil # the options for the operation
+function M.preview_hunk(opts)
+    opts = opts or {}
+    opts.window = opts.window or vim.api.nvim_get_current_win()
+
+    assert(type(opts.line) == 'number' or opts.line == nil)
+
+    if not package.loaded['gitsigns'] then
+        return
+    end
+
+    local command = string.format('Gitsigns %s', opts.inline and 'preview_hunk_inline' or 'preview_hunk')
+
+    vim.schedule(function()
+        if opts.line == nil then
+            vim.cmd(command)
+        else
+            vim.invoke_on_line(command, opts.line, { window = opts.window })
+        end
+    end)
+end
+
 return M

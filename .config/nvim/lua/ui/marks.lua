@@ -30,7 +30,7 @@ end
 ---@return boolean # whether the mark is a user mark
 local function is_user_mark(mark)
     local key = type(mark) == 'string' and mark or mark_key(mark --[[@as ui.marks.Mark]])
-    return key:match '[a-zA-Z0-9]'
+    return key:match '[a-zA-Z]'
 end
 
 --- Checks if a mark is a buffer mark
@@ -77,6 +77,8 @@ local function update_signs(buffer)
         vim.fn.sign_define(signName, { text = key, texthl = 'MarkSign' })
         vim.fn.sign_place(0, group, signName, buffer, { lnum = mark.pos[2], priority = -100 + i })
     end
+
+    vim.cmd.redrawstatus()
 end
 
 ---@type string[]
@@ -86,7 +88,7 @@ for i = 97, 122 do -- ASCII values for 'a' to 'z'
     table.insert(letters, string.char(i - 32))
 end
 
-keys.attach(nil, function(set)
+keys.attach(nil, function(set, _, buffer)
     for _, key in ipairs(letters) do
         set('n', 'm' .. key, function()
             local r, c = unpack(vim.api.nvim_win_get_cursor(0))
@@ -94,7 +96,7 @@ keys.attach(nil, function(set)
             vim.api.nvim_buf_set_mark(0, key, r, c, {})
             vim.info(string.format('Marked position **%d:%d** as `%s`.', r, c, key))
 
-            update_signs()
+            vim.schedule(update_signs)
         end, { desc = string.format('Set mark "%s" at current line', key) })
     end
 
@@ -104,7 +106,7 @@ keys.attach(nil, function(set)
         for _, mark in pairs(get_marks()) do
             if mark.pos[2] == r then
                 local key = mark_key(mark)
-                vim.info(string.format('Unmarked position **%d:%d** as `%s`.', r, c, key))
+                vim.info(string.format('Unmarked `%s` from position **%d:%d**.', key, r, c))
 
                 if is_buffer_mark(key) then
                     vim.api.nvim_buf_del_mark(0, key)
@@ -114,8 +116,16 @@ keys.attach(nil, function(set)
             end
         end
 
-        update_signs()
+        vim.schedule(update_signs)
     end, { desc = 'Remove mark from the current line' })
+
+    -- add which key group
+    keys.group {
+        mode = 'n',
+        lhs = 'm',
+        desc = 'Mark',
+        buffer = buffer,
+    }
 end, true)
 
 events.on_event('BufEnter', function(evt)

@@ -146,3 +146,34 @@ function vim.fn.expand_target(target)
         error 'Invalid target type'
     end
 end
+
+--- Gets the width of the status column
+---@param window integer|nil # the window to get the status column width for or the current window if nil
+---@return integer|nil # the status column width or nil if the window is invalid
+function vim.fn.status_column_width(window)
+    window = window or vim.api.nvim_get_current_win()
+    local info = vim.fn.getwininfo(window)
+    if vim.api.nvim_win_is_valid(window) and info[1] then
+        return info[1].textoff
+    end
+
+    return nil
+end
+
+--- Toggles a fold at a given line
+---@param line integer|nil # the line to toggle the fold for or the current line if nil
+---@return boolean|nil # true if the fold was opened, false if it was closed, nil if the line is not foldable
+function vim.fn.toggle_fold(line)
+    line = line or vim.fn.line '.'
+
+    if vim.fn.foldclosed(line) == line then
+        vim.cmd(string.format('%dfoldopen', line))
+        return true
+    elseif vim.fn.foldlevel(line) > 0 then
+        vim.cmd(string.format('%dfoldclose', line))
+
+        return false
+    end
+
+    return nil
+end

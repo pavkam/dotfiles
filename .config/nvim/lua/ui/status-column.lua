@@ -1,5 +1,3 @@
-local events = require 'core.events'
-
 ---@class (exact) ui.status-column.Sign # Defines a sign
 ---@field name string|nil # The name of the sign
 ---@field text string # The text of the sign
@@ -39,7 +37,7 @@ local function get_ext_marks(buffer, lnum)
             ---@param ext_mark vim.api.keyset.get_extmark_item
             function(ext_mark)
                 return {
-                    name = ext_mark[4].sign_hl_group or ext_mark[4].sign_name or '',
+                    name = ext_mark[4].sign_name or ext_mark[4].sign_hl_group or '',
                     text = ext_mark[4].sign_text,
                     texthl = ext_mark[4].sign_hl_group,
                     priority = ext_mark[4].priority,
@@ -117,6 +115,85 @@ local function status_column()
     return table.concat(components, '')
 end
 
--- events.on_event('<MouseLeft>', function(evt) end)
+local mouse_key_name = '<LeftMouse>'
+
+vim.keymap.set('n', mouse_key_name, function()
+    local window = vim.api.nvim_get_current_win()
+    if not vim.api.nvim_win_is_valid(window) then
+        return mouse_key_name
+    end
+
+    local pos = vim.fn.getmousepos()
+    local width = vim.fn.status_column_width()
+
+    if pos.wincol > width then
+        return mouse_key_name
+    end
+
+    local ext_marks = get_ext_marks(nil, pos.line)
+
+    -- Git gutter support
+    if pos.wincol >= width - 1 then
+        local has_git_sign = vim.iter(ext_marks):any(
+            ---@param s ui.status-column.Sign
+            function(s)
+                return s.name and (s.name:match '^GitSign' ~= nil) or false
+            end
+        )
+
+        if has_git_sign then
+            require('git').preview_hunk { window = window, line = pos.line }
+            return
+        end
+    end
+
+    --- Other sign support
+    ---@type string
+    local clicked_char = vim.fn.screenstring(pos.screenrow, pos.screencol)
+    clicked_char = clicked_char == ' ' and vim.fn.screenstring(pos.screenrow, pos.screencol - 1) or clicked_char
+
+    ---@type ui.status-column.Sign|nil
+    local clicked_sign = vim.iter(ext_marks):find(
+        ---@param s ui.status-column.Sign
+        function(s)
+            return s.text:gsub('%s', '') == clicked_char
+        end
+    )
+
+    -- A sign was clicked, figure out what to do
+    if clicked_sign then
+        if clicked_sign.name:match '^DiagnosticSign' then
+            vim.schedule(function()
+                vim.invoke_on_line(vim.diagnostic.open_float, pos.line, { window = window })
+            end)
+
+            return
+        end
+
+        if clicked_sign.name == 'DapBreakpoint' then
+            vim.invoke_on_line(require('dap').toggle_breakpoint, pos.line, { window = window })
+            return
+        end
+
+        if clicked_sign.name:match '^mark_' then
+            return
+        end
+
+        vim.warn(
+            string.format(
+                'No handler for sign of type: `%s`, highlight `%s` and sign `"%s"`.',
+                clicked_sign.name,
+                clicked_sign.texthl,
+                clicked_sign.text
+            )
+        )
+        return
+    elseif pos.wincol <= 2 and vim.has_plugin 'nvim-dap' then
+        vim.invoke_on_line(require('dap').toggle_breakpoint, pos.line, { window = window })
+        return
+    end
+
+    --  vim.fn.toggle_fold(pos.line)
+end, { expr = true })
 
 return status_column

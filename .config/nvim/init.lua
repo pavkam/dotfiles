@@ -9,13 +9,14 @@
 -- LOW: My own winbar? (https://github.com/MariaSolOs/dotfiles/blob/main/private_dot_config/nvim/lua/winbar.lua)
 -- LOW: My own statusline? (https://github.com/MariaSolOs/dotfiles/blob/main/private_dot_config/nvim/lua/statusline.lua)
 -- LOW: integrate with "cSpell.words" in .vscode/settings.json
--- TODO: click on status column to toggle different things
 -- TODO: ability to select the root of the project
+-- TODO: the `m` keys are behaving weirdly when run through which-key, if not clicked quickly the binding goes to
+-- original mapping
 -- TODO: the [No Name] is not getting the fuck out when I select a file
 -- TODO: typos lsp has issues when disabled. Not sure how to deal with it at the moment.
 -- TODO: disable 'u' and 'U' in visual mode, just annoying
 -- URGENT: package-info is crap
---
+
 require 'api'
 
 if not vim.fn.executable 'git' then
