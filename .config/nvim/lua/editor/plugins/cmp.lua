@@ -15,14 +15,20 @@ return {
             },
             {
                 'onsails/lspkind.nvim',
+                opts = {
+                    symbol_map = require('ui.icons').Symbols,
+                },
             },
         },
         opts = function()
             local cmp = require 'cmp'
-            local icons = require 'ui.icons'
+            local types = require 'cmp.types'
+            local compare = require 'cmp.config.compare'
             local copilot = vim.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
             local settings = require 'core.settings'
             local luasnip = require 'luasnip'
+            local lspkind = require 'lspkind'
+            local syntax = require 'editor.syntax'
 
             local border_opts = {
                 border = vim.g.border_style,
@@ -39,7 +45,7 @@ return {
                 return height
             end)
 
-            ---@param opts? {select: boolean, behavior: cmp.ConfirmBehavior}
+            ---@param opts {select: boolean, behavior: cmp.ConfirmBehavior}|nil
             local function confirm(opts)
                 opts = vim.tbl_extend('force', {
                     select = true,
@@ -57,6 +63,7 @@ return {
                 end
             end
 
+            ---@type cmp.ConfigSchema
             return {
                 enabled = function()
                     local dap_prompt = vim.tbl_contains(
@@ -68,9 +75,7 @@ return {
                         return false
                     end
 
-                    local context = require 'cmp.config.context'
-
-                    return not context.in_treesitter_capture 'comment' and not context.in_syntax_group 'Comment'
+                    return not syntax.node_category() == 'comment'
                 end,
                 completion = {
                     completeopt = 'menu,menuone,noinsert',
@@ -170,8 +175,19 @@ return {
                     end, { 'i', 's' }),
                 },
                 sources = cmp.config.sources {
-                    { name = 'nvim_lsp', priority = 100 },
-                    vim.has_plugin 'lazydev.nvim' and { name = 'lazydev', group_index = 0, priority = 90 } or nil,
+                    {
+                        name = 'nvim_lsp',
+                        ---@param entry cmp.Entry
+                        entry_filter = function(entry, _)
+                            if entry.source.source.client.name == 'emmet_ls' then
+                                return syntax.node_category() == 'jsx'
+                            end
+
+                            return true
+                        end,
+                        priority = 0,
+                    },
+                    vim.has_plugin 'lazydev.nvim' and { name = 'lazydev', group_index = 0, priority = 1 } or nil,
                     {
                         name = 'buffer',
                         option = {
@@ -180,21 +196,53 @@ return {
                         },
                         keyword_length = 3,
                         max_item_count = 4,
-                        priority = 80,
+                        priority = 2,
                     },
 
-                    { name = 'luasnip', priority = 70 },
-                    { name = 'path', priority = 60 },
+                    { name = 'luasnip', priority = 3 },
+                    { name = 'path', priority = 4 },
+                },
+                sorting = {
+                    priority_weight = 1,
+                    -- https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/config/compare.lua
+                    comparators = {
+                        compare.offset,
+                        compare.recently_used,
+                        compare.kind,
+                        ---@param a cmp.Entry
+                        ---@param b cmp.Entry
+                        function(a, b)
+                            local t1 = a.completion_item.sortText
+                            local t2 = b.completion_item.sortText
+                            if t1 ~= nil and t2 ~= nil and t1 ~= t2 then
+                                return t1 < t2
+                            end
+                        end,
+                        compare.score,
+                        compare.order,
+                    },
                 },
                 formatting = {
-                    fields = { 'kind', 'abbr', 'menu' },
-                    format = require('lspkind').cmp_format {
-                        mode = 'symbol',
-                        symbol_map = icons.Symbols,
-                        menu = {},
-                        maxwidth = 50,
-                        ellipsis_char = icons.TUI.Ellipsis,
-                    },
+                    expandable_indicator = true,
+                    fields = { 'kind', 'menu', 'abbr' },
+                    format = function(entry, vim_item)
+                        vim_item.kind = lspkind.symbolic(vim_item.kind)
+                        vim_item.abbr = vim.fn.abbreviate(vim_item.abbr)
+
+                        if entry.source.source and entry.source.source.client and entry.source.source.client.name then
+                            vim_item.menu = vim.fn.abbreviate(entry.source.source.client.name)
+                            vim_item.menu_hl_group = 'CmpItemKindKey'
+                        else
+                            vim_item.menu = vim.fn.abbreviate(entry.source.name)
+                            if entry.source.name ~= 'luasnip' then
+                                vim_item.menu_hl_group = 'CmpItemKindPackage'
+                            else
+                                vim_item.menu_hl_group = 'CmpItemKindSnippet'
+                            end
+                        end
+
+                        return vim_item
+                    end,
                 },
             }
         end,

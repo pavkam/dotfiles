@@ -153,14 +153,14 @@ return {
         local keys = require 'core.keys'
 
         keys.map({ 'n', 'v' }, '<M-f>', function()
-            local sel = require('editor.syntax').current_selection(nil, false)
+            local sel = require('editor.syntax').selected_text { smart = false }
             blanket 'live_grep' { default_text = sel }
         end, {
             desc = 'Grep in all files',
         })
 
         keys.map({ 'n', 'v' }, '<M-S-f>', function()
-            local sel = require('editor.syntax').current_selection(nil, true)
+            local sel = require('editor.syntax').selected_text()
             blanket 'live_grep' { default_text = sel }
         end, {
             desc = 'Grep in all files (selection)',

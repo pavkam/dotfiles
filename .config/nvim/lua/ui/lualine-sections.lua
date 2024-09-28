@@ -10,20 +10,6 @@ local hl = require 'ui.hl'
 ---@class ui.lualine.sections
 local M = {}
 
---- Cuts off a string if it is too long
----@param str string # The string to cut off
----@param max number|nil # The maximum length of the string
----@return string # The cut-off string
-local function delongify(str, max)
-    max = max or 40
-
-    if #str > max then
-        return str:sub(1, max - 1) .. icons.TUI.Ellipsis
-    end
-
-    return str
-end
-
 --- Formats a list of items into a string with a cut-off
 ---@param prefix string # The prefix to add to the string
 ---@param list string[]|string # The list of items to format
@@ -37,7 +23,7 @@ local function sexify(prefix, list, len_max, collapse_max)
         return prefix
     end
 
-    return delongify(
+    return vim.fn.abbreviate(
         icons.fit(prefix, 2) .. table.concat(vim.to_list(list), ' ' .. icons.fit(icons.TUI.ListSeparator, 2)),
         len_max
     )
@@ -432,7 +418,7 @@ M.buffers = {
     },
 
     fmt = function(name)
-        return delongify(name, 20)
+        return vim.fn.abbreviate(name, { max = 20 })
     end,
 }
 

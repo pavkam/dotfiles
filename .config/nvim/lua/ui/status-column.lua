@@ -1,3 +1,5 @@
+local events = require 'core.events'
+
 ---@class (exact) ui.status-column.Sign # Defines a sign
 ---@field name string|nil # The name of the sign
 ---@field text string # The text of the sign
@@ -52,10 +54,6 @@ local function get_ext_marks(buffer, lnum)
     end)
 
     return ext_marks
-end
-
-local function with_callback(cb, line)
-    return '%@v:lua.' .. cb .. '@' .. line .. '%T'
 end
 
 --- Gets the status column for the current buffer
@@ -119,8 +117,6 @@ local function status_column()
     return table.concat(components, '')
 end
 
-_G.stl_fold_cb = function(...)
-    dbg(...)
-end
+-- events.on_event('<MouseLeft>', function(evt) end)
 
 return status_column

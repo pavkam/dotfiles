@@ -185,13 +185,13 @@ keys.map('i', '<LeftMouse>', '<Esc><LeftMouse>', { desc = 'Exit insert mode and 
 keys.map('i', '<RightMouse>', '<Esc><RightMouse>', { desc = 'Exit insert mode and right-click' })
 
 keys.map('n', '<C-a>', function()
-    if not syntax.increment_node_under_cursor(nil, 1) then
+    if not syntax.increment_node(1) then
         vim.cmd 'norm! <C-a>'
     end
 end, { desc = 'Increment/Toggle value' })
 
 keys.map('n', '<C-x>', function()
-    if not syntax.increment_node_under_cursor(nil, -1) then
+    if not syntax.increment_node(-1) then
         vim.cmd 'norm! <C-x>'
     end
 end, { desc = 'Decrement/Toggle value' })

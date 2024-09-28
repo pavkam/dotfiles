@@ -72,10 +72,7 @@ local keymaps = {
     {
         '<C-r>',
         function()
-            local is_identifier = vim.tbl_contains(
-                { 'identifier', 'property_identifier', 'type_identifier' },
-                require('editor.syntax').node_type_under_cursor()
-            )
+            local is_identifier = require('editor.syntax').node_category() == 'identifier'
 
             if is_identifier then
                 vim.lsp.buf.rename()

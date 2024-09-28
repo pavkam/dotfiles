@@ -80,7 +80,7 @@ function M.resolve(window, file_type)
             table.insert(result, v)
         end
     elseif type(spec) == 'table' then
-        local node = syntax.node_under_cursor(window, { ignore_indent = true, lang = lang })
+        local node = syntax.node { window = window, ignore_indent = true, lang = lang }
         while node do
             if spec[node:type()] then
                 table.insert(result, spec[node:type()])
@@ -161,7 +161,7 @@ function M.select_matching(window, file_type)
     local best_option
     local n = math.huge
 
-    local line = syntax.current_line(window)
+    local line = syntax.current_line_text { window = window }
     for _, pattern in ipairs(patterns) do
         local left, right = pattern:match '^%s*(.-)%s*%%s%s*(.-)%s*$'
 

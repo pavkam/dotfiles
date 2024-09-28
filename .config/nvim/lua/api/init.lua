@@ -6,9 +6,9 @@ function _G.quit()
     vim.api.nvim_command 'cq1'
 end
 
---- Global debug function to help me debug (duh)
----@vararg any anything to debug
-function _G.dbg(...)
+--- Returns the formatted arguments for debugging
+---@vararg any # the arguments to format
+local function format_args(...)
     local objects = {}
     for _, v in pairs { ... } do
         ---@type string
@@ -25,10 +25,13 @@ function _G.dbg(...)
         table.insert(objects, val)
     end
 
-    local message = table.concat(objects, '\n')
+    return table.concat(objects, '\n')
+end
 
-    vim.notify(message)
-
+--- Global debug function to help me debug (duh)
+---@vararg any # anything to debug
+function _G.dbg(...)
+    vim.warn(format_args(...))
     return ...
 end
 
