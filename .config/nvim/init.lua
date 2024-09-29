@@ -15,6 +15,8 @@
 -- TODO: the [No Name] is not getting the fuck out when I select a file
 -- TODO: typos lsp has issues when disabled. Not sure how to deal with it at the moment.
 -- TODO: disable 'u' and 'U' in visual mode, just annoying
+-- TODO: expose the group for the mapping of keys
+-- TODO: status column click on expand folds
 -- URGENT: package-info is crap
 
 require 'api'

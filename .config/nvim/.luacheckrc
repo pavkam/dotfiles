@@ -24,6 +24,8 @@ std = {
         'tonumber',
         'coroutine',
         'setmetatable',
+        'getmetatable',
         'select',
+        'io',
     },
 }
