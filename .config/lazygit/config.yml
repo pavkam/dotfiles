@@ -1,22 +1,22 @@
 gui:
-  nerdFontsVersion: '2'
-  border: 'rounded'
+  nerdFontsVersion: "3"
+  border: "rounded"
   theme:
     activeBorderColor:
-        - green
-        - bold
+      - green
+      - bold
     inactiveBorderColor:
-        - white
+      - white
     optionsTextColor:
-        - blue
+      - blue
     selectedLineBgColor:
-        - white
+      - white
     cherryPickedCommitBgColor:
-        - cyan
+      - cyan
     cherryPickedCommitFgColor:
-        - blue
+      - blue
     unstagedChangesColor:
-        - red
+      - red
     searchingActiveBorderColor:
       - cyan
       - bold
@@ -33,21 +33,21 @@ gui:
   showFileTree: true
   showBottomLine: true
 os:
-  editPreset: 'nvim'
+  editPreset: "nvim"
   openLinkCommand: open {{link}}
 
 customCommands:
-  - key: '<c-o>'
-    description: 'Use ours'
-    context: 'files'
-    command: 'git checkout --ours {{.SelectedPath}}'
+  - key: "<c-o>"
+    description: "Use ours"
+    context: "files"
+    command: "git checkout --ours {{.SelectedPath}}"
     after:
       checkForConflicts: true
 
-  - key: '<c-t>'
-    description: 'Use theirs'
-    context: 'files'
-    command: 'git checkout --theirs {{.SelectedPath}}'
+  - key: "<c-t>"
+    description: "Use theirs"
+    context: "files"
+    command: "git checkout --theirs {{.SelectedPath}}"
     after:
       checkForConflicts: true
 

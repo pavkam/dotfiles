@@ -16,9 +16,11 @@
 -- TODO: typos lsp has issues when disabled. Not sure how to deal with it at the moment.
 -- TODO: disable 'u' and 'U' in visual mode, just annoying
 -- TODO: expose the group for the mapping of keys
--- TODO: status column click on expand folds
+-- URGENT: status column click on expand folds
 -- TODO: get rid of vim.fs.join_paths
+-- TODO: stop using writefile, it's crap
 -- URGENT: package-info is crap
+-- URGENT: the unused color and comment colors are too dark
 
 require 'api'
 

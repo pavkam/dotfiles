@@ -1,11 +1,5 @@
 local icons = require 'ui.icons'
 
-require 'api.vim.fn'
-require 'api.vim.fs'
-require 'api.vim.filetype'
-require 'api.vim.buf'
-require 'api.vim.yaml'
-
 --- Converts a value to a list
 ---@param value any # any value that will be converted to a list
 ---@return any[] # the listified version of the value
@@ -333,3 +327,9 @@ function vim.invoke_on_line(fn, line, opts)
         error(err)
     end
 end
+
+require 'api.vim.fn'
+require 'api.vim.fs'
+require 'api.vim.filetype'
+require 'api.vim.buf'
+require 'api.vim.yaml'

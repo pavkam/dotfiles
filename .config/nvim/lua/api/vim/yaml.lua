@@ -4,6 +4,7 @@ vim.yaml = {}
 ---@class (exact) vim.yaml.EncodeOpts # Options for encoding YAML.
 ---@field indent_width integer|nil # the optional width of the indentation (default: 2).
 ---@field anchors table<string, any>|nil # the optional anchors to use for references.
+---@field empty_lines_between_tables boolean|nil # whether to add empty lines between tables (default: false).
 
 ---@alias vim.yaml.Anchors table<any, { label: string, written: boolean }>
 ---@class vim.yaml.Serializer # A YAML serializer.
@@ -12,8 +13,10 @@ vim.yaml = {}
 ---@field private indent_str string # the current indentation level.
 ---@field private current_line string # the current line being written.
 ---@field private tracked_tables table<any, boolean> # the tables that have been tracked.
+---@field private empty_lines_between_tables boolean # whether to add empty lines between tables.
 ---@field lines string[] # the lines of the YAML output.
 local Serializer = {}
+Serializer.__index = Serializer
 
 --- Creates a new YAML serializer.
 ---@param opts vim.yaml.EncodeOpts|nil # the optional encoding options
@@ -22,9 +25,11 @@ function Serializer.new(opts)
     opts = opts or {}
     opts.anchors = opts.anchors or {}
     opts.indent_width = opts.indent_width or 2
+    opts.empty_lines_between_tables = opts.empty_lines_between_tables or false
 
     assert(opts.anchors == nil or type(opts.anchors) == 'table')
     assert(type(opts.indent_width) == 'number' and opts.indent_width > 0)
+    assert(type(opts.empty_lines_between_tables) == 'boolean')
 
     ---@type vim.yaml.Anchors
     local anchors = {}
@@ -33,21 +38,25 @@ function Serializer.new(opts)
     end
 
     ---@type vim.yaml.Serializer
-    return {
+    local instance = {
         anchors = anchors,
         lines = {},
         current_line = '',
         indent_str = '',
         indent_width = opts.indent_width,
         tracked_tables = {},
+        empty_lines_between_tables = opts.empty_lines_between_tables,
     }
+
+    setmetatable(instance, Serializer)
+    return instance
 end
 
 --- Appends a value to the current line.
 ---@param value_or_fmt string # the value or format string to append
 ---@vararg string # the values to format
 function Serializer:append(value_or_fmt, ...)
-    if #... > 0 then
+    if select('#', ...) > 0 then
         self.current_line = self.current_line .. string.format(value_or_fmt, ...)
     else
         self.current_line = self.current_line .. value_or_fmt
@@ -73,14 +82,22 @@ end
 
 --- Pushes the current line to the lines and resets the current line.
 ---@param increase boolean|nil # whether to increase, decrease or keep the indentation level
-function Serializer:next(increase)
+---@param trim_empty_lines boolean|nil # whether to trim empty lines (default: false)
+function Serializer:next(increase, trim_empty_lines)
     if increase == true then
         self.indent_str = self.indent_str .. string.rep(' ', self.indent_width)
     elseif increase == false then
-        self.indent_str = self.indent_str:sub(1, -self.indent_width)
+        self.indent_str = self.indent_str:sub(1, -self.indent_width - 1)
     end
 
-    table.insert(self.lines, self.current_line)
+    if self.current_line:match '%S' then
+        table.insert(self.lines, self.current_line)
+    elseif not trim_empty_lines then
+        table.insert(self.lines, self.current_line)
+    elseif self.empty_lines_between_tables then
+        table.insert(self.lines, '')
+    end
+
     self.current_line = self.indent_str
 end
 
@@ -91,10 +108,7 @@ function Serializer:anchored(value, fn)
 
     if anchor then
         if anchor.written then
-            self:write {
-                type = 'alias',
-                anchor = anchor.label,
-            }
+            self:append('*%s', anchor.label)
             anchor.written = true
         else
             Serializer:append_anchor(anchor.label)
@@ -111,22 +125,14 @@ function Serializer:table(value)
     self:track_table(value)
 
     self:anchored(value, function()
-        if vim.isempty(value) then
+        if vim.tbl_isempty(value) then
             self:append '{}'
         else
             if vim.islist(value) then
                 for _, v in ipairs(value) do
-                    self:append '-'
-
-                    if type(v) == 'table' then
-                        self:next(true)
-                        self:table(v)
-                        self:next(false)
-                    else
-                        self:append ' '
-                        self:object(v)
-                        self:next()
-                    end
+                    self:append '- '
+                    self:object(v)
+                    self:next()
                 end
             else
                 for k, v in pairs(value) do
@@ -137,21 +143,37 @@ function Serializer:table(value)
                         self:object(k)
                     end
 
-                    self:append ':'
-
                     if type(v) == 'table' then
+                        self:append ':'
                         self:next(true)
                         self:table(v)
-                        self:next(false)
+                        self:next(false, true)
                     else
-                        self:append ' '
+                        self:append ': '
                         self:object(v)
+                        self:next()
                     end
                 end
             end
         end
     end)
 end
+
+local function special_word_forms(...)
+    ---@type string[]
+    local result = {}
+
+    for _, word in ipairs { ... } do
+        table.insert(result, word:lower())
+        table.insert(result, word:upper())
+        table.insert(result, word:sub(1, 1):upper() .. word:sub(2))
+    end
+end
+
+local special_words = vim.tbl_merge({
+    '',
+    '~',
+}, special_word_forms('yes', 'no', 'on', 'off', 'true', 'false', 'null'))
 
 --- Writes a scalar value to the YAML output.
 ---@param value string|number|boolean # the scalar value to write
@@ -167,13 +189,17 @@ function Serializer:scalar(value)
 
                 vim.iter(list):each(function(line)
                     self:append(line)
-                    self:next()
+                    self:next(nil, false)
                 end)
 
                 self:next(false)
             else
-                value = value:gsub("'", "''")
-                self:append("'%s'", value)
+                local escaped = value:gsub("'", "''")
+                if escaped ~= value or vim.list_contains(special_words, value) then
+                    self:append("'%s'", escaped)
+                else
+                    self:append(value)
+                end
             end
         elseif value == math.huge then
             self:append '.inf'
@@ -211,6 +237,7 @@ end
 ---@return string # the YAML string
 function vim.yaml.encode(obj, opts)
     local serializer = Serializer.new(opts)
+
     serializer:object(obj)
 
     return table.concat(serializer.lines, '\n')

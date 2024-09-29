@@ -180,3 +180,29 @@ function vim.fs.split_path(path)
         compound_extension = compound_extension,
     }
 end
+
+--- Writes a string to a file
+---@param path string # the path to the file to write to.
+---@param content string # the content to write.
+---@return boolean, string|nil # true if the write was successful, false otherwise.
+function vim.fs.write_text_file(path, content)
+    assert(type(path) == 'string' and path ~= '')
+
+    local file, err = io.open(path, 'w')
+    if not file then
+        return false, err
+    end
+
+    local ok
+    ok, err = file:write(content)
+    if not ok then
+        return false, err
+    end
+
+    ok, err = file:close()
+    if not ok then
+        return false, err
+    end
+
+    return true, nil
+end

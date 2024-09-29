@@ -125,6 +125,7 @@ local M = {
         Explorer = ' ',
         Replace = '󰛔',
         Disabled = '✗',
+        Error = '',
         AI = '󱐏 ',
         Notes = '󰠮',
         IgnoreHidden = '󰛑',

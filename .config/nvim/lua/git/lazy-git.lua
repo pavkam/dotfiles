@@ -2,22 +2,24 @@ local events = require 'core.events'
 local shell = require 'core.shell'
 
 ---@class (exact) git.lazy-git.Color # A color for lazy-git.
----@field fg string|nil # the foreground color.
----@field bg string|nil # the background color.
----@field bold boolean|nil # whether the color is bold.
+---@field foreground string|nil # the foreground color.
+---@field background string|nil # the background color.
+---@field bold boolean|nil # whether the text is bold.
+---@field underline boolean|nil # whether the text is underlined.
+---@field strikethrough boolean|nil # whether the text is strikethrough.
 
 ---@type table<number|string, git.lazy-git.Color>
 local theme = {
-    [241] = { fg = 'Special' },
-    activeBorderColor = { fg = 'MatchParen', bold = true },
-    cherryPickedCommitBgColor = { fg = 'Identifier' },
-    cherryPickedCommitFgColor = { fg = 'Function' },
-    defaultFgColor = { fg = 'Normal' },
-    inactiveBorderColor = { fg = 'FloatBorder' },
-    optionsTextColor = { fg = 'Function' },
-    searchingActiveBorderColor = { fg = 'MatchParen', bold = true },
-    selectedLineBgColor = { bg = 'Visual' },
-    unstagedChangesColor = { fg = 'DiagnosticError' },
+    [241] = { foreground = 'Special' },
+    activeBorderColor = { foreground = 'MatchParen', bold = true },
+    cherryPickedCommitBgColor = { foreground = 'Identifier' },
+    cherryPickedCommitFgColor = { foreground = 'Function' },
+    defaultFgColor = { foreground = 'Normal' },
+    inactiveBorderColor = { foreground = 'FloatBorder' },
+    optionsTextColor = { foreground = 'Function' },
+    searchingActiveBorderColor = { foreground = 'MatchParen', bold = true },
+    selectedLineBgColor = { background = 'Visual' },
+    unstagedChangesColor = { foreground = 'DiagnosticError' },
 }
 
 ---@type string
@@ -40,55 +42,106 @@ end
 
 --- Deconstruct a color to its components.
 ---@param color git.lazy-git.Color # The color to deconstruct.
+---@return string, string|nil, string|nil, string|nil # The color, bold, underline, and strikethrough.
 local function deconstruct_color(color)
-    local hl = assert(vim.api.nvim_get_hl(0, { name = color.fg or color.bg, link = false }))
-    return string.format('#%06x', color.fg and hl.fg or hl.bg or 0), color.bold
+    local numeric = 0
+    if color.foreground then
+        local hl = vim.api.nvim_get_hl(0, { name = color.foreground, link = false })
+        numeric = hl.fg
+    elseif color.background then
+        local hl = vim.api.nvim_get_hl(0, { name = color.background, link = false })
+        numeric = hl.bg
+    end
+
+    local bold = color.bold and 'bold' or nil
+    local underline = color.underline and 'underline' or nil
+    local strikethrough = color.strikethrough and 'strikethrough' or nil
+
+    return string.format([['#%06x']], numeric), bold, underline, strikethrough
 end
 
-local function update_color_theme()
+--- Runs a function with the updated color theme for lazy git.
+---@param done_fn function # the function to call when the update is finished.
+local function with_updated_color_theme(done_fn)
+    assert(type(done_fn) == 'function')
+
+    local function apply()
+        ---@type table<string, string[]>
+        local lazy_git_theme = {}
+
+        for colorKey, color in pairs(theme) do
+            if type(colorKey) == 'number' then
+                pcall(set_ansi_color, colorKey, deconstruct_color(color))
+            else
+                lazy_git_theme[colorKey] = { deconstruct_color(color) }
+            end
+        end
+
+        local config = {
+            os = {
+                editPreset = 'nvim-remote',
+            },
+            gui = {
+                nerdFontsVersion = 3,
+                theme = lazy_git_theme,
+            },
+        }
+
+        color_theme_needs_update = false
+
+        local yaml = vim.yaml.encode(config)
+
+        local ok, err = vim.fs.write_text_file(custom_config_path, yaml)
+        if not ok then
+            vim.error(
+                string.format(
+                    'Failed to apply custom Lazygit theme at `%s`\nError was: %s.',
+                    custom_config_path,
+                    vim.inspect(err)
+                )
+            )
+        end
+    end
+
     if not config_dir then
         shell.async_cmd(command, { '-cd' }, nil, function(output)
             config_dir = output[1]
 
             vim.env.LG_CONFIG_FILE =
                 string.format('%s,%s', vim.fs.normalize(vim.fs.joinpath(config_dir, 'config.yml')), custom_config_path)
+
+            apply()
+            done_fn()
         end)
-    end
-
-    ---@type table<string, string[]>
-    local lazy_git_theme = {}
-
-    for colorKey, color in pairs(theme) do
-        if type(colorKey) == 'number' then
-            pcall(set_ansi_color, colorKey, deconstruct_color(color))
-        else
-            lazy_git_theme[colorKey] = { deconstruct_color(color) }
+    else
+        if color_theme_needs_update then
+            apply()
         end
+
+        done_fn()
     end
-
-    local config = {
-        os = {
-            editPreset = 'nvim-remote',
-        },
-        gui = {
-            nerdFontsVersion = 3,
-            theme = lazy_git_theme,
-        },
-    }
-
-    color_theme_needs_update = false
-
-    vim.fn.writefile({ dbg(vim.yaml.encode(config)) }, custom_config_path)
 end
 
 events.on_event('ColorScheme', function()
     color_theme_needs_update = true
 end)
 
-return function()
-    if color_theme_needs_update then
-        update_color_theme()
-    end
-
-    shell.floating(command)
+--- Runs lazygit with the updated color theme.
+local function run_lazygit()
+    with_updated_color_theme(function()
+        shell.floating(command)
+    end)
 end
+
+-- Add a command to run lazygit
+if vim.fn.executable 'lazygit' == 1 then
+    require('core.commands').register_command('Lazygit', function()
+        run_lazygit()
+    end, { desc = 'Run Lazygit', nargs = 0 })
+
+    require('core.keys').map('n', '<leader>g', function()
+        vim.cmd 'Lazygit'
+    end, { icon = require('ui.icons').UI.Git, desc = 'Lazygit' })
+end
+
+return run_lazygit
