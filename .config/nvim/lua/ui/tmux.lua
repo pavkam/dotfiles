@@ -25,8 +25,8 @@ local function find_git_enabled_dirs(root, collected)
         table.insert(collected, root)
     else
         for _, dir in ipairs(vim.fn.readdir(root)) do
-            local full = vim.fs.join_paths(root, dir)
-            if full and vim.fs.dir_exists(full) then
+            local full = vim.fs.joinpath(root, dir)
+            if vim.fs.dir_exists(full) then
                 find_git_enabled_dirs(full, collected)
             end
         end

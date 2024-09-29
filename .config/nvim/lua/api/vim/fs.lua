@@ -1,33 +1,3 @@
---- Joins two paths
----@param part1 string # the first part of the path
----@param part2 string # the second part of the path
----@return string # the joined path
-local function join_paths(part1, part2)
-    part1 = part1:gsub('([^/])$', '%1/'):gsub('//', '/')
-    part2 = part2:gsub('^/', '')
-
-    return part1 .. part2
-end
-
---- Joins multiple paths
----@vararg string|nil # the paths to join
----@return string|nil # the joined path or nil if none of the paths are valid
-function vim.fs.join_paths(...)
-    ---@type string|nil
-    local acc
-    for _, part in ipairs { ... } do
-        if part ~= nil then
-            if acc then
-                acc = join_paths(acc, part)
-            else
-                acc = part
-            end
-        end
-    end
-
-    return acc
-end
-
 --- Expands a path to its canonical form
 ---@param path string # the path to check
 ---@return string|nil # the expanded path or nil if the path could not be expanded
@@ -86,9 +56,9 @@ function vim.fs.first_found_file(base_paths, files)
 
     for _, path in ipairs(base_paths) do
         for _, file in ipairs(files) do
-            local full = vim.fs.join_paths(path, file)
+            local full = vim.fs.joinpath(path, file)
             if full and vim.fs.file_exists(full) then
-                return vim.fs.join_paths(path, file)
+                return vim.fs.joinpath(path, file)
             end
         end
     end
@@ -181,26 +151,47 @@ function vim.fs.split_path(path)
     }
 end
 
+---@class vim.WriteTextFileOpts
+---@field throw_errors boolean|nil # whether to throw errors or not, defaults to false
+
 --- Writes a string to a file
 ---@param path string # the path to the file to write to.
 ---@param content string # the content to write.
+---@param opts vim.WriteTextFileOpts|nil # the options to use when writing the file.
 ---@return boolean, string|nil # true if the write was successful, false otherwise.
-function vim.fs.write_text_file(path, content)
+function vim.fs.write_text_file(path, content, opts)
+    opts = opts or {}
+    opts.throw_errors = opts.throw_errors or false
+
     assert(type(path) == 'string' and path ~= '')
+    assert(type(content) == 'string')
+    assert(type(opts.throw_errors) == 'boolean')
 
     local file, err = io.open(path, 'w')
     if not file then
+        if opts.throw_errors then
+            error(err)
+        end
+
         return false, err
     end
 
     local ok
     ok, err = file:write(content)
     if not ok then
+        if opts.throw_errors then
+            error(err)
+        end
+
         return false, err
     end
 
     ok, err = file:close()
     if not ok then
+        if opts.throw_errors then
+            error(err)
+        end
+
         return false, err
     end
 

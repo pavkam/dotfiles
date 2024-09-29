@@ -134,7 +134,7 @@ local function run_lazygit()
 end
 
 -- Add a command to run lazygit
-if vim.fn.executable 'lazygit' == 1 then
+if vim.fn.executable(command) == 1 then
     require('core.commands').register_command('Lazygit', function()
         run_lazygit()
     end, { desc = 'Run Lazygit', nargs = 0 })

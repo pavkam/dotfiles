@@ -1,4 +1,5 @@
 local shell = require 'core.shell'
+local lazygit = require 'git.lazy-git'
 
 ---@class git
 local M = {}
@@ -62,17 +63,6 @@ function M.root(dir, callback)
     end, { ignore_codes = { 0, 1, 128 }, cwd = dir })
 end
 
--- Add a command to run lazygit
-if vim.fn.executable 'lazygit' == 1 then
-    require('core.commands').register_command('Lazygit', function()
-        require 'git.lazy-git'()
-    end, { desc = 'Run Lazygit', nargs = 0 })
-
-    require('core.keys').map('n', '<leader>g', function()
-        vim.cmd 'Lazygit'
-    end, { icon = require('ui.icons').UI.Git, desc = 'Lazygit' })
-end
-
 ---@class (exact) git.HunkPreviewOpts # Options for dealing with hunk previews.
 ---@field window number|nil # the window to use for the operation, if nil the current window is used.
 ---@field line number|nil # the line number to use for the operation, if nil the current line is used.
@@ -100,5 +90,7 @@ function M.preview_hunk(opts)
         end
     end)
 end
+
+M.lazygit = lazygit
 
 return M

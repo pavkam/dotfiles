@@ -44,8 +44,7 @@ function M.files(name)
     end)
     name = string.gsub(name, ' ', '+')
 
-    local res = vim.fs.join_paths(session_dir, name)
-    ---@cast res string
+    local res = vim.fs.joinpath(session_dir, name)
 
     return res .. '.vim', res .. '.shada', res .. '.json'
 end
@@ -90,7 +89,7 @@ function M.save_session(name)
     }
 
     local json = vim.json.encode(custom) or '{}'
-    error_call('save settings', name, vim.fn.writefile, { json }, custom_file, 'bs')
+    error_call('save settings', name, vim.fs.write_text_file, custom_file, json, { throw_errors = true })
 
     vim.hint(string.format('Saved session `%s`', name), { prefix_icon = icons.UI.SessionSave })
 end

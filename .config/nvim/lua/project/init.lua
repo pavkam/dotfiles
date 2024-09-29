@@ -265,7 +265,7 @@ end
 function M.nvim_settings_path(target)
     ---@type string|nil
     local root = M.root(target)
-    return root and vim.fs.join_paths(root, '.nvim') or nil
+    return root and vim.fs.joinpath(root, '.nvim') or nil
 end
 
 --- Returns the path to the launch.json file for a given target
@@ -273,7 +273,7 @@ end
 ---@return string|nil # the path to the launch.json file
 function M.get_launch_json(target)
     local path = M.nvim_settings_path(target)
-    return path and vim.fs.join_paths(path, 'dap.json')
+    return path and vim.fs.joinpath(path, 'dap.json')
         or vim.fs.first_found_file(M.roots(target), { '.vscode/launch.json' })
 end
 
@@ -318,7 +318,7 @@ end
 ---@param target vim.fn.Target # the target to get the binary path for
 ---@param bin string|nil # the path of the binary
 function M.get_js_bin_path(target, bin)
-    local sub = vim.fs.join_paths('node_modules', '.bin', bin)
+    local sub = vim.fs.joinpath('node_modules', '.bin', bin)
     ---@cast sub string
 
     return vim.fs.first_found_file(M.roots(target), sub)

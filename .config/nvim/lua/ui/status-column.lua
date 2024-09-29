@@ -80,13 +80,12 @@ local function status_column()
             end
         end
 
-        vim.api.nvim_win_call(window, function()
-            if vim.fn.foldclosed(vim.v.lnum) >= 0 then
-                fold = { text = vim.opt.fillchars:get().foldclose, texthl = githl or 'Folded', priority = 0 }
-            elseif tostring(vim.treesitter.foldexpr(vim.v.lnum)):sub(1, 1) == '>' then
-                fold = { text = vim.opt.fillchars:get().foldopen, texthl = githl, priority = 0 }
-            end
-        end)
+        local marker = vim.fn.fold_marker(vim.v.lnum, window)
+        if marker then
+            fold = { text = vim.opt.fillchars:get().foldclose, texthl = githl or 'Folded', priority = 0 }
+        elseif marker ~= nil then
+            fold = { text = vim.opt.fillchars:get().foldopen, texthl = githl, priority = 0 }
+        end
 
         components[1] = icon(left)
         components[3] = is_file and icon(fold or right) or ''
@@ -193,7 +192,9 @@ vim.keymap.set('n', mouse_key_name, function()
         return
     end
 
-    --  vim.fn.toggle_fold(pos.line)
+    if vim.fn.fold_marker(pos.line, window) ~= nil then
+        vim.fn.toggle_fold(pos.line)
+    end
 end, { expr = true })
 
 return status_column
