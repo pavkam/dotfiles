@@ -73,6 +73,9 @@ vim.fs.data_dir = vim.fs.expand_path(vim.fn.stdpath 'data' --[[@as string]])
 --- The config directory of NeoVim
 vim.fs.config_dir = vim.fs.expand_path(vim.fn.stdpath 'config' --[[@as string]])
 
+--- The cache directory of NeoVim
+vim.fs.cache_dir = vim.fs.expand_path(vim.fn.stdpath 'cache' --[[@as string]])
+
 --- Checks if files exist in a given directory and returns the first one that exists
 ---@param base_paths string|table<number, string|nil> # the list of base paths to check
 ---@param files string|table<number, string|nil> # the list of files to check
