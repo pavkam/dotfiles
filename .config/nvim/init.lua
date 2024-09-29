@@ -2,22 +2,23 @@
 -- MAYBE: Write my own cmd line? (https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/cmdline.lua)
 -- MAYBE: jump to buf (https://github.com/catgoose/templ-goto-definition/blob/main/lua/templ-goto-definition/init.lua)
 -- LOW: Evaluate difftastic
--- LOW: make sure emmet is not triggering outside JSX
 -- LOW: refactor the core module to be more modular
 -- LOW: Evaluate grug-far
 --      (https://www.reddit.com/r/neovim/comments/1f4al0o/grugfarnvim_update_multiline_input_and_telescope/)
 -- LOW: My own winbar? (https://github.com/MariaSolOs/dotfiles/blob/main/private_dot_config/nvim/lua/winbar.lua)
 -- LOW: My own statusline? (https://github.com/MariaSolOs/dotfiles/blob/main/private_dot_config/nvim/lua/statusline.lua)
 -- LOW: integrate with "cSpell.words" in .vscode/settings.json
+-- URGENT: package-info is crap
 -- TODO: ability to select the root of the project
--- TODO: the `m` keys are behaving weirdly when run through which-key, if not clicked quickly the binding goes to
--- original mapping
 -- TODO: the [No Name] is not getting the fuck out when I select a file
 -- TODO: typos lsp has issues when disabled. Not sure how to deal with it at the moment.
+--
+-- TODO: the comments continuation on 'o' is not working (should not!)
 -- TODO: disable 'u' and 'U' in visual mode, just annoying
 -- TODO: expose the group for the mapping of keys
--- TODO: move vim.fn.visual_selected_text() to editor
--- URGENT: package-info is crap
+-- TODO: move vim.fn.visual_selected_text() to editor or get rid of it in its form
+-- TODO: the `m` keys are behaving weirdly when run through which-key, if not clicked quickly the binding goes to
+-- original mapping
 
 require 'api'
 
