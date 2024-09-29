@@ -65,7 +65,7 @@ end
 -- Add a command to run lazygit
 if vim.fn.executable 'lazygit' == 1 then
     require('core.commands').register_command('Lazygit', function()
-        shell.floating 'lazygit'
+        require 'git.lazy-git'()
     end, { desc = 'Run Lazygit', nargs = 0 })
 
     require('core.keys').map('n', '<leader>g', function()

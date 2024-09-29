@@ -17,6 +17,7 @@
 -- TODO: disable 'u' and 'U' in visual mode, just annoying
 -- TODO: expose the group for the mapping of keys
 -- TODO: status column click on expand folds
+-- TODO: get rid of vim.fs.join_paths
 -- URGENT: package-info is crap
 
 require 'api'
