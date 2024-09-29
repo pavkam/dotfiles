@@ -115,7 +115,7 @@ o.conceallevel = 3
 o.confirm = true
 o.backspace = 'indent,eol,start'
 o.whichwrap:append '<,>,[,]'
-o.formatoptions = o.formatoptions - 'a' - 't' + 'c' + 'q' - 'o' + 'r' + 'n' + 'j' - '2'
+o.formatoptions = o.formatoptions - 'a' + 't' + 'c' + 'q' - 'o' - 'r' + 'n' + 'j' - '2'
 
 o.smoothscroll = true
 
@@ -147,7 +147,6 @@ o.fillchars = {
 
 o.list = false
 o.shortmess:append { W = true, I = true, c = true, C = true }
-o.formatoptions = 'jcroqlnt'
 o.sessionoptions = { 'buffers', 'tabpages', 'winsize', 'help', 'globals', 'skiprtp', 'help', 'folds' }
 
 o.statuscolumn = [[%!v:lua.require'ui.status-column'()]]

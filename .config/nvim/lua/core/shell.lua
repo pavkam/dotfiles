@@ -10,7 +10,7 @@ M.terminals = {}
 
 --- Creates a floating terminal
 ---@param cmd string # the command to run in the terminal
----@param opts table|nil # the options to pass to the terminal
+---@param opts LazyCmdOptions | { interactive: boolean|nil } |nil # the options to pass to the terminal
 ---@return LazyFloat # the created terminal
 function M.floating(cmd, opts)
     assert(type(cmd) == 'string' and cmd ~= '')

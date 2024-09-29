@@ -50,7 +50,7 @@ function M.map(mode, key, action, opts)
     end
 end
 
----@class (strict) core.keys.KeyGroupOpts # the options to pass to the key group
+---@class (exact) core.keys.KeyGroupOpts # the options to pass to the key group
 ---@field lhs string # the key to decorate
 ---@field icon string|nil # the icon of the key group
 ---@field desc string|nil # the description of the key group
