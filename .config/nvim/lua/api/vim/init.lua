@@ -327,9 +327,3 @@ function vim.invoke_on_line(fn, line, opts)
         error(err)
     end
 end
-
-require 'api.vim.fn'
-require 'api.vim.fs'
-require 'api.vim.filetype'
-require 'api.vim.buf'
-require 'api.vim.yaml'
