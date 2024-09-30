@@ -13,12 +13,8 @@
 -- TODO: the [No Name] is not getting the fuck out when I select a file
 -- TODO: typos lsp has issues when disabled. Not sure how to deal with it at the moment.
 --
--- TODO: the comments continuation on 'o' is not working (should not!)
 -- TODO: disable 'u' and 'U' in visual mode, just annoying
--- TODO: expose the group for the mapping of keys
--- TODO: move vim.fn.visual_selected_text() to editor or get rid of it in its form
--- TODO: the `m` keys are behaving weirdly when run through which-key, if not clicked quickly the binding goes to
--- original mapping
+-- TODO: expose the group for the mapping of keys (refactor keys module)
 
 require 'api'
 

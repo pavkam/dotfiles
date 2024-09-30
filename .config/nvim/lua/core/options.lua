@@ -115,7 +115,8 @@ o.conceallevel = 3
 o.confirm = true
 o.backspace = 'indent,eol,start'
 o.whichwrap:append '<,>,[,]'
-o.formatoptions = o.formatoptions - 'a' + 't' + 'c' + 'q' - 'o' - 'r' + 'n' + 'j' - '2'
+
+vim.cmd [[autocmd FileType * set formatoptions=trqaj]]
 
 o.smoothscroll = true
 

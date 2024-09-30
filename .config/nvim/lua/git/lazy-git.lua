@@ -57,7 +57,7 @@ local function deconstruct_color(color)
     local underline = color.underline and 'underline' or nil
     local strikethrough = color.strikethrough and 'strikethrough' or nil
 
-    return string.format([['#%06x']], numeric), bold, underline, strikethrough
+    return string.format('#%06x', numeric), bold, underline, strikethrough
 end
 
 --- Runs a function with the updated color theme for lazy git.

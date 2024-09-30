@@ -6,44 +6,44 @@ local group = 'pavkam_marks'
 ---@class ui.marks
 local M = {}
 
----@class (exact) ui.marks.Mark
----@field mark string # the mark name
----@field pos number[] # the position of the mark
----@field file string|nil # the file of the mark
+---@class (exact) ui.marks.Mark # A mark.
+---@field mark string # the mark name.
+---@field pos number[] # the position of the mark.
+---@field file string|nil # the file of the mark.
 
----@class (exact) ui.marks.SerializedMark
----@field mark string # the mark name
----@field lnum number # the line number of the mark
----@field col number # the column number of the mark
+---@class (exact) ui.marks.SerializedMark # A serialized mark.
+---@field mark string # the mark name.
+---@field lnum number # the line number of the mark.
+---@field col number # the column number of the mark.
 
 ---@alias ui.marks.SerializedMarks table<string, ui.marks.SerializedMark[]>
 
---- Gets the name of a mark
----@param mark ui.marks.Mark # the mark
----@return string # the name of the mark
+--- Gets the name of a mark.
+---@param mark ui.marks.Mark # the mark.
+---@return string # the name of the mark.
 local function mark_key(mark)
     return mark.mark:sub(2, 2)
 end
 
 --- Checks if a mark is a user mark
----@param mark ui.marks.Mark|string # the mark
----@return boolean # whether the mark is a user mark
+---@param mark ui.marks.Mark|string # the mark.
+---@return boolean # whether the mark is a user mark.
 local function is_user_mark(mark)
     local key = type(mark) == 'string' and mark or mark_key(mark --[[@as ui.marks.Mark]])
-    return key:match '[a-zA-Z]'
+    return key:match '^[a-zA-Z]$' ~= nil
 end
 
---- Checks if a mark is a buffer mark
----@param mark ui.marks.Mark|string # the mark
----@return boolean # whether the mark is a buffer mark
+--- Checks if a mark is a buffer mark.
+---@param mark ui.marks.Mark|string # the mark.
+---@return boolean # whether the mark is a buffer mark.
 local function is_buffer_mark(mark)
     local key = type(mark) == 'string' and mark or mark_key(mark --[[@as ui.marks.Mark]])
-    return key:match '[a-z]'
+    return key:match '^[a-z]$' ~= nil
 end
 
---- Gets the marks for a buffer
----@param buffer integer|nil # the buffer number, or 0 or nil for the current buffer
----@return ui.marks.Mark[] # a list of marks
+--- Gets the marks for a buffer.
+---@param buffer integer|nil # the buffer number, or 0 or nil for the current buffer.
+---@return ui.marks.Mark[] # a list of marks.
 local get_marks = function(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -59,8 +59,8 @@ local get_marks = function(buffer)
         :totable()
 end
 
---- Updates the signs for a buffer
----@param buffer integer|nil # the buffer number, or 0 or nil for the current buffer
+--- Updates the signs for a buffer.
+---@param buffer integer|nil # the buffer number, or 0 or nil for the current buffer.
 local function update_signs(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
@@ -81,53 +81,74 @@ local function update_signs(buffer)
     vim.cmd.redrawstatus()
 end
 
----@type string[]
-local letters = {}
-for i = 97, 122 do -- ASCII values for 'a' to 'z'
-    table.insert(letters, string.char(i))
-    table.insert(letters, string.char(i - 32))
+--- Sets a mark at the given position.
+---@param mark string # the mark character.
+---@param line integer # the line number.
+---@param col integer # the column number.
+---@param buffer integer|nil # the buffer number, or 0 or nil for the current buffer or global.
+function M.set(mark, line, col, buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    assert(type(mark) == 'string' and is_user_mark(mark))
+    assert(type(line) == 'number' and line > 0)
+    assert(type(col) == 'number' and col >= 0)
+
+    vim.api.nvim_buf_set_mark(buffer, mark, line, col, {})
+    vim.info(string.format('Added `%s` mark to position **%d:%d**.', mark, line, col))
+
+    update_signs(is_buffer_mark(mark) and buffer or nil)
 end
 
-keys.attach(nil, function(set, _, buffer)
-    for _, key in ipairs(letters) do
-        set('n', 'm' .. key, function()
-            local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+--- Removes a mark.
+---@param mark string # the mark character.
+---@param buffer integer|nil # the buffer number, or 0 or nil for the current buffer or global.
+function M.delete(mark, buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
 
-            vim.api.nvim_buf_set_mark(0, key, r, c, {})
-            vim.info(string.format('Marked position **%d:%d** as `%s`.', r, c, key))
+    assert(type(mark) == 'string' and is_user_mark(mark))
 
-            vim.schedule(update_signs)
-        end, { desc = string.format('Set mark "%s" at current line', key) })
+    local deleted = is_buffer_mark(mark) and vim.api.nvim_buf_del_mark(buffer, mark) or vim.api.nvim_del_mark(mark)
+
+    if deleted then
+        vim.info(string.format('Removed the `%s` mark.', mark))
+        update_signs(is_buffer_mark(mark) and buffer or nil)
+    else
+        vim.hint(string.format('Mark `%s` is not set.', mark))
     end
+end
 
-    set('n', 'm-', function()
-        local r, c = unpack(vim.api.nvim_win_get_cursor(0))
+--- Removes all marks from from a given position.
+---@param line integer # the line number.
+---@param col integer # the column number.
+---@param buffer integer|nil # the buffer number, or 0 or nil for the current buffer or global.
+function M.delete_all(line, col, buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
 
-        for _, mark in pairs(get_marks()) do
-            if mark.pos[2] == r then
-                local key = mark_key(mark)
-                vim.info(string.format('Unmarked `%s` from position **%d:%d**.', key, r, c))
+    assert(type(line) == 'number' and line > 0)
+    assert(type(col) == 'number' and col >= 0)
 
-                if is_buffer_mark(key) then
-                    vim.api.nvim_buf_del_mark(0, key)
-                else
-                    vim.api.nvim_del_mark(key)
-                end
-            end
+    for _, mark in pairs(get_marks(buffer)) do
+        if mark.pos[2] == line then
+            M.delete(mark_key(mark), buffer)
         end
+    end
+end
 
-        vim.schedule(update_signs)
-    end, { desc = 'Remove mark from the current line' })
+keys.attach(nil, function(set)
+    set('n', 'm', function()
+        local key = vim.fn.getcharstr()
+        local line, col = unpack(vim.api.nvim_win_get_cursor(0))
 
-    -- add which key group
-    keys.group {
-        mode = 'n',
-        lhs = 'm',
-        desc = 'Mark',
-        buffer = buffer,
-    }
+        if key == '-' then
+            M.delete_all(line, col)
+            return
+        elseif is_user_mark(key) then
+            M.set(key, line, col)
+        end
+    end, { desc = 'Manage mark on current line' })
 end, true)
 
+-- restore marks after reloading a file
 events.on_event('BufEnter', function(evt)
     if vim.buf.is_special(evt.buf) then
         return
@@ -136,19 +157,6 @@ events.on_event('BufEnter', function(evt)
     vim.schedule(function()
         update_signs(evt.buf)
     end)
-end)
-
--- restore marks after reloading a file
-events.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
-    if vim.buf.is_special(evt.buf) or vim.buf.is_transient(evt.buf) then
-        return
-    end
-
-    -- restore cursor position
-    local cursor_mark = vim.api.nvim_buf_get_mark(evt.buf, '"')
-    if cursor_mark[1] > 0 and cursor_mark[1] <= vim.api.nvim_buf_line_count(evt.buf) then
-        pcall(vim.api.nvim_win_set_cursor, 0, cursor_mark)
-    end
 end)
 
 events.on_event('CmdlineLeave', function(evt)

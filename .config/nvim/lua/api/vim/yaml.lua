@@ -173,6 +173,7 @@ end
 local special_words = vim.tbl_merge({
     '',
     '~',
+    '#',
 }, special_word_forms('yes', 'no', 'on', 'off', 'true', 'false', 'null'))
 
 --- Writes a scalar value to the YAML output.
@@ -195,7 +196,13 @@ function Serializer:scalar(value)
                 self:next(false)
             else
                 local escaped = value:gsub("'", "''")
-                if escaped ~= value or vim.list_contains(special_words, value) then
+
+                if
+                    escaped ~= value
+                    or vim.list_contains(special_words, value)
+                    or value:match '^%s'
+                    or value:match '%s$'
+                then
                     self:append("'%s'", escaped)
                 else
                     self:append(value)

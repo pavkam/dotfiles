@@ -155,12 +155,12 @@ keys.map({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Prev
 keys.map('n', '\\', 'viw', { desc = 'Select word' })
 
 keys.map('x', '<C-r>', function()
-    local text = vim.fn.visual_selected_text()
+    local text = vim.fn.selected_text()
     keys.feed(syntax.create_rename_expression { orig = text })
 end, { desc = 'Replace selection' })
 
 keys.map('x', '<C-S-r>', function()
-    local text = vim.fn.visual_selected_text()
+    local text = vim.fn.selected_text()
     keys.feed(syntax.create_rename_expression { orig = text, whole_word = true })
 end, { desc = 'Replace selection (whole word)' })
 
@@ -274,7 +274,7 @@ events.on_event('BufWritePre', function(evt)
     vim.fn.mkdir(vim.fn.fnamemodify(file, ':p:h'), 'p')
 end)
 
--- forget files that have been deleted
+-- Forget files that have been deleted
 local new_files = {}
 events.on_event({ 'BufNew' }, function(evt)
     if vim.buf.is_special(evt.buf) then
@@ -315,6 +315,19 @@ events.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
     end
 end)
 
+-- Restore cursor position after opening a file
+events.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
+    if vim.buf.is_special(evt.buf) or vim.buf.is_transient(evt.buf) then
+        return
+    end
+
+    local cursor_mark = vim.api.nvim_buf_get_mark(evt.buf, '"')
+    if cursor_mark[1] > 0 and cursor_mark[1] <= vim.api.nvim_buf_line_count(evt.buf) then
+        pcall(vim.api.nvim_win_set_cursor, 0, cursor_mark)
+    end
+end)
+
+-- TODO: move this into vim.filetype
 -- detect shebangs!
 events.on_event('BufReadPost', function(evt)
     if vim.bo[evt.buf].filetype == '' and not vim.buf.is_special(evt.buf) then

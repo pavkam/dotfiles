@@ -44,8 +44,10 @@ end
 
 --- Gets the selected text from the current buffer in visual mode
 ---@return string # the selected text
-function vim.fn.visual_selected_text()
-    assert(vim.fn.in_visual_mode())
+function vim.fn.selected_text()
+    if not vim.fn.in_visual_mode() then
+        return ''
+    end
 
     local old = vim.fn.getreg 'a'
     vim.cmd [[silent! normal! "aygv]]
