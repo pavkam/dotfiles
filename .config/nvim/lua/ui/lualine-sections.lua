@@ -132,7 +132,8 @@ local neotest_colors = {
     ['skipped'] = 'StatusLineTestSkipped',
 }
 
---- The section that shows the status of neo-test
+-- TODO: the tests do not show up in the statusline after first run
+-- The section that shows the status of neo-test
 M.neotest = {
     settings.transient(function(buffer)
         local spinner, msg = progress.status 'neotest'
