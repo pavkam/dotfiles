@@ -220,6 +220,7 @@ return {
                         vim_item.abbr = vim.abbreviate(vim_item.abbr)
 
                         if entry.source.source and entry.source.source.client and entry.source.source.client.name then
+                            -- TODO: replace the full names with their type icons (vstls, emmet, etc.)
                             vim_item.menu = vim.abbreviate(entry.source.source.client.name)
                             vim_item.menu_hl_group = 'CmpItemKindKey'
                         else

@@ -3,7 +3,6 @@ require 'api.vim.fn'
 require 'api.vim.fs'
 require 'api.vim.filetype'
 require 'api.vim.buf'
-require 'api.vim.yaml'
 
 --- Global function to quit the current process
 function _G.quit()

@@ -31,6 +31,7 @@ return {
     {
         'CopilotC-Nvim/CopilotChat.nvim',
         branch = 'canary',
+        -- TODO: add keymap for invoking some of these commands
         cmd = {
             'CopilotChat',
             'CopilotChatOpen',

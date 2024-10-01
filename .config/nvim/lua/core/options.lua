@@ -116,7 +116,7 @@ o.confirm = true
 o.backspace = 'indent,eol,start'
 o.whichwrap:append '<,>,[,]'
 
-vim.cmd [[autocmd FileType * set formatoptions=trqaj]]
+vim.cmd [[autocmd FileType * set formatoptions=trqj]]
 
 o.smoothscroll = true
 
