@@ -1,3 +1,5 @@
+-- TODO: export this as a global
+
 ---@class ui.icons
 local M = {
     TUI = {
@@ -165,11 +167,11 @@ local M = {
 ---@type boolean|nil # Whether or not the dev-icons are available
 local dev_icons_available = nil
 
---- Get the icon and highlight for a file
----@param path string # The name of the file
----@param width number|nil # The width to fit the icon to
----@param ltr boolean|nil # Whether or not the icon should be left-to-right
----@return string, string # The icon and highlight
+--- Get the icon and highlight for a file.
+---@param path string # the name of the file.
+---@param width number|nil # the width to fit the icon to
+---@param ltr boolean|nil # whether or not the icon should be left-to-right (default false).
+---@return string, string # the icon and highlight group
 function M.get_file_icon(path, width, ltr)
     ---@type fun(icon: string): string
     local fit = width ~= nil and function(icon)

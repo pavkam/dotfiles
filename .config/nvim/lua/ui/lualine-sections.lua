@@ -25,7 +25,7 @@ local function sexify(prefix, list, len_max, collapse_max)
 
     return vim.abbreviate(
         icons.fit(prefix, 2) .. table.concat(vim.to_list(list), ' ' .. icons.fit(icons.TUI.ListSeparator, 2)),
-        len_max
+        { max = len_max }
     )
 end
 

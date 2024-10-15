@@ -58,6 +58,46 @@ function M.make_hl(name, ...)
     vim.api.nvim_set_hl(0, name, merged)
 end
 
+--- Sets multiple highlight groups at once
+---@param highlights table<string, table<string, any>|string> # the highlight groups to set
+function M.make_hls(highlights)
+    for hl, def in pairs(highlights) do
+        if type(def) == 'string' then
+            M.make_hl(hl, def)
+        elseif vim.islist(def) then
+            M.make_hl(hl, unpack(def))
+        else
+            M.make_hl(hl, def)
+        end
+    end
+end
+
+--- Creates a new highlight group by reversing the colors of a given highlight group.
+---@param name string # the name of the new blended highlight group
+---@return string # the name of the new blended highlight group
+function M.reverse_hl(name)
+    assert(type(name) == 'string' and name ~= '')
+
+    local new_hl_name = string.format('%s-reversed', name)
+    local existing_hl = vim.api.nvim_get_hl(0, { name = new_hl_name, link = false })
+    if existing_hl then
+        return new_hl_name
+    end
+
+    local hl = vim.api.nvim_get_hl(0, { name = name, link = false })
+    if not hl then
+        error('Highlight group not found: ' .. name)
+    end
+
+    local new_hl = vim.tbl_extend('force', hl, {
+        reverse = true,
+    })
+
+    vim.api.nvim_set_hl(0, new_hl_name, new_hl)
+
+    return new_hl_name
+end
+
 local highlights = {
     -- Other
     CopilotAnnotation = '@string.regexp',
@@ -92,12 +132,6 @@ local highlights = {
     StatusLineTestSkipped = 'NeotestSkipped',
 }
 
-for hl, def in pairs(highlights) do
-    if type(def) == 'string' then
-        M.make_hl(hl, def)
-    else
-        M.make_hl(hl, unpack(def))
-    end
-end
+M.make_hls(highlights)
 
 return M

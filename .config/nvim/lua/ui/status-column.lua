@@ -1,3 +1,5 @@
+-- TODO: Is it possible to to display the marks in the statusline here without having a custom marks module?
+
 ---@class (exact) ui.status-column.Sign # Defines a sign
 ---@field name string|nil # The name of the sign
 ---@field text string # The text of the sign

@@ -81,3 +81,10 @@ buf
 strikethrough
 tokyonight
 inlining
+left_sep
+right_sep
+ltr
+rtl
+get_hl
+hl
+fifo

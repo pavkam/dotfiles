@@ -155,6 +155,7 @@ function vim.buf.is_special(buffer)
     local filetype = vim.api.nvim_get_option_value('filetype', { buf = buffer })
     local buftype = vim.api.nvim_get_option_value('buftype', { buf = buffer })
 
+    ---@type boolean
     return buftype ~= ''
         and (
             vim.tbl_contains(vim.buf.special_buffer_types, buftype)
@@ -175,6 +176,7 @@ function vim.buf.is_transient(buffer)
         return true
     end
 
+    ---@type boolean
     return (
         vim.tbl_contains(vim.buf.transient_buffer_types, buftype)
         or vim.tbl_contains(vim.buf.transient_file_types, filetype)
@@ -186,6 +188,8 @@ end
 ---@return boolean # whether the buffer is valid for formatting
 function vim.buf.is_regular(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
+
+    ---@type boolean
     return vim.api.nvim_buf_is_valid(buffer) and not vim.buf.is_special(buffer) and not vim.buf.is_transient(buffer)
 end
 

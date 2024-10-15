@@ -1,6 +1,7 @@
 -- MAYBE: Cross-tmux-session marks
 -- MAYBE: Write my own cmd line? (https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/cmdline.lua)
 -- MAYBE: jump to buf (https://github.com/catgoose/templ-goto-definition/blob/main/lua/templ-goto-definition/init.lua)
+--
 -- LOW: Evaluate difftastic
 -- LOW: refactor the core module to be more modular
 -- LOW: Evaluate grug-far
@@ -8,13 +9,17 @@
 -- LOW: My own winbar? (https://github.com/MariaSolOs/dotfiles/blob/main/private_dot_config/nvim/lua/winbar.lua)
 -- LOW: My own statusline? (https://github.com/MariaSolOs/dotfiles/blob/main/private_dot_config/nvim/lua/statusline.lua)
 -- LOW: integrate with "cSpell.words" in .vscode/settings.json
--- URGENT: package-info is crap
+-- LOW: rework the shell module or drop it in favor or buitin nvim code.
+--
+-- TODO: record error messages into a debug file
 -- TODO: ability to select the root of the project
 -- TODO: the [No Name] is not getting the fuck out when I select a file
 -- TODO: typos lsp has issues when disabled. Not sure how to deal with it at the moment.
---
+-- TODO: the CopilotChat buffer is not detached properly and gets reloaded as a buffer in session.
+-- TODO: lazy-git, use custom spinner
 -- TODO: disable 'u' and 'U' in visual mode, just annoying
 -- TODO: expose the group for the mapping of keys (refactor keys module)
+-- TODO: package-info is crap, make a smaller one just to show versions and if module is deprecated.
 
 require 'api'
 
