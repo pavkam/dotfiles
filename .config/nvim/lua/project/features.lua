@@ -173,6 +173,7 @@ function M.attach(client, buffer)
         vim.lsp.protocol.Methods.textDocument_documentHighlight,
         buffer,
         function()
+            -- TODO: probably need to remove references here as well
             vim.lsp.buf.document_highlight()
         end
     )

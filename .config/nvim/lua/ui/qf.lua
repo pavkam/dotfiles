@@ -6,38 +6,42 @@ vim.filetype.pin_to_window 'qf'
 ---@class ui.qf`
 local M = {}
 
----@class vim.QuickFixListItem # Quick-fix list item
----@field bufnr number # number of buffer that has the file name
----@field module string # module name
----@field lnum number # line number in the buffer (first line is 1)
----@field end_lnum number # end of line number if the item is multi-line
----@field col number # column number (first column is 1)
----@field end_col number # end of column number if the item has range
----@field vcol boolean # |TRUE|: "col" is visual column |FALSE|: "col" is byte index
----@field nr number # error number
----@field pattern string # search pattern used to locate the error
----@field text string # description of the error
+---@class vim.QuickFixListItem # Quick-fix list item.
+---@field bufnr number # number of buffer that has the file name.
+---@field module string # module name.
+---@field lnum number # line number in the buffer (first line is 1).
+---@field end_lnum number # end of line number if the item is multi-line.
+---@field col number # column number (first column is 1).
+---@field end_col number # end of column number if the item has range.
+---@field vcol boolean # |TRUE|: "col" is visual column |FALSE|: "col" is byte index.
+---@field nr number # error number.
+---@field pattern string # search pattern used to locate the error.
+---@field text string # description of the error.
 ---@field type string # type of the error, 'E', '1', etc.
----@field valid boolean # |TRUE|: recognized error message
+---@field valid boolean # |TRUE|: recognized error message.
 ---@field user_data any # custom data associated with the item, can be any type.
 
----@class vim.QuickFixList # Quick-fix list
----@field changedtick number # total number of changes made to the list
----@field context string # quick-fix list context
+---@class vim.QuickFixList # Quick-fix list.
+---@field changedtick number # total number of changes made to the list.
+---@field context string # quick-fix list context.
 ---@field id number # quick-fix list ID. If not present, set to 0.
 ---@field idx number # index of the quick-fix entry in the list. If not present, set to 0.
 ---@field items vim.QuickFixListItem[] # quick-fix list entries. If not present, set to an empty list.
----@field nr number # quick-fix list number. If not present, set to 0
+---@field nr number # quick-fix list number. If not present, set to 0.
 ---@field qfbufnr number # number of the buffer displayed in the quick-fix window. If not present, set to 0.
----@field size number # number of entries in the quick-fix list. If not present, set to 0
----@field title string # quick-fix list title text. If not present, set to ""
----@field winid number # quick-fix window ID. If not present, set to 0
+---@field size number # number of entries in the quick-fix list. If not present, set to 0.
+---@field title string # quick-fix list title text. If not present, set to "".
+---@field winid number # quick-fix window ID. If not present, set to 0.
 
----@class ui.qf.HandleRef
----@field id integer
----@field window integer|nil
+---@alias ui.qf.Type # The type of the quick-fix or locations list.
+---| 'c' # quick-fix list.
+---| 'l' # locations list.
 
----@alias ui.qf.Handle ui.qf.HandleRef | 'c' | 'l'
+---@class ui.qf.HandleRef # The handle of the quick-fix or locations list.
+---@field id integer # the list ID.
+---@field window integer|nil # the window the list is associated with (for location lists)
+
+---@alias ui.qf.Handle ui.qf.HandleRef | ui.qf.Type # The handle of the quick-fix or locations list.
 
 ---@class ui.qf.QuickFixList : vim.QuickFixList # Extended quick-fix list
 ---@field window integer|nil # the window the list is associated with (for location lists)
@@ -270,6 +274,23 @@ function M.loc_lists(window)
     end
 
     return lists
+end
+
+--- Gets the details of the focused list.
+---@param window integer|nil # the window to check, or 0 or nil for the current window.
+---@return ui.qf.QuickFixList|nil, ui.qf.Type|nil # the list details and the type (or `nil`)
+function M.details(window)
+    local list = focused_list(window)
+    if not list then
+        return nil, nil
+    end
+
+    local details = list_details(list)
+    if not details then
+        return nil, nil
+    end
+
+    return details, details.window and 'l' or 'c'
 end
 
 --- Forget file from all lists

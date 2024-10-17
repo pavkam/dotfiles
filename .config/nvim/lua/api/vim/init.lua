@@ -267,23 +267,18 @@ end
 ---(if not provided, the default ellipsis is '...')
 ---@return string # The cut-off string
 function vim.abbreviate(str, opts)
-    if not str or str == '' then
-        return ''
-    end
-
-    assert(type(str) == 'string')
+    str = str or ''
 
     opts = opts or {}
+    opts.max = opts.max or 40
+    opts.ellipsis = opts.ellipsis or icons.TUI.Ellipsis
 
-    local max = opts.max or 40
-    local ellipsis = opts.ellipsis or icons.TUI.Ellipsis
+    assert(type(str) == 'string')
+    assert(type(opts.max) == 'number' and opts.max > 0)
+    assert(type(opts.ellipsis) == 'string')
 
-    if #str > max then
-        if opts.ellipsis then
-            return str:sub(1, max - #ellipsis) .. ellipsis
-        else
-            return str:sub(1, max)
-        end
+    if vim.fn.strwidth(str) > opts.max then
+        return vim.fn.strcharpart(str, 0, opts.max - vim.fn.strwidth(opts.ellipsis)) .. opts.ellipsis
     end
 
     return str

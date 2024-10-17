@@ -88,3 +88,5 @@ rtl
 get_hl
 hl
 fifo
+neotest_summary
+NeotestSummary
