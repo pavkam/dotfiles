@@ -9,6 +9,9 @@ local configure_dotnet = require 'debugging.dotnet'
 
 keys.group { lhs = '<leader>d', mode = { 'n', 'v' }, icon = icons.UI.Debugger, desc = 'Debugger' }
 
+-- TODO: Can get the multi-select implementation out of it and the DAP stuff.
+-- https://github.com/lucaSartore/nvim-dap-exception-breakpoints/tree/main/lua/nvim-dap-exception-breakpoints
+
 ---@class debugging
 local M = {}
 

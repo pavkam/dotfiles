@@ -7,6 +7,8 @@
 -- LOW: integrate with "cSpell.words" in .vscode/settings.json
 -- LOW: rework the shell module or drop it in favor or buitin nvim code.
 --
+-- TODO: improve the mouse right-click: https://github.com/neovim/neovim/commit/76aa3e52be7a5a8b53b3775981c35313284230ac
+-- TODO: Use copilot to describe vim commands with suggestions: https://github.com/oflisback/describe-command.nvim/blob/main/lua/describe-command/commands.lua
 -- TODO: record error messages into a debug file
 -- TODO: ability to select the root of the project
 -- TODO: the [No Name] is not getting the fuck out when I select a file

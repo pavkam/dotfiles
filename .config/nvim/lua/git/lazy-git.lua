@@ -84,6 +84,10 @@ local function with_updated_color_theme(done_fn)
             gui = {
                 nerdFontsVersion = 3,
                 theme = lazy_git_theme,
+                spinner = {
+                    frames = require('ui.icons').Progress,
+                    rate = 100,
+                },
             },
         }
 

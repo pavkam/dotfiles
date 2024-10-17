@@ -1,5 +1,7 @@
 local M = {}
 
+-- TODO, move function to vim module to open space for color definitions only.
+
 --- Extracts the color and attributes from a highlight group.
 ---@param name string # the name of the highlight group
 ---@return { fg: string, gui: string }|nil # the color and attributes of the highlight group
