@@ -1,4 +1,3 @@
-local commands = require 'core.commands'
 local project = require 'project'
 
 --- Get the notes root directory
@@ -82,13 +81,13 @@ local function append(title, lines, global)
     vim.api.nvim_put(lines, 'l', true, true)
 end
 
-commands.register_command('Note', {
-    ---@param args core.commands.CommandCallbackArgs
+vim.fn.user_command('Note', {
+    ---@param args vim.fn.CommandCallbackArgs
     open = function(args)
         edit(args.bang)
     end,
     append = {
-        ---@param args core.commands.CommandCallbackArgs
+        ---@param args vim.fn.CommandCallbackArgs
         fn = function(args)
             if not args.lines or #args.lines == 0 then
                 vim.error 'No lines selected'
@@ -112,12 +111,12 @@ commands.register_command('Note', {
     bang = true,
 })
 
-commands.register_command('Notes', {
-    ---@param args core.commands.CommandCallbackArgs
+vim.fn.user_command('Notes', {
+    ---@param args vim.fn.CommandCallbackArgs
     list = function(args)
         find(args.bang)
     end,
-    ---@param args core.commands.CommandCallbackArgs
+    ---@param args vim.fn.CommandCallbackArgs
     grep = function(args)
         grep(args.bang)
     end,

@@ -130,7 +130,7 @@ function M.check_workspace(client, target)
     end)
 end
 
-require('core.commands').register_command('DiagnoseWorkspace', function()
+vim.fn.user_command('DiagnoseWorkspace', function()
     vim.info 'Checking workspace diagnostics...'
 
     ---@type vim.lsp.Client[]
