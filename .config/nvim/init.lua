@@ -6,6 +6,8 @@
 --      (https://www.reddit.com/r/neovim/comments/1f4al0o/grugfarnvim_update_multiline_input_and_telescope/)
 -- LOW: integrate with "cSpell.words" in .vscode/settings.json
 -- LOW: rework the shell module or drop it in favor or buitin nvim code.
+-- LOW: Maybe find a way to configure semantic tokens to avoid comments and string literals:
+--      https://gist.github.com/swarn/fb37d9eefe1bc616c2a7e476c0bc0316#controlling-when-highlights-are-applied.
 --
 -- TODO: improve the mouse right-click: https://github.com/neovim/neovim/commit/76aa3e52be7a5a8b53b3775981c35313284230ac
 -- TODO: Use copilot to describe vim commands with suggestions: https://github.com/oflisback/describe-command.nvim/blob/main/lua/describe-command/commands.lua

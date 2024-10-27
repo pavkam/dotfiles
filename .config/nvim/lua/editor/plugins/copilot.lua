@@ -13,6 +13,7 @@ return {
             panel = { enabled = false },
         },
         config = function(_, opts)
+            -- TODO: "unexpectedly started multiple copilot instances". Probably due to CopilotChat messing around
             local copilot = require 'copilot'
             local copilot_api = require 'copilot.api'
 

@@ -205,6 +205,9 @@ end
 ---@field lnum number # The line number
 ---@field type string # The type of file entry
 
+-- TODO: add git modified files
+-- LOW: all project files as well?
+
 --- Get all operating files
 ---@param opts ui.file_palette.Options # The options
 ---@return ui.file_palette.Entry[] # List of items

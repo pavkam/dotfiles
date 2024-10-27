@@ -106,11 +106,16 @@ end
 
 local undo_command = vim.api.nvim_replace_termcodes('<c-G>u', true, true, true)
 
---- Creates an undo point if in insert mode
+--- Creates an undo point if in insert mode.
+---@return boolean # true if the undo point was created, false otherwise.
 function vim.fn.create_undo_point()
-    assert(vim.api.nvim_get_mode().mode == 'i')
+    local is_insert = vim.api.nvim_get_mode().mode == 'i'
 
-    vim.api.nvim_feedkeys(undo_command, 'n', false)
+    if is_insert then
+        vim.api.nvim_feedkeys(undo_command, 'n', false)
+    end
+
+    return is_insert
 end
 
 ---@alias vim.fn.Target string|integer|nil # the target buffer or path or auto-detect

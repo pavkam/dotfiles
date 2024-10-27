@@ -346,4 +346,8 @@ vim.filetype.add {
     extension = {
         snap = 'javascript',
     },
+    pattern = {
+        ['.env'] = 'bash',
+        ['.env.*'] = 'bash',
+    },
 }

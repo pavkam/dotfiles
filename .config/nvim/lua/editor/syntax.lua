@@ -71,7 +71,7 @@ end
 ---| 'jsx'
 
 local comment_node_types = { 'comment', 'comment_block', 'Comment' }
-local identifier_node_types = { 'identifier', 'property_identifier', 'type_identifier' }
+local identifier_node_types = { 'identifier', 'property_identifier', 'type_identifier', 'field_identifier' }
 local string_content_node_types = { 'string_content', 'string_fragment' }
 local string_node_types = { 'string', 'interpreted_string_literal' }
 

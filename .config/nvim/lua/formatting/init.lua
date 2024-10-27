@@ -3,6 +3,7 @@ local keys = require 'core.keys'
 local progress = require 'ui.progress'
 local settings = require 'core.settings'
 local icons = require 'ui.icons'
+-- TODO: can we preload eslind and prettier? or make sure the async works?
 
 ---@class formatting
 local M = {}
