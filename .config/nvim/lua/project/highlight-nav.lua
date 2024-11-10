@@ -19,6 +19,8 @@ local M = {}
 
 ---@alias vim.lsp.ClientDocumentHighlightResponse table<integer, vim.lsp.DocumentHighlightResponse>
 
+-- TODO: ""Failed to get document highlights: "timeout"
+
 --- Jumps to the next of previous occurrence of the highlighted token.
 ---@param window integer|nil # The window to jump in
 ---@param forward boolean # Whether to jump to the next or previous occurrence

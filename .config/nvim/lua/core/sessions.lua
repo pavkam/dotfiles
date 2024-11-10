@@ -1,4 +1,3 @@
-local events = require 'core.events'
 local icons = require 'ui.icons'
 local settings = require 'core.settings'
 local qf = require 'ui.qf'
@@ -166,19 +165,18 @@ end
 
 -- save session on a timer
 if enabled() then
-    events.on_event('VimLeavePre', function()
+    vim.when.quitting(function()
         local current = M.current()
-        if current then
-            M.save_session(current)
-        end
+        return current and M.save_session(current)
     end)
 
-    events.on_user_event('LazyVimStarted', function()
-        swap_sessions(nil, M.current())
+    vim.when.ready(function()
+        local current = M.current()
+        return current and M.restore_session(current)
     end)
 
-    events.on_focus_gained(function()
-        swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
+    vim.when.focus_gained(function()
+        return swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
     end)
 
     vim.defer_fn(function()

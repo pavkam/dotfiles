@@ -4,6 +4,7 @@ require 'api.vim.fs'
 require 'api.vim.filetype'
 require 'api.vim.buf'
 require 'api.vim.assert'
+require 'api.vim.when'
 
 --- Returns the formatted arguments for debugging
 ---@vararg any # the arguments to format

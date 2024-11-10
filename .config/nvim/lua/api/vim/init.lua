@@ -5,9 +5,10 @@ function vim.quit()
     vim.api.nvim_command 'cq1'
 end
 
---- Converts a value to a list
----@param value any # any value that will be converted to a list
----@return any[] # the listified version of the value
+--- Coerces a value to a list.
+---@generic T
+---@param value T|T[]|table<any,T>|nil # any value that will be converted to a list
+---@return T[] # the listified version of the value
 function vim.to_list(value)
     if value == nil then
         return {}
@@ -15,7 +16,7 @@ function vim.to_list(value)
         return value
     elseif type(value) == 'table' then
         local list = {}
-        for _, item in ipairs(value) do
+        for _, item in pairs(value) do
             table.insert(list, item)
         end
 
