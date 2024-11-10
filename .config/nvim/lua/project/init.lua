@@ -160,6 +160,9 @@ M.root_patterns = {
 ---@return string[] # the list of roots
 function M.roots(target)
     local buffer, path, is_real = vim.fn.expand_target(target)
+    if not vim.api.nvim_buf_is_valid(buffer) then
+        return {}
+    end
 
     local setting_name = 'root_paths'
 
@@ -221,6 +224,9 @@ end
 ---@return string|nil # the root
 function M.root(target, deepest)
     local roots = M.roots(target)
+    if #roots == 0 then
+        return nil
+    end
 
     if deepest == nil then
         deepest = true

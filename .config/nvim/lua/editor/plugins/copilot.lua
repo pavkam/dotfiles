@@ -4,7 +4,6 @@ return {
         cond = not vim.headless,
         cmd = 'Copilot',
         build = ':Copilot auth',
-        lazy = false, -- TODO: temporary hack
         opts = {
             suggestion = {
                 enabled = true,
@@ -16,11 +15,12 @@ return {
         config = function(_, opts)
             -- TODO: "unexpectedly started multiple copilot instances". Probably due to CopilotChat messing around
             local copilot = require 'copilot'
-            local copilot_api = require 'copilot.api'
 
             copilot.setup(opts)
 
             -- status updates for Copilot
+            local copilot_api = require 'copilot.api'
+
             local curr_status
             copilot_api.register_status_notification_handler(function()
                 if copilot_api.status.data.status ~= curr_status then
@@ -32,6 +32,7 @@ return {
     },
     {
         'CopilotC-Nvim/CopilotChat.nvim',
+        cond = false,
         branch = 'canary',
         -- TODO: add keymap for invoking some of these commands
         -- TODO: make the buffer the default context

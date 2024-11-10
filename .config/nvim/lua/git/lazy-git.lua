@@ -34,8 +34,8 @@ local color_theme_needs_update = true
 ---@param color_key number # The index of the color to set.
 ---@param color string # the color to set.
 local function set_ansi_color(color_key, color)
-    vim.expect.number(color_key)
-    vim.expect.color_string(color, { optional = false })
+    vim.assert.number(color_key)
+    vim.assert.color_string(color, { optional = false })
 
     io.write(('\27]4;%d;%s\7'):format(color_key, color))
 end
@@ -63,7 +63,7 @@ end
 --- Runs a function with the updated color theme for lazy git.
 ---@param done_fn function # the function to call when the update is finished.
 local function with_updated_color_theme(done_fn)
-    vim.expect.callable(done_fn)
+    vim.assert.callable(done_fn)
 
     local function apply()
         ---@type table<string, string[]>

@@ -12,6 +12,7 @@ std = {
         'dbg',
         'who',
         'get_trace_back',
+        'get_formatted_trace_back',
         'assert',
         'require',
         'package',

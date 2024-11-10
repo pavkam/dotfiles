@@ -126,6 +126,9 @@ end
 function vim.fn.expand_target(target)
     if type(target) == 'number' or target == nil then
         target = target or vim.api.nvim_get_current_buf()
+        if not vim.api.nvim_buf_is_valid(target) then
+            return 0, '', false
+        end
 
         local path = vim.api.nvim_buf_get_name(target)
         if not path or path == '' then

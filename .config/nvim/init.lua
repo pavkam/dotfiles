@@ -5,7 +5,7 @@
 -- LOW: Evaluate grug-far
 --      (https://www.reddit.com/r/neovim/comments/1f4al0o/grugfarnvim_update_multiline_input_and_telescope/)
 -- LOW: integrate with "cSpell.words" in .vscode/settings.json
--- LOW: rework the shell module or drop it in favor or buitin nvim code.
+-- LOW: rework the shell module or drop it in favor or built-in nvim code.
 -- LOW: Maybe find a way to configure semantic tokens to avoid comments and string literals:
 --      https://gist.github.com/swarn/fb37d9eefe1bc616c2a7e476c0bc0316#controlling-when-highlights-are-applied.
 --

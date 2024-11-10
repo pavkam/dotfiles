@@ -13,19 +13,19 @@ function M.swap_custom_dictionary(target)
     local path = project.nvim_settings_path(target)
 
     ---@diagnostic disable-next-line: undefined-field
-    local current_file = vim.opt.spellfile:get()[1] or nil
+    local current_file = vim.opt_local.spellfile:get()[1] or nil
 
     if not path then
         if current_file then
             vim.hint 'Disabling custom spelling dictionary'
         end
 
-        vim.opt.spellfile = nil
+        vim.opt_local.spellfile = nil
         return
     end
 
     ---@type string
-    local base_lang = vim.opt.spelllang:get()[1] or 'en'
+    local base_lang = vim.opt_local.spelllang:get()[1] or 'en'
 
     ---@type string|nil
     local spl_file = vim.fs.joinpath(path, base_lang .. '.add')
@@ -35,7 +35,7 @@ function M.swap_custom_dictionary(target)
     end
 
     vim.hint(string.format('Selecting spelling dictionary to `%s` for buffer', project.format_relative(spl_file)))
-    vim.opt.spellfile = spl_file
+    vim.opt_local.spellfile = spl_file
 end
 
 -- if vim.has_plugin 'nvim-lspconfig' then
@@ -102,11 +102,11 @@ events.on_event('FileType', function(evt)
 end)
 
 events.on_event({ 'UIEnter', 'LspAttach', 'LspDetach' }, function()
-    M.swap_custom_dictionary()
+    vim.schedule(M.swap_custom_dictionary)
 end)
 
 events.on_focus_gained(function()
-    M.swap_custom_dictionary()
+    vim.schedule(M.swap_custom_dictionary)
 end)
 
 --- Mark a word as good or bad in the global dictionary

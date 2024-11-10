@@ -23,9 +23,15 @@ local function on_event(events, callback, target)
         group_registry[group_name] = group
     end
 
+    local reg_trace_back = get_formatted_trace_back(4)
     local opts = {
         callback = function(evt)
-            callback(evt, group)
+            local ok, err = pcall(callback, evt, group)
+            if not ok then
+                vim.error(
+                    string.format('Error in auto command `%s`: `%s`\n\n%s', vim.inspect(events), err, reg_trace_back)
+                )
+            end
         end,
         group = group,
     }

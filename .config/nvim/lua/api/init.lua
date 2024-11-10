@@ -137,3 +137,25 @@ function _G.get_trace_back(level)
 
     return result
 end
+
+--- Gets the trace-back of the current function
+---@param level integer|nil # the level of the trace-back to get
+---@return string # the formatted trace-back
+function _G.get_formatted_trace_back(level)
+    local trace = get_trace_back(level)
+
+    local result = { 'Traceback:' }
+    for _, entry in pairs(trace) do
+        table.insert(
+            result,
+            string.format(
+                ' - %s %s:%d',
+                vim.fs.format_relative_path(vim.fs.config_dir, entry.file),
+                entry.fn_name,
+                entry.line
+            )
+        )
+    end
+
+    return table.concat(result, '\n')
+end

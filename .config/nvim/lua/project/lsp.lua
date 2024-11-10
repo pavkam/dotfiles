@@ -10,11 +10,11 @@ local M = {}
 local lsp_tasks = {}
 
 events.on_event('LspDetach', function(evt)
-    local client = vim.lsp.get_client_by_id(evt.data.client_id)
-    if not client or M.is_special(client) then
-        return
-    end
-
+    -- local client = vim.lsp.get_client_by_id(evt.data.client_id)
+    -- if not client or M.is_special(client) then
+    --     return
+    -- end
+    --
     -- clear the tasks for the all clients to prevent infinite loops
     lsp_tasks = {}
 end)
