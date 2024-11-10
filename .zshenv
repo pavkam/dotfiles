@@ -18,6 +18,7 @@ typeset -U PATH
 typeset -U IS_ARM64_DARWIN
 typeset -U IS_DARWIN
 typeset -U DARWIN_HAS_BREW
+typeset -U PKG_CONFIG_PATH
 
 export IS_ARM64_DARWIN=0
 export IS_DARWIN=0
@@ -38,6 +39,19 @@ if [ "$(uname)" = "Darwin" ]; then
     if [ -x $B ]; then
         HOMEBREW_PREFIX="$($B --prefix)"
         PATH="$HOMEBREW_PREFIX/bin:$PATH"
+
+        if [ -d "$HOMEBREW_PREFIX/sbin" ]; then
+            PATH="$HOMEBREW_PREFIX/sbin:$PATH"
+        fi
+
+        local BREW_PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
+        if [ "$PKG_CONFIG_PATH" = "" ]; then
+            PKG_CONFIG_PATH="$BREW_PKG_CONFIG_PATH:$PKG_CONFIG_PATH"
+        else
+            PKG_CONFIG_PATH="$BREW_PKG_CONFIG_PATH"
+        fi
+
+        PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/lib/pkgconfig"
     fi
 
     if command -v brew &>/dev/null; then

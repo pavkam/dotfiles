@@ -27,5 +27,6 @@ std = {
         'getmetatable',
         'select',
         'io',
+        'quit',
     },
 }

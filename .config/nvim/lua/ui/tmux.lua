@@ -65,6 +65,7 @@ local function merge_results(projects_dirs, sessions)
     return results
 end
 
+-- TODO: use Kitty to open new tab for session if another keymap used
 --- Switches to an existing session
 ---@param session string|nil # the session to switch to
 local function switch_to_session(session)

@@ -3,11 +3,7 @@ require 'api.vim.fn'
 require 'api.vim.fs'
 require 'api.vim.filetype'
 require 'api.vim.buf'
-
---- Global function to quit the current process
-function _G.quit()
-    vim.api.nvim_command 'cq1'
-end
+require 'api.vim.assert'
 
 --- Returns the formatted arguments for debugging
 ---@vararg any # the arguments to format
@@ -64,14 +60,14 @@ end
 --- Global function to log a message as an error and quit
 ---@param message string the message to log
 function _G.fatal(message)
-    assert(type(message) == 'string')
+    vim.assert.string(message, { empty = false })
 
     error(string.format('fatal error has occurred: %s', message))
     error 'press any key to quit the process'
 
     vim.fn.getchar()
 
-    vim.api.nvim_command 'cq1'
+    vim.quit()
 end
 
 --- Gets the value of an up-value of a function
@@ -79,6 +75,9 @@ end
 ---@param name string # the name of the up-value to get
 ---@return any # the value of the up-value or nil if it does not exist
 function _G.get_up_value(fn, name)
+    vim.assert.callable(fn)
+    vim.assert.string(name, { empty = false })
+
     local i = 1
     while true do
         local n, v = debug.getupvalue(fn, i)
@@ -105,6 +104,8 @@ end
 ---@param level integer|nil # the level of the trace-back to get
 ---@return vim.TraceBackEntry[] # the trace-back entries
 function _G.get_trace_back(level)
+    vim.assert.integer(level, { min = 0 })
+
     local trace = level and debug.traceback('', level) or debug.traceback()
 
     -- split trace by new-line into an array

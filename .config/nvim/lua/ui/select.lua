@@ -10,6 +10,13 @@ local icons = require 'ui.icons'
 
 local M = {}
 
+-- TODO: fix bug pressing enter without a selection
+-- E5108: Error executing lua: /Users/alex/.config/nvim/lua/ui/select.lua:180: attempt to index local 'selection' (a nil value)
+--stack traceback:
+--	/Users/alex/.config/nvim/lua/ui/select.lua:180: in function 'run_replace_or_original'
+--	...re/nvim/lazy/telescope.nvim/lua/telescope/actions/mt.lua:65: in function 'key_func'
+--	...hare/nvim/lazy/telescope.nvim/lua/telescope/mappings.lua:293: in function <...hare/nvim/lazy/telescope.nvim/lua/telescope/mappings.lua:292>
+
 ---@alias ui.select.SelectEntry
 ---|string
 ---|number

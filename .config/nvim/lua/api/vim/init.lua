@@ -1,5 +1,10 @@
 local icons = require 'ui.icons'
 
+--- Global function to quit the current process
+function vim.quit()
+    vim.api.nvim_command 'cq1'
+end
+
 --- Converts a value to a list
 ---@param value any # any value that will be converted to a list
 ---@return any[] # the listified version of the value

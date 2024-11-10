@@ -126,6 +126,7 @@ local M = {
         Quit = ' ',
         Explorer = ' ',
         Replace = '󰛔',
+        Tree = '󱏒',
         Disabled = '✗',
         Error = '',
         AI = '󱐏 ',

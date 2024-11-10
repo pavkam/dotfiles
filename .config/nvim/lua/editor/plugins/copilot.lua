@@ -4,6 +4,7 @@ return {
         cond = not vim.headless,
         cmd = 'Copilot',
         build = ':Copilot auth',
+        lazy = false, -- TODO: temporary hack
         opts = {
             suggestion = {
                 enabled = true,
@@ -33,6 +34,8 @@ return {
         'CopilotC-Nvim/CopilotChat.nvim',
         branch = 'canary',
         -- TODO: add keymap for invoking some of these commands
+        -- TODO: make the buffer the default context
+        -- TODO: make sure the c-y works as expected (updates the buffer)
         cmd = {
             'CopilotChat',
             'CopilotChatOpen',

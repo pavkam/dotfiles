@@ -143,6 +143,7 @@ return {
             },
             incremental_selection = {
                 enable = true,
+                --TODO: Add shift+\ to select an entire block until the mega parent
                 keymaps = {
                     init_selection = '\\',
                     node_incremental = '\\',

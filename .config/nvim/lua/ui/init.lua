@@ -14,6 +14,7 @@ require 'ui.file-palette'
 require 'ui.mouse'
 
 vim.filetype.pin_to_window 'help'
+vim.filetype.pin_to_window 'query'
 
 keys.group { lhs = 'g', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Go-to' }
 keys.group { lhs = ']', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Next' }

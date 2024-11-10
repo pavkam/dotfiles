@@ -29,6 +29,8 @@ local function sexify(prefix, list, len_max, collapse_max)
     )
 end
 
+-- TODO: refactor this whole mess
+
 local macro_recording_fmt = icons.UI.Macro
     .. ' Recording macro as '
     .. icons.TUI.StrongPrefix
@@ -540,6 +542,28 @@ M.extensions = {
         },
         filetypes = {
             'help',
+        },
+    },
+    {
+        winbar = {
+            lualine_c = {
+                {
+                    function()
+                        return icons.fit(icons.UI.Tree, 2)
+                    end,
+                    color = '@comment.note',
+                    separator = false,
+                    padding = { right = 0 },
+                },
+                {
+                    'filename',
+                    file_status = false,
+                    padding = { left = 0 },
+                },
+            },
+        },
+        filetypes = {
+            'query',
         },
     },
 }
