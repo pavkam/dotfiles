@@ -1,4 +1,4 @@
-local icons = require 'ui.icons'
+local icons = require 'icons'
 
 --- Global function to quit the current process
 function vim.quit()

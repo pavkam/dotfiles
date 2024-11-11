@@ -137,7 +137,7 @@ end
 ---@return string # the simplified path.
 function vim.fs.format_relative_path(prefix, path, opts)
     opts = opts or {}
-    opts.ellipsis = opts.ellipsis or require('ui.icons').TUI.Ellipsis
+    opts.ellipsis = opts.ellipsis or require('icons').TUI.Ellipsis
     opts.include_base_dir = opts.include_base_dir or false
 
     assert(type(prefix) == 'string')

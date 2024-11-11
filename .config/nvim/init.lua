@@ -35,20 +35,7 @@ end
 
 vim.headless = vim.list_contains(vim.api.nvim_get_vvar 'argv', '--headless') or #vim.api.nvim_list_uis() == 0
 
-local modules = {
-    'core',
-    'ui',
-    'editor',
-    'testing',
-    'git',
-    'project',
-    'debugging',
-    'formatting',
-    'linting',
-    'extras',
-}
-
-require 'core.options'
+require 'options'
 
 -- Setup the Lazy plugin manager
 local lazypath = vim.fs.joinpath(vim.fs.data_dir, 'lazy', 'lazy.nvim')
@@ -66,31 +53,8 @@ end
 ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
----@type string[]
-local plugin_dirs = vim.iter(modules)
-    :map(
-        ---@param module string
-        function(module)
-            return vim.fs.joinpath(module, 'plugins')
-        end
-    )
-    :filter(
-        ---@param dir string
-        function(dir)
-            return vim.fs.dir_exists(vim.fs.joinpath(vim.fs.config_dir, 'lua', dir))
-        end
-    )
-    :totable()
-
 require('lazy').setup {
-    spec = vim.iter(plugin_dirs)
-        :map(
-            ---@param dir string
-            function(dir)
-                return { import = dir }
-            end
-        )
-        :totable(),
+    spec = { import = 'plugins' },
     defaults = {
         lazy = true,
         version = false,
@@ -126,25 +90,12 @@ require('lazy').setup {
     },
 }
 
---- Load all modules
----@type table<string, any>
-local load_errors = {}
-for _, module in ipairs(modules) do
-    local ok, err = pcall(require, module)
-
-    if not ok then
-        load_errors[module] = err
-    end
-end
+require 'init'
 
 -- Post-load hook
 vim.api.nvim_create_autocmd('User', {
     pattern = 'LazyVimStarted',
     callback = function()
-        for module, err in pairs(load_errors) do
-            vim.api.nvim_err_writeln('Error loading "' .. module .. '": ' .. vim.inspect(err))
-        end
-
         local opening_a_dir = vim.fn.argc() == 1 and vim.fs.dir_exists(vim.fn.argv(0) --[[@as string]])
 
         if opening_a_dir then
