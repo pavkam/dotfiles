@@ -17,6 +17,7 @@ return {
                 javascriptreact = { 'eslint' },
                 typescript = { 'eslint' },
                 typescriptreact = { 'eslint' },
+                json = { 'jsonlint' },
                 go = { 'golangcilint' },
                 proto = { 'buf_lint' },
                 dockerfile = { 'hadolint' },

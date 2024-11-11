@@ -53,7 +53,8 @@ function M.jump(next_or_prev, severity)
     go { severity = sev }
 end
 
--- TODO: fix this diagnostics module: https://github.com/artemave/workspace-diagnostics.nvim/blob/main/lua/workspace-diagnostics/init.lua
+-- TODO: fix this diagnostics module:
+-- https://github.com/artemave/workspace-diagnostics.nvim/blob/main/lua/workspace-diagnostics/init.lua
 local indexing_in_progress = false
 
 --- Check all files in the workspace for diagnostics

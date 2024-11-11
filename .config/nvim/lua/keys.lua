@@ -69,7 +69,7 @@ function M.group(opts)
 end
 
 ---@alias core.keys.KeyMapCallback
----| fun(mode: core.keys.KeyMapMode|core.keys.KeyMapMode[], lhs: string, rhs: string|function, opts: core.keys.KeyMapOpts)
+---| fun(mode: core.keys.KeyMapMode|core.keys.KeyMapMode[], lhs" string, rhs:string|function, opts:core.keys.KeyMapOpts)
 
 --- Allows attaching keymaps in a given buffer alone.
 ---@param file_types string|table|nil # the list of file types to attach the keymaps to

@@ -53,6 +53,7 @@ return {
             'prettier',
             'prettierd',
             'js-debug-adapter',
+            'jsonlint',
             -- csharp
             'csharpier',
             'netcoredbg',
