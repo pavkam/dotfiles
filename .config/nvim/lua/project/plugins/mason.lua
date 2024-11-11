@@ -58,6 +58,8 @@ return {
             'netcoredbg',
             -- markdown
             'markdownlint',
+            -- python,
+            'ruff',
             -- general
             'typos-lsp',
         },

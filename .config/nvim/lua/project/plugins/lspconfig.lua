@@ -1,5 +1,7 @@
 local icons = require 'ui.icons'
 
+---@module "lspconfig"
+
 return {
     {
         'neovim/nvim-lspconfig',
@@ -44,6 +46,12 @@ return {
                 },
             },
             capabilities = {
+                workspace = {
+                    fileOperations = {
+                        didRename = true,
+                        willRename = true,
+                    },
+                },
                 textDocument = {
                     foldingRange = {
                         dynamicRegistration = false,
@@ -75,6 +83,7 @@ return {
             handlers = {
                 [vim.lsp.protocol.Methods.textDocument_rename] = require 'project.rename',
             },
+            ---@type table<string, lspconfig.Config>
             servers = {
                 typos_lsp = {
                     init_options = {
@@ -115,9 +124,11 @@ return {
                 emmet_ls = {},
                 marksman = {},
                 prismals = {},
-                bufls = {},
+                buf_ls = {
+                    mason_package = 'bufls',
+                },
                 pyright = {},
-                ruff_lsp = {},
+                ruff = {},
                 jsonls = {
                     on_new_config = function(new_config)
                         -- add schema-store schemas
@@ -308,39 +319,72 @@ return {
             )
 
             -- configure the servers
-            local servers = opts.servers
             local function setup(server)
-                local server_opts = vim.tbl_merge({
+                local server_opts = opts.servers[server]
+
+                server_opts = vim.tbl_merge({
                     capabilities = vim.deepcopy(capabilities),
                     handlers = opts.handlers,
-                }, servers[server] or {})
+                }, server_opts or {})
 
-                require('lspconfig')[server].setup(server_opts)
+                local lsp_server = require('lspconfig')[server]
+                if not lsp_server or not lsp_server.setup then
+                    vim.error(
+                        string.format('Language server `%s` does not appear to be present in `lspconfig`.' .. server)
+                    )
+                    return
+                end
+
+                lsp_server.setup(server_opts)
             end
 
             -- get all the servers that are available through mason-LSP-config
-            local through_mason = vim.has_plugin 'mason.nvim'
-            local mlsp = through_mason and require 'mason-lspconfig' or nil
-            local all_mslp_servers = through_mason
-                    and vim.tbl_keys(require('mason-lspconfig.mappings.server').lspconfig_to_package)
-                or {}
+            local using_mason = vim.has_plugin 'mason.nvim'
+            local mason_packages = using_mason and require('mason-lspconfig.mappings.server').lspconfig_to_package or {}
 
             local ensure_installed = {}
-            for server, server_opts in pairs(servers) do
-                if server_opts then
-                    server_opts = server_opts == true and {} or server_opts
-                    -- run manual setup if mason=false or if this is a server that cannot be
-                    -- installed with mason-LSP-config
-                    if server_opts.mason == false or not vim.tbl_contains(all_mslp_servers, server) then
-                        setup(server)
+            for server, server_opts in pairs(opts.servers) do
+                server_opts = server_opts == true and {} or server_opts
+                local package_name = type(server_opts) == 'table'
+                        and type(server_opts.mason_package) == 'string'
+                        and server_opts.mason_package
+                    or nil
+
+                local mason_package_for_server = mason_packages[server]
+                local mason_package_for_alias = mason_packages[package_name]
+
+                if mason_package_for_server == mason_package_for_alias == nil then
+                    vim.error(string.format('Server `%s` could not be located in mason registry.', server))
+                elseif mason_package_for_server == mason_package_for_alias then
+                    vim.warn(
+                        string.format(
+                            'Server `%s` has the same mason package as its alias `%s`. Consider removing the alias.',
+                            server,
+                            server_opts.mason_package
+                        )
+                    )
+                else
+                    if not mason_package_for_server and not mason_package_for_alias then
+                        setup(package_name or server)
                     else
-                        ensure_installed[#ensure_installed + 1] = server
+                        table.insert(ensure_installed, server)
                     end
                 end
             end
 
-            if mlsp then
-                mlsp.setup { ensure_installed = ensure_installed, handlers = { setup } }
+            local mason_lsp_config = vim.has_plugin 'mason-lspconfig' and using_mason and require 'mason-lspconfig'
+                or nil
+            if mason_lsp_config then
+                local mason_opts = assert(vim.plugin_config 'mason-lspconfig.nvim')
+
+                mason_lsp_config.setup {
+                    ensure_installed = vim.tbl_deep_extend(
+                        'force',
+                        ensure_installed,
+                        mason_opts.ensure_installed or {}
+                    ),
+                    handlers = { setup },
+                }
             end
 
             -- re-trigger FileType auto-commands to force LSP to start

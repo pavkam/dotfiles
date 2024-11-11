@@ -101,6 +101,18 @@ function vim.has_plugin(name)
     return false
 end
 
+--- Returns the configuration of a plugin
+---@param name string # the name of the plugin
+---@return table<string, any>|nil # the configuration of the plugin
+function vim.plugin_config(name)
+    assert(type(name) == 'string' and name ~= '')
+
+    if package.loaded['lazy'] then
+        local plugin = require('lazy.core.config').spec.plugins[name]
+        return plugin and require('lazy.core.plugin').values(plugin, 'opts', false)
+    end
+end
+
 ---Converts a value to a string
 ---@param value any # any value that will be converted to a string
 ---@return string|nil # the stringified version of the value

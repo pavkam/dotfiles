@@ -2,7 +2,6 @@ return {
     'folke/noice.nvim',
     cond = not vim.headless,
     lazy = false,
-    commit = 'd9328ef903168b6f52385a751eb384ae7e906c6f', -- TODO: remove when fixed
     dependencies = {
         'MunifTanjim/nui.nvim',
         'rcarriga/nvim-notify',
@@ -49,6 +48,7 @@ return {
                 },
                 view = 'mini',
             },
+            -- TODO: make "no fold found" silent
             {
                 filter = {
                     event = 'notify',
