@@ -32,14 +32,14 @@ local function linters(buffer)
         buf = buffer,
     }
 
-    return dbg(vim.iter(clients)
+    return vim.iter(clients)
         :filter(function(name)
             local linter = lint.linters[name]
-            dbg(linter)
+
             ---@diagnostic disable-next-line: undefined-field
             return linter and not (type(linter) == 'table' and linter.condition and not linter.condition(ctx))
         end)
-        :totable())
+        :totable()
 end
 
 --- Checks the status of linting for a buffer

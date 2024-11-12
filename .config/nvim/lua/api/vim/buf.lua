@@ -86,11 +86,6 @@ end
 ---@class (exact) vim.buf.DeleteBufferOpts # options for deleting a buffer
 ---@field force boolean|nil # whether to force the deletion of the buffer
 
--- TODO: Errors on deletion of file:
--- E315: ml_get: Invalid lnum: 1
--- E315: ml_get: Invalid lnum: 1
--- E315: ml_get: Invalid lnum: 1
-
 --- Removes a buffer
 ---@param buffer integer|nil # the buffer to remove or the current buffer if 0 or nil
 ---@param opts vim.buf.DeleteBufferOpts|nil # the options for deleting the buffer

@@ -94,3 +94,25 @@ end
 function vim.when.focus_gained(callback)
     return attach({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, callback)
 end
+
+---@class vim.when.ColorSchemeChangeOpts # the options for the color scheme change event.
+---@field before boolean | nil # whether to trigger the callback before the color scheme is changed.
+---@field immediate boolean | nil # whether to trigger the callback immediately.
+
+--- Triggers when vim receives focus.
+---@generic T # the return type of the callback.
+---@param callback fun(evt: any, group: number): T # the callback to call when vim regained focus.
+---@param opts vim.when.ColorSchemeChangeOpts | nil # the options for the color scheme change event
+---@return fun(): T # the function that can be called to get the result of the callback.
+function vim.when.colors_change(callback, opts)
+    opts = vim.tbl_merge(opts or { before = false, immediate = true })
+
+    vim.assert.boolean(opts.before)
+    vim.assert.boolean(opts.immediate)
+
+    if opts.immediate then
+        callback(nil, 0)
+    end
+
+    return attach(opts.before and 'ColorSchemePre' or 'ColorScheme', callback)
+end

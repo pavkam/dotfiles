@@ -158,6 +158,8 @@ events.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
     end
 
     if not vim.buf.is_special(evt.buf) then
+        events.trigger_user_event 'NormalFile'
+
         git.check_tracked(vim.uv.fs_realpath(current_file) or current_file, function(yes)
             if yes then
                 events.trigger_user_event 'GitFile'

@@ -3,6 +3,7 @@ return {
     cond = not vim.headless,
     ft = 'qf',
     opts = {
+        ---@type table<string, string>
         func_map = {
             open = 'o',
             openc = '<CR>',
@@ -16,7 +17,6 @@ return {
             pscrollup = '<C-b>',
             pscrolldown = '<C-f>',
             filter = 'zn',
-
             filterr = '',
             stoggleup = '',
             stogglebuf = '',

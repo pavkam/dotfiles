@@ -73,7 +73,8 @@ end
 function vim.tbl_merge(...)
     local all = {}
 
-    for _, a in ipairs { ... } do
+    for i = 1, select('#', ...) do
+        local a = select(i, ...)
         if a then
             table.insert(all, a)
         end
@@ -84,7 +85,7 @@ function vim.tbl_merge(...)
     elseif #all == 1 then
         return all[1]
     else
-        return vim.tbl_deep_extend('force', unpack(all))
+        return vim.tbl_deep_extend('keep', unpack(all))
     end
 end
 

@@ -16,7 +16,7 @@ return {
             {
                 'onsails/lspkind.nvim',
                 opts = {
-                    symbol_map = require('ui').Symbols,
+                    symbol_map = require('icons').Symbols,
                 },
             },
         },

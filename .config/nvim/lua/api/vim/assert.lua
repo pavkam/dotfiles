@@ -60,6 +60,30 @@ function vim.assert.string(value, opts)
     error(string.format('expected a `string`, got `%s`.', type(value)))
 end
 
+---@class (exact) vim.assert.BooleanOpts # Options for the `boolean` function.
+---@field optional boolean|nil # allow `nil` or not (default: `false`).
+---@field default boolean|nil # default value if `nil`.
+
+--- Checks if a given value is a boolean.
+---@param value boolean|nil # the value to check.
+---@param opts vim.assert.BooleanOpts|nil # options for the function.
+---@return boolean|nil # the value if it is a string.
+function vim.assert.boolean(value, opts)
+    opts = vim.tbl_merge(opts, { optional = false })
+    dbg(opts)
+
+    assert(type(opts.optional) == 'boolean')
+    assert(opts.default == nil or type(opts.default) == 'boolean')
+
+    if type(value) == 'boolean' then
+        return value
+    elseif value == nil and opts.optional ~= false then
+        return opts.default
+    end
+
+    error(string.format('expected a `boolean`, got `%s`.', type(value)))
+end
+
 ---@class (exact) vim.assert.NumberOpts # Options for the `number` function.
 ---@field optional boolean|nil # allow `nil` or not (default: `false`).
 ---@field min number|nil # minimum value (optional).
