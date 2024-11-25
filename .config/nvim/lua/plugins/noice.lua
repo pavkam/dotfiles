@@ -41,6 +41,7 @@ return {
                         { find = '^W325' },
                         { find = '^E1513' },
                         { find = '^E553' },
+                        { find = 'E490: No fold found' },
                         { find = 'E211: File .* no longer available' },
                         { find = 'No more valid diagnostics to move to' },
                         { find = 'No code actions available' },
@@ -48,7 +49,6 @@ return {
                 },
                 view = 'mini',
             },
-            -- TODO: make "no fold found" silent
             {
                 filter = {
                     event = 'notify',

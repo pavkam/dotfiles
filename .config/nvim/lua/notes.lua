@@ -1,5 +1,7 @@
 local project = require 'project'
 
+-- TODO: this is broken for :Note
+
 --- Get the notes root directory
 ---@param global boolean|nil: If true, return the global notes root
 ---@return string: The notes root directory

@@ -8,7 +8,7 @@ return {
         cond = not vim.headless,
         event = 'User NormalFile',
         dependencies = {
-            'williamboman/mason-lspconfig.nvim',
+            'williamboman/mason-lspconfig.nvim', -- TODO: disable autoloading of all servers that mason installed
             'Hoffs/omnisharp-extended-lsp.nvim',
         },
         opts = {

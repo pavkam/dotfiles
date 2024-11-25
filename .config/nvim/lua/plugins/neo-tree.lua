@@ -1,5 +1,17 @@
 local icons = require 'icons'
 
+--[[ TODO: fix this error
+E5108: Error executing lua: ...hare/nvim/lazy/neo-tree.nvim/lua/neo-tree/utils/init.lua:729: Failed to switch to window 1000
+stack traceback:
+	[C]: in function 'nvim_set_current_win'
+	...hare/nvim/lazy/neo-tree.nvim/lua/neo-tree/utils/init.lua:729: in function 'open_file'
+	...y/neo-tree.nvim/lua/neo-tree/sources/common/commands.lua:733: in function 'open'
+	...y/neo-tree.nvim/lua/neo-tree/sources/common/commands.lua:755: in function 'open_with_cmd'
+	...y/neo-tree.nvim/lua/neo-tree/sources/common/commands.lua:764: in function 'open'
+	...o-tree.nvim/lua/neo-tree/sources/filesystem/commands.lua:184: in function <...o-tree.nvim/lua/neo-tree/sources/filesystem/commands.lua:183>
+]]
+--
+-- TODO: can I replace the y/n dialog with the default one?
 return {
     'nvim-neo-tree/neo-tree.nvim',
     cond = not vim.headless,
@@ -14,6 +26,7 @@ return {
     end,
     opts = {
         sources = { 'filesystem' },
+        use_popups_for_input = false,
         open_files_do_not_replace_types = vim.buf.special_file_types,
         enable_diagnostics = true,
         enable_git_status = true,

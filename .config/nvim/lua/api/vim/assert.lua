@@ -70,7 +70,6 @@ end
 ---@return boolean|nil # the value if it is a string.
 function vim.assert.boolean(value, opts)
     opts = vim.tbl_merge(opts, { optional = false })
-    dbg(opts)
 
     assert(type(opts.optional) == 'boolean')
     assert(opts.default == nil or type(opts.default) == 'boolean')

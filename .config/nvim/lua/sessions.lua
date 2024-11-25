@@ -163,7 +163,7 @@ local function swap_sessions(old_name, new_name)
     end
 end
 
--- save session on a timer
+-- TODO: session broken again, what a shocker!
 if enabled() then
     vim.when.quitting(function()
         local current = M.current()

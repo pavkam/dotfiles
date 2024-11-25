@@ -32,11 +32,12 @@ return {
     },
     {
         'CopilotC-Nvim/CopilotChat.nvim',
-        cond = false,
         branch = 'canary',
         -- TODO: add keymap for invoking some of these commands
         -- TODO: make the buffer the default context
         -- TODO: make sure the c-y works as expected (updates the buffer)
+        -- TODO: remove [CopilotChat.nvim] [INFO  14:09:20] /Users/alex/.local/share/nvim/lazy/CopilotChat.nvim/lua/CopilotChat/copilot.lua:435: Models fetched
+
         cmd = {
             'CopilotChat',
             'CopilotChatOpen',
