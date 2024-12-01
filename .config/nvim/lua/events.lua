@@ -16,14 +16,14 @@ local function on_event(events, callback, target)
     target = vim.to_list(target)
 
     -- create/update group
-    local group_name = get_trace_back(3)[1].file
+    local group_name = api.process.get_trace_back(3)[1].file
     local group = group_registry[group_name]
     if not group then
         group = group or vim.api.nvim_create_augroup(group_name, { clear = true })
         group_registry[group_name] = group
     end
 
-    local reg_trace_back = get_formatted_trace_back(4)
+    local reg_trace_back = api.process.get_formatted_trace_back(4)
     local opts = {
         callback = function(evt)
             local ok, err = pcall(callback, evt, group)

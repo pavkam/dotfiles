@@ -13,14 +13,12 @@ local progress_class = 'linting'
 ---@param buffer integer|nil # the buffer to get the linters for or 0 or nil for current
 ---@return string[] # the names of the active linters
 local function linters(buffer)
-
     buffer = buffer or vim.api.nvim_get_current_buf()
     if not vim.buf.is_regular(buffer) then
         return {}
     end
 
     local file_type = vim.api.nvim_get_option_value('filetype', { buf = buffer })
-
 
     local lint = require 'lint'
     local clients = lint.linters_by_ft[file_type] or {}
@@ -51,7 +49,7 @@ local function linting_status(buffer)
     local lint = require 'lint'
 
     ---@type table<integer, table<string, lint.LintProc>>
-    local tbl = get_up_value(lint.try_lint, 'running_procs_by_buf')
+    local tbl = api.process.get_up_value(lint.try_lint, 'running_procs_by_buf')
     local running_linters = tbl and tbl[buffer] or {}
 
     for _, linter in pairs(running_linters) do
