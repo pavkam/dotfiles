@@ -1,36 +1,41 @@
 local process = require 'api.process'
 local assert = require 'api.assert'
 
----@class api.events.Slot # The slot object.
----@field continue fun(follow_up: fun(args: any)): api.events.Slot # adds a follow-up to the slot.
----@field trigger fun(args: any): any # triggers the slot with the given data.
----@field source any|nil # the source of the slot.
+-- HACK: This is a workaround for the fact that lua_ls doesn't support generic classes.
+-- luacheck: push ignore 631
 
----@param handler fun(args: any)|nil # the handler to call when the slot is triggered.
----@returns api.events.Slot # the slot object.
+---@class (exact) api.events.Slot<TIn, TOut>: { ["continue"]: (fun(continuation: fun(args: TIn, slot: api.events.Slot<TIn, TOut>): TOut): api.events.Slot<TIn, TOut>), ["trigger"]: fun(args: TIn) } # A slot object.
+
+-- luacheck: pop
+
+---@alias api.events.RawSlot # A raw slot object.
+---| api.events.Slot<any, any>
+
+-- Create a new raw slot (internal).
+---@param handler (fun(args: any, slot: api.events.RawSlot): any) | nil # the handler of the slot.
+---@returns api.events.RawSlot # the slot object.
 local function new_slot(handler)
-    ---@type { trigger: fun(args: any) }[]
+    ---@type table<api.events.RawSlot, boolean>
     local subscribers = {}
 
-    ---@type api.events.Slot
-    local obj = {
-        continue = function(follow_up)
-            local follower = new_slot(follow_up)
-            table.insert(subscribers, follower)
+    local obj = {}
 
-            return follower
-        end,
+    obj.continue = function(continuation)
+        local follower = new_slot(continuation)
+        subscribers[follower] = true
 
-        trigger = function(args)
-            local result = handler and handler(args)
-            for _, subscriber in ipairs(subscribers) do
-                subscriber.trigger(args)
-            end
+        return follower
+    end
 
-            return result
-        end,
-    }
+    obj.trigger = function(args)
+        args = handler and handler(args, obj) or args
 
+        for subscriber in pairs(subscribers) do
+            subscriber.trigger(args)
+        end
+    end
+
+    ---@type api.events.RawSlot
     return obj
 end
 
@@ -40,21 +45,16 @@ end
 ---@field group string|nil # the group of the auto command.
 ---@field patterns string[]|nil # the pattern to target (or `nil` for all patterns).
 
----@class (exact) api.events.AutoCommandEventData # The event data received by the auto command.
+---@class (exact) vim.AutoCommandData # The event data received by the auto command.
 ---@field id integer # the id of the auto command.
 ---@field event string # the event that was triggered.
----@field is_custom boolean # whether the event is a custom event.
----@field is_system boolean # whether the event is a system event.
----@field buffer integer|nil # the buffer the event was triggered on (or `nil` of no buffer).
----@field group string|nil # the group of the auto command.
----@field original table # the original event data.
-
----@class api.events.AutoCommandSlot # The auto command slot.
----@field continue fun(follow_up: fun(args: api.events.AutoCommandEventData)) # continues the slot with a follow-up.
----@field trigger fun(args: any|nil) # triggers the auto command with the given data.
+---@field buf integer|nil # the buffer the event was triggered on (or `nil` of no buffer).
+---@field group integer|nil # the group of the auto command.
+---@field match string|nil # the match of the auto command.
 
 ---@param events string[] # the list of events to trigger on.
 ---@param opts api.events.AutoCommandOpts # the options for the auto command.
+---@returns api.events.Slot<api.events.AutoCommandEventData, any> # the slot object.
 local function create_auto_command_slot(events, opts)
     assert {
         events = { events, { ['*'] = 'string' } },
@@ -68,7 +68,6 @@ local function create_auto_command_slot(events, opts)
             },
         },
     }
-    ---@type { trigger: fun(args: any) }[]
 
     local slot = new_slot()
     local slot_trigger = slot.trigger
@@ -79,21 +78,8 @@ local function create_auto_command_slot(events, opts)
 
     ---@type vim.api.keyset.create_autocmd
     local auto_command_opts = {
-        callback = function(evt)
-            local buffer = vim.api.nvim_buf_is_valid(evt.buf) and evt.buf or nil
-
-            ---@type api.events.AutoCommandEventData
-            local data = {
-                id = evt.id,
-                buffer = buffer,
-                event = evt.event == 'User' and evt.match or evt.event,
-                group = defacto_group,
-                is_custom = evt.event == 'User',
-                is_system = evt.event ~= 'User',
-                original = evt,
-            }
-
-            local ok, err = pcall(slot_trigger, data)
+        callback = function(args)
+            local ok, err = pcall(slot_trigger, args)
 
             if not ok then
                 local formatted = table.concat(
@@ -107,7 +93,7 @@ local function create_auto_command_slot(events, opts)
                         'Error in auto command `%s`: %s\nPayload:\n%s\nRegistered at:\n%s',
                         formatted,
                         err,
-                        vim.inspect(data),
+                        vim.inspect(args),
                         reg_trace_back
                     )
                 )
@@ -120,31 +106,60 @@ local function create_auto_command_slot(events, opts)
     }
 
     -- create auto command
+    vim.api.nvim_create_autocmd(events, auto_command_opts)
 
-    slot.source = {
-        auto_command_id = vim.api.nvim_create_autocmd(events, auto_command_opts),
-        group = opts.group,
-    }
-
-    ---@cast slot api.events.AutoCommandSlot
     slot.trigger = function(args)
         vim.api.nvim_exec_autocmds(events, { pattern = opts.patterns, modeline = false, data = args })
     end
 
+    ---@type api.events.Slot<vim.AutoCommandData, any>
     return slot
+end
+
+---@class (exact) api.events.AutoCommandEventData # The event data received by the auto command.
+---@field id integer # the id of the auto command.
+---@field event string # the event that was triggered.
+---@field is_custom boolean # whether the event is a custom event.
+---@field is_system boolean # whether the event is a system event.
+---@field buffer integer|nil # the buffer the event was triggered on (or `nil` of no buffer).
+---@field group string|nil # the group of the auto command.
+---@field original table # the original event data.
+
+---@param args vim.AutoCommandData
+local function buffer_continuation(args)
+    local buffer = vim.api.nvim_buf_is_valid(evt.buf) and evt.buf or nil
+
+    ---@type api.events.AutoCommandEventData
+    local data = {
+        id = evt.id,
+        buffer = buffer,
+        event = evt.event == 'User' and evt.match or evt.event,
+        group = defacto_group,
+        is_custom = evt.event == 'User',
+        is_system = evt.event ~= 'User',
+        original = evt,
+    }
 end
 
 ---@class api.events
 local M = {}
 
+---@type api.events.Slot<string, string>
 M.ready = create_auto_command_slot({ 'User' }, {
     description = 'Triggers when vim is fully ready.',
     patterns = { 'LazyVimStarted' },
-})
+}).continue(function()
+    return {}
+end)
 
 M.before_quitting = create_auto_command_slot({ 'VimLeavePre' }, {
     description = 'Triggers when vim is ready to quit.',
-})
+}).continue(function()
+    return {
+        exit_code = vim.v.exiting == vim.v.null and 0 or vim.v.exiting --[[@as integer]],
+        dying = vim.v.dying > 0,
+    }
+end)
 
 M.focus_gained = create_auto_command_slot({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, {
     description = 'Triggers when vim receives focus.',
@@ -153,7 +168,9 @@ M.focus_gained = create_auto_command_slot({ 'FocusGained', 'TermClose', 'TermLea
 M.before_colors_change = create_auto_command_slot({ 'ColorSchemePre', 'ColorScheme' }, {
     description = 'Triggers before the colors change.',
 }).continue(function(data)
-    dbg(data)
+    return {
+        color_scheme = data.match,
+    }
 end)
 
 M.after_colors_change = create_auto_command_slot({ 'ColorScheme' }, {
