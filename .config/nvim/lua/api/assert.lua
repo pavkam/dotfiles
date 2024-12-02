@@ -5,7 +5,8 @@ local types = require 'api.types'
 ---| api.types.Type # the base type.
 ---| api.assert.Type[] # a list of types.
 ---| { [1]: 'list', ['*']: api.assert.Type|nil, ['<']: integer|nil, ['>']: integer|nil  } # a list of values.
----| { [1]: 'number'|'integer'|'string', ['<']: integer|nil, ['>']: integer|nil } # a number.
+---| { [1]: 'number'|'integer', ['<']: integer|nil, ['>']: integer|nil } # a number.
+---| { [1]: 'number'|'integer'|'string', ['*']: string|nil, ['<']: integer|nil, ['>']: integer|nil } # a string.
 ---| { [string|number]: api.assert.Type } # a sub-table.
 
 ---@class (exact) api.assert.AssertEntry # An assertion entry.
@@ -205,6 +206,18 @@ local function validate(parent_field_name, schema)
                         expected_type = field_value_type,
                         actual_type = field_value_type,
                         message = string.format('string is too large (expected at most `%d`)', gt),
+                    })
+
+                    goto continue
+                end
+
+                local string_match = types.get(field_schema['*']) == 'string' and field_schema['*'] or nil
+                if string_match ~= nil and not field_value:match(string_match) then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = field_value_type,
+                        actual_type = field_value_type,
+                        message = string.format('string does not match pattern `%s`', string_match),
                     })
 
                     goto continue

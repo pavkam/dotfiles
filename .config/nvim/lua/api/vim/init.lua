@@ -1,10 +1,5 @@
 local icons = require 'icons'
 
---- Global function to quit the current process
-function vim.quit()
-    vim.api.nvim_command 'cq1'
-end
-
 --- Coerces a value to a list.
 ---@generic T
 ---@param value T|T[]|table<any,T>|nil # any value that will be converted to a list

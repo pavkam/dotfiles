@@ -31,11 +31,10 @@ local config_dir
 local color_theme_needs_update = true
 
 --- Set the ANSI color for a specific index.
----@param color_key number # The index of the color to set.
+---@param color_key integer # The index of the color to set.
 ---@param color string # the color to set.
 local function set_ansi_color(color_key, color)
-    vim.assert.number(color_key)
-    vim.assert.color_string(color, { optional = false })
+    api.assert { color_key = { color_key, 'integer' }, color = { color, { 'string', ['*'] = '^#%x%x%x%x%x%x$' } } }
 
     io.write(('\27]4;%d;%s\7'):format(color_key, color))
 end
