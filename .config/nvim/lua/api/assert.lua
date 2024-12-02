@@ -4,8 +4,8 @@ local types = require 'api.types'
 ---@alias api.assert.Type # The assertion type.
 ---| api.types.Type # the base type.
 ---| api.assert.Type[] # a list of types.
----| { [1]: 'list', [2]: api.assert.Type } # a list of values.
----| { ['*']: api.assert.Type } # a list validator.
+---| { [1]: 'list', ['*']: api.assert.Type|nil, ['<']: integer|nil, ['>']: integer|nil  } # a list of values.
+---| { [1]: 'number'|'integer'|'string', ['<']: integer|nil, ['>']: integer|nil } # a number.
 ---| { [string|number]: api.assert.Type } # a sub-table.
 
 ---@class (exact) api.assert.AssertEntry # An assertion entry.
@@ -44,7 +44,7 @@ local function validate(parent_field_name, schema)
         local field_name = parent_field_name and string.format('%s.%s', parent_field_name, tostring(key))
             or tostring(key)
 
-        if type(entry) ~= 'table' then
+        if types.get(entry) ~= 'table' then
             table.insert(errors, {
                 field = field_name,
                 expected_type = 'table',
@@ -57,9 +57,10 @@ local function validate(parent_field_name, schema)
 
         local field_value = entry[1]
         local field_schema = entry[2]
-        local field_value_type = types.get(field_value)
+        local field_value_raw_type, field_value_type = types.get(field_value)
+        local field_schema_raw_type, field_schema_type = types.get(field_schema)
 
-        if type(field_schema) == 'string' then --[[@cast field_schema string]]
+        if field_schema_raw_type == 'string' then --[[@cast field_schema string]]
             if field_value_type ~= field_schema then
                 table.insert(errors, {
                     field = field_name,
@@ -72,11 +73,11 @@ local function validate(parent_field_name, schema)
             goto continue
         end
 
-        if type(field_schema) ~= 'table' then
+        if field_schema_raw_type ~= 'table' then
             table.insert(errors, {
                 field = field_name,
                 expected_type = 'table',
-                actual_type = type(field_schema),
+                actual_type = field_schema_raw_type,
                 message = 'invalid schema entry',
             })
 
@@ -84,32 +85,136 @@ local function validate(parent_field_name, schema)
         end
 
         ---@cast field_schema table
+        if field_schema_type == 'table' and types.get(field_schema[1]) == 'string' then
+            local possible_type = field_schema[1] --[[@as api.types.Type]]
+            local lt = types.get(field_schema['<']) == 'number' and field_schema['<'] or nil
+            local gt = types.get(field_schema['>']) == 'number' and field_schema['>'] or nil
 
-        local list_item_schema = schema['*']
-        if list_item_schema then
-            if field_value_type ~= 'list' then
-                table.insert(errors, {
-                    field = field_name,
-                    expected_type = 'list',
-                    actual_type = field_value_type,
-                    message = 'not a list',
-                })
+            if possible_type == 'list' then
+                if field_value_type ~= possible_type then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = possible_type,
+                        actual_type = field_value_type,
+                        message = 'not a list',
+                    })
+
+                    goto continue
+                end
+
+                if lt and #field_value < lt then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = field_value_type,
+                        actual_type = field_value_type,
+                        message = string.format('list is too short (expected at least `%d`)', lt),
+                    })
+
+                    goto continue
+                end
+
+                if gt and #field_value > gt then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = field_value_type,
+                        actual_type = field_value_type,
+                        message = string.format('list is too long (expected at most `%d`)', gt),
+                    })
+
+                    goto continue
+                end
+
+                local list_item_schema = field_schema['*']
+
+                if list_item_schema ~= nil then
+                    ---@type api.assert.AssertSchema
+                    local composite_schema = {}
+                    for i, v in ipairs(field_value) do
+                        composite_schema[i] = { v, list_item_schema }
+                    end
+
+                    vim.list_extend(errors, validate(field_name, composite_schema))
+                end
 
                 goto continue
             end
 
-            ---@type api.assert.AssertSchema
-            local composite_schema = {}
-            for i, v in ipairs(field_value) do
-                composite_schema[i] = { v, list_item_schema }
+            if possible_type == 'integer' or possible_type == 'number' then
+                if field_value_type ~= possible_type then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = possible_type,
+                        actual_type = field_value_type,
+                        message = 'invalid type',
+                    })
+
+                    goto continue
+                end
+
+                if lt and field_value < lt then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = field_value_type,
+                        actual_type = field_value_type,
+                        message = string.format('value is too small (expected at least `%d`)', lt),
+                    })
+
+                    goto continue
+                end
+
+                if gt and field_value > gt then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = field_value_type,
+                        actual_type = field_value_type,
+                        message = string.format('value is too large (expected at most `%d`)', gt),
+                    })
+
+                    goto continue
+                end
+
+                goto continue
             end
 
-            vim.list_extend(errors, validate(field_name, composite_schema))
+            if possible_type == 'string' then
+                if field_value_type ~= possible_type then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = possible_type,
+                        actual_type = field_value_type,
+                        message = 'invalid type',
+                    })
 
-            goto continue
+                    goto continue
+                end
+
+                if lt and #field_value < lt then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = field_value_type,
+                        actual_type = field_value_type,
+                        message = string.format('string is too short (expected at least `%d`)', lt),
+                    })
+
+                    goto continue
+                end
+
+                if gt and #field_value > gt then
+                    table.insert(errors, {
+                        field = field_name,
+                        expected_type = field_value_type,
+                        actual_type = field_value_type,
+                        message = string.format('string is too large (expected at most `%d`)', gt),
+                    })
+
+                    goto continue
+                end
+
+                goto continue
+            end
         end
 
-        if vim.islist(field_schema) then
+        if field_schema_type == 'list' then
             local all_inner_errors = {}
             for _, candidate_schema in ipairs(field_schema) do
                 local inner_errors = validate(field_name, { field_value, candidate_schema })
@@ -127,7 +232,7 @@ local function validate(parent_field_name, schema)
             goto continue
         end
 
-        if field_value_type ~= 'list' and field_value_type ~= 'table' then
+        if field_value_raw_type ~= 'table' then
             table.insert(errors, {
                 field = field_name,
                 expected_type = 'table | list',

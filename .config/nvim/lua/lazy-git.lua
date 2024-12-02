@@ -63,7 +63,7 @@ end
 --- Runs a function with the updated color theme for lazy git.
 ---@param done_fn function # the function to call when the update is finished.
 local function with_updated_color_theme(done_fn)
-    vim.assert.callable(done_fn)
+    api.assert { done_fn = { done_fn, 'callable' } }
 
     local function apply()
         ---@type table<string, string[]>

@@ -4,18 +4,15 @@ local assert = require 'api.assert'
 -- HACK: This is a workaround for the fact that lua_ls doesn't support generic classes.
 -- luacheck: push ignore 631
 
----@class (exact) api.events.Slot<TIn, TOut>: { ["continue"]: (fun(continuation: fun(args: TIn, slot: api.events.Slot<TIn, TOut>): TOut): api.events.Slot<TIn, TOut>), ["trigger"]: fun(args: TIn) } # A slot object.
+---@class (exact) api.events.Slot<TArgs>: { ["continue"]: (fun(continuation: fun(args: TArgs, slot:api.events.Slot<TArgs>): any|nil): api.events.Slot<TArgs>), ["trigger"]: fun(args: TArgs|nil) } # A slot object.
 
 -- luacheck: pop
 
----@alias api.events.RawSlot # A raw slot object.
----| api.events.Slot<any, any>
-
 -- Create a new raw slot (internal).
----@param handler (fun(args: any, slot: api.events.RawSlot): any) | nil # the handler of the slot.
----@returns api.events.RawSlot # the slot object.
+---@param handler (fun(args: any, slot: api.events.Slot<any>): any) | nil # the handler of the slot.
+---@return api.events.Slot<any> # the slot object.
 local function new_slot(handler)
-    ---@type table<api.events.RawSlot, boolean>
+    ---@type table<api.events.Slot<any>, boolean>
     local subscribers = {}
 
     local obj = {}
@@ -29,13 +26,15 @@ local function new_slot(handler)
 
     obj.trigger = function(args)
         args = handler and handler(args, obj) or args
+        if not args then
+            return
+        end
 
         for subscriber in pairs(subscribers) do
             subscriber.trigger(args)
         end
     end
 
-    ---@type api.events.RawSlot
     return obj
 end
 
@@ -51,10 +50,11 @@ end
 ---@field buf integer|nil # the buffer the event was triggered on (or `nil` of no buffer).
 ---@field group integer|nil # the group of the auto command.
 ---@field match string|nil # the match of the auto command.
+---@field data table|nil # the data of the auto command.
 
 ---@param events string[] # the list of events to trigger on.
 ---@param opts api.events.AutoCommandOpts # the options for the auto command.
----@returns api.events.Slot<api.events.AutoCommandEventData, any> # the slot object.
+---@return api.events.Slot<vim.AutoCommandData> # the slot object.
 local function create_auto_command_slot(events, opts)
     assert {
         events = { events, { ['*'] = 'string' } },
@@ -62,9 +62,9 @@ local function create_auto_command_slot(events, opts)
             opts,
             {
                 buffer = { 'number', 'nil' },
-                description = 'string',
-                group = { 'string', 'nil' },
-                patterns = { 'nil', { ['*'] = 'string' } },
+                description = { 'string', ['>'] = 0 },
+                group = { 'nil', { 'string', ['>'] = 0 } },
+                patterns = { 'nil', { 'list', ['*'] = 'string' } },
             },
         },
     }
@@ -112,7 +112,6 @@ local function create_auto_command_slot(events, opts)
         vim.api.nvim_exec_autocmds(events, { pattern = opts.patterns, modeline = false, data = args })
     end
 
-    ---@type api.events.Slot<vim.AutoCommandData, any>
     return slot
 end
 
@@ -126,7 +125,7 @@ end
 ---@field original table # the original event data.
 
 ---@param args vim.AutoCommandData
-local function buffer_continuation(args)
+local function with_buffer_details(args)
     local buffer = vim.api.nvim_buf_is_valid(evt.buf) and evt.buf or nil
 
     ---@type api.events.AutoCommandEventData
@@ -144,7 +143,8 @@ end
 ---@class api.events
 local M = {}
 
----@type api.events.Slot<string, string>
+-- Slot that triggers when vim is fully ready.
+---@type api.events.Slot<{}>
 M.ready = create_auto_command_slot({ 'User' }, {
     description = 'Triggers when vim is fully ready.',
     patterns = { 'LazyVimStarted' },
@@ -152,7 +152,9 @@ M.ready = create_auto_command_slot({ 'User' }, {
     return {}
 end)
 
-M.before_quitting = create_auto_command_slot({ 'VimLeavePre' }, {
+-- Slot that triggers when vim is about to quit.
+---@type api.events.Slot<{ exit_code: integer, dying: boolean }>
+M.quitting = create_auto_command_slot({ 'VimLeavePre' }, {
     description = 'Triggers when vim is ready to quit.',
 }).continue(function()
     return {
@@ -161,20 +163,35 @@ M.before_quitting = create_auto_command_slot({ 'VimLeavePre' }, {
     }
 end)
 
+-- Slot that triggers when vim receives focus.
+---@type api.events.Slot<{}>
 M.focus_gained = create_auto_command_slot({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, {
     description = 'Triggers when vim receives focus.',
-})
+}).continue(function()
+    return {}
+end)
 
-M.before_colors_change = create_auto_command_slot({ 'ColorSchemePre', 'ColorScheme' }, {
+-- Slot that triggers when the colors change.
+---@type api.events.Slot<{ color_scheme: string, before: boolean, after: boolean }>
+M.colors_change = create_auto_command_slot({ 'ColorSchemePre', 'ColorScheme' }, {
     description = 'Triggers before the colors change.',
 }).continue(function(data)
     return {
+        before = data.event == 'ColorSchemePre',
+        after = data.event == 'ColorScheme',
         color_scheme = data.match,
     }
 end)
 
-M.after_colors_change = create_auto_command_slot({ 'ColorScheme' }, {
-    description = 'Triggers after the colors change.',
-})
+--- Slot that triggers when a plugin is loaded.
+---@type api.events.Slot<{ plugin: string }>
+M.plugin_loaded = create_auto_command_slot({ 'User' }, {
+    description = 'Triggers when a plugin is loaded.',
+    patterns = { 'LazyLoad' },
+}).continue(function(data)
+    return type(data.data) == 'string' and {
+        plugin = data.data,
+    } or nil
+end)
 
 return M

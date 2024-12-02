@@ -163,20 +163,23 @@ local function swap_sessions(old_name, new_name)
     end
 end
 
--- TODO: session broken again, what a shocker!
 if enabled() then
-    vim.when.quitting(function()
+    api.events.quitting.continue(function(args)
         local current = M.current()
-        return current and M.save_session(current)
+        if not args.dying and current then
+            M.save_session(current)
+        end
     end)
 
-    vim.when.ready(function()
+    api.events.ready.continue(function()
         local current = M.current()
-        return current and M.restore_session(current)
+        if current then
+            M.restore_session(current)
+        end
     end)
 
-    vim.when.focus_gained(function()
-        return swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
+    api.events.focus_gained.continue(function()
+        swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
     end)
 
     vim.defer_fn(function()
