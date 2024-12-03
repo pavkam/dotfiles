@@ -38,7 +38,7 @@ vim.headless = vim.list_contains(vim.api.nvim_get_vvar 'argv', '--headless') or 
 require 'options'
 
 -- Setup the Lazy plugin manager
-local lazypath = vim.fs.joinpath(vim.fs.data_dir, 'lazy', 'lazy.nvim')
+local lazypath = vim.fs.joinpath(ide.file_system.DATA_DIRECTORY, 'lazy', 'lazy.nvim')
 if not vim.uv.fs_stat(lazypath) then
     vim.fn.system {
         'git',
@@ -96,7 +96,7 @@ require 'init'
 vim.api.nvim_create_autocmd('User', {
     pattern = 'LazyVimStarted',
     callback = function()
-        local opening_a_dir = vim.fn.argc() == 1 and vim.fs.dir_exists(vim.fn.argv(0) --[[@as string]])
+        local opening_a_dir = vim.fn.argc() == 1 and ide.file_system.directory_exists(vim.fn.argv(0) --[[@as string]])
 
         if opening_a_dir then
             require 'neo-tree'

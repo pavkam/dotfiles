@@ -135,18 +135,18 @@ function vim.fn.expand_target(target)
             return target, '', false
         end
 
-        return target, vim.fs.expand_path(path) or path, true
+        return target, ide.file_system.expand_path(path) or path, true
     elseif type(target) == 'string' then
         ---@cast target string
         if target == '' then
             return vim.api.nvim_get_current_buf(), '', false
         end
 
-        local path = vim.fs.expand_path(target) or target
+        local path = ide.file_system.expand_path(target) or target
 
         for _, buf in ipairs(vim.buf.get_listed_buffers { loaded = false }) do
             local buf_path = vim.api.nvim_buf_get_name(buf)
-            if buf_path and buf_path ~= '' and vim.fs.expand_path(buf_path) == path then
+            if buf_path and buf_path ~= '' and ide.file_system.expand_path(buf_path) == path then
                 return buf, path, true
             end
         end
@@ -214,48 +214,6 @@ function vim.fn.fold_marker(line, window)
 
         return nil
     end)
-end
-
----@alias vim.fn.WindowType # The type of the window.
----| 'internal' # the window is a vim-internal window.
----| 'command' # the command-line window.
----| 'main' # the main window.
----| 'float' # a floating window.
----| 'split' # a split window.
----| 'quick-fix' # the quick-fix window.
----| 'location-list' # the location-list window.
-
-local win_type_mapping = {
-    autocmd = 'internal',
-    command = 'command',
-    loclist = 'location-list',
-    popup = 'float',
-    preview = 'internal',
-    quickfix = 'quick-fix',
-}
-
---- Gets the type of a window
----@param window integer|nil # the window to get the type for or the current window if nil
-function vim.fn.win_type(window)
-    window = window or vim.api.nvim_get_current_win()
-    assert(type(window) == 'number')
-
-    local type = win_type_mapping[vim.fn.win_gettype(window)]
-    if type then
-        return type
-    end
-
-    local config = vim.api.nvim_win_get_config(window)
-    if config.relative ~= '' or config.zindex then
-        return 'float'
-    end
-
-    if config.split then
-        return 'split'
-    end
-
-    -- TODO: this check ain't working baby
-    return 'main'
 end
 
 --- Checks if a window is in diff mode.

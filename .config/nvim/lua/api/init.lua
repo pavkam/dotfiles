@@ -156,6 +156,7 @@ _G.ide = {
     assert = require 'api.assert',
     text = require 'api.text',
     file_system = require 'api.file_system',
+    file_types = require 'api.file_types',
     process = require 'api.process',
     events = require 'api.events',
     tui = require 'api.tui',
@@ -164,7 +165,6 @@ _G.ide = {
 }
 
 require 'api.vim.fn'
-require 'api.vim.fs'
 require 'api.vim.filetype'
 require 'api.vim.buf'
 

@@ -25,7 +25,7 @@ local theme = {
 ---@type string
 local command = 'lazygit'
 ---@type string
-local custom_config_path = vim.fs.normalize(vim.fs.joinpath(vim.fs.cache_dir, 'lazy-git-config.json'))
+local custom_config_path = vim.fs.normalize(vim.fs.joinpath(ide.file_system.CACHE_DIRECTORY, 'lazy-git-config.json'))
 ---@type string|nil
 local config_dir
 local color_theme_needs_update = true
@@ -94,7 +94,7 @@ local function with_updated_color_theme(done_fn)
 
         local json = vim.json.encode(config)
 
-        local ok, err = vim.fs.write_text_file(custom_config_path, json)
+        local ok, err = ide.file_system.write_text_file(custom_config_path, json)
         if not ok then
             ide.tui.error(
                 string.format(

@@ -4,7 +4,7 @@ local qf = require 'qf'
 
 ---@class core.session
 local M = {}
-local session_dir = vim.fs.joinpath(vim.fs.data_dir, 'sessions')
+local session_dir = vim.fs.joinpath(ide.file_system.DATA_DIRECTORY, 'sessions')
 
 ---@type string
 local setting_name = 'current_session_name'
@@ -88,7 +88,7 @@ function M.save_session(name)
     }
 
     local json = vim.json.encode(custom) or '{}'
-    error_call('save settings', name, vim.fs.write_text_file, custom_file, json, { throw_errors = true })
+    error_call('save settings', name, ide.file_system.write_text_file, custom_file, json, { throw_errors = true })
 
     ide.tui.hint(string.format('Saved session `%s`', name), { prefix_icon = icons.UI.SessionSave })
 end

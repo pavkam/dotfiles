@@ -181,7 +181,7 @@ function M.get_file_icon(path, width, ltr)
         return icon
     end
 
-    if vim.fs.dir_exists(path) then
+    if ide.file_system.directory_exists(path) then
         return fit(M.Files.ClosedFolder), 'Normal'
     end
 
@@ -199,7 +199,7 @@ function M.get_file_icon(path, width, ltr)
 
     if dev_icons_available and path and #path > 0 then
         local dev_icons = require 'nvim-web-devicons'
-        local split = vim.fs.split_path(path)
+        local split = ide.file_system.split_path(path)
 
         local icon, icon_highlight = dev_icons.get_icon(split.base_name, split.compound_extension, { default = false })
 

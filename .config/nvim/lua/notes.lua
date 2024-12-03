@@ -24,7 +24,7 @@ end
 local function grep(global)
     local telescope = require 'telescope.builtin'
     local root = get_notes_root(global)
-    if not vim.fs.dir_exists(root) then
+    if not ide.file_system.directory_exists(root) then
         ide.tui.info 'No notes saved'
         return
     end
@@ -42,7 +42,7 @@ end
 local function find(global)
     local telescope = require 'telescope.builtin'
     local root = get_notes_root(global)
-    if not vim.fs.dir_exists(root) then
+    if not ide.file_system.directory_exists(root) then
         ide.tui.info 'No notes saved'
         return
     end

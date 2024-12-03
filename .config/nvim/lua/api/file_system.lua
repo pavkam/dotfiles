@@ -3,9 +3,9 @@
 local M = {}
 
 --- TODO: cleanup asserts
---- Expands a path to its canonical form resolving symlinks and removing extra slashes
----@param path string # the path to check
----@return string|nil # the expanded path or nil if the path could not be expanded
+--- Expands a path to its canonical form resolving symlinks and removing extra slashes.
+---@param path string # the path to check.
+---@return string|nil # the expanded path or nil if the path could not be expanded.
 function M.expand_path(path)
     assert(type(path) == 'string' and path ~= '')
 
@@ -27,6 +27,77 @@ function M.expand_path(path)
     return nil
 end
 
+---@alias api.file_system.ObjectType # The type of a file system object.
+---| "file" # a regular file.
+---| "directory" # a directory.
+---| "link" # a symbolic link.
+---| "fifo" # a named pipe.
+---| "socket" # a socket.
+---| "char" # a character device.
+---| "block" # a block device.
+
+--- Gets the type of file identified by path.
+---@param path string # the path to check.
+---@return api.file_system.ObjectType | nil # the type of the file system object or `nil`.
+---if the file does not exist
+function M.path_type(path)
+    local res_path = ide.file_system.expand_path(path)
+    if not res_path then
+        return nil
+    end
+
+    local stat, err = vim.uv.fs_stat(res_path)
+    if err or not stat then
+        return nil
+    end
+
+    return stat.type
+end
+
+--- Checks if a directory exists.
+---@param path string # the path to check.
+---@return boolean # true if the file exists, false otherwise.
+function M.directory_exists(path)
+    return M.path_type(path) == 'directory'
+end
+
+--- Checks if a file exists.
+---@param path string # the path to check.
+---@return boolean # true if the file exists, false otherwise.
+function M.file_exists(path)
+    return M.path_type(path) == 'file'
+end
+
+---@class (exact) vim.PathComponents # The components of a path
+---@field dir_name string # the directory name
+---@field base_name string # the base name
+---@field extension string # the extension
+---@field compound_extension string # the compound extension
+
+--- Splits a file path into its components
+---@param path string # the path to split
+---@return vim.PathComponents # the components of the path
+function M.split_path(path)
+    assert(type(path) == 'string' and path ~= '')
+
+    local dir_name = vim.fn.fnamemodify(path, ':h')
+    local base_name = vim.fn.fnamemodify(path, ':t')
+    local extension = vim.fn.fnamemodify(path, ':e')
+    local compound_extension = extension
+
+    local parts = vim.split(base_name, '%.')
+    if #parts > 2 then
+        compound_extension = table.concat(vim.list_slice(parts, #parts - 1), '.')
+    end
+
+    return {
+        dir_name = dir_name,
+        base_name = base_name,
+        extension = extension,
+        compound_extension = compound_extension,
+    }
+end
+
 --- The data directory of NeoVim
 M.DATA_DIRECTORY = M.expand_path(vim.fn.stdpath 'data' --[[@as string]])
 
@@ -36,6 +107,75 @@ M.CONFIGURATION_DIRECTORY = M.expand_path(vim.fn.stdpath 'config' --[[@as string
 --- The cache directory of NeoVim
 M.CACHE_DIRECTORY = M.expand_path(vim.fn.stdpath 'cache' --[[@as string]])
 
+--- Scans for files in a list of directories and returns the first found one.
+---@param base_paths string|(string|nil)[] # the list of base paths to check.
+---@param files string|(string|nil)[] # the list of files to check.
+---@return string|nil # the first found file or nil if none found.
+function M.scan(base_paths, files)
+    assert(type(base_paths) == 'string' or vim.islist(base_paths))
+    assert(type(files) == 'string' or vim.islist(files))
+
+    base_paths = table.to_list(base_paths)
+    files = table.to_list(files)
+
+    for _, path in ipairs(base_paths) do
+        for _, file in ipairs(files) do
+            local full = vim.fs.joinpath(path, file)
+            if full and ide.file_system.file_exists(full) then
+                return vim.fs.joinpath(path, file)
+            end
+        end
+    end
+
+    return nil
+end
+
+---@class vim.WriteTextFileOpts
+---@field throw_errors boolean|nil # whether to throw errors or not, defaults to false
+
+--- Writes a string to a file
+---@param path string # the path to the file to write to.
+---@param content string # the content to write.
+---@param opts vim.WriteTextFileOpts|nil # the options to use when writing the file.
+---@return boolean, string|nil # true if the write was successful, false otherwise.
+function M.write_text_file(path, content, opts)
+    opts = opts or {}
+    opts.throw_errors = opts.throw_errors or false
+
+    assert(type(path) == 'string' and path ~= '')
+    assert(type(content) == 'string')
+    assert(type(opts.throw_errors) == 'boolean')
+
+    local file, err = io.open(path, 'w')
+    if not file then
+        if opts.throw_errors then
+            error(err)
+        end
+
+        return false, err
+    end
+
+    local ok
+    ok, err = file:write(content)
+    if not ok then
+        if opts.throw_errors then
+            error(err)
+        end
+
+        return false, err
+    end
+
+    ok, err = file:close()
+    if not ok then
+        if opts.throw_errors then
+            error(err)
+        end
+
+        return false, err
+    end
+
+    return true, nil
+end
 ---@class (exact) api.fs.FormatRelativePathOpts # The options for formatting a relative path.
 ---@field ellipsis string|nil # the ellipsis to use, defaults to '…'.
 ---@field include_base_dir boolean|nil # whether to include the base directory in the path, defaults to false.
