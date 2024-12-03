@@ -1,8 +1,5 @@
----@module "api.types"
-local types = require 'api.types'
-
 ---@alias api.assert.Type # The assertion type.
----| api.types.Type # the base type.
+---| extended_type # the base type.
 ---| api.assert.Type[] # a list of types.
 ---| { [1]: 'list', ['*']: api.assert.Type|nil, ['<']: integer|nil, ['>']: integer|nil  } # a list of values.
 ---| { [1]: 'number'|'integer', ['<']: integer|nil, ['>']: integer|nil } # a number.
@@ -18,8 +15,8 @@ local types = require 'api.types'
 
 ---@class (exact) api.assert.ValidateError # The error of a validation.
 ---@field field string|nil # the field that failed the validation.
----@field expected_type api.types.Type # the expected type.
----@field actual_type api.types.Type # the actual type.
+---@field expected_type extended_type # the expected type.
+---@field actual_type extended_type # the actual type.
 ---@field message string # the message to display.
 
 -- Validates a given schema.
@@ -45,7 +42,7 @@ local function validate(parent_field_name, schema)
         local field_name = parent_field_name and string.format('%s.%s', parent_field_name, tostring(key))
             or tostring(key)
 
-        if types.get(entry) ~= 'table' then
+        if extended_type(entry) ~= 'table' then
             table.insert(errors, {
                 field = field_name,
                 expected_type = 'table',
@@ -58,8 +55,8 @@ local function validate(parent_field_name, schema)
 
         local field_value = entry[1]
         local field_schema = entry[2]
-        local field_value_raw_type, field_value_type = types.get(field_value)
-        local field_schema_raw_type, field_schema_type = types.get(field_schema)
+        local field_value_raw_type, field_value_type = extended_type(field_value)
+        local field_schema_raw_type, field_schema_type = extended_type(field_schema)
 
         if field_schema_raw_type == 'string' then --[[@cast field_schema string]]
             if field_value_type ~= field_schema then
@@ -86,10 +83,10 @@ local function validate(parent_field_name, schema)
         end
 
         ---@cast field_schema table
-        if field_schema_type == 'table' and types.get(field_schema[1]) == 'string' then
-            local possible_type = field_schema[1] --[[@as api.types.Type]]
-            local lt = types.get(field_schema['<']) == 'number' and field_schema['<'] or nil
-            local gt = types.get(field_schema['>']) == 'number' and field_schema['>'] or nil
+        if field_schema_type == 'table' and extended_type(field_schema[1]) == 'string' then
+            local possible_type = field_schema[1] --[[@as extended_type]]
+            local lt = extended_type(field_schema['<']) == 'number' and field_schema['<'] or nil
+            local gt = extended_type(field_schema['>']) == 'number' and field_schema['>'] or nil
 
             if possible_type == 'list' then
                 if field_value_type ~= possible_type then
@@ -103,23 +100,23 @@ local function validate(parent_field_name, schema)
                     goto continue
                 end
 
-                if lt and #field_value < lt then
+                if lt and #field_value > lt then
                     table.insert(errors, {
                         field = field_name,
                         expected_type = field_value_type,
                         actual_type = field_value_type,
-                        message = string.format('list is too short (expected at least `%d`)', lt),
+                        message = string.format('list is too long (expected at most `%d`)', lt),
                     })
 
                     goto continue
                 end
 
-                if gt and #field_value > gt then
+                if gt and #field_value < gt then
                     table.insert(errors, {
                         field = field_name,
                         expected_type = field_value_type,
                         actual_type = field_value_type,
-                        message = string.format('list is too long (expected at most `%d`)', gt),
+                        message = string.format('list is too short (expected at least `%d`)', gt),
                     })
 
                     goto continue
@@ -152,23 +149,23 @@ local function validate(parent_field_name, schema)
                     goto continue
                 end
 
-                if lt and field_value < lt then
+                if lt and field_value > lt then
                     table.insert(errors, {
                         field = field_name,
                         expected_type = field_value_type,
                         actual_type = field_value_type,
-                        message = string.format('value is too small (expected at least `%d`)', lt),
+                        message = string.format('value is too large (expected at most `%d`)', lt),
                     })
 
                     goto continue
                 end
 
-                if gt and field_value > gt then
+                if gt and field_value < gt then
                     table.insert(errors, {
                         field = field_name,
                         expected_type = field_value_type,
                         actual_type = field_value_type,
-                        message = string.format('value is too large (expected at most `%d`)', gt),
+                        message = string.format('value is too small (expected at least `%d`)', gt),
                     })
 
                     goto continue
@@ -189,29 +186,29 @@ local function validate(parent_field_name, schema)
                     goto continue
                 end
 
-                if lt and #field_value < lt then
+                if lt and #field_value > lt then
                     table.insert(errors, {
                         field = field_name,
                         expected_type = field_value_type,
                         actual_type = field_value_type,
-                        message = string.format('string is too short (expected at least `%d`)', lt),
+                        message = string.format('string is too long (expected at most `%d`)', lt),
                     })
 
                     goto continue
                 end
 
-                if gt and #field_value > gt then
+                if gt and #field_value < gt then
                     table.insert(errors, {
                         field = field_name,
                         expected_type = field_value_type,
                         actual_type = field_value_type,
-                        message = string.format('string is too large (expected at most `%d`)', gt),
+                        message = string.format('string is too short (expected at least `%d`)', gt),
                     })
 
                     goto continue
                 end
 
-                local string_match = types.get(field_schema['*']) == 'string' and field_schema['*'] or nil
+                local string_match = extended_type(field_schema['*']) == 'string' and field_schema['*'] or nil
                 if string_match ~= nil and not field_value:match(string_match) then
                     table.insert(errors, {
                         field = field_name,

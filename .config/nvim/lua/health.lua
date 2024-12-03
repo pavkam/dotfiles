@@ -118,10 +118,7 @@ local function show_for_buffer(buffer)
     local dap_info = md(package.loaded['dap'] and debugging.configurations(buffer))
 
     local lsp_info = md {
-        LSP = vim.inflate_list(
-            function(client)
-                return client.name
-            end,
+        LSP = table.inflate(
             vim.iter(vim.lsp.get_clients { bufnr = buffer })
                 :map(function(client)
                     return {
@@ -134,7 +131,10 @@ local function show_for_buffer(buffer)
                         requests = client.requests,
                     }
                 end)
-                :totable()
+                :totable(),
+            function(client)
+                return client.name
+            end
         ),
     }
 

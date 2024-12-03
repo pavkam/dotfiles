@@ -104,7 +104,7 @@ return {
                 end
 
                 ---@cast linter_def lint.Linter
-                lint.linters[name] = vim.tbl_merge(linter_def, linter)
+                lint.linters[name] = table.merge(linter_def, linter)
 
                 if args then
                     lint.linters[name].args = args

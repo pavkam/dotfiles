@@ -56,7 +56,7 @@ end
 local function error_call(what, session, ...)
     local ok, res_or_error = pcall(...)
     if not ok then
-        vim.error(
+        ide.tui.error(
             string.format('Failed to %s for session `%s`:\n```%s```', what, session, vim.inspect(res_or_error)),
             { prefix_icon = icons.UI.Error }
         )
@@ -90,7 +90,7 @@ function M.save_session(name)
     local json = vim.json.encode(custom) or '{}'
     error_call('save settings', name, vim.fs.write_text_file, custom_file, json, { throw_errors = true })
 
-    vim.hint(string.format('Saved session `%s`', name), { prefix_icon = icons.UI.SessionSave })
+    ide.tui.hint(string.format('Saved session `%s`', name), { prefix_icon = icons.UI.SessionSave })
 end
 
 --- Resets the UI
@@ -128,8 +128,8 @@ function M.restore_session(name)
             error_call('restore vim session', name, vim.cmd.source, session_file)
 
             vim.schedule(function()
-                vim.refresh_ui()
-                vim.hint(string.format('Restored session `%s`', name), { prefix_icon = icons.UI.SessionSave })
+                ide.tui.redraw()
+                ide.tui.hint(string.format('Restored session `%s`', name), { prefix_icon = icons.UI.SessionSave })
             end)
         end)
     end
@@ -164,21 +164,17 @@ local function swap_sessions(old_name, new_name)
 end
 
 if enabled() then
-    api.events.quitting.continue(function(args)
-        local current = M.current()
-        if not args.dying and current then
-            M.save_session(current)
+    ide.events.quitting.continue(function(args)
+        if not args.dying then
+            swap_sessions(M.current(), nil)
         end
     end)
 
-    api.events.ready.continue(function()
-        local current = M.current()
-        if current then
-            M.restore_session(current)
-        end
+    ide.events.ready.continue(function()
+        swap_sessions(nil, M.current())
     end)
 
-    api.events.focus_gained.continue(function()
+    ide.events.focus_gained.continue(function()
         swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
     end)
 

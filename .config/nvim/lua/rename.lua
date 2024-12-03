@@ -46,7 +46,7 @@ local function handle_post_rename(result)
     end
 
     -- notify and fill QF
-    vim.info(notification)
+    ide.tui.info(notification)
     if #entries > 0 then
         qf.add_items('c', entries)
     end

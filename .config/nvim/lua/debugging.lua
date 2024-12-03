@@ -44,7 +44,7 @@ function M.continue(target)
     local current_session = dap.session()
     if not current_session then
         if not setup(target) then
-            vim.error 'No debugging configuration found for this project type.'
+            ide.tui.error 'No debugging configuration found for this project type.'
             return
         end
     end
@@ -55,13 +55,13 @@ function M.continue(target)
             return i.name
         end, function(configuration)
             if configuration then
-                vim.info("Starting debugging session '" .. configuration.name .. "' ...")
+                ide.tui.info("Starting debugging session '" .. configuration.name .. "' ...")
 
                 dap.run(configuration, { filetype = project_type })
             end
         end)
     elseif current_session then
-        vim.info("Resuming debugging session '" .. current_session.config.name .. "' ...")
+        ide.tui.info("Resuming debugging session '" .. current_session.config.name .. "' ...")
         dap.continue()
     end
 end

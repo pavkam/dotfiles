@@ -1,6 +1,6 @@
 local hl = require 'hl'
 
-api.events.colors_change
+ide.events.colors_change
     .continue(function()
         hl.make_hls {
             CopilotAnnotation = '@string.regexp',

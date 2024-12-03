@@ -49,7 +49,7 @@ local function linting_status(buffer)
     local lint = require 'lint'
 
     ---@type table<integer, table<string, lint.LintProc>>
-    local tbl = api.process.get_up_value(lint.try_lint, 'running_procs_by_buf')
+    local tbl = ide.process.get_up_value(lint.try_lint, 'running_procs_by_buf')
     local running_linters = tbl and tbl[buffer] or {}
 
     for _, linter in pairs(running_linters) do
@@ -80,7 +80,7 @@ function M.active(buffer)
     return linters(buffer)
 end
 
-local debounced_lint = vim.debounce_fn(
+local debounced_lint = ide.async.debounce(
     ---@param buffer integer
     ---@param names string[]
     function(buffer, names)
@@ -129,7 +129,7 @@ end, {
     scope = { 'buffer', 'global' },
 })
 
-if vim.has_plugin 'nvim-lint' then
+if ide.plugins.has 'nvim-lint' then
     -- setup auto-commands
     events.on_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(evt)
         if M.enabled(evt.buf) then

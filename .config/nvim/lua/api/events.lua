@@ -88,7 +88,7 @@ local function create_auto_command_slot(events, opts)
                     ', '
                 )
 
-                vim.error(
+                ide.tui.error(
                     string.format(
                         'Error in auto command `%s`: %s\nPayload:\n%s\nRegistered at:\n%s',
                         formatted,
@@ -194,4 +194,4 @@ M.plugin_loaded = create_auto_command_slot({ 'User' }, {
     } or nil
 end)
 
-return M
+return table.freeze(M)

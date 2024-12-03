@@ -95,11 +95,11 @@ local function update_tasks(interval)
             task.ttl = task.ttl - interval
 
             if task.ttl <= 0 then
-                vim.warn('Task "' .. class .. '" is still running')
+                ide.tui.warn('Task "' .. class .. '" is still running')
                 tasks[class].ttl = tasks[class].timeout
             else
                 if task.fn and not task.fn(buffer) then
-                    vim.hint('Task "' .. class .. '" has finished')
+                    ide.tui.hint('Task "' .. class .. '" has finished')
                     tasks[class] = nil
                 else
                     tasks[class] = task

@@ -34,7 +34,7 @@ local function get_listed_buffers()
     local all = vim.buf.get_listed_buffers()
     vim.list_extend(all, vim.buf.get_listed_buffers { loaded = false, listed = false })
 
-    all = vim.list_uniq(all)
+    all = table.list_uniq(all)
     table.sort(
         all,
         ---@param a integer
@@ -234,7 +234,7 @@ local function get_items(opts)
         )
         :totable()
 
-    return vim.list_uniq(
+    return table.list_uniq(
         mapped,
         ---@param file ui.file_palette.Entry
         function(file)
@@ -276,7 +276,7 @@ local function get_entry_maker(displayer)
 
     ---@param entry ui.file_palette.Entry
     return function(entry)
-        return vim.tbl_merge(entry, {
+        return table.merge(entry, {
             ordinal = entry.filename,
             display = make_display,
         })

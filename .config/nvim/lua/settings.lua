@@ -174,7 +174,7 @@ function M.register_toggle(option, toggle_fn, opts)
     assert(type(opts.name) == 'string' and opts.name ~= '')
     assert(type(toggle_fn) == 'function')
 
-    local scopes = assert(vim.to_list(opts.scope))
+    local scopes = assert(table.to_list(opts.scope))
 
     for _, scope in ipairs(scopes) do
         assert(scope == 'buffer' or scope == 'global')
@@ -192,7 +192,7 @@ function M.register_toggle(option, toggle_fn, opts)
 
             if buffer ~= nil then
                 local file_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ':t')
-                vim.hint(
+                ide.tui.hint(
                     string.format(
                         'Turning **%s** `%s` for `%s`.',
                         enabled and 'off' or 'on',
@@ -202,7 +202,7 @@ function M.register_toggle(option, toggle_fn, opts)
                     { prefix_icon = icons.UI.Toggle }
                 )
             else
-                vim.hint(
+                ide.tui.hint(
                     string.format(
                         'Turning **%s** `%s` globally.',
                         enabled and 'off' or 'on',

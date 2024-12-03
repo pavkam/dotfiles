@@ -24,7 +24,7 @@ local M = {}
 function M.map(mode, key, action, opts)
     opts = opts or {}
 
-    if vim.has_plugin 'which-key.nvim' and mode ~= 'c' then
+    if ide.plugins.has 'which-key.nvim' and mode ~= 'c' then
         local wk = require 'which-key'
         wk.add {
             key,
@@ -83,7 +83,7 @@ function M.attach(file_types, callback, force)
     if file_types == nil then
         file_types = '*'
     else
-        file_types = vim.to_list(file_types)
+        file_types = table.to_list(file_types)
     end
 
     return events.on_event('FileType', function(evt)
@@ -96,7 +96,7 @@ function M.attach(file_types, callback, force)
             ---@diagnostic disable-next-line: param-type-mismatch
             local has_mapping = not vim.tbl_isempty(vim.fn.maparg(lhs, mode, 0, 1))
             if not has_mapping or force then
-                M.map(mode, lhs, rhs, vim.tbl_merge({ buffer = evt.buf }, opts or {}))
+                M.map(mode, lhs, rhs, table.merge({ buffer = evt.buf }, opts or {}))
             end
         end
 

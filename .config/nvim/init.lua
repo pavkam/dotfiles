@@ -24,12 +24,12 @@
 require 'api'
 
 if not vim.fn.executable 'git' then
-    api.process.fatal 'git required'
+    ide.process.fatal 'git required'
     return
 end
 
 if not vim.fn.has 'nvim-0.10' then
-    api.process.fatal 'minimum required Neovim version is 0.10'
+    ide.process.fatal 'minimum required Neovim version is 0.10'
     return
 end
 

@@ -34,7 +34,7 @@ local color_theme_needs_update = true
 ---@param color_key integer # The index of the color to set.
 ---@param color string # the color to set.
 local function set_ansi_color(color_key, color)
-    api.assert { color_key = { color_key, 'integer' }, color = { color, { 'string', ['*'] = '^#%x%x%x%x%x%x$' } } }
+    ide.assert { color_key = { color_key, 'integer' }, color = { color, { 'string', ['*'] = '^#%x%x%x%x%x%x$' } } }
 
     io.write(('\27]4;%d;%s\7'):format(color_key, color))
 end
@@ -62,7 +62,7 @@ end
 --- Runs a function with the updated color theme for lazy git.
 ---@param done_fn function # the function to call when the update is finished.
 local function with_updated_color_theme(done_fn)
-    api.assert { done_fn = { done_fn, 'callable' } }
+    ide.assert { done_fn = { done_fn, 'callable' } }
 
     local function apply()
         ---@type table<string, string[]>
@@ -96,7 +96,7 @@ local function with_updated_color_theme(done_fn)
 
         local ok, err = vim.fs.write_text_file(custom_config_path, json)
         if not ok then
-            vim.error(
+            ide.tui.error(
                 string.format(
                     'Failed to apply custom Lazygit theme at `%s`\nError was: %s.',
                     custom_config_path,

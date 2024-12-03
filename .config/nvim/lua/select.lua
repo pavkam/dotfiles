@@ -49,7 +49,7 @@ function M.advanced(items, opts)
 
     local callback = opts.callback
         or function(entry)
-            vim.warn('No handler defined, selected: ' .. vim.inspect(entry))
+            ide.tui.warn('No handler defined, selected: ' .. vim.inspect(entry))
         end
     opts.callback = nil
 

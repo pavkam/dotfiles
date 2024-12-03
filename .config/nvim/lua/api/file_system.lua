@@ -1,7 +1,5 @@
-local types = require 'api.types'
-
 -- Filesystem API
----@class api.fs
+---@class api.file_system
 local M = {}
 
 --- TODO: cleanup asserts
@@ -89,4 +87,4 @@ function M.format_relative_path(prefix, path, opts)
     return path
 end
 
-return types.freeze_table(M)
+return table.freeze(M)

@@ -165,14 +165,14 @@ vim.keymap.set('n', mouse_key_name, function()
     if clicked_sign then
         if clicked_sign.name:match '^DiagnosticSign' then
             vim.schedule(function()
-                vim.invoke_on_line(vim.diagnostic.open_float, pos.line, { window = window })
+                ide.tui.invoke_on_line(vim.diagnostic.open_float, pos.line, { window = window })
             end)
 
             return
         end
 
         if clicked_sign.name == 'DapBreakpoint' then
-            vim.invoke_on_line(require('dap').toggle_breakpoint, pos.line, { window = window })
+            ide.tui.invoke_on_line(require('dap').toggle_breakpoint, pos.line, { window = window })
             return
         end
 
@@ -180,7 +180,7 @@ vim.keymap.set('n', mouse_key_name, function()
             return
         end
 
-        vim.warn(
+        ide.tui.warn(
             string.format(
                 'No handler for sign of type: `%s`, highlight `%s` and sign `"%s"`.',
                 clicked_sign.name,
@@ -189,8 +189,8 @@ vim.keymap.set('n', mouse_key_name, function()
             )
         )
         return
-    elseif pos.wincol <= 2 and vim.has_plugin 'nvim-dap' then
-        vim.invoke_on_line(require('dap').toggle_breakpoint, pos.line, { window = window })
+    elseif pos.wincol <= 2 and ide.plugins.has 'nvim-dap' then
+        ide.tui.invoke_on_line(require('dap').toggle_breakpoint, pos.line, { window = window })
         return
     end
 

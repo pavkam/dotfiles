@@ -21,7 +21,7 @@ local function hover()
     elseif lsp.buffer_has_capability(0, 'hover') then
         vim.lsp.buf.hover()
     else
-        vim.info 'No hover information available!'
+        ide.tui.info 'No hover information available!'
     end
 end
 

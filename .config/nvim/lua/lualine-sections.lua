@@ -23,8 +23,8 @@ local function sexify(prefix, list, len_max, collapse_max)
         return prefix
     end
 
-    return vim.abbreviate(
-        icons.fit(prefix, 2) .. table.concat(vim.to_list(list), ' ' .. icons.fit(icons.TUI.ListSeparator, 2)),
+    return ide.text.abbreviate(
+        icons.fit(prefix, 2) .. table.concat(table.to_list(list), ' ' .. icons.fit(icons.TUI.ListSeparator, 2)),
         { max = len_max }
     )
 end
@@ -302,7 +302,7 @@ local components = {
         end,
     },
     --- The section that shows the status of the copilot.
-    copilot = vim.has_plugin 'copilot.lua' and {
+    copilot = ide.plugins.has 'copilot.lua' and {
         settings.transient(function()
             return sexify(icons.Symbols.Copilot, require('copilot.api').status.data.message or '')
         end),
@@ -417,7 +417,7 @@ local components = {
             ['neo-tree'] = 'File System',
         },
         fmt = function(name)
-            return vim.abbreviate(name, { max = 30 })
+            return ide.text.abbreviate(name, { max = 30 })
         end,
     },
 
@@ -572,7 +572,7 @@ M.extensions = {
 M.tab_line = {
     lualine_a = {
         components.branch,
-        vim.tbl_merge(components.file_type, { padding = { left = 1, right = 0 } }),
+        table.merge(components.file_type, { padding = { left = 1, right = 0 } }),
         components.diff,
         components.diagnostics,
     },
@@ -592,7 +592,7 @@ M.status_line = {
         components.macro,
     },
     lualine_b = {
-        vim.tbl_merge(components.copilot, { separator = false, padding = { left = 1, right = 0 } }),
+        table.merge(components.copilot, { separator = false, padding = { left = 1, right = 0 } }),
     },
     lualine_c = {
         components.lsp,
@@ -607,13 +607,13 @@ M.status_line = {
         components.debugger,
     },
     lualine_z = {
-        vim.tbl_merge(components.ignore_hidden_files, { separator = false }),
-        vim.tbl_merge(components.tmux, { separator = false }),
-        vim.tbl_merge(components.spell_check, { separator = false }),
-        vim.tbl_merge(components.typo_check, { separator = false }),
+        table.merge(components.ignore_hidden_files, { separator = false }),
+        table.merge(components.tmux, { separator = false }),
+        table.merge(components.spell_check, { separator = false }),
+        table.merge(components.typo_check, { separator = false }),
         components.lazy_updates,
-        vim.tbl_merge(components.location_in_buffer, { separator = ' ', padding = { left = 1, right = 0 } }),
-        vim.tbl_merge(components.position_in_buffer, { left = 0, right = 1 }),
+        table.merge(components.location_in_buffer, { separator = ' ', padding = { left = 1, right = 0 } }),
+        table.merge(components.position_in_buffer, { left = 0, right = 1 }),
     },
 }
 
@@ -622,8 +622,8 @@ M.win_bar = {
     lualine_a = {},
     lualine_b = {},
     lualine_c = {
-        vim.tbl_merge(components.file_type, { padding = { right = 0 } }),
-        vim.tbl_merge(components.file_name, { padding = { left = 0 } }),
+        table.merge(components.file_type, { padding = { right = 0 } }),
+        table.merge(components.file_name, { padding = { left = 0 } }),
     },
     lualine_x = {},
     lualine_y = {},

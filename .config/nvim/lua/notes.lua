@@ -25,7 +25,7 @@ local function grep(global)
     local telescope = require 'telescope.builtin'
     local root = get_notes_root(global)
     if not vim.fs.dir_exists(root) then
-        vim.info 'No notes saved'
+        ide.tui.info 'No notes saved'
         return
     end
 
@@ -43,7 +43,7 @@ local function find(global)
     local telescope = require 'telescope.builtin'
     local root = get_notes_root(global)
     if not vim.fs.dir_exists(root) then
-        vim.info 'No notes saved'
+        ide.tui.info 'No notes saved'
         return
     end
 
@@ -92,7 +92,7 @@ vim.fn.user_command('Note', {
         ---@param args vim.fn.CommandCallbackArgs
         fn = function(args)
             if not args.lines or #args.lines == 0 then
-                vim.error 'No lines selected'
+                ide.tui.error 'No lines selected'
             else
                 local title
                 if args.range == 2 then

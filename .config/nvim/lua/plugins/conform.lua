@@ -76,7 +76,7 @@ return {
                         return project.root(ctx.buf or ctx.filename)
                     end,
                 },
-                golines = vim.tbl_merge(require 'conform.formatters.golines', {
+                golines = table.merge(require 'conform.formatters.golines', {
                     args = { '-m', '180', '--no-reformat-tags', '--base-formatter', 'gofumpt' },
                 }),
                 prisma = {

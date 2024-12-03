@@ -176,14 +176,14 @@ end)
 -- resize splits if window got resized
 events.on_event('VimResized', function()
     vim.schedule(function()
-        vim.refresh_ui()
+        ide.tui.redraw()
         events.trigger_status_update_event()
     end)
 end)
 
 --- Macro tracking
 events.on_event({ 'RecordingEnter' }, function()
-    vim.info(
+    ide.tui.info(
         string.format(
             'Started recording macro into register `%s`',
             vim.fn.reg_recording(),
@@ -202,7 +202,7 @@ events.on_event({ 'RecordingEnter' }, function()
 end)
 
 events.on_event({ 'RecordingLeave' }, function()
-    vim.info(
+    ide.tui.info(
         string.format(
             'Stopped recording macro into register `%s`',
             vim.fn.reg_recording(),

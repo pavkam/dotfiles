@@ -19,7 +19,7 @@ local running_jobs = {}
 local function formatters(buffer)
     assert(type(buffer) == 'number' and buffer)
 
-    if not vim.has_plugin 'conform.nvim' then
+    if not ide.plugins.has 'conform.nvim' then
         return {}
     end
 
@@ -60,7 +60,7 @@ end
 ---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
 function M.apply(buffer)
     if not package.loaded['conform'] then
-        vim.warn 'Conform plugin is not installed!'
+        ide.tui.warn 'Conform plugin is not installed!'
         return
     end
 
@@ -112,7 +112,7 @@ settings.register_toggle(setting_name, function(enabled, buffer)
     end
 end, { icon = icons.UI.Format, name = 'Auto-formatting', scope = { 'buffer', 'global' } })
 
-if vim.has_plugin 'conform.nvim' then
+if ide.plugins.has 'conform.nvim' then
     keys.map({ 'n', 'x' }, '=', function()
         require('formatting').apply()
     end, { desc = 'Format buffer/selection' })

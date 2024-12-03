@@ -4,28 +4,29 @@ std = {
         'pcall',
         'pairs',
         'ipairs',
-        'table',
-        'error',
-        'type',
-        'string',
+        'table', -- remove
+        'error', -- remove
+        'type', -- remove
+        'extended_type',
+        'string', -- remove
         'fatal',
         'dbg',
         'who',
-        'assert',
+        'assert', -- remove
         'require',
-        'package',
+        'package', -- remove
         'unpack',
         'math',
-        'os',
+        'os', -- remove
         'next',
-        'debug',
-        'tostring',
-        'tonumber',
-        'coroutine',
-        'setmetatable',
-        'getmetatable',
+        'debug', -- remove
+        'tostring', -- remove
+        'tonumber', -- remove
+        'coroutine', -- remove
+        'setmetatable', -- remove
+        'getmetatable', -- remove
         'select',
-        'io',
-        'api',
+        'io', -- remove
+        'ide',
     },
 }

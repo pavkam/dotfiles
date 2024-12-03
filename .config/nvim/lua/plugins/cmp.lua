@@ -23,7 +23,7 @@ return {
         opts = function()
             local cmp = require 'cmp'
             local compare = require 'cmp.config.compare'
-            local copilot = vim.has_plugin 'copilot.lua' and require 'copilot.suggestion' or nil
+            local copilot = ide.plugins.has 'copilot.lua' and require 'copilot.suggestion' or nil
             local settings = require 'settings'
             local luasnip = require 'luasnip'
             local lspkind = require 'lspkind'
@@ -174,7 +174,7 @@ return {
                     end, { 'i', 's' }),
                 },
                 sources = cmp.config.sources {
-                    vim.has_plugin 'lazydev.nvim' and { name = 'lazydev', priority = 10 } or nil,
+                    ide.plugins.has 'lazydev.nvim' and { name = 'lazydev', priority = 10 } or nil,
                     {
                         name = 'nvim_lsp',
                         ---@param entry cmp.Entry
@@ -217,14 +217,14 @@ return {
                     fields = { 'kind', 'menu', 'abbr' },
                     format = function(entry, vim_item)
                         vim_item.kind = lspkind.symbolic(vim_item.kind)
-                        vim_item.abbr = vim.abbreviate(vim_item.abbr)
+                        vim_item.abbr = ide.text.abbreviate(vim_item.abbr)
 
                         if entry.source.source and entry.source.source.client and entry.source.source.client.name then
                             -- TODO: replace the full names with their type icons (vstls, emmet, etc.)
-                            vim_item.menu = vim.abbreviate(entry.source.source.client.name)
+                            vim_item.menu = ide.text.abbreviate(entry.source.source.client.name)
                             vim_item.menu_hl_group = 'CmpItemKindKey'
                         else
-                            vim_item.menu = vim.abbreviate(entry.source.name)
+                            vim_item.menu = ide.text.abbreviate(entry.source.name)
                             if entry.source.name ~= 'luasnip' then
                                 vim_item.menu_hl_group = 'CmpItemKindPackage'
                             else
@@ -242,7 +242,7 @@ return {
 
             cmp.setup(opts)
 
-            if not vim.has_plugin 'cmp-dap' then
+            if not ide.plugins.has 'cmp-dap' then
                 ---@diagnostic disable-next-line: missing-fields
                 cmp.setup.filetype({ 'dap-repl', 'dapui_watches', 'dapui_hover' }, {
                     sources = {

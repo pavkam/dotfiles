@@ -132,7 +132,7 @@ function M.check_workspace(client, target)
 end
 
 vim.fn.user_command('DiagnoseWorkspace', function()
-    vim.info 'Checking workspace diagnostics...'
+    ide.tui.info 'Checking workspace diagnostics...'
 
     ---@type vim.lsp.Client[]
     local clients = vim.iter(vim.lsp.get_clients())

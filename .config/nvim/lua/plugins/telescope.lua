@@ -137,7 +137,7 @@ return {
                 end
             end
 
-            return vim.tbl_merge(add, opts)
+            return table.merge(add, opts)
         end
 
         --- Creates a wrapper around a picker and returns a function that can be called to invoke the picker

@@ -224,7 +224,9 @@ function M.add_at_cursor(handle, window, opts)
 
     local r, c = unpack(vim.api.nvim_win_get_cursor(window))
 
-    vim.info(string.format('Added position **%d:%d** to %s list.', r, c, list.window and 'locations' or 'quick-fix'))
+    ide.tui.info(
+        string.format('Added position **%d:%d** to %s list.', r, c, list.window and 'locations' or 'quick-fix')
+    )
 
     M.add_items(handle, {
         {

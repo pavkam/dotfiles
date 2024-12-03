@@ -307,13 +307,13 @@ return {
             -- setup progress
             local progress_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress]
             vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress] = function(_, msg, info)
-                events.trigger_user_event('LspProgress', vim.tbl_merge(msg, { client_id = info.client_id }))
+                events.trigger_user_event('LspProgress', table.merge(msg, { client_id = info.client_id }))
                 progress_capability_handler(_, msg, info)
             end
 
             -- register nvim-cmp capabilities
             local cmp_nvim_lsp = require 'cmp_nvim_lsp'
-            local capabilities = vim.tbl_merge(
+            local capabilities = table.merge(
                 vim.lsp.protocol.make_client_capabilities(),
                 cmp_nvim_lsp.default_capabilities(),
                 opts.capabilities
@@ -323,14 +323,14 @@ return {
             local function setup(server)
                 local server_opts = opts.servers[server]
 
-                server_opts = vim.tbl_merge({
+                server_opts = table.merge({
                     capabilities = vim.deepcopy(capabilities),
                     handlers = opts.handlers,
                 }, server_opts or {})
 
                 local lsp_server = require('lspconfig')[server]
                 if not lsp_server or not lsp_server.setup then
-                    vim.error(
+                    ide.tui.error(
                         string.format('Language server `%s` does not appear to be present in `lspconfig`.' .. server)
                     )
                     return
@@ -340,7 +340,7 @@ return {
             end
 
             -- get all the servers that are available through mason-LSP-config
-            local using_mason = vim.has_plugin 'mason.nvim'
+            local using_mason = ide.plugins.has 'mason.nvim'
             local mason_packages = using_mason and require('mason-lspconfig.mappings.server').lspconfig_to_package or {}
 
             local ensure_installed = {}
@@ -355,9 +355,9 @@ return {
                 local mason_package_for_alias = mason_packages[package_name]
 
                 if mason_package_for_server == mason_package_for_alias == nil then
-                    vim.error(string.format('Server `%s` could not be located in mason registry.', server))
+                    ide.tui.error(string.format('Server `%s` could not be located in mason registry.', server))
                 elseif mason_package_for_server == mason_package_for_alias then
-                    vim.warn(
+                    ide.tui.warn(
                         string.format(
                             'Server `%s` has the same mason package as its alias `%s`. Consider removing the alias.',
                             server,
@@ -373,11 +373,13 @@ return {
                 end
             end
 
-            local mason_lsp_config = vim.has_plugin 'mason-lspconfig.nvim' and using_mason and require 'mason-lspconfig'
+            local mason_lsp_config = ide.plugins.has 'mason-lspconfig.nvim'
+                    and using_mason
+                    and require 'mason-lspconfig'
                 or nil
 
             if mason_lsp_config then
-                local mason_opts = assert(vim.plugin_config 'mason-lspconfig.nvim')
+                local mason_opts = assert(ide.plugins.config 'mason-lspconfig.nvim')
 
                 mason_lsp_config.setup {
                     ensure_installed = vim.tbl_deep_extend(

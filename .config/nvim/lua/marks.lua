@@ -94,7 +94,7 @@ function M.set(mark, line, col, buffer)
     assert(type(col) == 'number' and col >= 0)
 
     vim.api.nvim_buf_set_mark(buffer, mark, line, col, {})
-    vim.info(string.format('Added `%s` mark to position **%d:%d**.', mark, line, col))
+    ide.tui.info(string.format('Added `%s` mark to position **%d:%d**.', mark, line, col))
 
     update_signs(is_buffer_mark(mark) and buffer or nil)
 end
@@ -110,10 +110,10 @@ function M.delete(mark, buffer)
     local deleted = is_buffer_mark(mark) and vim.api.nvim_buf_del_mark(buffer, mark) or vim.api.nvim_del_mark(mark)
 
     if deleted then
-        vim.info(string.format('Removed the `%s` mark.', mark))
+        ide.tui.info(string.format('Removed the `%s` mark.', mark))
         update_signs(is_buffer_mark(mark) and buffer or nil)
     else
-        vim.hint(string.format('Mark `%s` is not set.', mark))
+        ide.tui.hint(string.format('Mark `%s` is not set.', mark))
     end
 end
 

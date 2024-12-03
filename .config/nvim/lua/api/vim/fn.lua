@@ -363,7 +363,7 @@ function vim.fn.user_command(name, fn, opts)
             name,
             ---@param args vim.api.CommandCallbackArgs
             function(args)
-                fn(vim.tbl_merge(args, { split_args = parse_command_args(args) }))
+                fn(table.merge(args, { split_args = parse_command_args(args) }))
             end,
             {
                 desc = opts.desc,
@@ -376,7 +376,7 @@ function vim.fn.user_command(name, fn, opts)
             name,
             ---@param args vim.api.CommandCallbackArgs
             function(args)
-                fn.fn(vim.tbl_merge(args, {
+                fn.fn(table.merge(args, {
                     split_args = parse_command_args(args),
                     lines = fn.range and extract_command_lines(args) or nil,
                 }))
@@ -420,14 +420,14 @@ function vim.fn.user_command(name, fn, opts)
             function(args)
                 local func_or_spec = fn[args.fargs[1] or opts.default_fn]
                 if not func_or_spec then
-                    vim.error(string.format('Unknown function `%s`', args.args))
+                    ide.tui.error(string.format('Unknown function `%s`', args.args))
                     return
                 end
 
                 local func = type(func_or_spec) == 'function' and func_or_spec or func_or_spec.fn
 
                 if func then
-                    func(vim.tbl_merge(args, {
+                    func(table.merge(args, {
                         split_args = parse_command_args(args),
                         lines = type(func_or_spec) == 'table' and func_or_spec.range and extract_command_lines(args)
                             or nil,

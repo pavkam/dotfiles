@@ -70,7 +70,7 @@ end
 ---@param session string|nil # the session to switch to
 local function switch_to_session(session)
     shell.async_cmd('tmux', { 'switch', '-t', session }, nil, function(_, _)
-        vim.info(string.format('Switched to session *%s*', session))
+        ide.tui.info(string.format('Switched to session *%s*', session))
     end)
 end
 
@@ -248,7 +248,7 @@ local function change_win(direction)
 
     local ok = pcall(vim.cmd.wincmd, direction)
     if not ok then
-        vim.hint('Cannot navigate to the ' .. direction .. ' window')
+        ide.tui.hint('Cannot navigate to the ' .. direction .. ' window')
     end
 
     return current_window ~= vim.api.nvim_get_current_win()

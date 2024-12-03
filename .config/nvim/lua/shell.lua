@@ -17,7 +17,7 @@ function M.floating(cmd, opts)
 
     local cwd = vim.uv.cwd()
 
-    opts = vim.tbl_merge({
+    opts = table.merge({
         ft = 'lazyterm',
         size = { width = 0.9, height = 0.9 },
         cwd = cwd and vim.uv.fs_realpath(cwd),
@@ -132,7 +132,7 @@ local function async_cmd(cmd, args, input, callback, opts)
 
     if not handle then
         cleanup()
-        vim.error(
+        ide.tui.error(
             string.format(
                 'Failed to spawn command *"%s"* with arguments *"%s"*: **%s**!',
                 markdown.escape(cmd),
@@ -192,7 +192,7 @@ local function async_cmd(cmd, args, input, callback, opts)
 
     if (stdin and not stdin_write_success) or not stdout_read_success or not stderr_read_success then
         cleanup()
-        vim.error(
+        ide.tui.error(
             string.format(
                 'Failed to read/write from/to pipes for command *"%s"*: **%s**!',
                 markdown.escape(cmd),
@@ -217,7 +217,7 @@ function M.async_cmd(cmd, args, input, callback, opts)
     opts = opts or {}
     args = args or {}
 
-    local ignore_codes = opts.ignore_codes and vim.to_list(opts.ignore_codes) or { 0 }
+    local ignore_codes = opts.ignore_codes and table.to_list(opts.ignore_codes) or { 0 }
 
     async_cmd(cmd, args, input, function(code, stdout, stderr)
         if not opts.no_checktime then
@@ -241,7 +241,7 @@ function M.async_cmd(cmd, args, input, callback, opts)
             end
 
             if message then
-                vim.error(
+                ide.tui.error(
                     string.format(
                         'Error running command `%s %s` (error: **%s**):\n\n```\n%s\n```',
                         markdown.escape(cmd),
@@ -251,7 +251,7 @@ function M.async_cmd(cmd, args, input, callback, opts)
                     )
                 )
             else
-                vim.error(
+                ide.tui.error(
                     string.format(
                         'Error running command `%s %s` (error: **%s**)',
                         markdown.escape(cmd),
@@ -318,7 +318,7 @@ vim.fn.user_command('Run', {
             if not args.bang then
                 if #output > 0 then
                     local message = markdown.escape(table.concat(output, '\n'))
-                    vim.info(
+                    ide.tui.info(
                         string.format(
                             'Command "%s" finished:\n\n```sh\n%s\n```',
                             markdown.escape(cmd_line_desc),
@@ -326,7 +326,7 @@ vim.fn.user_command('Run', {
                         )
                     )
                 else
-                    vim.info(string.format('Command "%s" finished', markdown.escape(cmd_line_desc)))
+                    ide.tui.info(string.format('Command "%s" finished', markdown.escape(cmd_line_desc)))
                 end
             else
                 if args.range == 2 then

@@ -1,16 +1,16 @@
-local assert = require 'api.assert'
-local fs = require 'api.fs'
-
+--- Provides functions for interacting with the current process.
 ---@class api.process
 local M = {}
+
+local assert = require 'api.assert'
+local file_system = require 'api.file_system'
 
 --- Gets the value of an up-value of a function
 ---@param fn function # the function to get the up-value from
 ---@param name string # the name of the up-value to get
 ---@return any # the value of the up-value or nil if it does not exist
 function M.get_up_value(fn, name)
-    -- TODO: check for empty strings
-    assert { fn = { fn, 'callable' }, name = { name, 'string' } }
+    assert { fn = { fn, 'callable' }, name = { name, { 'string', ['>'] = 0 } } }
 
     local i = 1
     while true do
@@ -38,9 +38,7 @@ end
 ---@param level integer|nil # the level of the trace-back to get
 ---@return vim.TraceBackEntry[] # the trace-back entries
 function M.get_trace_back(level)
-    -- TODO: check for positive integers
-
-    assert { level = { level, 'integer' } }
+    assert { level = { level, { 'integer', ['>'] = 0 } } }
 
     local trace = level and debug.traceback('', level) or debug.traceback()
 
@@ -80,13 +78,13 @@ end
 function M.get_formatted_trace_back(level)
     local trace = M.get_trace_back(level)
 
-    local result = { 'Traceback:' }
+    local result = {}
     for _, entry in pairs(trace) do
         table.insert(
             result,
             string.format(
                 ' - %s %s:%d',
-                fs.format_relative_path(fs.CONFIGURATION_DIRECTORY, entry.file),
+                require('api.file_system').format_relative_path(file_system.CONFIGURATION_DIRECTORY, entry.file),
                 entry.fn_name,
                 entry.line
             )
@@ -105,15 +103,14 @@ end
 --- Global function to log a message as an error and quit.
 ---@param message string the message to log.
 function M.fatal(message)
-    -- TODO: check for empty strings
-    assert { message = { message, 'string' } }
+    assert { message = { message, { 'string', ['>'] = 0 } } }
 
     error(string.format('fatal error has occurred: %s', message))
     error 'press any key to quit the process'
 
     vim.fn.getchar()
 
-    api.process.quit()
+    M.quit()
 end
 
-return M
+return table.freeze(M)

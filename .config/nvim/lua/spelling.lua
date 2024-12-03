@@ -17,7 +17,7 @@ function M.swap_custom_dictionary(target)
 
     if not path then
         if current_file then
-            vim.hint 'Disabling custom spelling dictionary'
+            ide.tui.hint 'Disabling custom spelling dictionary'
         end
 
         vim.opt_local.spellfile = nil
@@ -34,11 +34,11 @@ function M.swap_custom_dictionary(target)
         return
     end
 
-    vim.hint(string.format('Selecting spelling dictionary to `%s` for buffer', project.format_relative(spl_file)))
+    ide.tui.hint(string.format('Selecting spelling dictionary to `%s` for buffer', project.format_relative(spl_file)))
     vim.opt_local.spellfile = spl_file
 end
 
--- if vim.has_plugin 'nvim-lspconfig' then
+-- if ide.plugins.has 'nvim-lspconfig' then
 --     local lspconfig = require 'lspconfig'
 --     if lspconfig.typos_lsp then
 --         lspconfig.typos_lsp.setup {

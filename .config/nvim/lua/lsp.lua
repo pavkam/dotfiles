@@ -113,7 +113,7 @@ function M.on_capability_event(event, capability, buffer, callback, run_on_regis
 
     buffer = buffer or vim.api.nvim_get_current_buf()
 
-    event = vim.to_list(event)
+    event = table.to_list(event)
 
     if not M.buffer_has_capability(buffer, capability) then
         return
@@ -136,7 +136,7 @@ function M.on_capability_event(event, capability, buffer, callback, run_on_regis
         callback = function()
             if not M.buffer_has_capability(buffer, capability) then
                 if vim.api.nvim_buf_is_valid(buffer) and vim.api.nvim_buf_is_loaded(buffer) then
-                    vim.warn('Buffer lost capability `' .. capability .. '`')
+                    ide.tui.warn('Buffer lost capability `' .. capability .. '`')
                 end
 
                 vim.api.nvim_del_augroup_by_name(auto_group_name)
@@ -223,13 +223,13 @@ function M.restart_all_for_buffer(buffer)
         :totable()
 
     if #clients == 0 then
-        vim.warn 'No active clients to restart. Starting all.'
+        ide.tui.warn 'No active clients to restart. Starting all.'
         vim.cmd 'LspStart'
         return
     end
 
     for _, client in ipairs(clients) do
-        vim.warn('Restarting client ' .. client.name .. '...')
+        ide.tui.warn('Restarting client ' .. client.name .. '...')
         vim.cmd(string.format('LspRestart %s', client.name))
     end
 end
@@ -290,7 +290,7 @@ function M.clear_diagnostics(sources, buffer)
 
     local ns = vim.diagnostic.get_namespaces()
 
-    for _, source in ipairs(vim.to_list(sources)) do
+    for _, source in ipairs(table.to_list(sources)) do
         assert(type(source) == 'string' and source)
         for id, n in pairs(ns) do
             if n.name == source or n.name:find('vim.lsp.' .. source, 1, true) then

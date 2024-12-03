@@ -86,7 +86,7 @@ function M.preview_hunk(opts)
         if opts.line == nil then
             vim.cmd(command)
         else
-            vim.invoke_on_line(command, opts.line, { window = opts.window })
+            ide.tui.invoke_on_line(command, opts.line, { window = opts.window })
         end
     end)
 end

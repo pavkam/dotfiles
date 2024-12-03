@@ -73,8 +73,8 @@ function vim.fs.first_found_file(base_paths, files)
     assert(type(base_paths) == 'string' or vim.islist(base_paths))
     assert(type(files) == 'string' or vim.islist(files))
 
-    base_paths = vim.to_list(base_paths)
-    files = vim.to_list(files)
+    base_paths = table.to_list(base_paths)
+    files = table.to_list(files)
 
     for _, path in ipairs(base_paths) do
         for _, file in ipairs(files) do
