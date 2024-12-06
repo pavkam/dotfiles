@@ -35,7 +35,18 @@ function _G.extended_type(value)
     return t, t --[[@as extended_type]]
 end
 
--- luacheck: push ignore 122
+-- luacheck: push ignore 121 122 113
+
+if _VERSION == 'Lua 5.1' then
+    local _pairs = pairs
+    pairs = function(t)
+        local metatable = getmetatable(t)
+        if metatable and metatable.__pairs then
+            return metatable.__pairs(t)
+        end
+        return _pairs(t)
+    end
+end
 
 --- Makes a table read-only.
 ---@generic T: table
@@ -57,7 +68,7 @@ end
 ---@field getter fun(key: any): boolean, any # the getter function.
 ---@field setter (fun(key: any, value: any): boolean)|nil # the setter function (optional).
 ---@field enumerate (fun(): any[])|nil # the enumeration function (optional).
----@field cache boolean|nil # whether to cache the values (default `true`).
+---@field store boolean|nil # whether to cache the values (default `true`).
 
 --- Creates a new synthetic table.
 ---@generic T: table
@@ -65,10 +76,9 @@ end
 ---@param opts SyntheticTableOpts # the options for the synthetic table.
 ---@return T # the synthetic table.
 function table.synthetic(table, opts)
-    local cache = {}
     return setmetatable(table, {
-        __index = function(key)
-            local value = cache[key]
+        __index = function(t, key)
+            local value = rawget(t, key)
             if value == nil then
                 local ok
                 ok, value = opts.getter(key)
@@ -76,14 +86,14 @@ function table.synthetic(table, opts)
                     error(string.format('Unknown property %s.', vim.inspect(key)))
                 end
 
-                if opts.cache ~= false then
-                    cache[key] = value
+                if opts.store ~= false then
+                    rawset(t, key, value)
                 end
             end
 
             return value
         end,
-        __newindex = function(key, value)
+        __newindex = function(t, key, value)
             if not opts.setter then
                 error(string.format('Property %s is read-only.', vim.inspect(key)))
             end
@@ -93,11 +103,13 @@ function table.synthetic(table, opts)
                 error(string.format('Unknown property %s.', vim.inspect(key)))
             end
 
-            if opts.cache ~= false then
-                cache[key] = value
+            if opts.store ~= false then
+                rawset(t, key, value)
             end
         end,
-        __pairs = opts.enumerate and function()
+        __pairs = opts.enumerate and function(t)
+            dbg 'Enumerating'
+
             local keys = opts.enumerate()
             local i = 0
 
@@ -109,21 +121,20 @@ function table.synthetic(table, opts)
                     return nil
                 end
 
-                local val = cache[key]
+                local val = t[key]
                 if val == nil then
                     local ok
                     ok, val = opts.getter(key)
                     if not ok then
                         error(string.format('Unknown property %s.', vim.inspect(key)))
                     end
-                    if opts.cache ~= false then
-                        cache[key] = val
+                    if opts.store ~= false then
+                        rawset(t, key, val)
                     end
                 end
                 return key, val
             end
         end,
-        __metatable = false,
     })
 end
 

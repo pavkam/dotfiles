@@ -37,7 +37,25 @@ local function detect(file_path)
     return file_type
 end
 
----@enum api.ft.OptionType
+---@alias api.ft.OptionType # The supported file type options.
+---| 'keep_undo_history' # whether to keep undo history.
+---| 'keep_swap_file' # whether to keep a swap file.
+---| 'auto_read' # whether to automatically read the file.
+---| 'is_binary' # whether the file is binary.
+---| 'is_listed' # whether the file is listed.
+---| 'is_hidden' # whether the file is hidden.
+---| 'is_readonly' # whether the file is read-only.
+---| 'is_modifiable' # whether the file is modifiable.
+---| 'comment_format' # the comment format.
+---| 'show_cursorline' # whether to show the cursor line.
+---| 'spell_check' # whether the file is spell checked.
+---| 'spell_file_path' # the path to the spell file.
+---| 'wrap_enabled' # whether wrapping is enabled.
+---| 'show_sign_column' # the sign column to show.
+---| 'pinned_to_window' # whether the file is pinned to the window.
+
+-- The supported file type options.
+---@type table<api.ft.OptionType, { [1]: string, [2]: type }>
 local supported_options = {
     keep_undo_history = { 'undofile', 'boolean' },
     keep_swap_file = { 'swapfile', 'boolean' },
@@ -49,7 +67,7 @@ local supported_options = {
     is_modifiable = { 'modifiable', 'boolean' },
     comment_format = { 'commentstring', 'string' },
     show_cursorline = { 'cursorline', 'boolean' },
-    is_spell_checked = { 'spell', 'boolean' },
+    spell_check = { 'spell', 'boolean' },
     spell_file_path = { 'spellfile', 'string' },
     wrap_enabled = { 'wrap', 'boolean' },
     show_sign_column = { 'signcolumn', 'string' },
@@ -90,12 +108,13 @@ local function get_file_type_option_names()
     return vim.tbl_keys(supported_options)
 end
 
--- Provides access to file type options.
----@class  api.ft # Exposes file type related functionality.
----@field detect fun(file_path: string): string|nil # Gets the file type of a file.
----@field [string] { [api.ft.OptionType]: boolean|string|integer } # Provides access to file type options.
+---@alias api.ft.FileTypeOptions # The options for a file type.
+---| table<api.ft.OptionType, boolean|string|integer>
 
----@type api.ft
+-- File type management.
+---@class api.ft
+---@field detect fun(file_type: string): boolean # Detects the file type of a file.
+---@field [api.ft.OptionType] boolean|string|integer # The options for a file type.
 local M = table.synthetic({ detect }, {
     ---@param file_type string
     getter = function(file_type)
@@ -109,7 +128,7 @@ local M = table.synthetic({ detect }, {
                     return set_file_type_option(file_type, option, value)
                 end,
                 enumerate = get_file_type_option_names,
-                cache = false,
+                store = true,
             })
     end,
 })
@@ -118,7 +137,7 @@ vim.api.nvim_create_autocmd('FileType', {
     callback = function(evt)
         local options = M[evt.match]
         for option, value in pairs(options) do
-            vim.opt_local[evt.bur][option] = value
+            vim.opt_local[assert(supported_options[option])[1]] = value
         end
     end,
     group = vim.api.nvim_create_augroup('api.ft.apply_file_type_options', { clear = true }),

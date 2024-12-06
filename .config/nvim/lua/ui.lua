@@ -13,8 +13,8 @@ require 'tmux'
 require 'file-palette'
 require 'mouse'
 
-vim.filetype.pin_to_window 'help'
-vim.filetype.pin_to_window 'query'
+ide.ft['help'].pinned_to_window = true
+ide.ft['query'].pinned_to_window = true
 
 keys.group { lhs = 'g', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Go-to' }
 keys.group { lhs = ']', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Next' }
