@@ -84,7 +84,7 @@ local function check_file(client, files, index)
                 uri = vim.uri_from_fname(path),
                 version = 0,
                 text = vim.fn.join(vim.fn.readfile(path), '\n'),
-                languageId = ide.file_types.detect(path),
+                languageId = ide.ft.detect(path),
             },
         })
 
@@ -94,7 +94,7 @@ local function check_file(client, files, index)
                     uri = vim.uri_from_fname(path),
                     version = 0,
                     text = vim.fn.join(vim.fn.readfile(path), '\n'),
-                    languageId = ide.file_types.detect(path),
+                    languageId = ide.ft.detect(path),
                 },
             }, 1000, buffer)
 

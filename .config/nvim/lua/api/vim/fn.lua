@@ -135,18 +135,18 @@ function vim.fn.expand_target(target)
             return target, '', false
         end
 
-        return target, ide.file_system.expand_path(path) or path, true
+        return target, ide.fs.expand_path(path) or path, true
     elseif type(target) == 'string' then
         ---@cast target string
         if target == '' then
             return vim.api.nvim_get_current_buf(), '', false
         end
 
-        local path = ide.file_system.expand_path(target) or target
+        local path = ide.fs.expand_path(target) or target
 
         for _, buf in ipairs(vim.buf.get_listed_buffers { loaded = false }) do
             local buf_path = vim.api.nvim_buf_get_name(buf)
-            if buf_path and buf_path ~= '' and ide.file_system.expand_path(buf_path) == path then
+            if buf_path and buf_path ~= '' and ide.fs.expand_path(buf_path) == path then
                 return buf, path, true
             end
         end

@@ -21,7 +21,7 @@ local session_open_files = {}
 
 events.on_event('BufRead', function(evt)
     local path = vim.buf.is_regular(evt.buf) and vim.api.nvim_buf_get_name(evt.buf)
-    if not path or not ide.file_system.file_exists(path) then
+    if not path or not ide.fs.file_exists(path) then
         return
     end
 
@@ -92,7 +92,7 @@ local function get_global_marked_files()
         :filter(
             ---@param mark ui.marks.Mark
             function(mark)
-                return ide.file_system.file_exists(mark.file) and mark.mark:match [[^'[A-Z]$]]
+                return ide.fs.file_exists(mark.file) and mark.mark:match [[^'[A-Z]$]]
             end
         )
         :map(
@@ -162,7 +162,7 @@ local function get_jump_list_files()
         local buffer = jumplist[i].bufnr
         local path = vim.buf.is_regular(buffer) and vim.api.nvim_buf_get_name(buffer)
 
-        if path and ide.file_system.file_exists(path) then
+        if path and ide.fs.file_exists(path) then
             table.insert(results, {
                 file = path,
                 type = 'jump-list',
@@ -181,7 +181,7 @@ local function get_old_files()
         :filter(
             ---@param file string
             function(file)
-                return ide.file_system.file_exists(file)
+                return ide.fs.file_exists(file)
             end
         )
         :map(

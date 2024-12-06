@@ -3,7 +3,7 @@
 local M = {}
 
 local assert = require 'api.assert'
-local file_system = require 'api.file_system'
+local fs = require 'api.fs'
 
 --- Gets the value of an up-value of a function
 ---@param fn function # the function to get the up-value from
@@ -84,7 +84,7 @@ function M.get_formatted_trace_back(level)
             result,
             string.format(
                 ' - %s %s:%d',
-                require('api.file_system').format_relative_path(file_system.CONFIGURATION_DIRECTORY, entry.file),
+                fs.format_relative_path(fs.CONFIGURATION_DIRECTORY, entry.file),
                 entry.fn_name,
                 entry.line
             )

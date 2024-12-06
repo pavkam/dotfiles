@@ -1,5 +1,5 @@
 std = {
-    globals = { 'vim', '_G', '_' },
+    globals = { 'vim', '_G', '_', 'ide' },
     read_globals = {
         'pcall',
         'pairs',
@@ -27,6 +27,5 @@ std = {
         'getmetatable', -- remove
         'select',
         'io', -- remove
-        'ide',
     },
 }

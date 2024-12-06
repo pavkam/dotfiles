@@ -34,7 +34,7 @@ end
 ---@param target vim.fn.Target # the target to read the package.json for
 ---@return table<string, any>|nil # the parsed package.json
 local function read_package_json(target)
-    local full_name = ide.file_system.scan(M.roots(target), 'package.json')
+    local full_name = ide.fs.scan(M.roots(target), 'package.json')
 
     local json_content = full_name and vim.fn.join(vim.fn.readfile(full_name), '\n')
     return json_content and vim.json.decode(json_content)
@@ -58,7 +58,7 @@ end
 ---@param target vim.fn.Target # the target to get the type for
 ---@return string|nil # the type of the project
 local function go_type(target)
-    if ide.file_system.scan(M.roots(target), { 'go.mod', 'go.sum' }) then
+    if ide.fs.scan(M.roots(target), { 'go.mod', 'go.sum' }) then
         return 'go'
     end
 
@@ -77,7 +77,7 @@ local python_root_patterns = {
 ---@param target vim.fn.Target # the target to get the type for
 ---@return string|nil # the type of the project
 local function python_type(target)
-    if ide.file_system.scan(M.roots(target), python_root_patterns) then
+    if ide.fs.scan(M.roots(target), python_root_patterns) then
         return 'python'
     end
 
@@ -262,7 +262,7 @@ function M.format_relative(target)
     ---@type string|nil
     local root = M.root(target)
     local _, path = vim.fn.expand_target(target)
-    return root and ide.file_system.format_relative_path(root, path) or path
+    return root and ide.fs.format_relative_path(root, path) or path
 end
 
 --- Returns the path to the Neovim settings directory for a given target
@@ -279,8 +279,7 @@ end
 ---@return string|nil # the path to the launch.json file
 function M.get_launch_json(target)
     local path = M.nvim_settings_path(target)
-    return path and vim.fs.joinpath(path, 'dap.json')
-        or ide.file_system.scan(M.roots(target), { '.vscode/launch.json' })
+    return path and vim.fs.joinpath(path, 'dap.json') or ide.fs.scan(M.roots(target), { '.vscode/launch.json' })
 end
 
 --- Returns the type of the project
@@ -301,7 +300,7 @@ local golangci_root_patterns = {
 ---@param target vim.fn.Target # the target to get the golangci file for
 ---@return string|nil # the path to the golangci file
 function M.get_golangci_config(target)
-    return ide.file_system.scan(M.roots(target), golangci_root_patterns)
+    return ide.fs.scan(M.roots(target), golangci_root_patterns)
 end
 
 --- Checks if a target has a dependency
@@ -327,7 +326,7 @@ function M.get_js_bin_path(target, bin)
     local sub = vim.fs.joinpath('node_modules', '.bin', bin)
     ---@cast sub string
 
-    return ide.file_system.scan(M.roots(target), sub)
+    return ide.fs.scan(M.roots(target), sub)
 end
 
 local eslint_root_patterns = {
@@ -341,7 +340,7 @@ local eslint_root_patterns = {
 ---@param target vim.fn.Target # the target to get the eslint config for
 ---@return string|nil # the path to the eslint config
 function M.get_eslint_config_path(target)
-    return ide.file_system.scan(M.roots(target), eslint_root_patterns)
+    return ide.fs.scan(M.roots(target), eslint_root_patterns)
 end
 
 settings.register_toggle('diagnostics_enabled', function(enabled, buffer)

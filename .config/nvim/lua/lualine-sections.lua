@@ -131,7 +131,7 @@ local components = {
                 return name
             end
 
-            return ide.file_system.format_relative_path(root, vim.api.nvim_buf_get_name(0), { include_base_dir = true })
+            return ide.fs.format_relative_path(root, vim.api.nvim_buf_get_name(0), { include_base_dir = true })
         end,
         on_click = function()
             vim.cmd 'Debug'

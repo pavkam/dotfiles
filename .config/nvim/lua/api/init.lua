@@ -53,6 +53,80 @@ function table.freeze(table)
     })
 end
 
+---@class SyntheticTableOpts
+---@field getter fun(key: any): boolean, any # the getter function.
+---@field setter (fun(key: any, value: any): boolean)|nil # the setter function (optional).
+---@field enumerate (fun(): any[])|nil # the enumeration function (optional).
+---@field cache boolean|nil # whether to cache the values (default `true`).
+
+--- Creates a new synthetic table.
+---@generic T: table
+---@param table T # the table to make synthetic.
+---@param opts SyntheticTableOpts # the options for the synthetic table.
+---@return T # the synthetic table.
+function table.synthetic(table, opts)
+    local cache = {}
+    return setmetatable(table, {
+        __index = function(key)
+            local value = cache[key]
+            if value == nil then
+                local ok
+                ok, value = opts.getter(key)
+                if not ok then
+                    error(string.format('Unknown property %s.', vim.inspect(key)))
+                end
+
+                if opts.cache ~= false then
+                    cache[key] = value
+                end
+            end
+
+            return value
+        end,
+        __newindex = function(key, value)
+            if not opts.setter then
+                error(string.format('Property %s is read-only.', vim.inspect(key)))
+            end
+
+            local ok = opts.setter(key, value)
+            if not ok then
+                error(string.format('Unknown property %s.', vim.inspect(key)))
+            end
+
+            if opts.cache ~= false then
+                cache[key] = value
+            end
+        end,
+        __pairs = opts.enumerate and function()
+            local keys = opts.enumerate()
+            local i = 0
+
+            return function()
+                i = i + 1
+
+                local key = keys[i]
+                if key == nil then
+                    return nil
+                end
+
+                local val = cache[key]
+                if val == nil then
+                    local ok
+                    ok, val = opts.getter(key)
+                    if not ok then
+                        error(string.format('Unknown property %s.', vim.inspect(key)))
+                    end
+                    if opts.cache ~= false then
+                        cache[key] = val
+                    end
+                end
+                return key, val
+            end
+        end,
+        __metatable = false,
+    })
+end
+
 --- Merges multiple tables into one.
 ---@vararg table|nil # the tables to merge.
 ---@return table # the merged table.
@@ -155,8 +229,8 @@ end
 _G.ide = {
     assert = require 'api.assert',
     text = require 'api.text',
-    file_system = require 'api.file_system',
-    file_types = require 'api.file_types',
+    fs = require 'api.fs',
+    ft = require 'api.ft',
     process = require 'api.process',
     events = require 'api.events',
     tui = require 'api.tui',

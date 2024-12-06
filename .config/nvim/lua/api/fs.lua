@@ -1,5 +1,5 @@
 -- Filesystem API
----@class api.file_system
+---@class api.fs
 local M = {}
 
 --- TODO: cleanup asserts
@@ -27,7 +27,7 @@ function M.expand_path(path)
     return nil
 end
 
----@alias api.file_system.ObjectType # The type of a file system object.
+---@alias api.fs.ObjectType # The type of a file system object.
 ---| "file" # a regular file.
 ---| "directory" # a directory.
 ---| "link" # a symbolic link.
@@ -38,10 +38,10 @@ end
 
 --- Gets the type of file identified by path.
 ---@param path string # the path to check.
----@return api.file_system.ObjectType | nil # the type of the file system object or `nil`.
+---@return api.fs.ObjectType | nil # the type of the file system object or `nil`.
 ---if the file does not exist
 function M.path_type(path)
-    local res_path = ide.file_system.expand_path(path)
+    local res_path = ide.fs.expand_path(path)
     if not res_path then
         return nil
     end
@@ -121,7 +121,7 @@ function M.scan(base_paths, files)
     for _, path in ipairs(base_paths) do
         for _, file in ipairs(files) do
             local full = vim.fs.joinpath(path, file)
-            if full and ide.file_system.file_exists(full) then
+            if full and ide.fs.file_exists(full) then
                 return vim.fs.joinpath(path, file)
             end
         end
