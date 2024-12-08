@@ -1,9 +1,12 @@
+---@module 'CopilotChat'
+
 return {
     {
         'zbirenbaum/copilot.lua',
         cond = not vim.headless,
         cmd = 'Copilot',
         build = ':Copilot auth',
+        ---@type copilot_config
         opts = {
             suggestion = {
                 enabled = true,
@@ -13,7 +16,6 @@ return {
             panel = { enabled = false },
         },
         config = function(_, opts)
-            -- TODO: "unexpectedly started multiple copilot instances". Probably due to CopilotChat messing around
             local copilot = require 'copilot'
 
             copilot.setup(opts)
@@ -32,44 +34,29 @@ return {
     },
     {
         'CopilotC-Nvim/CopilotChat.nvim',
-        branch = 'canary',
-        -- TODO: add keymap for invoking some of these commands
-        -- TODO: make the buffer the default context
         -- TODO: make sure the c-y works as expected (updates the buffer)
-        -- TODO: remove [CopilotChat.nvim] [INFO  14:09:20] /Users/alex/.local/share/nvim/lazy/CopilotChat.nvim/lua/CopilotChat/copilot.lua:435: Models fetched
 
         cmd = {
             'CopilotChat',
-            'CopilotChatOpen',
-            'CopilotChatClose',
-            'CopilotChatToggle',
             'CopilotChatStop',
-            'CopilotChatReset',
-            'CopilotChatSave',
-            'CopilotChatLoad',
-            'CopilotChatDebugInfo',
-            'CopilotChatExplain',
-            'CopilotChatReview',
-            'CopilotChatFix',
-            'CopilotChatOptimize',
-            'CopilotChatDocs',
-            'CopilotChatTests',
-            'CopilotChatFixDiagnostic',
-            'CopilotChatCommit',
-            'CopilotChatCommitStaged',
         },
         dependencies = {
             'zbirenbaum/copilot.lua',
             'nvim-lua/plenary.nvim',
         },
         build = 'make tiktoken',
+        ---@type CopilotChat.config
         opts = {
+            context = '#buffers',
+            chat_autocomplete = true,
             auto_insert_mode = true,
+            auto_follow_cursor = true,
+            model = 'claude-3.5-sonnet',
             window = {
-                layout = 'float',
-                width = 0.5,
-                height = 0.5,
+                layout = 'vertical',
+                width = 0.3,
                 border = vim.g.border_style,
+                title = require('icons').UI.AI .. ' Copilot',
             },
             mappings = {
                 close = {
@@ -86,9 +73,5 @@ return {
                 },
             },
         },
-        config = function(_, opts)
-            require('CopilotChat').setup(opts)
-            require('CopilotChat.integrations.cmp').setup()
-        end,
     },
 }

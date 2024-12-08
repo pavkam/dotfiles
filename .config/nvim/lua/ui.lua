@@ -126,6 +126,37 @@ keys.attach('help', function(set)
     set('n', '<Esc>', '<cmd>close<cr>', { icon = icons.UI.Close, silent = true })
 end, true)
 
+keys.attach(nil, function(set)
+    keys.group { mode = 'n', icon = icons.UI.AI, lhs = '<leader>x', desc = 'AI' }
+
+    set('n', '<leader>xx', function()
+        require('CopilotChat').open()
+    end, { desc = 'Open chat window', icon = icons.UI.Tool })
+
+    set('n', '<leader>xa', function()
+        require('CopilotChat').select_agent()
+    end, { desc = 'Select agent', icon = icons.UI.Tool })
+
+    set('n', '<leader>xm', function()
+        require('CopilotChat').select_model()
+    end, { desc = 'Select model', icon = icons.UI.Tool })
+
+    set('n', '<leader>xf', function()
+        require('CopilotChat').ask('Fix the code in the file', {
+            context = '#buffer',
+            clear_chat_on_new_prompt = true,
+            auto_insert_mode = false,
+            window = {
+                layout = 'float',
+                relative = 'cursor',
+                width = 1,
+                height = 0.4,
+                row = 1,
+            },
+        })
+    end, { desc = 'Chat with AI', icon = icons.UI.AI })
+end)
+
 -- Specials using "Command/Super" key (when available!)
 keys.map('n', '<M-]>', '<C-i>', { icon = icons.UI.Next, desc = 'Next location' })
 keys.map('n', '<M-[>', '<C-o>', { icon = icons.UI.Prev, desc = 'Previous location' })
