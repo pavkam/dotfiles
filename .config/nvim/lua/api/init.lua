@@ -1,3 +1,5 @@
+math.randomseed(os.time())
+
 _G.inspect = vim.inspect
 
 ---@alias xtype # The extended type.
@@ -58,11 +60,214 @@ end
 ---@field actual_type xtype # the actual type.
 ---@field message string # the message to display.
 
+---@type fun(parent_field_name: string|nil, schema: xassert_schema): xassert_error[] # the validation function.
+local validate
+
+-- Validates a given schema entry.
+---@param field_name string # the key to assert.
+---@param entry xassert_entry # the schema to validate.
+---@return xassert_error|xassert_error[]|nil # the result of the validation.
+local function validate_entry(field_name, entry)
+    if xtype(entry) ~= 'table' then
+        return {
+            field = field_name,
+            expected_type = 'table',
+            actual_type = type(entry),
+            message = 'invalid schema entry',
+        }
+    end
+
+    local field_value = entry[1]
+    local field_schema = entry[2]
+    local field_value_raw_type, field_value_type = xtype(field_value)
+    local field_schema_raw_type, field_schema_type = xtype(field_schema)
+
+    if field_schema_type == 'string' then --[[@cast field_schema string]]
+        if field_value == 'list' and field_schema == 'table' and table.is_empty(field_value) then
+            return
+        end
+
+        if field_value_type ~= field_schema then
+            return {
+                field = field_name,
+                expected_type = field_schema,
+                actual_type = field_value_type,
+                message = 'invalid type',
+            }
+        end
+
+        return
+    end
+
+    if field_schema_raw_type ~= 'table' then
+        return {
+            field = field_name,
+            expected_type = 'table',
+            actual_type = field_schema_raw_type,
+            message = 'invalid schema entry',
+        }
+    end
+
+    ---@cast field_schema table
+    if field_schema_type == 'table' and xtype(field_schema[1]) == 'string' then
+        local possible_type = field_schema[1] --[[@as xtype]]
+        local lt = xtype(field_schema['<']) == 'number' and field_schema['<'] or nil
+        local gt = xtype(field_schema['>']) == 'number' and field_schema['>'] or nil
+
+        if possible_type == 'list' then
+            if field_value_type ~= possible_type then
+                return {
+                    field = field_name,
+                    expected_type = possible_type,
+                    actual_type = field_value_type,
+                    message = 'not a list',
+                }
+            end
+
+            if lt and #field_value > lt then
+                return {
+                    field = field_name,
+                    expected_type = field_value_type,
+                    actual_type = field_value_type,
+                    message = string.format('list is too long (expected at most `%d`)', lt),
+                }
+            end
+
+            if gt and #field_value < gt then
+                return {
+                    field = field_name,
+                    expected_type = field_value_type,
+                    actual_type = field_value_type,
+                    message = string.format('list is too short (expected at least `%d`)', gt),
+                }
+            end
+
+            local list_item_schema = field_schema['*']
+
+            if list_item_schema ~= nil then
+                ---@type xassert_schema
+                local composite_schema = {}
+                for i, v in ipairs(field_value) do
+                    composite_schema[tostring(i)] = { v, list_item_schema }
+                end
+
+                return validate(field_name, composite_schema)
+            end
+
+            return
+        end
+
+        if possible_type == 'integer' or possible_type == 'number' then
+            if field_value_type ~= possible_type then
+                return {
+                    field = field_name,
+                    expected_type = possible_type,
+                    actual_type = field_value_type,
+                    message = 'invalid type',
+                }
+            end
+
+            if lt and field_value > lt then
+                return {
+                    field = field_name,
+                    expected_type = field_value_type,
+                    actual_type = field_value_type,
+                    message = string.format('value is too large (expected at most `%d`)', lt),
+                }
+            end
+
+            if gt and field_value < gt then
+                return {
+                    field = field_name,
+                    expected_type = field_value_type,
+                    actual_type = field_value_type,
+                    message = string.format('value is too small (expected at least `%d`)', gt),
+                }
+            end
+
+            return
+        end
+
+        if possible_type == 'string' then
+            if field_value_type ~= possible_type then
+                return {
+                    field = field_name,
+                    expected_type = possible_type,
+                    actual_type = field_value_type,
+                    message = 'invalid type',
+                }
+            end
+
+            if lt and #field_value > lt then
+                return {
+                    field = field_name,
+                    expected_type = field_value_type,
+                    actual_type = field_value_type,
+                    message = string.format('string is too long (expected at most `%d`)', lt),
+                }
+            end
+
+            if gt and #field_value < gt then
+                return {
+                    field = field_name,
+                    expected_type = field_value_type,
+                    actual_type = field_value_type,
+                    message = string.format('string is too short (expected at least `%d`)', gt),
+                }
+            end
+
+            local string_match = xtype(field_schema['*']) == 'string' and field_schema['*'] or nil
+            if string_match ~= nil and not field_value:match(string_match) then
+                return {
+                    field = field_name,
+                    expected_type = field_value_type,
+                    actual_type = field_value_type,
+                    message = string.format('string does not match pattern `%s`', string_match),
+                }
+            end
+
+            return
+        end
+    end
+
+    if field_schema_type == 'list' then
+        local errors = {}
+        for i, candidate_schema in ipairs(field_schema) do
+            local inner_errors = validate(field_name, { [tostring(i)] = { field_value, candidate_schema } })
+
+            if #inner_errors == 0 then
+                return
+            else
+                errors = table.list_merge(errors, inner_errors)
+            end
+        end
+
+        return errors
+    end
+
+    if field_value_raw_type ~= 'table' then
+        return {
+            field = field_name,
+            expected_type = 'table | list',
+            actual_type = field_value_type,
+            message = 'invalid type',
+        }
+    end
+
+    ---@type xassert_schema
+    local composite_schema = {}
+    for k, v in pairs(composite_schema) do
+        composite_schema[k] = { field_value[k], v }
+    end
+
+    return validate(field_name, composite_schema)
+end
+
 -- Validates a given schema.
 ---@param parent_field_name string|nil # the key to assert.
 ---@param schema xassert_schema # the schema to validate.
 ---@return xassert_error[] # the result of the validation.
-local function validate(parent_field_name, schema)
+validate = function(parent_field_name, schema)
     if type(schema) ~= 'table' then
         return {
             {
@@ -81,235 +286,18 @@ local function validate(parent_field_name, schema)
         local field_name = parent_field_name and string.format('%s.%s', parent_field_name, tostring(key))
             or tostring(key)
 
-        if xtype(entry) ~= 'table' then
-            table.insert(errors, {
-                field = field_name,
-                expected_type = 'table',
-                actual_type = type(entry),
-                message = 'invalid schema entry',
-            })
-
-            goto continue
-        end
-
-        local field_value = entry[1]
-        local field_schema = entry[2]
-        local field_value_raw_type, field_value_type = xtype(field_value)
-        local field_schema_raw_type, field_schema_type = xtype(field_schema)
-
-        if field_schema_type == 'string' then --[[@cast field_schema string]]
-            if field_value == 'list' and field_schema == 'table' and table.is_empty(field_value) then
-                goto continue
-            end
-
-            if field_value_type ~= field_schema then
-                table.insert(errors, {
-                    field = field_name,
-                    expected_type = field_schema,
-                    actual_type = field_value_type,
-                    message = 'invalid type',
-                })
-            end
-
-            goto continue
-        end
-
-        if field_schema_raw_type ~= 'table' then
-            table.insert(errors, {
-                field = field_name,
-                expected_type = 'table',
-                actual_type = field_schema_raw_type,
-                message = 'invalid schema entry',
-            })
-
-            goto continue
-        end
-
-        ---@cast field_schema table
-        if field_schema_type == 'table' and xtype(field_schema[1]) == 'string' then
-            local possible_type = field_schema[1] --[[@as xtype]]
-            local lt = xtype(field_schema['<']) == 'number' and field_schema['<'] or nil
-            local gt = xtype(field_schema['>']) == 'number' and field_schema['>'] or nil
-
-            if possible_type == 'list' then
-                if field_value_type ~= possible_type then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = possible_type,
-                        actual_type = field_value_type,
-                        message = 'not a list',
-                    })
-
-                    goto continue
-                end
-
-                if lt and #field_value > lt then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = field_value_type,
-                        actual_type = field_value_type,
-                        message = string.format('list is too long (expected at most `%d`)', lt),
-                    })
-
-                    goto continue
-                end
-
-                if gt and #field_value < gt then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = field_value_type,
-                        actual_type = field_value_type,
-                        message = string.format('list is too short (expected at least `%d`)', gt),
-                    })
-
-                    goto continue
-                end
-
-                local list_item_schema = field_schema['*']
-
-                if list_item_schema ~= nil then
-                    ---@type xassert_schema
-                    local composite_schema = {}
-                    for i, v in ipairs(field_value) do
-                        composite_schema[tostring(i)] = { v, list_item_schema }
-                    end
-
-                    table.list_merge(errors, validate(field_name, composite_schema))
-                end
-
-                goto continue
-            end
-
-            if possible_type == 'integer' or possible_type == 'number' then
-                if field_value_type ~= possible_type then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = possible_type,
-                        actual_type = field_value_type,
-                        message = 'invalid type',
-                    })
-
-                    goto continue
-                end
-
-                if lt and field_value > lt then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = field_value_type,
-                        actual_type = field_value_type,
-                        message = string.format('value is too large (expected at most `%d`)', lt),
-                    })
-
-                    goto continue
-                end
-
-                if gt and field_value < gt then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = field_value_type,
-                        actual_type = field_value_type,
-                        message = string.format('value is too small (expected at least `%d`)', gt),
-                    })
-
-                    goto continue
-                end
-
-                goto continue
-            end
-
-            if possible_type == 'string' then
-                if field_value_type ~= possible_type then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = possible_type,
-                        actual_type = field_value_type,
-                        message = 'invalid type',
-                    })
-
-                    goto continue
-                end
-
-                if lt and #field_value > lt then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = field_value_type,
-                        actual_type = field_value_type,
-                        message = string.format('string is too long (expected at most `%d`)', lt),
-                    })
-
-                    goto continue
-                end
-
-                if gt and #field_value < gt then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = field_value_type,
-                        actual_type = field_value_type,
-                        message = string.format('string is too short (expected at least `%d`)', gt),
-                    })
-
-                    goto continue
-                end
-
-                local string_match = xtype(field_schema['*']) == 'string' and field_schema['*'] or nil
-                if string_match ~= nil and not field_value:match(string_match) then
-                    table.insert(errors, {
-                        field = field_name,
-                        expected_type = field_value_type,
-                        actual_type = field_value_type,
-                        message = string.format('string does not match pattern `%s`', string_match),
-                    })
-
-                    goto continue
-                end
-
-                goto continue
+        local validation_result = validate_entry(field_name, entry)
+        if validation_result then
+            if table.is_list(validation_result) then
+                errors = table.list_merge(errors, validation_result)
+            else
+                table.insert(errors, validation_result)
             end
         end
-
-        if field_schema_type == 'list' then
-            local all_inner_errors = {}
-            for i, candidate_schema in ipairs(field_schema) do
-                local inner_errors = validate(field_name, { [tostring(i)] = { field_value, candidate_schema } })
-
-                if #inner_errors == 0 then
-                    all_inner_errors = {}
-                    break
-                else
-                    table.insert(all_inner_errors, inner_errors)
-                end
-            end
-
-            errors = table.list_merge(errors, all_inner_errors)
-
-            goto continue
-        end
-
-        if field_value_raw_type ~= 'table' then
-            table.insert(errors, {
-                field = field_name,
-                expected_type = 'table | list',
-                actual_type = field_value_type,
-                message = 'invalid type',
-            })
-
-            goto continue
-        end
-
-        ---@type xassert_schema
-        local composite_schema = {}
-        for k, v in pairs(composite_schema) do
-            composite_schema[k] = { field_value[k], v }
-        end
-
-        errors = table.list_merge(errors, validate(field_name, composite_schema))
-
-        ::continue::
     end
 
     return errors
 end
-
 
 -- Formats the errors of a validation.
 ---@param errors xassert_error[] # the errors to format.
@@ -329,7 +317,6 @@ local format_assert_error = function(errors)
 
     return formatted
 end
-
 
 -- Asserts the validity of a schema.
 ---@param input xassert_schema # the input to assert.
@@ -540,14 +527,17 @@ function table.list_merge(...)
     local result = {}
     for i, list in ipairs(lists) do
         local _, t = xtype(list)
-        assert(t == 'list', format_assert_error({
-            {
-                field = tostring(i),
-                expected_type = 'list',
-                actual_type = t,
-                message = 'invalid type',
-            },
-        }))
+        assert(
+            t == 'list',
+            format_assert_error {
+                {
+                    field = tostring(i),
+                    expected_type = 'list',
+                    actual_type = t,
+                    message = 'invalid type',
+                },
+            }
+        )
 
         for _, item in ipairs(list) do
             table.insert(result, item)
@@ -643,6 +633,18 @@ function table.is_empty(t)
     return next(t) == nil
 end
 
+--- Checks if a table is a list.
+---@param t table # the table to check.
+---@return boolean # whether the table is a list.
+function table.is_list(t)
+    xassert {
+        t = { t, { 'table', 'list' } },
+    }
+
+    local _, ty = xtype(t)
+    return ty == 'list'
+end
+
 --- Extracts the keys from a table.
 ---@param t table # the table to extract the keys from.
 function table.keys(t)
@@ -655,7 +657,7 @@ function table.keys(t)
         table.insert(keys, k)
     end
 
-  return keys
+    return keys
 end
 
 --- Checks if a string starts with a given prefix.
@@ -683,6 +685,38 @@ function string.ends_with(s, suffix)
     return string.sub(s, -#suffix) == suffix
 end
 
+--- Gets the timezone offset for a given timestamp
+---@param timestamp integer # the timestamp to get the offset for
+---@return integer # the timezone offset
+function os.timezone_offset(timestamp)
+    assert(type(timestamp) == 'number')
+
+    local utc_date = os.date('!*t', timestamp)
+    local local_date = os.date('*t', timestamp)
+
+    local_date.isdst = false
+
+    local diff = os.difftime(os.time(local_date --[[@as osdateparam]]), os.time(utc_date --[[@as osdateparam]]))
+    local h, m = math.modf(diff / 3600)
+
+    return 100 * h + 60 * m
+end
+
+---@type string
+local uuid_template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+
+--- Generates a new UUID
+---@return string # the generated UUID
+function os.uuid()
+    ---@param c string
+    local function subs(c)
+        local v = (((c == 'x') and math.random(0, 15)) or math.random(8, 11))
+        return string.format('%x', v)
+    end
+
+    local res = uuid_template:gsub('[xy]', subs)
+    return res
+end
 
 -- luacheck: pop
 

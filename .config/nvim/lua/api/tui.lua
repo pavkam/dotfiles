@@ -1,16 +1,16 @@
 -- Terminal User Interface API
----@class ide.tui
+---@class tui
 local M = {}
 
----@class (exact) vim.NotifyOpts # the options to pass to the notification
----@field prefix_icon string|nil # the icon to prefix the message with
----@field suffix_icon string|nil # the icon to suffix the message with
----@field title string|nil # the title of the notification
+---@class (exact) tui.notify_opts # the options to pass to the notification.
+---@field prefix_icon string|nil # the icon to prefix the message with.
+---@field suffix_icon string|nil # the icon to suffix the message with.
+---@field title string|nil # the title of the notification.
 
---- Shows a notification
----@param msg string # the message to show
----@param level integer # the level of the notification
----@param opts vim.NotifyOpts|nil # the options to pass to the notification
+--- Shows a notification.
+---@param msg string # the message to show.
+---@param level integer # the level of the notification.
+---@param opts tui.notify_opts|nil # the options to pass to the notification.
 local function notify(msg, level, opts)
     if opts and opts.prefix_icon then
         msg = opts.prefix_icon .. ' ' .. msg
@@ -42,30 +42,30 @@ local function notify(msg, level, opts)
     end)
 end
 
---- Shows a notification with the INFO type
----@param msg string # the message to show
----@param opts vim.NotifyOpts|nil # the options to pass to the notification
+--- Shows a notification with the INFO type.
+---@param msg string # the message to show.
+---@param opts tui.notify_opts|nil # the options to pass to the notification.
 function M.info(msg, opts)
     notify(msg, vim.log.levels.INFO, opts)
 end
 
---- Shows a notification with the WARN type
----@param msg string # the message to show
----@param opts vim.NotifyOpts|nil # the options to pass to the notification
+--- Shows a notification with the WARN type.
+---@param msg string # the message to show.
+---@param opts tui.notify_opts|nil # the options to pass to the notification.
 function M.warn(msg, opts)
     notify(msg, vim.log.levels.WARN, opts)
 end
 
---- Shows a notification with the ERROR type
----@param msg string # the message to show
----@param opts vim.NotifyOpts|nil # the options to pass to the notification
+--- Shows a notification with the ERROR type.
+---@param msg string # the message to show.
+---@param opts tui.notify_opts|nil # the options to pass to the notification.
 function M.error(msg, opts)
     notify(msg, vim.log.levels.ERROR, opts)
 end
 
---- Shows a notification with the HINT type
----@param msg string # the message to show
----@param opts vim.NotifyOpts|nil # the options to pass to the notification
+--- Shows a notification with the HINT type.
+---@param msg string # the message to show.
+---@param opts tui.notify_opts|nil # the options to pass to the notification.
 function M.hint(msg, opts)
     notify(msg, vim.log.levels.DEBUG, opts)
 end
@@ -78,7 +78,7 @@ function M.redraw()
     vim.cmd 'redraw!'
 end
 
----@class (exact) vim.InvokeOnLineOpts # Options for invoking a function on a specific line
+---@class (exact) vim.InvokeOnLineOpts # Options for invoking a function on a specific line.
 ---@field window number|nil # the window to use for the operation, if nil the current window is used.
 
 --- Invokes a function on a specific line without moving the cursor
@@ -115,6 +115,35 @@ function M.invoke_on_line(fn, line, opts)
     if not ok then
         error(err)
     end
+end
+
+--- Checks if a mode is visual.
+---@param mode string|nil # the mode to check or the current mode if nil.
+---@return boolean # true if the mode is visual, false otherwise.
+function M.in_visual_mode(mode)
+    xassert {
+        mode = { 'nil', { 'string', ['>'] = 0 } },
+    }
+
+    mode = mode or vim.api.nvim_get_mode().mode
+    return mode == 'v' or mode == 'V' or mode == ''
+end
+
+--- Gets the selected text from the current buffer in visual mode.
+---@return string # the selected text.
+function M.selected_text()
+    if not vim.fn.in_visual_mode() then
+        return ''
+    end
+
+    local old = vim.fn.getreg 'a'
+    vim.cmd [[silent! normal! "aygv]]
+
+    local original_selection = vim.fn.getreg 'a'
+    vim.fn.setreg('a', old)
+
+    local res, _ = original_selection:gsub('/', '\\/'):gsub('\n', '\\n')
+    return res
 end
 
 return table.freeze(M)
