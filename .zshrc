@@ -11,6 +11,9 @@ export ZSH="$HOME/.oh-my-zsh"
 
 plugins=( git z fzf docker zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting sdk vscode )
 
+autoload -Uz compinit
+compinit
+
 COMM=$(basename "$(cat "/proc/$PPID/comm" 1>/dev/null 2>/dev/null)")
 if [ "$COMM" = "login" ] || [ "$TERM" = "linux" ] || [ "$MC_SID" != "" ]; then
   export ZSH_THEME="clean"

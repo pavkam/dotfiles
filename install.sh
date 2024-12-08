@@ -555,6 +555,9 @@ link .config/htop
 link .config/kitty
 link .config/bat
 link .config/yazi
+link .docker/config.json
+link .docker/daemon.json
+link .docker/features.json
 
 if [ "$DISTRO_DARWIN" = "" ]; then
   link .config/Code/User/settings.json
