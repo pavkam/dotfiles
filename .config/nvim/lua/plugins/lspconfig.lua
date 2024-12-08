@@ -5,7 +5,7 @@ local icons = require 'icons'
 return {
     {
         'neovim/nvim-lspconfig',
-        cond = not vim.headless,
+        cond = not ide.process.is_headless,
         event = 'User NormalFile',
         dependencies = {
             'williamboman/mason-lspconfig.nvim', -- TODO: disable autoloading of all servers that mason installed

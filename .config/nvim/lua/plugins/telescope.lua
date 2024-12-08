@@ -2,7 +2,7 @@ local icons = require 'icons'
 
 return {
     'nvim-telescope/telescope.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     dependencies = {
         {
             'nvim-telescope/telescope-fzf-native.nvim',

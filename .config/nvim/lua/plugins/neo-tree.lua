@@ -14,7 +14,7 @@ stack traceback:
 -- TODO: can I replace the y/n dialog with the default one?
 return {
     'nvim-neo-tree/neo-tree.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     dependencies = {
         'nvim-lua/plenary.nvim',
         'nvim-tree/nvim-web-devicons',

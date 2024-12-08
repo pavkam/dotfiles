@@ -112,4 +112,29 @@ function M.fatal(message)
     M.quit()
 end
 
+-- Checks if the current process if at least a certain version of Neovim.
+---@param major integer # the major version to check.
+---@param minor integer # the minor version to check.
+---@param patch integer|nil # the patch version to check.
+function M.at_least_version(major, minor, patch)
+    xassert {
+        major = { major, { 'integer', ['>'] = 0 } },
+        minor = { minor, { 'integer', ['>'] = 0 } },
+        patch = { patch, { 'nil', { 'integer', ['>'] = 0 } } },
+    }
+
+    return vim.fn.has(string.format('nvim-%d.%d.%d', major, minor, patch or 0))
+end
+
+-- Checks if a command exists and can be run.
+---@param command string # the command to check.
+---@return boolean # whether the command exists.
+function M.tool_exists(command)
+    xassert { command = { command, { 'string', ['>'] = 0 } } }
+
+    return vim.fn.executable(command) == 1
+end
+
+M.is_headless = vim.list_contains(vim.api.nvim_get_vvar 'argv', '--headless') or #vim.api.nvim_list_uis() == 0
+
 return table.freeze(M)

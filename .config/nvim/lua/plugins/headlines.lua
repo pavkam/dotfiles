@@ -1,6 +1,6 @@
 return {
     'lukas-reineke/headlines.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     opts = {},
     ft = { 'markdown' },
     config = function(_, opts)

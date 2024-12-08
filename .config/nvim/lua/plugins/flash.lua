@@ -1,6 +1,6 @@
 return {
     'folke/flash.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     opts = {},
     keys = {
         {

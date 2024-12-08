@@ -2,7 +2,7 @@ local icons = require 'icons'
 
 return {
     'williamboman/mason.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     cmd = {
         'Mason',
         'MasonInstall',

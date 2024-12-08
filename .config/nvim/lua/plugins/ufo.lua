@@ -1,6 +1,6 @@
 return {
     'kevinhwang91/nvim-ufo',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     lazy = false,
     dependencies = { 'kevinhwang91/promise-async' },
     keys = {

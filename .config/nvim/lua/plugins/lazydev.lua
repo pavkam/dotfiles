@@ -1,6 +1,6 @@
 return {
     'folke/lazydev.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     dependencies = {
         'Bilal2453/luvit-meta',
     },

@@ -9,7 +9,9 @@
 --      https://gist.github.com/swarn/fb37d9eefe1bc616c2a7e476c0bc0316#controlling-when-highlights-are-applied.
 --
 -- TODO: improve the mouse right-click: https://github.com/neovim/neovim/commit/76aa3e52be7a5a8b53b3775981c35313284230ac
--- TODO: Use copilot to describe vim commands with suggestions: https://github.com/oflisback/describe-command.nvim/blob/main/lua/describe-command/commands.lua
+-- TODO: Use copilot to describe vim commands with suggestions:
+--      https://github.com/oflisback/describe-command.nvim/blob/main/lua/describe-command/commands.lua
+--
 -- TODO: record error messages into a debug file
 -- TODO: ability to select the root of the project
 -- TODO: the [No Name] is not getting the fuck out when I select a file
@@ -20,35 +22,18 @@
 
 require 'api'
 
-if not vim.fn.executable 'git' then
-    ide.process.fatal 'git required'
-    return
+if not ide.process.at_least_version(0, 10) then
+    return ide.process.fatal 'minimum required Neovim version is 0.10'
 end
 
-if not vim.fn.has 'nvim-0.10' then
-    ide.process.fatal 'minimum required Neovim version is 0.10'
-    return
+if not ide.process.tool_exists 'git' then
+    return ide.process.fatal 'git required'
 end
 
-vim.headless = vim.list_contains(vim.api.nvim_get_vvar 'argv', '--headless') or #vim.api.nvim_list_uis() == 0
-
-require 'options'
+require 'options' -- TODO: this must go
 
 -- Setup the Lazy plugin manager
-local lazypath = vim.fs.joinpath(ide.fs.DATA_DIRECTORY, 'lazy', 'lazy.nvim')
-if not vim.uv.fs_stat(lazypath) then
-    vim.fn.system {
-        'git',
-        'clone',
-        '--filter=blob:none',
-        'https://github.com/folke/lazy.nvim.git',
-        '--branch=stable', -- latest stable release
-        lazypath,
-    }
-end
-
----@diagnostic disable-next-line: undefined-field
-vim.opt.rtp:prepend(lazypath)
+ide.plugins.require_online('https://github.com/folke/lazy.nvim.git', ide.fs.join_paths('lazy', 'lazy.nvim'))
 
 require('lazy').setup {
     spec = { import = 'plugins' },
@@ -89,6 +74,7 @@ require('lazy').setup {
 
 require 'init'
 
+-- TODO: not working
 -- Post-load hook
 vim.api.nvim_create_autocmd('User', {
     pattern = 'LazyVimStarted',

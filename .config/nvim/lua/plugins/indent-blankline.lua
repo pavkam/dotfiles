@@ -2,7 +2,7 @@ local icons = require 'icons'
 
 return {
     'lukas-reineke/indent-blankline.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     event = 'User NormalFile',
     opts = {
         indent = {

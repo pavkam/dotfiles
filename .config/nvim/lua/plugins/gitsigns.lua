@@ -2,7 +2,7 @@ local icons = require 'icons'
 
 return {
     'lewis6991/gitsigns.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     event = 'User GitFile',
     opts = {
         signs = {

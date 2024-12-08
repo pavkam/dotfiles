@@ -1,6 +1,6 @@
 return {
     'iamcco/markdown-preview.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     ft = { 'markdown' },
     cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
     build = function()

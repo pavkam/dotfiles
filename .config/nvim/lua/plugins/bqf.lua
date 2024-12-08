@@ -1,6 +1,6 @@
 return {
     'kevinhwang91/nvim-bqf',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     ft = 'qf',
     opts = {
         ---@type table<string, string>

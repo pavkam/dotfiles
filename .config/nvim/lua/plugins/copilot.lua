@@ -3,7 +3,7 @@
 return {
     {
         'zbirenbaum/copilot.lua',
-        cond = not vim.headless,
+        cond = not ide.process.is_headless,
         cmd = 'Copilot',
         build = ':Copilot auth',
         ---@type copilot_config

@@ -2,7 +2,7 @@ local icons = require 'icons'
 
 return {
     'stevearc/dressing.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     dependencies = {
         'MunifTanjim/nui.nvim',
         'nvim-lua/plenary.nvim',

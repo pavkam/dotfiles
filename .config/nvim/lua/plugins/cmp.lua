@@ -1,7 +1,7 @@
 return {
     {
         'hrsh7th/nvim-cmp',
-        cond = not vim.headless,
+        cond = not ide.process.is_headless,
         event = 'InsertEnter',
         dependencies = {
             'hrsh7th/cmp-nvim-lsp',

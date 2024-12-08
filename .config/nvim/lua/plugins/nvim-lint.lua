@@ -1,6 +1,6 @@
 return {
     'mfussenegger/nvim-lint',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     event = 'User NormalFile',
     opts = function()
         local project = require 'project'

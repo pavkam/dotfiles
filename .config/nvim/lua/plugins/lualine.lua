@@ -1,6 +1,6 @@
 return {
     'nvim-lualine/lualine.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     dependencies = {
         'nvim-tree/nvim-web-devicons',
     },

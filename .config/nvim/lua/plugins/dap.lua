@@ -1,6 +1,6 @@
 return {
     'mfussenegger/nvim-dap',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     dependencies = {
         'rcarriga/nvim-dap-ui',
         'mxsdev/nvim-dap-vscode-js',

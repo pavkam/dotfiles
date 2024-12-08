@@ -12,7 +12,7 @@ local setting_name = 'current_session_name'
 --- Check if the session support is enabled
 --- @return boolean # true if enabled, false otherwise
 local function enabled()
-    return vim.fn.argc() == 0 and not vim.headless
+    return vim.fn.argc() == 0 and not ide.process.is_headless
 end
 
 --- Get the current session name

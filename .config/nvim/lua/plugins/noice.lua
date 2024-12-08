@@ -1,6 +1,6 @@
 return {
     'folke/noice.nvim',
-    cond = not vim.headless,
+    cond = not ide.process.is_headless,
     lazy = false,
     dependencies = {
         'MunifTanjim/nui.nvim',
