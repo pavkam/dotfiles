@@ -1,5 +1,4 @@
 local process = require 'api.process'
-local assert = require 'api.assert'
 
 -- HACK: This is a workaround for the fact that lua_ls doesn't support generic classes.
 -- luacheck: push ignore 631
@@ -56,7 +55,7 @@ end
 ---@param opts api.events.AutoCommandOpts # the options for the auto command.
 ---@return api.events.Slot<vim.AutoCommandData> # the slot object.
 local function create_auto_command_slot(events, opts)
-    assert {
+    xassert {
         events = { events, { ['*'] = 'string' } },
         opts = {
             opts,

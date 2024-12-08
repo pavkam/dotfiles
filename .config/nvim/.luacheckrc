@@ -7,12 +7,13 @@ std = {
         'table', -- remove
         'error', -- remove
         'type', -- remove
-        'extended_type',
+        'xtype',
         'string', -- remove
         'fatal',
         'dbg',
         'who',
         'assert', -- remove
+        'xassert',
         'require',
         'package', -- remove
         'unpack',
@@ -25,7 +26,8 @@ std = {
         'coroutine', -- remove
         'setmetatable', -- remove
         'getmetatable', -- remove
-        'select',
+        'select', -- remove
+        'inspect',
         'io', -- remove
     },
 }

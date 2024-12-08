@@ -2,7 +2,6 @@
 ---@class api.process
 local M = {}
 
-local assert = require 'api.assert'
 local fs = require 'api.fs'
 
 --- Gets the value of an up-value of a function
@@ -10,7 +9,7 @@ local fs = require 'api.fs'
 ---@param name string # the name of the up-value to get
 ---@return any # the value of the up-value or nil if it does not exist
 function M.get_up_value(fn, name)
-    assert { fn = { fn, 'callable' }, name = { name, { 'string', ['>'] = 0 } } }
+    xassert { fn = { fn, 'callable' }, name = { name, { 'string', ['>'] = 0 } } }
 
     local i = 1
     while true do
@@ -38,7 +37,7 @@ end
 ---@param level integer|nil # the level of the trace-back to get
 ---@return vim.TraceBackEntry[] # the trace-back entries
 function M.get_trace_back(level)
-    assert { level = { level, { 'integer', ['>'] = 0 } } }
+    xassert { level = { level, { 'integer', ['>'] = 0 } } }
 
     local trace = level and debug.traceback('', level) or debug.traceback()
 
@@ -103,7 +102,7 @@ end
 --- Global function to log a message as an error and quit.
 ---@param message string the message to log.
 function M.fatal(message)
-    assert { message = { message, { 'string', ['>'] = 0 } } }
+    xassert { message = { message, { 'string', ['>'] = 0 } } }
 
     error(string.format('fatal error has occurred: %s', message))
     error 'press any key to quit the process'

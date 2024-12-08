@@ -95,8 +95,8 @@ function vim.buf.delete(buffer, opts)
 
     local should_remove = opts.force or vim.fn.confirm_saved(buffer, 'closing')
 
-    if vim.list_contains(vim.filetype.pinned(), vim.api.nvim_get_option_value('filetype', { buf = buffer })) then
-        for _, window in ipairs(vim.fn.getbufinfo(buffer)[1].windows) do
+    if ide.buf[buffer].is_pinned_to_window(vim.api.nvim_get_current_win()) then
+        for _, window in ipairs(ide.buf[buffer].window_ids) do
             vim.api.nvim_win_close(window, true)
         end
     end

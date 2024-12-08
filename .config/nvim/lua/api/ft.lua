@@ -7,7 +7,10 @@ local file_to_file_type = {}
 ---@param file_path string # the path to the file to get the type for.
 ---@return string|nil # the file type or nil if the file type could not be determined.
 local function detect(file_path)
-    assert(type(file_path) == 'string' and file_path ~= '')
+    xassert {
+        file_path = { file_path, { 'string', ['>'] = 0 } },
+    }
+
     file_path = fs.expand_path(file_path) or file_path
 
     ---@type string|nil
@@ -37,7 +40,7 @@ local function detect(file_path)
     return file_type
 end
 
----@alias api.ft.OptionType # The supported file type options.
+---@alias ft.option_type # The supported file type options.
 ---| 'keep_undo_history' # whether to keep undo history.
 ---| 'keep_swap_file' # whether to keep a swap file.
 ---| 'auto_read' # whether to automatically read the file.
@@ -55,7 +58,7 @@ end
 ---| 'pinned_to_window' # whether the file is pinned to the window.
 
 -- The supported file type options.
----@type table<api.ft.OptionType, { [1]: string, [2]: type }>
+---@type table<ft.option_type, { [1]: string, [2]: xtype }>
 local supported_options = {
     keep_undo_history = { 'undofile', 'boolean' },
     keep_swap_file = { 'swapfile', 'boolean' },
@@ -76,7 +79,7 @@ local supported_options = {
 
 -- Gets an option for a file type.
 ---@param file_type string # the file type to get the option for.
----@param option api.ft.OptionType # the option to get.
+---@param option ft.option_type # the option to get.
 ---@return boolean, boolean|string|integer|nil # the option value.
 local function get_file_type_option(file_type, option)
     local actual_option = supported_options[option]
@@ -93,6 +96,12 @@ end
 ---@param value boolean|string|integer # the value to set the option to.
 ---@return boolean # whether the option was set successfully.
 local function set_file_type_option(file_type, option, value)
+    xassert {
+        file_type = { file_type, { 'string', ['>'] = 0 } },
+        option = { option, { 'string', ['>'] = 0 } },
+        value = { value, { 'boolean', 'string', 'number' } },
+    }
+
     for _, buffer_id in ipairs(vim.api.nvim_list_bufs()) do
         if vim.bo[buffer_id].filetype == file_type then
             vim.opt_local[buffer_id][option] = value
@@ -108,16 +117,17 @@ local function get_file_type_option_names()
     return vim.tbl_keys(supported_options)
 end
 
----@alias api.ft.FileTypeOptions # The options for a file type.
----| table<api.ft.OptionType, boolean|string|integer>
-
 -- File type management.
----@class api.ft
+---@class ft
 ---@field detect fun(file_type: string): boolean # Detects the file type of a file.
----@field [api.ft.OptionType] boolean|string|integer # The options for a file type.
+---@field [ft.option_type] boolean|string|integer # The options for a file type.
 local M = table.synthetic({ detect }, {
     ---@param file_type string
     getter = function(file_type)
+        xassert {
+            file_type = { file_type, { 'string', ['>'] = 0 } },
+        }
+
         return true,
             table.synthetic({}, {
                 getter = function(option)
