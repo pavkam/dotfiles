@@ -11,7 +11,6 @@ stack traceback:
 	...o-tree.nvim/lua/neo-tree/sources/filesystem/commands.lua:184: in function <...o-tree.nvim/lua/neo-tree/sources/filesystem/commands.lua:183>
 ]]
 --
--- TODO: can I replace the y/n dialog with the default one?
 return {
     'nvim-neo-tree/neo-tree.nvim',
     cond = not ide.process.is_headless,

@@ -626,7 +626,16 @@ M.win_bar = {
         table.merge(components.file_name, { padding = { left = 0 } }),
     },
     lualine_x = {},
-    lualine_y = {},
+    lualine_y = {
+        -- TODO: make this sexier
+        function()
+            return require('nvim-treesitter').statusline {
+                indicator_size = 70,
+                type_patterns = { 'class', 'function', 'method' },
+                separator = ' -> ',
+            }
+        end,
+    },
     lualine_z = { components.diagnostics },
 }
 

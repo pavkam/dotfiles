@@ -158,18 +158,19 @@ return {
     },
     {
         'windwp/nvim-ts-autotag',
+        event = 'User NormalFile',
+        ---@type nvim-ts-autotag.PluginSetup
         opts = {
-            enable_close = true,
-            enable_rename = true,
-            enable_close_on_slash = false,
+            opts = {
+                enable_rename = true,
+                enable_close = true,
+                enable_close_on_slash = false,
+            },
             per_filetype = {
                 ['html'] = {
                     enable_close = false,
                 },
             },
         },
-        config = function(_, opts)
-            require('nvim-ts-autotag').setup(opts)
-        end,
     },
 }

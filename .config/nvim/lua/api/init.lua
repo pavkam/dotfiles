@@ -82,8 +82,10 @@ local function validate_entry(field_name, entry)
     local field_value_raw_type, field_value_type = xtype(field_value)
     local field_schema_raw_type, field_schema_type = xtype(field_schema)
 
+    local field_value_type_maybe_table = field_value_type == 'list' and next(field_value) == nil
+
     if field_schema_type == 'string' then --[[@cast field_schema string]]
-        if field_value == 'list' and field_schema == 'table' and table.is_empty(field_value) then
+        if field_schema == 'table' and field_value_type_maybe_table then
             return
         end
 
@@ -111,6 +113,35 @@ local function validate_entry(field_name, entry)
     ---@cast field_schema table
     if field_schema_type == 'table' and xtype(field_schema[1]) == 'string' then
         local possible_type = field_schema[1] --[[@as xtype]]
+
+        if possible_type == 'table' then
+            if field_value_type ~= possible_type and not field_value_type_maybe_table then
+                return {
+                    field = field_name,
+                    expected_type = possible_type,
+                    actual_type = field_value_type,
+                    message = 'not a table',
+                }
+            end
+
+            local table_item_schema = field_schema['*']
+
+            if table_item_schema ~= nil then
+                ---@type xassert_schema
+                local composite_schema = {
+                    ['__keys__'] = { table.keys(field_value), { 'list', ['*'] = 'string' } },
+                }
+
+                for k, v in pairs(field_value) do
+                    composite_schema[tostring(k)] = { v, table_item_schema }
+                end
+
+                return validate(field_name, composite_schema)
+            end
+
+            return
+        end
+
         local lt = xtype(field_schema['<']) == 'number' and field_schema['<'] or nil
         local gt = xtype(field_schema['>']) == 'number' and field_schema['>'] or nil
 
@@ -238,7 +269,9 @@ local function validate_entry(field_name, entry)
             if #inner_errors == 0 then
                 return
             else
-                errors = table.list_merge(errors, inner_errors)
+                for _, error in ipairs(inner_errors) do
+                    table.insert(errors, error)
+                end
             end
         end
 
@@ -288,8 +321,12 @@ validate = function(parent_field_name, schema)
 
         local validation_result = validate_entry(field_name, entry)
         if validation_result then
-            if table.is_list(validation_result) then
-                errors = table.list_merge(errors, validation_result)
+            local _, ty = xtype(validation_result)
+
+            if ty == 'list' then
+                for _, error in ipairs(validation_result) do
+                    table.insert(errors, error)
+                end
             else
                 table.insert(errors, validation_result)
             end
@@ -418,11 +455,13 @@ function table.synthetic(table, opts)
 end
 
 ---@class smart_table_prop # The property for a smart table.
----@field get fun(entity: any, key: string): any # the getter function.
----@field set (fun(entity: any, key: string, value: any)) | nil # the setter function (optional).
+---@field get fun(entity: any): any # the getter function.
+---@field set (fun(entity: any, value: any)) | nil # the setter function (optional).
 
 ---@class smart_table_opts # The options for a synthetic table.
----@field enumerate fun(): any[] # enumerate members.
+---@field globals table<string, any>|nil # the global variables.
+---@field entities fun(): any[] # the entities to make smart tables for.
+---@field valid_entity fun(entity: any): boolean # the function to check if an entity is valid.
 ---@field functions table<string, fun(entity: any, ...): any> # the functions for the smart table.
 ---@field properties table<string, smart_table_prop> # the properties for the smart table.
 
@@ -434,14 +473,27 @@ function table.smart(opts)
         opts = {
             opts,
             {
-                enumerate = 'callable',
-                functions = 'table', --TODO: make the assrt allow to check for table key/val
-                properties = 'table',
+                globals = { 'nil', 'table' },
+                functions = {
+                    'table',
+                    ['*'] = 'callable',
+                },
+                properties = {
+                    'table',
+                    ['*'] = {
+                        get = 'callable',
+                        set = { 'nil', 'callable' },
+                    },
+                },
+                entities = 'callable',
+                valid_entity = 'callable',
             },
         },
     }
 
-    --TODO: make smarter
+    local globals = opts.globals or {}
+    local entity_keys = table.list_merge(table.keys(opts.functions), table.keys(opts.properties))
+    local global_keys = table.keys(globals)
 
     local function make(entity)
         return table.synthetic({}, {
@@ -455,41 +507,50 @@ function table.smart(opts)
 
                 local prop = opts.properties[key]
                 if prop then
-                    return true, prop.get(entity, key)
+                    return true, prop.get(entity)
                 end
 
                 return false, nil
             end,
             setter = function(key, value)
-                local prop = opts.properties[entity]
+                local prop = opts.properties[key]
                 if prop and prop.set then
-                    prop.set(entity, key, value)
+                    prop.set(entity, value)
                     return true
                 end
 
                 return false
             end,
             enumerate = function()
-                return table.list_merge(table.keys(opts.functions), table.keys(opts.properties))
+                return entity_keys
             end,
+            cache = false,
         })
     end
 
-    return setmetatable({}, {
+    return setmetatable(globals, {
         __index = function(t, entity)
             local value = rawget(t, entity)
-            if value == nil then
-                value = make(entity)
-                rawset(t, entity, value)
-            end
+            if opts.valid_entity(entity) then
+                if value == nil then
+                    value = make(entity)
+                    rawset(t, entity, value)
+                end
 
-            return value
+                return value
+            else
+                if value ~= nil then
+                    rawset(t, entity, nil)
+                end
+
+                return nil
+            end
         end,
         __newindex = function()
             error('Cannot set a value on a smart table.', 2)
         end,
         __pairs = function()
-            return opts.enumerate()
+            return table.list_merge(opts.entities(), global_keys)
         end,
     })
 end
@@ -526,18 +587,9 @@ function table.list_merge(...)
 
     local result = {}
     for i, list in ipairs(lists) do
-        local _, t = xtype(list)
-        assert(
-            t == 'list',
-            format_assert_error {
-                {
-                    field = tostring(i),
-                    expected_type = 'list',
-                    actual_type = t,
-                    message = 'invalid type',
-                },
-            }
-        )
+        xassert {
+            [tostring(i)] = { list, 'list' },
+        }
 
         for _, item in ipairs(list) do
             table.insert(result, item)
@@ -645,6 +697,25 @@ function table.is_list(t)
     return ty == 'list'
 end
 
+--- Converts the elements of a list to a new list.
+---@generic I, O
+---@param list I[] # the list to map.
+---@param fn fun(value: I): O # the function to map the values.
+---@return O[] # the mapped list.
+function table.list_map(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    local result = {}
+    for _, item in ipairs(list) do
+        table.insert(result, fn(item))
+    end
+
+    return result
+end
+
 --- Extracts the keys from a table.
 ---@param t table # the table to extract the keys from.
 function table.keys(t)
@@ -725,7 +796,9 @@ _G.ide = {
     text = require 'api.text',
     fs = require 'api.fs',
     buf = require 'api.buf',
+    win = require 'api.win',
     ft = require 'api.ft',
+    editor = require 'api.editor',
     process = require 'api.process',
     events = require 'api.events',
     tui = require 'api.tui',
