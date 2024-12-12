@@ -50,7 +50,7 @@ local function get_listed_buffers()
             return {
                 file = name and name ~= '' and name or '[No Name]',
                 type = 'buffer',
-                line = vim.buf.cursor_line(buffer),
+                line = ide.buf[buffer].cursor[1],
             }
         end)
         :totable()

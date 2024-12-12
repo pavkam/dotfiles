@@ -127,10 +127,10 @@ local M = table.smart {
 
                 ---@type boolean, any
                 local ok, err
-                if type(fn_or_cmd) == 'function' then
-                    ok, err = pcall(fn_or_cmd)
-                else
+                if type(fn_or_cmd) == 'string' then
                     ok, err = pcall(vim.cmd --[[@as function]], fn_or_cmd)
+                else
+                    ok, err = pcall(fn_or_cmd)
                 end
 
                 vim.api.nvim_win_set_cursor(window_id, current_pos)
