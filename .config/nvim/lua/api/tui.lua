@@ -78,4 +78,81 @@ function M.redraw()
     vim.cmd 'redraw!'
 end
 
+local function extract_shortcut(label)
+    xassert {
+        label = { label, { 'string', ['>'] = 0 } },
+    }
+
+    local shortcuts = {}
+    local i = 1
+    local amp_len = 0
+
+    while i <= #label do
+        local ch = label:sub(i, i)
+        i = i + 1
+
+        if ch == '&' and amp_len < 3 then
+            amp_len = amp_len + 1
+        elseif amp_len % 2 == 1 then
+            table.insert(shortcuts, ch)
+            amp_len = 0
+        end
+    end
+
+    return #shortcuts == 1 and shortcuts[1] or nil
+end
+
+---@class (exact) ask_choice # The choice to present to the user.
+---@field [1] string # the label of the choice.
+---@field [2] any|nil # the value of the choice.
+
+--- Asks the user a question with a list of choices.
+---@param question string # the question to ask.
+---@param choices ask_choice[] # the list of choices to present to the user.
+---@return any|nil # the value of the choice the user selected.
+function M.ask(question, choices)
+    xassert {
+        question = { question, { 'string', ['>'] = 0 } },
+        choices = { choices, { 'list', ['>'] = 0 } },
+    }
+
+    local labels = table.list_map(choices, function(c)
+        return c[1]
+    end)
+
+    xassert {
+        choices = {
+            table.list_map(labels, extract_shortcut),
+            {
+                'list',
+                ['>'] = #choices - 1,
+                ['<'] = #choices + 1,
+            },
+        },
+    }
+
+    local choice = vim.fn.confirm(question, table.concat(labels, '\n'))
+
+    if choice == 0 then
+        return nil
+    end
+
+    return choices[choice][2] or choices[choice][1]
+end
+
+--- Asks the user a question with a list of choices.
+---@param question string # the question to ask.
+---@return boolean|nil # the value of the choice the user selected.
+function M.confirm(question)
+    xassert {
+        question = { question, { 'string', ['>'] = 0 } },
+    }
+
+    return M.ask(question, {
+        { '&Yes', true },
+        { '&No', false },
+        { '&Cancel', nil },
+    })
+end
+
 return table.freeze(M)

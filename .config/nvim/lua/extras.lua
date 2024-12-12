@@ -7,7 +7,7 @@ require 'notes'
 -- File manipulation (delete, rename)
 events.on_user_event('NormalFile', function(_, evt)
     local function delete_buffer(buffer)
-        vim.buf.delete(buffer, { force = true })
+        ide.buf[buffer].remove { force = true }
     end
 
     vim.api.nvim_buf_create_user_command(evt.buf, 'Rename', function(args)

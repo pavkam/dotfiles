@@ -40,8 +40,12 @@ keys.map('n', '<leader><leader>', function()
     end
 end, { icon = icons.UI.Switch, desc = 'Switch buffer', silent = true })
 
-keys.map('n', '<leader>c', vim.buf.delete, { icon = icons.UI.Close, desc = 'Close buffer' })
-keys.map('n', '<leader>C', vim.buf.delete_others, { icon = icons.UI.Close, desc = 'Close other buffers' })
+keys.map('n', '<leader>c', function()
+    ide.buf[vim.api.nvim_get_current_buf()].remove()
+end, { icon = icons.UI.Close, desc = 'Close buffer' })
+keys.map('n', '<leader>C', function()
+    ide.buf[vim.api.nvim_get_current_buf()].remove_others()
+end, { icon = icons.UI.Close, desc = 'Close other buffers' })
 
 for i = 1, 9 do
     keys.map('n', '<M-' .. i .. '>', function()
