@@ -155,12 +155,12 @@ keys.map({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Prev
 keys.map('n', '\\', 'viw', { desc = 'Select word' })
 
 keys.map('x', '<C-r>', function()
-    local text = vim.fn.selected_text()
+    local text = ide.win[vim.api.nvim_get_current_win()].selected_text
     keys.feed(syntax.create_rename_expression { orig = text })
 end, { desc = 'Replace selection' })
 
 keys.map('x', '<C-S-r>', function()
-    local text = vim.fn.selected_text()
+    local text = ide.win[vim.api.nvim_get_current_win()].selected_text
     keys.feed(syntax.create_rename_expression { orig = text, whole_word = true })
 end, { desc = 'Replace selection (whole word)' })
 

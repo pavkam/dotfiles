@@ -67,7 +67,7 @@ return {
         }, neotest_ns)
 
         local function confirm_saved(buffer)
-            return vim.fn.confirm_saved(buffer, 'running tests')
+            return ide.buf[buffer].confirm_saved 'running tests'
         end
 
         -- register neotest mappings

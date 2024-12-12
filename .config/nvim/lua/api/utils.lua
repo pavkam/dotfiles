@@ -130,16 +130,6 @@ function vim.fn.fold_marker(line, window)
     end)
 end
 
---- Checks if a window is in diff mode.
----@param window integer|nil # the window to check or the current window if nil
----@return boolean # true if the window is in diff mode, false otherwise
-function vim.fn.win_in_diff_mode(window)
-    window = window or vim.api.nvim_get_current_win()
-    assert(type(window) == 'number')
-
-    return vim.api.nvim_get_option_value('diff', { win = window })
-end
-
 ---@class (exact) vim.fn.RegisterCommandOpts # The options to pass to the command.
 ---@field desc string # the description of the command.
 ---@field nargs integer|'*'|'?'|'+'|nil # the number of arguments the command takes.
