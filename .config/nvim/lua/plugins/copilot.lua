@@ -30,6 +30,11 @@ return {
                     require('events').trigger_status_update_event()
                 end
             end)
+
+            ide.theme.register_highlight_groups {
+                CopilotAnnotation = '@string.regexp',
+                CopilotSuggestion = '@string.regexp',
+            }
         end,
     },
     {

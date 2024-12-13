@@ -255,6 +255,13 @@ local function get_displayer(opts)
     }
 end
 
+ide.theme.register_highlight_groups {
+    FilePaletteOpenFile = '@lsp.type.variable',
+    FilePaletteJumpedFile = '@lsp.type.decorator',
+    FilePaletteOldFile = '@lsp.type.number',
+    FilePaletteMarkedFile = '@keyword',
+}
+
 local hl_map = {
     ['old-file'] = 'FilePaletteOldFile',
     ['jump-list'] = 'FilePaletteJumpedFile',

@@ -6,6 +6,10 @@ local group = 'pavkam_marks'
 ---@class ui.marks
 local M = {}
 
+ide.theme.register_highlight_groups {
+    MarkSign = 'DiagnosticWarn',
+}
+
 ---@class (exact) ui.marks.Mark # A mark.
 ---@field mark string # the mark name.
 ---@field pos number[] # the position of the mark.

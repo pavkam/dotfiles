@@ -8,6 +8,10 @@ local strings = require 'plenary.strings'
 local config = require('telescope.config').values
 local icons = require 'icons'
 
+ide.theme.register_highlight_groups {
+    NormalMenuItem = 'Special',
+}
+
 local M = {}
 
 -- TODO: fix bug pressing enter without a selection

@@ -10,6 +10,23 @@ local hl = require 'hl'
 ---@class ui.lualine.sections
 local M = {}
 
+ide.theme.register_highlight_groups {
+    AuxiliaryProgressStatus = 'Comment',
+    ActiveLintersStatus = { 'Statement', { italic = true } },
+    DisabledLintersStatus = { 'ActiveLintersStatus', { strikethrough = true } },
+    ActiveFormattersStatus = { 'Function', { italic = true } },
+    DisabledFormattersStatus = { 'ActiveFormattersStatus', { strikethrough = true } },
+    ActiveLSPsStatus = 'PreProc',
+    CopilotIdle = 'Special',
+    CopilotFetching = 'DiagnosticWarn',
+    CopilotWarning = 'DiagnosticError',
+    RecordingMacroStatus = { 'Error', { bold = true } },
+
+    StatusLineTestFailed = 'NeotestFailed',
+    StatusLineTestPassed = 'NeotestPassed',
+    StatusLineTestSkipped = 'NeotestSkipped',
+}
+
 --- Formats a list of items into a string with a cut-off
 ---@param prefix string # The prefix to add to the string
 ---@param list string[]|string # The list of items to format

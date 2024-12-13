@@ -119,7 +119,7 @@ local M = table.smart {
                     return window.cursor
                 end
 
-                local row, col = vim.api.nvim_buf_get_mark(buffer.id, [["]])
+                local row, col = unpack(vim.api.nvim_buf_get_mark(buffer.id, [["]]))
 
                 return { row, col + 1 }
             end,

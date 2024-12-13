@@ -2,6 +2,11 @@ local events = require 'events'
 local keys = require 'keys'
 local icons = require 'icons'
 
+ide.theme.register_highlight_groups {
+    NormalMenuItem = 'Special',
+    SpecialMenuItem = 'Boolean',
+}
+
 ---@type table<string, any>
 local global_permanent_settings = {}
 ---@type table<integer, any>

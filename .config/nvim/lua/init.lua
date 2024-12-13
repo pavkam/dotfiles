@@ -16,7 +16,6 @@ require 'lsp'
 require 'linting'
 require 'extras'
 require 'formatting'
-require 'colors'
 
 -- common misspellings
 vim.cmd.cnoreabbrev('qw', 'wq')
