@@ -6,7 +6,6 @@ local diagnostics = require 'diagnostics'
 local icons = require 'icons'
 local progress = require 'progress'
 
-require 'hl'
 require 'marks'
 require 'qf'
 require 'tmux'

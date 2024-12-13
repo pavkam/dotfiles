@@ -5,10 +5,31 @@ local lint = require 'linting'
 local shell = require 'shell'
 local settings = require 'settings'
 local progress = require 'progress'
-local hl = require 'hl'
+local ui = require 'ui'
 
 ---@class ui.lualine.sections
 local M = {}
+
+local function hl_fg_color_and_attrs(name)
+    assert(type(name) == 'string' and name ~= '')
+
+    local hl = vim.api.nvim_get_hl(0, { name = name, link = false })
+
+    if not hl then
+        return nil
+    end
+
+    local fg = hl.fg or 0
+    local attrs = {}
+
+    for _, attr in ipairs { 'italic', 'bold', 'undercurl', 'underdotted', 'underlined', 'strikethrough' } do
+        if hl[attr] then
+            table.insert(attrs, attr)
+        end
+    end
+
+    return { fg = string.format('#%06x', fg), gui = table.concat(attrs, ',') }
+end
 
 ide.theme.register_highlight_groups {
     AuxiliaryProgressStatus = 'Comment',
@@ -129,7 +150,7 @@ local components = {
         cond = settings.transient(function()
             return progress.status 'recording_macro' ~= nil
         end),
-        color = hl.hl_fg_color_and_attrs 'RecordingMacroStatus',
+        color = hl_fg_color_and_attrs 'RecordingMacroStatus',
     },
 
     --- The section that shows the current file name.
@@ -242,7 +263,7 @@ local components = {
         cond = settings.transient(function()
             return shell.progress() ~= nil
         end),
-        color = hl.hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
+        color = hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
     },
 
     --- The section that shows the status of the linters.
@@ -260,9 +281,9 @@ local components = {
         end),
         color = settings.transient(function(buffer)
             if not lint.enabled(buffer) then
-                return hl.hl_fg_color_and_attrs 'DisabledLintersStatus'
+                return hl_fg_color_and_attrs 'DisabledLintersStatus'
             else
-                return hl.hl_fg_color_and_attrs 'ActiveLintersStatus'
+                return hl_fg_color_and_attrs 'ActiveLintersStatus'
             end
         end),
     },
@@ -282,9 +303,9 @@ local components = {
         end),
         color = settings.transient(function(buffer)
             if not format.enabled(buffer) then
-                return hl.hl_fg_color_and_attrs 'DisabledFormattersStatus'
+                return hl_fg_color_and_attrs 'DisabledFormattersStatus'
             else
-                return hl.hl_fg_color_and_attrs 'ActiveFormattersStatus'
+                return hl_fg_color_and_attrs 'ActiveFormattersStatus'
             end
         end),
         on_click = function()
@@ -301,7 +322,7 @@ local components = {
         cond = function()
             return progress.status 'workspace' ~= nil
         end,
-        color = hl.hl_fg_color_and_attrs 'ActiveLSPsStatus',
+        color = hl_fg_color_and_attrs 'ActiveLSPsStatus',
     },
 
     --- The section that shows the status of the LSP.
@@ -313,7 +334,7 @@ local components = {
         cond = settings.transient(function(buffer)
             return lsp.any_active_for_buffer(buffer)
         end),
-        color = hl.hl_fg_color_and_attrs 'ActiveLSPsStatus',
+        color = hl_fg_color_and_attrs 'ActiveLSPsStatus',
         on_click = function()
             vim.cmd.LspInfo()
         end,
@@ -327,7 +348,7 @@ local components = {
             return lsp.is_active_for_buffer(buffer, 'copilot')
         end),
         color = settings.transient(function()
-            return hl.hl_fg_color_and_attrs(
+            return hl_fg_color_and_attrs(
                 copilot_colors[require('copilot.api').status.data.status] or copilot_colors['Normal']
             )
         end),
@@ -341,7 +362,7 @@ local components = {
         cond = function()
             return package.loaded['dap'] and require('dap').status() ~= ''
         end,
-        color = hl.hl_fg_color_and_attrs 'Debug',
+        color = hl_fg_color_and_attrs 'Debug',
     },
 
     --- The section that shows the status of the git diff.
@@ -369,11 +390,11 @@ local components = {
     --- The section that shows the status of hidden files.
     ignore_hidden_files = {
         function()
-            return hl.ignore_hidden_files.active() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
+            return ui.ignore_hidden_files.active() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
         end,
-        color = hl.hl_fg_color_and_attrs 'Comment',
+        color = hl_fg_color_and_attrs 'Comment',
         on_click = function()
-            hl.ignore_hidden_files.toggle()
+            ui.ignore_hidden_files.toggle()
         end,
     },
 
@@ -382,7 +403,7 @@ local components = {
         function()
             return icons.UI.TMux
         end,
-        color = hl.hl_fg_color_and_attrs 'Comment',
+        color = hl_fg_color_and_attrs 'Comment',
         cond = function()
             return require('tmux').socket() ~= nil
         end,
@@ -393,7 +414,7 @@ local components = {
         function()
             return icons.UI.SpellCheck
         end,
-        color = hl.hl_fg_color_and_attrs 'Comment',
+        color = hl_fg_color_and_attrs 'Comment',
         cond = function()
             return vim.o.spell
         end,
@@ -407,14 +428,14 @@ local components = {
         cond = settings.transient(function(buffer)
             return lsp.is_active_for_buffer(buffer, 'typos_lsp')
         end),
-        color = hl.hl_fg_color_and_attrs 'Comment',
+        color = hl_fg_color_and_attrs 'Comment',
     },
 
     --- The section that shows the status of updates.
     lazy_updates = {
         require('lazy.status').updates,
         cond = require('lazy.status').has_updates,
-        color = hl.hl_fg_color_and_attrs 'Comment',
+        color = hl_fg_color_and_attrs 'Comment',
         on_click = function()
             vim.cmd 'Lazy'
         end,
