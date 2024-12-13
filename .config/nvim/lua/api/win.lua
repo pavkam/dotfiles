@@ -3,43 +3,32 @@
 ---@alias position { [1]: integer, [2]: integer } # A position in the window.
 
 ---@class (exact) window # The window object.
----@field window_id integer # the window id.
+---@field id integer # the window id.
 ---@field buffer buffer # the active buffer in the window.
 ---@field cursor position # the cursor position in the window.
 ---@field selected_text string # the selected text in the window.
 ---@field is_pinned_to_buffer boolean # whether the window is pinned to the buffer.
 ---@field invoke_on_line fun(fn_or_cmd: fun()|string, line: integer) # invokes a function on a line.
+---@field display_alternate_buffer fun() # selects the alternate buffer.
+---@field close fun() # closes the window.
 
 ---@class (exact) win # Provides information about windows.
 ---@field [integer] window # the details of a window.
 
 -- The window API.
 ---@type win
-local M = table.smart {
-    entities = function()
-        return vim.api.nvim_list_wins()
-    end,
-    ---@param window_id integer
-    valid_entity = function(window_id)
-        return vim.api.nvim_win_is_valid(window_id)
-    end,
-    properties = {
-        window_id = {
-            ---@param window_id integer
-            ---@return integer
-            get = function(window_id)
-                return window_id
-            end,
-        },
+local M = table.smart2 {
+    entity_ids = vim.api.nvim_list_wins,
+    entity_id_valid = vim.api.nvim_win_is_valid,
+    entity_properties = {
         buffer = {
-            ---@param window_id integer
-            get = function(window_id)
-                local buffer_id = vim.api.nvim_win_get_buf(window_id)
-                return vim.api.nvim_buf_is_valid(buffer_id) and require('api.buf')[buffer_id] or nil
+            ---@param window window
+            get = function(_, window)
+                return require('api.buf')[vim.api.nvim_win_get_buf(window.id)]
             end,
-            ---@param window_id integer
+            ---@param window window
             ---@param buffer buffer
-            set = function(window_id, buffer)
+            set = function(_, window, buffer)
                 xassert {
                     buffer = {
                         buffer,
@@ -49,19 +38,19 @@ local M = table.smart {
                     },
                 }
 
-                vim.api.nvim_win_set_buf(window_id, buffer.buffer_id)
+                vim.api.nvim_win_set_buf(window.id, buffer.id)
             end,
         },
         cursor = {
-            ---@param window_id integer
+            ---@param window window
             ---@return position
-            get = function(window_id)
-                local row, col = unpack(vim.api.nvim_win_get_cursor(window_id))
+            get = function(_, window)
+                local row, col = unpack(vim.api.nvim_win_get_cursor(window.id))
                 return { row, col + 1 }
             end,
-            ---@param window_id integer
+            ---@param window window
             ---@param cursor position
-            set = function(window_id, cursor)
+            set = function(_, window, cursor)
                 xassert {
                     cursor = {
                         cursor,
@@ -72,34 +61,34 @@ local M = table.smart {
                     },
                 }
 
-                vim.api.nvim_win_set_cursor(window_id, { cursor[1], cursor[2] - 1 })
+                vim.api.nvim_win_set_cursor(window.id, { cursor[1], cursor[2] - 1 })
             end,
         },
         is_pinned_to_buffer = {
-            ---@param window_id integer
+            ---@param window window
             ---@return boolean
-            get = function(window_id)
-                return vim.wo[window_id].winfixbuf
+            get = function(_, window)
+                return vim.wo[window.id].winfixbuf
             end,
-            ---@param window_id integer
+            ---@param window window
             ---@param value boolean
-            set = function(window_id, value)
+            set = function(_, window, value)
                 xassert {
                     value = { value, 'boolean' },
                 }
 
-                vim.wo[window_id].winfixbuf = value
+                vim.wo[window.id].winfixbuf = value
             end,
         },
         selected_text = {
-            ---@param window_id integer
+            ---@param window window
             ---@return string
-            get = function(window_id)
+            get = function(_, window)
                 if not vim.fn.in_visual_mode() then
                     return ''
                 end
 
-                return vim.api.nvim_win_call(window_id, function()
+                return vim.api.nvim_win_call(window.id, function()
                     local old = vim.fn.getreg 'a'
                     vim.cmd [[silent! normal! "aygv]]
 
@@ -111,20 +100,43 @@ local M = table.smart {
             end,
         },
     },
-    functions = {
-        ---@param window_id integer
+    entity_functions = {
+        ---@param window window
+        close = function(_, window)
+            vim.api.nvim_win_close(window.id, true)
+        end,
+
+        ---@param window window
+        display_alternate_buffer = function(_, window)
+            local alt_buffer = require('api.buf')[vim.fn.bufnr '#']
+            local current_buffer = window.buffer
+
+            if alt_buffer and alt_buffer.id ~= current_buffer.id and alt_buffer.is_listed then
+                window.buffer = alt_buffer
+            else
+                local switched = vim.api.nvim_win_call(window.id, function()
+                    return pcall(vim.cmd.bprevious, { silent = true }) and current_buffer.id ~= window.buffer.id
+                end)
+
+                if not switched then
+                    window.buffer = require('api.buf').new()
+                end
+            end
+        end,
+
+        ---@param window window
         ---@param fn_or_cmd fun()|string
         ---@param line integer
-        invoke_on_line = function(window_id, fn_or_cmd, line)
+        invoke_on_line = function(_, window, fn_or_cmd, line)
             xassert {
                 fn_or_cmd = { fn_or_cmd, { 'callable', { 'string', ['>'] = 0 } } },
                 line = { line, { 'integer', ['>'] = 0 } },
             }
 
-            local ok, err = vim.api.nvim_win_call(window_id, function()
-                local current_pos = vim.api.nvim_win_get_cursor(window_id)
-                vim.api.nvim_win_set_cursor(window_id, { line, 0 })
+            local current_cursor = window.cursor
+            window.cursor = { line, 0 }
 
+            local ok, err = vim.api.nvim_win_call(window.id, function()
                 ---@type boolean, any
                 local ok, err
                 if type(fn_or_cmd) == 'string' then
@@ -132,10 +144,10 @@ local M = table.smart {
                 else
                     ok, err = pcall(fn_or_cmd)
                 end
-
-                vim.api.nvim_win_set_cursor(window_id, current_pos)
                 return ok, err
             end)
+
+            vim.api.nvim_win_set_cursor(window.id, current_cursor)
 
             if not ok then
                 error(err)

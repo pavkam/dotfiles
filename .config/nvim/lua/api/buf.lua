@@ -6,11 +6,10 @@ local fs = require 'api.fs'
 ---@field force boolean|nil # whether to force the removal of the buffer.
 
 ---@class (exact) buffer # The buffer details.
----@field buffer_id integer # the buffer ID.
+---@field id integer # the buffer ID.
 ---@field file_path string|nil # the file path of the buffer.
 ---@field file_type string # the file type of the buffer.
 ---@field windows window[] # the window IDs that display this buffer.
----@field is_pinned_to_window fun(window_id: integer): boolean # whether the buffer is pinned to a window.
 ---@field is_modified boolean # whether the buffer is modified.
 ---@field is_listed boolean # whether the buffer is listed.
 ---@field is_hidden boolean # whether the buffer is hidden.
@@ -20,249 +19,226 @@ local fs = require 'api.fs'
 ---@field remove fun(opts: remove_buffer_options|nil)  # remove the buffer.
 ---@field remove_others fun(opts: remove_buffer_options|nil) # remove all other buffers.
 
--- Get the value of a window-local option.
----@param buffer_id integer # The buffer id.
----@param window_id integer # The window id.
----@param option string # The option name.
-local get_win_local_option_value = function(buffer_id, window_id, option)
-    xassert {
-        buffer_id = { buffer_id, { 'integer', ['>'] = 0 } },
-        window_id = { window_id, { 'integer', ['>'] = 0 } },
-        option = { option, { 'string', ['>'] = 0 } },
-    }
-
-    local window_ids = vim.fn.getbufinfo(buffer_id)[1].windows
-    for _, id in ipairs(window_ids) do
-        if id == window_id then
-            local v = vim.api.nvim_get_option_value(option, { win = window_id })
-            return v
-        end
-    end
-
-    return false
-end
-
-local get_buf_info = function(buffer_id)
-    return vim.fn.getbufinfo(buffer_id)[1]
-end
-
----@param buffer_id integer
----@param reason string|nil
-local function confirm_saved(buffer_id, reason)
-    xassert {
-        buffer_id = { buffer_id, 'integer' },
-        reason = {
-            reason,
-            {
-                'nil',
-                { 'string', ['>'] = 0 },
-            },
-        },
-    }
-
-    if vim.bo[buffer_id].modified then
-        local message = reason and 'Save changes to "%q" before %s?' or 'Save changes to "%q"?'
-        local choice = require('api.tui').confirm(
-            string.format(message, require('api.fs').base_name(vim.api.nvim_buf_get_name(buffer_id)), reason)
-        )
-
-        if choice == nil then -- Cancel
-            return false
-        end
-
-        if choice then -- Yes
-            vim.api.nvim_buf_call(buffer_id, vim.cmd.write)
-        end
-    end
-
-    return true
-end
-
----@param buffer_id integer
----@param opts remove_buffer_options|nil
-local function remove(buffer_id, opts)
-    opts = table.merge(opts, { force = false })
-    xassert {
-        buffer_id = { buffer_id, 'integer' },
-        opts = {
-            opts,
-            {
-                force = { 'boolean' },
-            },
-        },
-    }
-
-    local should_remove = opts.force or confirm_saved(buffer_id, 'closing')
-    if not should_remove then
-        return
-    end
-
-    for _, window_id in ipairs(get_buf_info(buffer_id).windows) do
-        if vim.wo[window_id].winfixbuf then
-            vim.api.nvim_win_close(window_id, true)
-        end
-    end
-
-    for _, window_id in ipairs(get_buf_info(buffer_id).windows) do
-        if vim.api.nvim_win_is_valid(window_id) and vim.api.nvim_win_get_buf(window_id) == buffer_id then
-            local alt_buffer_id = vim.fn.bufnr '#'
-            if alt_buffer_id ~= buffer_id and vim.fn.buflisted(alt_buffer_id) == 1 then
-                vim.api.nvim_win_set_buf(window_id, alt_buffer_id)
-            else
-                local switched = vim.api.nvim_win_call(window_id, function()
-                    local has_previous = pcall(vim.cmd --[[@as function]], 'bprevious')
-                    if has_previous and buffer_id ~= vim.api.nvim_win_get_buf(window_id) then
-                        return true
-                    end
-                end)
-
-                if not switched then
-                    local new_buffer_id = vim.api.nvim_create_buf(true, false)
-                    vim.api.nvim_win_set_buf(window_id, new_buffer_id)
-                end
-            end
-        end
-    end
-
-    if vim.api.nvim_buf_is_valid(buffer_id) then
-        pcall(vim.cmd --[[@as function]], 'bdelete! ' .. buffer_id)
-    end
-end
-
----@param buffer_id integer|nil # the buffer to keep or the current buffer if 0 or nil
----@param opts remove_buffer_options|nil # the options for deleting the buffer
-local function remove_others(buffer_id, opts)
-    for _, b in ipairs(vim.buf.get_listed_buffers { loaded = false }) do
-        if b ~= buffer_id then
-            remove(b, opts)
-        end
-    end
-end
+---@class (exact) create_buffer_options # Options for creating a buffer.
+---@field listed boolean|nil # whether the buffer is listed.
+---@field scratch boolean|nil # whether the buffer is a scratch buffer.
 
 ---@class (exact) buf # Provides information about buffers.
----@field [integer] buffer # the details for a given buffer.
+---@field [integer] buffer|nil # the details for a given buffer.
+---@field alternate buffer|nil # the alternate buffer.
+---@field new fun(opts: create_buffer_options|nil): buffer # create a new buffer.
 
 -- The buffer API.
 ---@type buf
-local M = table.smart {
-    entities = function()
-        return vim.api.nvim_list_bufs()
-    end,
-    ---@param buffer_id integer
-    valid_entity = function(buffer_id)
-        return vim.api.nvim_buf_is_valid(buffer_id)
-    end,
-    properties = {
-        buffer_id = {
-            ---@param buffer_id integer
-            ---@return integer
-            get = function(buffer_id)
-                return buffer_id
-            end,
-        },
+local M = table.smart2 {
+    entity_ids = vim.api.nvim_list_bufs,
+    entity_id_valid = vim.api.nvim_buf_is_valid,
+    entity_properties = {
         windows = {
-            ---@param buffer_id integer
-            get = function(buffer_id)
-                local window_ids = get_buf_info(buffer_id).windows
+            ---@param buffer buffer
+            get = function(_, buffer)
+                local window_ids = vim.fn.getbufinfo(buffer.id)[1].windows
                 if not table.is_empty(window_ids) then
                     local win = require 'api.win'
                     return table.list_map(window_ids, function(window_id)
-                        if not vim.api.nvim_win_is_valid(window_id) then
-                            return nil
-                        end
-
                         return win[window_id]
                     end)
                 end
             end,
         },
         is_listed = {
-            ---@param buffer_id integer
+            ---@param buffer buffer
             ---@return boolean
-            get = function(buffer_id)
-                return vim.bo[buffer_id].buflisted
+            get = function(_, buffer)
+                return vim.bo[buffer.id].buflisted
             end,
-            ---@param buffer_id integer
+            ---@param buffer buffer
             ---@param value boolean
-            set = function(buffer_id, value)
+            set = function(_, buffer, value)
                 xassert {
                     value = { value, 'boolean' },
                 }
-                vim.bo[buffer_id].buflisted = value
+                vim.bo[buffer.id].buflisted = value
             end,
         },
         is_hidden = {
-            ---@param buffer_id integer
+            ---@param buffer buffer
             ---@return boolean
-            get = function(buffer_id)
-                return get_buf_info(buffer_id).hidden
+            get = function(_, buffer)
+                return vim.fn.getbufinfo(buffer.id)[1].hidden
             end,
         },
         is_loaded = {
-            ---@param buffer_id integer
+            ---@param buffer buffer
             ---@return boolean
-            get = function(buffer_id)
-                return vim.api.nvim_buf_is_loaded(buffer_id)
+            get = function(_, buffer)
+                return vim.api.nvim_buf_is_loaded(buffer.id)
             end,
         },
         is_modified = {
-            ---@param buffer_id integer
+            ---@param buffer buffer
             ---@return boolean
-            get = function(buffer_id)
-                return vim.bo[buffer_id].modified
+            get = function(_, buffer)
+                return vim.bo[buffer.id].modified
             end,
         },
         file_path = {
-            ---@param buffer_id integer
+            ---@param buffer buffer
             ---@return string|nil
-            get = function(buffer_id)
-                if vim.bo[buffer_id].buftype == '' then
-                    return fs.expand_path(vim.api.nvim_buf_get_name(buffer_id))
+            get = function(_, buffer)
+                if vim.bo[buffer.id].buftype == '' then
+                    return fs.expand_path(vim.api.nvim_buf_get_name(buffer.id))
                 end
 
                 return nil
             end,
         },
         file_type = {
-            ---@param buffer_id integer
+            ---@param buffer buffer
             ---@return string
-            get = function(buffer_id)
-                return vim.bo[buffer_id].filetype
+            get = function(_, buffer)
+                return vim.bo[buffer.id].filetype
             end,
-            ---@param buffer_id integer
+            ---@param buffer buffer
             ---@param value string
-            set = function(buffer_id, value)
+            set = function(_, buffer, value)
                 xassert {
                     value = { value, { 'string', ['>'] = 0 } },
                 }
 
-                vim.bo[buffer_id].filetype = value
+                vim.bo[buffer.id].filetype = value
             end,
         },
         cursor = {
-            ---@param buffer_id integer
+            ---@param buffer buffer
             ---@return position
-            get = function(buffer_id)
-                local window_id = vim.fn.bufwinid(buffer_id)
+            get = function(_, buffer)
+                local window = require('api.win')[vim.fn.bufwinid(buffer.id)]
+                if window then
+                    return window.cursor
+                end
 
-                local row, col = unpack(
-                    vim.api.nvim_win_is_valid(window_id) and vim.api.nvim_win_get_cursor(window_id)
-                        or vim.api.nvim_buf_get_mark(buffer_id, [["]])
-                )
+                local row, col = vim.api.nvim_buf_get_mark(buffer.id, [["]])
 
                 return { row, col + 1 }
             end,
         },
     },
-    functions = {
-        ---@param buffer_id integer
-        ---@param window_id integer
-        is_pinned_to_window = function(buffer_id, window_id)
-            return get_win_local_option_value(buffer_id, window_id, 'winfixbuf')
+    entity_functions = {
+        ---@param buffer buffer
+        ---@param reason string|nil
+        confirm_saved = function(_, buffer, reason)
+            xassert {
+                reason = {
+                    reason,
+                    {
+                        'nil',
+                        { 'string', ['>'] = 0 },
+                    },
+                },
+            }
+
+            if buffer.is_modified then
+                local message = reason and 'Save changes to "%q" before %s?' or 'Save changes to "%q"?'
+                local choice = require('api.tui').confirm(
+                    string.format(message, require('api.fs').base_name(buffer.file_path), reason)
+                )
+
+                if choice == nil then -- Cancel
+                    return false
+                end
+
+                if choice then -- Yes
+                    vim.api.nvim_buf_call(buffer.id, vim.cmd.write)
+                end
+            end
+
+            return true
         end,
-        confirm_saved = confirm_saved,
-        remove = remove,
-        remove_others = remove_others,
+
+        ---@param buffer buffer
+        ---@param opts remove_buffer_options|nil
+        remove = function(_, buffer, opts)
+            opts = table.merge(opts, { force = false })
+            xassert {
+                opts = {
+                    opts,
+                    {
+                        force = { 'boolean' },
+                    },
+                },
+            }
+
+            local should_remove = opts.force or buffer.confirm_saved 'closing'
+            if not should_remove then
+                return
+            end
+
+            for _, window in ipairs(buffer.windows) do
+                if window.is_pinned_to_buffer then
+                    window.close()
+                else
+                    window.display_alternate_buffer()
+                end
+            end
+
+            pcall(vim.cmd.bdelete, { args = { buffer.id }, bang = true })
+        end,
+
+        ---@param t buf
+        ---@param buffer buffer
+        ---@param opts remove_buffer_options|nil
+        remove_others = function(t, buffer, opts)
+            opts = table.merge(opts, { force = false })
+            xassert {
+                opts = {
+                    opts,
+                    {
+                        force = { 'boolean' },
+                    },
+                },
+            }
+
+            for _, other_buffer in ipairs(t) do
+                if other_buffer ~= buffer.id then
+                    other_buffer.remove(opts)
+                end
+            end
+        end,
+    },
+    properties = {
+        alternate = {
+            ---@param t buf
+            ---@return buffer|nil
+            get = function(t)
+                local buffer = t[vim.fn.bufnr '#']
+                if buffer and buffer.is_listed then
+                    return buffer
+                end
+
+                return nil
+            end,
+        },
+    },
+    functions = {
+        ---@param t buf
+        ---@param opts create_buffer_options|nil
+        ---@return buffer
+        new = function(t, opts)
+            opts = table.merge(opts, { listed = true, scratch = false })
+
+            xassert {
+                opts = {
+                    opts,
+                    {
+                        listed = { 'boolean' },
+                        scratch = { 'boolean' },
+                    },
+                },
+            }
+
+            return t[vim.api.nvim_create_buf(opts.listed, opts.scratch)]
+        end,
     },
 }
 

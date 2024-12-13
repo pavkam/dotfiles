@@ -555,6 +555,145 @@ function table.smart(opts)
     })
 end
 
+---@class smart_table_entity_prop2 # The property for a smart table.
+---@field get fun(smart_table: table, entity: table): any # the getter function.
+---@field set (fun(smart_table: table, entity: table, value: any)) | nil # the setter function (optional).
+
+---@class smart_table_prop2 # The property for a smart table.
+---@field get fun(smart_table: table): any # the getter function.
+---@field set (fun(smart_table: table, value: any)) | nil # the setter function (optional).
+
+---@alias smart_table_func2 fun(smart_table: table, ...): any # The function for a smart table.
+---@alias smart_table_entity_func2 fun(entity: table, ...): any # The function for an entity.
+
+---@class smart_table_opts2 # The options for a synthetic table.
+---@field functions table<string, smart_table_func2>|nil # the functions for the smart table.
+---@field properties table<string, smart_table_prop2>|nil # the properties for the smart table.
+---@field entity_id_valid fun(id: any): boolean # the function to check if an entity is valid.
+---@field entity_ids fun(): any[] # the entities to make smart tables for.
+---@field entity_functions table<string, smart_table_entity_func2> # the functions for the smart table.
+---@field entity_properties table<string, smart_table_entity_prop2> # the properties for the smart table.
+
+--- Creates a new smart table.
+---@param opts smart_table_opts2 # the options for the smart table.
+---@return table # the smart table.
+function table.smart2(opts)
+    opts = table.merge({
+        functions = {},
+        properties = {},
+    }, opts)
+
+    xassert {
+        opts = {
+            opts,
+            {
+                functions = {
+                    'table',
+                    ['*'] = 'callable',
+                },
+                properties = {
+                    'table',
+                    ['*'] = {
+                        get = 'callable',
+                        set = { 'nil', 'callable' },
+                    },
+                },
+                entity_ids = 'callable',
+                entity_id_valid = 'callable',
+                entity_functions = {
+                    'table',
+                    ['*'] = 'callable',
+                },
+                entity_properties = {
+                    'table',
+                    ['*'] = {
+                        get = 'callable',
+                        set = { 'nil', 'callable' },
+                    },
+                },
+            },
+        },
+    }
+
+    local entity_keys = table.list_merge(table.keys(opts.entity_functions), table.keys(opts.entity_properties))
+
+    ---@param entity_id any
+    local function make_entity_table(root, entity_id)
+        return setmetatable({}, {
+            __index = function(entity, key)
+                if key == 'id' then
+                    return entity_id
+                end
+
+                local fn = opts.entity_functions[key]
+                if fn then
+                    return function(...)
+                        return fn(root, entity, ...)
+                    end
+                end
+
+                local prop = opts.entity_properties[key]
+                if prop and prop.get then
+                    return prop.get(root, entity)
+                end
+
+                return rawget(entity, key)
+            end,
+            __newindex = function(entity, key, value)
+                local prop = opts.entity_properties[key]
+                if prop and prop.get then
+                    return prop.set(root, entity, value)
+                end
+
+                rawset(entity, key, value)
+            end,
+            __pairs = function()
+                return entity_keys
+            end,
+        })
+    end
+
+    return setmetatable({}, {
+        __index = function(root, key)
+            local fn = opts.functions[key]
+            if fn then
+                return function(...)
+                    return fn(root, ...)
+                end
+            end
+
+            local prop = opts.properties[key]
+            if prop and prop.get then
+                return prop.get(root)
+            end
+
+            if opts.entity_id_valid(key) then
+                local entity = rawget(root, key)
+                if entity == nil then
+                    entity = make_entity_table(root, key)
+                    rawset(root, key, entity)
+                end
+
+                return entity
+            end
+
+            error(string.format('unknown property, function or entity %s.', inspect(key)), 2)
+        end,
+        __newindex = function(root, key, value)
+            local prop = opts.properties[key]
+            if prop and prop.set then
+                prop.set(root, value)
+                return
+            end
+
+            error(string.format('unknown property %s.', inspect(key)), 2)
+        end,
+        __pairs = function()
+            return opts.entity_ids()
+        end,
+    })
+end
+
 --- Merges multiple tables into one.
 ---@vararg table|nil # the tables to merge.
 ---@return table # the merged table.
@@ -624,6 +763,23 @@ function table.to_list(value)
         result = list
     else
         result = { value }
+    end
+
+    return result
+end
+
+--- Converts a list to a set.
+---@param list any[] # the list to convert to a set.
+---@return table<any, boolean> # the set.
+function table.list_to_set(list)
+    assert {
+        list = { list, 'list' },
+    }
+
+    local result = {}
+
+    for _, item in ipairs(list) do
+        result[item] = true
     end
 
     return result
@@ -813,7 +969,8 @@ require 'api.vim.buf'
 ---@vararg any # the arguments to format
 local function format_args(...)
     local objects = {}
-    for _, v in pairs { ... } do
+    for i = 1, select('#', ...) do
+        local v = select(i, ...)
         ---@type string
         local val = 'nil'
 
