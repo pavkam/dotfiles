@@ -131,7 +131,7 @@ function M.check_workspace(client, target)
     end)
 end
 
-vim.fn.user_command('DiagnoseWorkspace', function()
+ide.command.register('DiagnoseWorkspace', function()
     ide.tui.info 'Checking workspace diagnostics...'
 
     ---@type vim.lsp.Client[]

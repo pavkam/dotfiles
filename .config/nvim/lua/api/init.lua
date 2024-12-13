@@ -825,6 +825,7 @@ _G.ide = {
     buf = require 'api.buf',
     win = require 'api.win',
     ft = require 'api.ft',
+    command = require 'api.command',
     editor = require 'api.editor',
     process = require 'api.process',
     events = require 'api.events',

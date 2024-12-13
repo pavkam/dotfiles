@@ -305,7 +305,7 @@ function M.grep_dir(term, dir, callback)
     end, { ignore_codes = { 0, 1 } })
 end
 
-vim.fn.user_command('Run', {
+ide.command.register('Run', {
     fn = function(args)
         if #args.split_args == 0 then
             error 'No command specified'

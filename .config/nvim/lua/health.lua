@@ -206,7 +206,7 @@ function M.register_stack_trace_highlights(buffer)
 end
 
 -- Show buffer information
-vim.fn.user_command('Debug', function()
+ide.command.register('Debug', function()
     show_for_buffer()
 end, { desc = 'Show buffer information', nargs = 0 })
 

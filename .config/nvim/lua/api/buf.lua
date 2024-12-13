@@ -15,6 +15,8 @@ local fs = require 'api.fs'
 ---@field is_hidden boolean # whether the buffer is hidden.
 ---@field is_loaded boolean # whether the buffer is loaded.
 ---@field cursor position # the cursor position in the buffer.
+---@field height integer # the height of the buffer.
+---@field lines fun(start: integer|nil, end_: integer|nil): string[] # get the lines of the buffer.
 ---@field confirm_saved fun(reason: string|nil): boolean # confirm if the buffer is saved.
 ---@field remove fun(opts: remove_buffer_options|nil)  # remove the buffer.
 ---@field remove_others fun(opts: remove_buffer_options|nil) # remove all other buffers.
@@ -26,6 +28,7 @@ local fs = require 'api.fs'
 ---@class (exact) buf # Provides information about buffers.
 ---@field [integer] buffer|nil # the details for a given buffer.
 ---@field alternate buffer|nil # the alternate buffer.
+---@field current buffer # the current buffer.
 ---@field new fun(opts: create_buffer_options|nil): buffer # create a new buffer.
 ---@field load fun(file_path: string): buffer|nil # load a buffer from a file.
 
@@ -124,8 +127,49 @@ local M = table.smart {
                 return { row, col + 1 }
             end,
         },
+        height = {
+            ---@param buffer buffer
+            ---@return integer
+            get = function(_, buffer)
+                return vim.api.nvim_buf_line_count(buffer.id)
+            end,
+        },
     },
     entity_functions = {
+        ---@param buffer buffer
+        ---@param start integer|nil
+        ---@param end_ integer|nil
+        ---@return string[]
+        lines = function(_, buffer, start, end_)
+            local height = buffer.height
+            xassert {
+                start = {
+                    start,
+                    {
+                        'nil',
+                        {
+                            'integer',
+                            ['>'] = 0,
+                            ['<'] = height,
+                        },
+                    },
+                },
+                end_ = {
+                    end_,
+                    {
+                        'nil',
+                        {
+                            'integer',
+                            ['>'] = 0,
+                            ['<'] = height,
+                        },
+                    },
+                },
+            }
+
+            return vim.api.nvim_buf_get_lines(buffer.id, start or 0, end_ and (end_ + 1) or -1, true)
+        end,
+
         ---@param buffer buffer
         ---@param reason string|nil
         confirm_saved = function(_, buffer, reason)
@@ -208,6 +252,13 @@ local M = table.smart {
         end,
     },
     properties = {
+        current = {
+            ---@param t buf
+            ---@return buffer
+            get = function(t)
+                return t[vim.api.nvim_get_current_buf()]
+            end,
+        },
         alternate = {
             ---@param t buf
             ---@return buffer|nil

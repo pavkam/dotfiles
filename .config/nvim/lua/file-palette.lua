@@ -327,7 +327,7 @@ function M.show_file_palette(opts)
     show_file_palette(opts)
 end
 
-vim.fn.user_command('Files', function()
+ide.command.register('Files', function()
     M.show_file_palette()
 end, { desc = 'Show file palette' })
 

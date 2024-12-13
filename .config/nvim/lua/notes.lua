@@ -83,13 +83,11 @@ local function append(title, lines, global)
     vim.api.nvim_put(lines, 'l', true, true)
 end
 
-vim.fn.user_command('Note', {
-    ---@param args vim.fn.CommandCallbackArgs
+ide.command.register('Note', {
     open = function(args)
         edit(args.bang)
     end,
     append = {
-        ---@param args vim.fn.CommandCallbackArgs
         fn = function(args)
             if not args.lines or #args.lines == 0 then
                 ide.tui.error 'No lines selected'
@@ -113,12 +111,10 @@ vim.fn.user_command('Note', {
     bang = true,
 })
 
-vim.fn.user_command('Notes', {
-    ---@param args vim.fn.CommandCallbackArgs
+ide.command.register('Notes', {
     list = function(args)
         find(args.bang)
     end,
-    ---@param args vim.fn.CommandCallbackArgs
     grep = function(args)
         grep(args.bang)
     end,
