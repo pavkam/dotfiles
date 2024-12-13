@@ -17,7 +17,7 @@
 
 -- The window API.
 ---@type win
-local M = table.smart2 {
+local M = table.smart {
     entity_ids = vim.api.nvim_list_wins,
     entity_id_valid = vim.api.nvim_win_is_valid,
     entity_properties = {

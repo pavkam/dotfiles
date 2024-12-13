@@ -382,205 +382,36 @@ function table.freeze(table)
     })
 end
 
----@class synthetic_table_opts # The options for a synthetic table.
----@field getter fun(key: any): boolean, any # the getter function.
----@field setter (fun(key: any, value: any): boolean)|nil # the setter function (optional).
----@field enumerate (fun(): any[])|nil # the enumeration function (optional).
----@field store boolean|nil # whether to cache the values (default `true`).
-
---- Creates a new synthetic table.
----@generic T: table
----@param table T # the table to make synthetic.
----@param opts synthetic_table_opts # the options for the synthetic table.
----@return T # the synthetic table.
-function table.synthetic(table, opts)
-    return setmetatable(table, {
-        __index = function(t, key)
-            local value = rawget(t, key)
-            if value == nil then
-                local ok
-                ok, value = opts.getter(key)
-                if not ok then
-                    error(string.format('Unknown property %s.', inspect(key)))
-                end
-
-                if opts.store ~= false then
-                    rawset(t, key, value)
-                end
-            end
-
-            return value
-        end,
-        __newindex = function(t, key, value)
-            if not opts.setter then
-                error(string.format('Property %s is read-only.', inspect(key)))
-            end
-
-            local ok = opts.setter(key, value)
-            if not ok then
-                error(string.format('Unknown property %s.', inspect(key)))
-            end
-
-            if opts.store ~= false then
-                rawset(t, key, value)
-            end
-        end,
-        __pairs = opts.enumerate and function(t)
-            local keys = opts.enumerate()
-            local i = 0
-
-            return function()
-                i = i + 1
-
-                local key = keys[i]
-                if key == nil then
-                    return nil
-                end
-
-                local val = t[key]
-                if val == nil then
-                    local ok
-                    ok, val = opts.getter(key)
-                    if not ok then
-                        error(string.format('Unknown property %s.', inspect(key)))
-                    end
-                    if opts.store ~= false then
-                        rawset(t, key, val)
-                    end
-                end
-                return key, val
-            end
-        end,
-    })
-end
-
----@class smart_table_prop # The property for a smart table.
----@field get fun(entity: any): any # the getter function.
----@field set (fun(entity: any, value: any)) | nil # the setter function (optional).
-
----@class smart_table_opts # The options for a synthetic table.
----@field globals table<string, any>|nil # the global variables.
----@field entities fun(): any[] # the entities to make smart tables for.
----@field valid_entity fun(entity: any): boolean # the function to check if an entity is valid.
----@field functions table<string, fun(entity: any, ...): any> # the functions for the smart table.
----@field properties table<string, smart_table_prop> # the properties for the smart table.
-
---- Creates a new smart table.
----@param opts smart_table_opts # the options for the smart table.
----@return table # the smart table.
-function table.smart(opts)
-    xassert {
-        opts = {
-            opts,
-            {
-                globals = { 'nil', 'table' },
-                functions = {
-                    'table',
-                    ['*'] = 'callable',
-                },
-                properties = {
-                    'table',
-                    ['*'] = {
-                        get = 'callable',
-                        set = { 'nil', 'callable' },
-                    },
-                },
-                entities = 'callable',
-                valid_entity = 'callable',
-            },
-        },
-    }
-
-    local globals = opts.globals or {}
-    local entity_keys = table.list_merge(table.keys(opts.functions), table.keys(opts.properties))
-    local global_keys = table.keys(globals)
-
-    local function make(entity)
-        return table.synthetic({}, {
-            getter = function(key)
-                local fn = opts.functions[key]
-                if fn then
-                    return true, function(...)
-                        return fn(entity, ...)
-                    end
-                end
-
-                local prop = opts.properties[key]
-                if prop then
-                    return true, prop.get(entity)
-                end
-
-                return false, nil
-            end,
-            setter = function(key, value)
-                local prop = opts.properties[key]
-                if prop and prop.set then
-                    prop.set(entity, value)
-                    return true
-                end
-
-                return false
-            end,
-            enumerate = function()
-                return entity_keys
-            end,
-            cache = false,
-        })
-    end
-
-    return setmetatable(globals, {
-        __index = function(t, entity)
-            local value = rawget(t, entity)
-            if opts.valid_entity(entity) then
-                if value == nil then
-                    value = make(entity)
-                    rawset(t, entity, value)
-                end
-
-                return value
-            else
-                if value ~= nil then
-                    rawset(t, entity, nil)
-                end
-
-                return nil
-            end
-        end,
-        __newindex = function()
-            error('Cannot set a value on a smart table.', 2)
-        end,
-        __pairs = function()
-            return table.list_merge(opts.entities(), global_keys)
-        end,
-    })
-end
-
----@class smart_table_entity_prop2 # The property for a smart table.
+---@class (exact) smart_table_entity_prop # The property for a smart table.
 ---@field get fun(smart_table: table, entity: table): any # the getter function.
 ---@field set (fun(smart_table: table, entity: table, value: any)) | nil # the setter function (optional).
+---@field cache boolean|nil # whether to cache the values (default `false`).
 
----@class smart_table_prop2 # The property for a smart table.
+---@class (exact) smart_table_prop # The property for a smart table.
 ---@field get fun(smart_table: table): any # the getter function.
 ---@field set (fun(smart_table: table, value: any)) | nil # the setter function (optional).
 
----@alias smart_table_func2 fun(smart_table: table, ...): any # The function for a smart table.
----@alias smart_table_entity_func2 fun(entity: table, ...): any # The function for an entity.
+---@alias smart_table_func fun(smart_table: table, ...): any # The function for a smart table.
+---@alias smart_table_entity_func fun(entity: table, ...): any # The function for an entity.
 
----@class smart_table_opts2 # The options for a synthetic table.
----@field functions table<string, smart_table_func2>|nil # the functions for the smart table.
----@field properties table<string, smart_table_prop2>|nil # the properties for the smart table.
+---@class smart_table_options # The options for a synthetic table.
+---@field functions table<string, smart_table_func>|nil # the functions for the smart table (optional).
+---@field properties table<string, smart_table_prop>|nil # the properties for the smart table (optional).
 ---@field entity_id_valid fun(id: any): boolean # the function to check if an entity is valid.
----@field entity_ids fun(): any[] # the entities to make smart tables for.
----@field entity_functions table<string, smart_table_entity_func2> # the functions for the smart table.
----@field entity_properties table<string, smart_table_entity_prop2> # the properties for the smart table.
+---@field entity_ids (fun(): any[])|nil # the entities to make smart tables for (optional).
+---@field entity_functions table<string, smart_table_entity_func>|nil # the functions for the smart table (optional).
+---@field entity_properties table<string, smart_table_entity_prop>|nil # the properties for the smart table (optional).
 
 --- Creates a new smart table.
----@param opts smart_table_opts2 # the options for the smart table.
+---@param opts smart_table_options # the options for the smart table.
 ---@return table # the smart table.
-function table.smart2(opts)
+function table.smart(opts)
+    ---@type smart_table_options
     opts = table.merge({
         functions = {},
         properties = {},
+        entity_functions = {},
+        entity_properties = {},
     }, opts)
 
     xassert {
@@ -598,7 +429,7 @@ function table.smart2(opts)
                         set = { 'nil', 'callable' },
                     },
                 },
-                entity_ids = 'callable',
+                entity_ids = { 'nil', 'callable' },
                 entity_id_valid = 'callable',
                 entity_functions = {
                     'table',
@@ -609,6 +440,7 @@ function table.smart2(opts)
                     ['*'] = {
                         get = 'callable',
                         set = { 'nil', 'callable' },
+                        cache = { 'nil', 'boolean' },
                     },
                 },
             },
@@ -617,6 +449,7 @@ function table.smart2(opts)
 
     local entity_keys = table.list_merge(table.keys(opts.entity_functions), table.keys(opts.entity_properties))
 
+    ---@param root table
     ---@param entity_id any
     local function make_entity_table(root, entity_id)
         return setmetatable({}, {
@@ -633,19 +466,36 @@ function table.smart2(opts)
                 end
 
                 local prop = opts.entity_properties[key]
-                if prop and prop.get then
+                if prop then
+                    if prop.cache then
+                        local value = rawget(entity, key)
+                        if value == nil then
+                            value = prop.get(root, entity)
+                            rawset(entity, key, value)
+                        end
+
+                        return value
+                    end
+
                     return prop.get(root, entity)
                 end
 
-                return rawget(entity, key)
+                error(string.format('unknown property, function or property %s.', inspect(key)), 2)
             end,
             __newindex = function(entity, key, value)
                 local prop = opts.entity_properties[key]
-                if prop and prop.get then
-                    return prop.set(root, entity, value)
+
+                if prop then
+                    if prop.cache then
+                        rawset(entity, key, value)
+                    end
+
+                    if prop.set then
+                        return prop.set(root, entity, value)
+                    end
                 end
 
-                rawset(entity, key, value)
+                error(string.format('unknown property, function or property %s.', inspect(key)), 2)
             end,
             __pairs = function()
                 return entity_keys
@@ -677,7 +527,7 @@ function table.smart2(opts)
                 return entity
             end
 
-            error(string.format('unknown property, function or entity %s.', inspect(key)), 2)
+            return nil
         end,
         __newindex = function(root, key, value)
             local prop = opts.properties[key]
@@ -688,8 +538,10 @@ function table.smart2(opts)
 
             error(string.format('unknown property %s.', inspect(key)), 2)
         end,
-        __pairs = function()
+        __pairs = opts.entity_ids and function()
             return opts.entity_ids()
+        end or function()
+            error 'this table is not enumerable'
         end,
     })
 end
@@ -872,6 +724,25 @@ function table.list_map(list, fn)
     return result
 end
 
+--- Converts the values of a table to a new table.
+---@generic K, I, O
+---@param t table<K, I> # the table to map.
+---@param fn fun(value: I): O # the function to map the values.
+---@return table<K, O> # the mapped list.
+function table.map(t, fn)
+    xassert {
+        t = { t, 'table' },
+        fn = { fn, 'callable' },
+    }
+
+    local result = {}
+    for key, value in pairs(t) do
+        result[key] = fn(value)
+    end
+
+    return result
+end
+
 --- Extracts the keys from a table.
 ---@param t table # the table to extract the keys from.
 function table.keys(t)
@@ -959,6 +830,7 @@ _G.ide = {
     events = require 'api.events',
     tui = require 'api.tui',
     async = require 'api.async',
+    theme = require 'api.theme',
     plugins = require 'api.plugins',
 }
 

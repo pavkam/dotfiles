@@ -27,10 +27,11 @@ local fs = require 'api.fs'
 ---@field [integer] buffer|nil # the details for a given buffer.
 ---@field alternate buffer|nil # the alternate buffer.
 ---@field new fun(opts: create_buffer_options|nil): buffer # create a new buffer.
+---@field load fun(file_path: string): buffer|nil # load a buffer from a file.
 
 -- The buffer API.
 ---@type buf
-local M = table.smart2 {
+local M = table.smart {
     entity_ids = vim.api.nvim_list_bufs,
     entity_id_valid = vim.api.nvim_buf_is_valid,
     entity_properties = {
@@ -238,6 +239,24 @@ local M = table.smart2 {
             }
 
             return t[vim.api.nvim_create_buf(opts.listed, opts.scratch)]
+        end,
+        ---@param t buf
+        ---@param file_path string
+        load = function(t, file_path)
+            xassert {
+                file_path = { file_path, { 'string', ['>'] = 0 } },
+            }
+
+            if not fs.file_exists(file_path) then
+                return nil
+            end
+
+            local buffer = t[vim.fn.bufadd(file_path)]
+            if buffer then
+                vim.fn.bufload(buffer.id)
+            end
+
+            return buffer
         end,
     },
 }
