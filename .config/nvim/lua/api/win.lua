@@ -157,7 +157,7 @@ local M = table.smart {
                 window.buffer = alt_buffer
             else
                 local switched = vim.api.nvim_win_call(window.id, function()
-                    return pcall(vim.cmd.bprevious, { silent = true }) and current_buffer.id ~= window.buffer.id
+                    return pcall(vim.cmd.bprevious, { mods = { silent = true } })
                 end)
 
                 if not switched then
