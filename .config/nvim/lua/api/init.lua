@@ -407,12 +407,12 @@ end
 ---@return table # the smart table.
 function table.smart(opts)
     ---@type smart_table_options
-    opts = table.merge({
+    opts = table.merge(opts, {
         functions = {},
         properties = {},
         entity_functions = {},
         entity_properties = {},
-    }, opts)
+    })
 
     xassert {
         opts = {
@@ -546,6 +546,21 @@ function table.smart(opts)
     })
 end
 
+-- Checks if a table has a specific kay/value.
+---@generic K, V
+---@param t table<K, V> # the table to check.
+---@param fn fun(key: K, value: V): boolean # the function to check the key/value.
+---@return boolean # whether the table has the key/value.
+function table.any(t, fn)
+    for k, v in pairs(t) do
+        if fn(k, v) then
+            return true
+        end
+    end
+
+    return false
+end
+
 --- Merges multiple tables into one.
 ---@vararg table|nil # the tables to merge.
 ---@return table # the merged table.
@@ -564,7 +579,7 @@ function table.merge(...)
         result = list[1] --[[@as table]]
     else
         -- TODO: make my own
-        result = vim.tbl_extend('force', unpack(list))
+        result = vim.tbl_extend('keep', unpack(list))
     end
 
     return result
@@ -624,7 +639,7 @@ end
 ---@param list any[] # the list to convert to a set.
 ---@return table<any, boolean> # the set.
 function table.list_to_set(list)
-    assert {
+    xassert {
         list = { list, 'list' },
     }
 
@@ -637,12 +652,35 @@ function table.list_to_set(list)
     return result
 end
 
+--- Removes the keys from a table.
+---@generic K, V
+---@param t table<K, V> # the table to remove the keys from.
+---@param keys K[] # the keys to remove.
+---@return table<K, V> # the table without the keys.
+function table.without_keys(t, keys)
+    xassert {
+        t = { t, 'table' },
+        keys = { keys, 'list' },
+    }
+
+    local result = {}
+    local set = table.list_to_set(keys)
+
+    for k, v in pairs(t) do
+        if not set[k] then
+            result[k] = v
+        end
+    end
+
+    return result
+end
+
 --- Returns a new list that contains only unique values.
 ---@param list any[] # the list to make unique.
 ---@param key_fn (fun(value: any): any)|nil # the function to get the key from the value.
 ---@return any[] # the list with unique values.
 function table.list_uniq(list, key_fn)
-    assert {
+    xassert {
         list = { list, 'list' },
         key_fn = { key_fn, { 'nil', 'callable' } },
     }
@@ -724,6 +762,27 @@ function table.list_map(list, fn)
     return result
 end
 
+--- Filters the elements of a list.
+---@generic T
+---@param list T[] # the list to filter.
+---@param fn fun(value: T): boolean # the function to filter the values.
+---@return T[] # the filtered list.
+function table.list_filter(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    local result = {}
+    for _, item in ipairs(list) do
+        if fn(item) then
+            table.insert(result, item)
+        end
+    end
+
+    return result
+end
+
 --- Converts the values of a table to a new table.
 ---@generic K, I, O
 ---@param t table<K, I> # the table to map.
@@ -756,6 +815,14 @@ function table.keys(t)
     end
 
     return keys
+end
+
+-- Clones a table or a list.
+---@generic T: table
+---@param t T # the table or list to clone.
+---@return T # the cloned table or list.
+function table.clone(t)
+    return vim.deepcopy(t)
 end
 
 --- Checks if a string starts with a given prefix.
@@ -839,7 +906,7 @@ require 'api.vim.fn'
 require 'api.vim.buf'
 
 --- Returns the formatted arguments for debugging
----@vararg any # the arguments to format
+---@param ... any # the arguments to format
 local function format_args(...)
     local objects = {}
     for i = 1, select('#', ...) do
@@ -865,7 +932,7 @@ end
 local shown_messages = {}
 
 --- Global debug function to help me debug (duh)
----@vararg any # anything to debug
+---@param ... any # anything to debug
 function _G.dbg(...)
     local formatted = format_args(...)
     local key = vim.fn.sha256(formatted)

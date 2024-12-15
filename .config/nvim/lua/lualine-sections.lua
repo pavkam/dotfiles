@@ -290,19 +290,19 @@ local components = {
 
     --- The section that shows the status of the formatters.
     formatting = {
-        settings.transient(function(buffer)
+        ide.async.bind_to_buffer_task('formatting', function(buffer, running, tick)
             local prefix = icons.UI.Disabled
-            if format.enabled(buffer) then
-                prefix = format.progress(buffer) or icons.UI.Lint
+            if format.enabled(buffer.id) then
+                prefix = running and icons.Progress[tick % #icons.Progress + 1] or icons.UI.Lint
             end
 
-            return sexify(prefix, format.active(buffer))
+            return sexify(prefix, format.active(buffer.id))
         end),
-        cond = settings.transient(function(buffer)
-            return #format.active(buffer) > 0
+        cond = ide.async.bind_to_buffer_task('formatting', function(buffer)
+            return #format.active(buffer.id) > 0
         end),
-        color = settings.transient(function(buffer)
-            if not format.enabled(buffer) then
+        color = ide.async.bind_to_buffer_task('formatting', function(buffer)
+            if not format.enabled(buffer.id) then
                 return hl_fg_color_and_attrs 'DisabledFormattersStatus'
             else
                 return hl_fg_color_and_attrs 'ActiveFormattersStatus'

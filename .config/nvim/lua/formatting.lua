@@ -1,17 +1,11 @@
 local events = require 'events'
 local keys = require 'keys'
-local progress = require 'progress'
 local settings = require 'settings'
 local icons = require 'icons'
 -- TODO: can we preload eslind and prettier? or make sure the async works?
 
 ---@class formatting
 local M = {}
-
-local progress_class = 'formatting'
-
----@type table<integer, integer>
-local running_jobs = {}
 
 --- Gets the names of all active formatters for a buffer
 ---@param buffer integer # the buffer to get the formatters for
@@ -41,29 +35,17 @@ local function formatters(buffer)
         :totable()
 end
 
---- Gets the progress of a formatter for a buffer
----@param buffer integer|nil # the buffer to get the linter progress for or 0 or nil for current
----@return string|nil,string[]|nil # the progress spinner of the formatter or nil if not running
-function M.progress(buffer)
-    return progress.status(progress_class, { buffer = buffer })
-end
-
---- Gets the names of all active formatters for a buffer
----@param buffer integer|nil # the buffer to get the formatters for or nil for current
----@return string[] # the names of the active formatters
+--- Gets the names of all active formatters for a buffer.
+---@param buffer integer|nil # the buffer to get the formatters for or nil for current.
+---@return string[] # the names of the active formatters.
 function M.active(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
     return formatters(buffer)
 end
 
---- Applies all active formatters to a buffer
----@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current
+--- Applies all active formatters to a buffer.
+---@param buffer integer|nil # the buffer to apply the formatters to or 0 or nil for current.
 function M.apply(buffer)
-    if not package.loaded['conform'] then
-        ide.tui.warn 'Conform plugin is not installed!'
-        return
-    end
-
     local conform = require 'conform'
 
     buffer = buffer or vim.api.nvim_get_current_buf()
@@ -73,7 +55,14 @@ function M.apply(buffer)
 
     local names = formatters(buffer)
     if #names > 0 then
-        running_jobs[buffer] = (running_jobs[buffer] or 0) + 1
+        local tracked_task = ide.async
+            .track_task('formatting', {
+                buffer = ide.buf[buffer],
+            })
+            .update(function(running)
+                return table.merge(table.list_to_set(running or {}), table.list_to_set(names))
+            end)
+
         conform.format({
             bufnr = buffer,
             formatters = names,
@@ -81,17 +70,11 @@ function M.apply(buffer)
             lsp_format = 'fallback',
             timeout_ms = 5000,
         }, function()
-            running_jobs[buffer] = (running_jobs[buffer] or 0) - 1
+            tracked_task.update(function(running)
+                running = table.without_keys(running or {}, names)
+                return next(running) and running or nil
+            end)
         end)
-
-        progress.update(progress_class, {
-            buffer = buffer,
-            prv = true,
-            fn = function(b)
-                return b and running_jobs[b] and running_jobs[b] > 0 or false
-            end,
-            ctx = names,
-        })
     end
 end
 
@@ -105,23 +88,21 @@ function M.enabled(buffer)
 end
 
 settings.register_toggle(setting_name, function(enabled, buffer)
-    local format = require 'formatting'
-
     if enabled then
-        format.apply(buffer)
+        M.apply(buffer)
     end
 end, { icon = icons.UI.Format, name = 'Auto-formatting', scope = { 'buffer', 'global' } })
 
 if ide.plugins.has 'conform.nvim' then
     keys.map({ 'n', 'x' }, '=', function()
-        require('formatting').apply()
+        M.apply()
     end, { desc = 'Format buffer/selection' })
 
     events.on_event('BufWritePre', function(evt)
         if M.enabled(evt.buf) then
-            require('formatting').apply(evt.buf)
+            M.apply(evt.buf)
         end
     end, '*')
 end
 
-return M
+return table.freeze(M)

@@ -53,7 +53,7 @@ return {
 
                 return function(fallback)
                     if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
-                        vim.fn.create_undo_point()
+                        ide.editor.insert_undo_point()
                         if cmp.confirm(opts) then
                             return
                         end

@@ -31,8 +31,9 @@ local events = require 'events'
 events.on_focus_gained(function()
     local buffer = vim.api.nvim_get_current_buf()
 
+    vim.api.nvim_buf_get_changedtick(buffer)
     if vim.buf.is_regular(buffer) then
-        vim.cmd.checktime()
+        vim.cmd.checktime() --TODO: use FileChangedShell to do all the whacky stuff
     end
 end)
 

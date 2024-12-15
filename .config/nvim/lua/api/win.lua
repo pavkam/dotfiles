@@ -6,7 +6,12 @@
 ---@field id integer # the window id.
 ---@field buffer buffer # the active buffer in the window.
 ---@field cursor position # the cursor position in the window.
+---@field width integer # the width of the window.
+---@field height integer # the height of the window.
+---@field status_column_width integer # the width of the status column.
 ---@field selected_text string # the selected text in the window.
+---@field toggle_fold fun(line: integer|nil): boolean|nil # toggles the fold at the line.
+---@field is_folded fun(line: integer|nil): boolean|nil # whether the line is folded.
 ---@field is_pinned_to_buffer boolean # whether the window is pinned to the buffer.
 ---@field invoke_on_line fun(fn_or_cmd: fun()|string, line: integer) # invokes a function on a line.
 ---@field display_alternate_buffer fun() # selects the alternate buffer.
@@ -99,6 +104,43 @@ local M = table.smart {
                 end)
             end,
         },
+        width = {
+            ---@param window window
+            ---@return integer
+            get = function(_, window)
+                return vim.api.nvim_win_get_width(window.id)
+            end,
+            ---@param window window
+            ---@param value integer
+            set = function(_, window, value)
+                xassert {
+                    value = { value, { 'integer', ['>'] = 0 } },
+                }
+
+                vim.api.nvim_win_set_width(window.id, value)
+            end,
+        },
+        height = {
+            ---@param window window
+            ---@return integer
+            get = function(_, window)
+                return vim.api.nvim_win_get_height(window.id)
+            end,
+            ---@param window window
+            ---@param value integer
+            set = function(_, window, value)
+                xassert {
+                    value = { value, { 'integer', ['>'] = 0 } },
+                }
+
+                vim.api.nvim_win_set_height(window.id, value)
+            end,
+        },
+        status_column_width = {
+            get = function(_, window)
+                return vim.fn.getwininfo(window.id)[1].textoff
+            end,
+        },
     },
     entity_functions = {
         ---@param window window
@@ -152,6 +194,50 @@ local M = table.smart {
             if not ok then
                 error(err)
             end
+        end,
+
+        ---@param window window
+        ---@param line integer|nil
+        ---@return boolean|nil
+        toggle_fold = function(_, window, line)
+            xassert {
+                line = { line, { 'nil', { 'integer', ['>'] = 0 } } },
+            }
+
+            line = line or window.cursor[1]
+
+            return vim.api.nvim_win_call(window.id, function()
+                if vim.fn.foldclosed(line) == line then
+                    vim.cmd.foldopen { range = { line } }
+                    return true
+                elseif vim.fn.foldlevel(line) > 0 then
+                    vim.cmd.foldclose { range = { line } }
+                    return false
+                end
+
+                return nil
+            end)
+        end,
+
+        ---@param window window
+        ---@param line integer|nil
+        ---@return boolean|nil
+        is_folded = function(_, window, line)
+            xassert {
+                line = { line, { 'nil', { 'integer', ['>'] = 0 } } },
+            }
+
+            line = line or window.cursor[1]
+
+            return vim.api.nvim_win_call(window.id, function()
+                if vim.fn.foldclosed(line) >= 0 then
+                    return true
+                elseif tostring(vim.treesitter.foldexpr(line)):sub(1, 1) == '>' then
+                    return false
+                end
+
+                return nil
+            end)
         end,
     },
 }

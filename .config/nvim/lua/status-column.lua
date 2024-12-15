@@ -59,16 +59,16 @@ end
 --- Gets the status column for the current buffer
 ---@return string # the status column
 local function status_column()
-    local window = vim.api.nvim_get_var 'statusline_winid'
-    local buffer = vim.api.nvim_win_get_buf(window)
+    local window = ide.win[vim.api.nvim_get_var 'statusline_winid']
+    local buffer = window.buffer
 
-    local is_file = vim.buf.is_regular(buffer)
-    local show_signs = vim.api.nvim_get_option_value('signcolumn', { win = window }) ~= 'no'
+    local is_file = vim.buf.is_regular(buffer.id)
+    local show_signs = vim.api.nvim_get_option_value('signcolumn', { win = window.id }) ~= 'no'
 
     local components = { '', '', '' } -- left, middle, right
 
     if show_signs then
-        local ext_marks = get_ext_marks(buffer, vim.v.lnum)
+        local ext_marks = get_ext_marks(buffer.id, vim.v.lnum)
 
         ---@type ui.status-column.Sign | nil, ui.status-column.Sign | nil, ui.status-column.Sign | nil, string | nil
         local left, right, fold, githl
@@ -82,10 +82,10 @@ local function status_column()
             end
         end
 
-        local marker = vim.fn.fold_marker(vim.v.lnum, window)
-        if marker then
+        local is_folded = window.is_folded(vim.v.lnum)
+        if is_folded then
             fold = { text = vim.opt.fillchars:get().foldclose, texthl = githl or 'Folded', priority = 0 }
-        elseif marker ~= nil then
+        elseif is_folded ~= nil then
             fold = { text = vim.opt.fillchars:get().foldopen, texthl = githl, priority = 0 }
         end
 
@@ -93,11 +93,11 @@ local function status_column()
         components[3] = is_file and icon(fold or right) or ''
     end
 
-    local number_col_enabled = vim.api.nvim_get_option_value('number', { win = window })
-    local relative_number_col_enabled = vim.api.nvim_get_option_value('relativenumber', { win = window })
+    local number_col_enabled = vim.api.nvim_get_option_value('number', { win = window.id })
+    local relative_number_col_enabled = vim.api.nvim_get_option_value('relativenumber', { win = window.id })
 
     if (number_col_enabled or relative_number_col_enabled) and vim.v.virtnum == 0 then
-        if vim.fn.has 'nvim-0.11' == 1 then
+        if ide.process.at_least_version(0, 11) then
             components[2] = '%l' -- 0.11 handles both the current and other lines with %l
         else
             if vim.v.relnum == 0 then
@@ -119,13 +119,13 @@ end
 local mouse_key_name = '<LeftMouse>'
 
 vim.keymap.set('n', mouse_key_name, function()
-    local window = vim.api.nvim_get_current_win()
-    if not vim.api.nvim_win_is_valid(window) then
+    local window = ide.win[vim.api.nvim_get_current_win()]
+    if not window then
         return mouse_key_name
     end
 
     local pos = vim.fn.getmousepos()
-    local width = vim.fn.status_column_width()
+    local width = window.status_column_width
 
     if pos.wincol > width then
         return mouse_key_name
@@ -143,7 +143,7 @@ vim.keymap.set('n', mouse_key_name, function()
         )
 
         if has_git_sign then
-            require('git').preview_hunk { window = window, line = pos.line }
+            require('git').preview_hunk { window = window.id, line = pos.line }
             return
         end
     end
@@ -165,14 +165,14 @@ vim.keymap.set('n', mouse_key_name, function()
     if clicked_sign then
         if clicked_sign.name:match '^DiagnosticSign' then
             vim.schedule(function()
-                require('api.win')[window].invoke_on_line(vim.diagnostic.open_float, pos.line)
+                window.invoke_on_line(vim.diagnostic.open_float, pos.line)
             end)
 
             return
         end
 
         if clicked_sign.name == 'DapBreakpoint' then
-            ide.win[window].invoke_on_line(require('dap').toggle_breakpoint, pos.line)
+            window.invoke_on_line(require('dap').toggle_breakpoint, pos.line)
             return
         end
 
@@ -190,12 +190,12 @@ vim.keymap.set('n', mouse_key_name, function()
         )
         return
     elseif pos.wincol <= 2 and ide.plugins.has 'nvim-dap' then
-        ide.win[window].invoke_on_line(require('dap').toggle_breakpoint, pos.line)
+        window.invoke_on_line(require('dap').toggle_breakpoint, pos.line)
         return
     end
 
-    if vim.fn.fold_marker(pos.line, window) ~= nil then
-        vim.fn.toggle_fold(pos.line)
+    if window.is_folded(pos.line) ~= nil then
+        window.toggle_fold(pos.line)
     end
 end, { expr = true })
 
