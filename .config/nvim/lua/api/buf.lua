@@ -76,7 +76,7 @@ local M = table.smart {
             ---@param buffer buffer
             ---@return boolean
             get = function(_, buffer)
-                return vim.fn.getbufinfo(buffer.id)[1].hidden
+                return vim.fn.getbufinfo(buffer.id)[1].hidden == 1
             end,
         },
         is_loaded = {

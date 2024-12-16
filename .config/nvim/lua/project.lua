@@ -341,7 +341,7 @@ ide.config.register_toggle('diagnostics_enabled', function(enabled, buffer)
     end
 end, {
     icon = icons.Diagnostics.Prefix,
-    name = 'Diagnostics',
+    desc = 'Diagnostics',
     scope = { 'global', 'buffer' },
     default = true,
 })
@@ -358,7 +358,7 @@ ide.config.register_toggle('inlay_hint_enabled', function(enabled, buffer)
     end
 end, {
     icon = icons.Diagnostics.LSP.Hint,
-    name = 'Inlay hints',
+    desc = 'Inlay hints',
     scope = { 'global', 'buffer' },
     default = true,
 })
@@ -375,7 +375,7 @@ ide.config.register_toggle('code_lens_enabled', function(enabled, buffer)
     end
 end, {
     icon = icons.UI.CodeLens,
-    name = 'Code Lense',
+    desc = 'Code Lense',
     scope = { 'global', 'buffer' },
     default = true,
 })
@@ -393,7 +393,7 @@ ide.config.register_toggle('semantic_tokens_enabled', function(enabled, buffer)
     end)
 end, {
     icon = icons.UI.CodeLens,
-    name = 'Semantic Tokens',
+    desc = 'Semantic Tokens',
     scope = { 'global', 'buffer' },
     default = true,
 })

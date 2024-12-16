@@ -35,13 +35,25 @@ local function get(name, default, buffer)
     }
 
     if buffer then
-        if buffer.is_normal then
+        if not buffer.is_normal then
             return default
         end
 
-        return vim.b[buffer.id][name] or default
+        local v = vim.b[buffer.id][name]
+        if v == nil then
+            v = default
+        end
+
+        return v
     else
-        return vim.g[name] or persistent_data.global[name] or default
+        local v = vim.g[name]
+        if v == nil then
+            v = persistent_data.global[name]
+        end
+        if v == nil then
+            v = default
+        end
+        return v
     end
 end
 
@@ -58,7 +70,8 @@ local function set(name, persistent, value, buffer)
         end
 
         vim.b[buffer.id][name] = value
-        if persistent then
+        if persistent and buffer.file_path then
+            persistent_data.file[buffer.file_path] = persistent_data.file[buffer.file_path] or {}
             persistent_data.file[buffer.file_path][name] = value
         end
     else
@@ -146,7 +159,6 @@ function M.register_toggle(name, toggle_fn, opts)
 
     ---@type config_register_toggle_options
     opts = table.merge(opts, {
-        desc = name,
         scope = 'global',
         icon = icons.UI.Tool,
         default = true,
@@ -239,7 +251,7 @@ function M.register_toggle(name, toggle_fn, opts)
 
         table.insert(managed_toggles, {
             name = name,
-            desc = opts.desc,
+            desc = opts.desc or name,
             toggle_fn = toggle_value,
             value_fn = get_value,
             scope = scope,
@@ -281,14 +293,16 @@ function M.use_toggle(name)
                     buffer = { buffer, { 'table' } },
                 }
 
-                return global_toggle.value_fn() and buffer_toggle.value_fn()
+                return global_toggle.value_fn() and buffer_toggle.value_fn(buffer)
             end,
             set = function(value, buffer)
                 xassert {
                     buffer = { buffer, { 'nil', 'table' } },
                 }
 
-                if value == nil or global_toggle.value_fn(buffer) ~= value then
+                if buffer and buffer_toggle.value_fn(buffer) ~= value then
+                    buffer_toggle.toggle_fn(buffer)
+                elseif not buffer and global_toggle.value_fn() ~= value then
                     global_toggle.toggle_fn(buffer)
                 end
             end,
@@ -318,7 +332,7 @@ function M.use_toggle(name)
                     buffer = { buffer, 'table' },
                 }
 
-                if value == nil or buffer_toggle.value_fn(buffer) ~= value then
+                if buffer_toggle.value_fn(buffer) ~= value then
                     buffer_toggle.toggle_fn(buffer)
                 end
             end,
@@ -389,8 +403,8 @@ function M.manage(buffer)
     ---@type string[][]
     local items = table.list_map(sorted, function(item)
         return {
-            item.name,
             item.desc,
+            item.scope,
             item.value_fn(item.scope == 'buffer' and buffer or nil) and 'on' or 'off',
         }
     end)

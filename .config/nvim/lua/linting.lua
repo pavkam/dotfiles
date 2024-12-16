@@ -1,7 +1,6 @@
 local events = require 'events'
 local project = require 'project'
 local progress = require 'progress'
-local settings = require 'settings'
 local icons = require 'icons'
 
 ---@class linting
@@ -115,11 +114,11 @@ local toggle = ide.config.register_toggle('auto_linting_enabled', function(enabl
     if not enabled then
         M.apply(buffer.id)
     else
-        require('project.lsp').clear_diagnostics(M.active(buffer.id), buffer.id)
+        require('lsp').clear_diagnostics(M.active(buffer.id), buffer.id)
     end
 end, {
     icon = icons.UI.Lint,
-    name = 'Auto-linting',
+    desc = 'Auto-linting',
     default = true,
     scope = { 'buffer', 'global' },
 })

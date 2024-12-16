@@ -76,7 +76,7 @@ ide.config.register_toggle('spelling', function(enabled)
 
     toggle_typos_lsp(enabled)
     ---@diagnostic disable-next-line: undefined-field
-end, { icon = icons.UI.SpellCheck, name = 'Spell checking', default = vim.opt.spell:get(), scope = 'global' })
+end, { icon = icons.UI.SpellCheck, desc = 'Spell checking', default = vim.opt.spell:get(), scope = 'global' })
 
 events.on_event({ 'BufWinEnter' }, function(evt)
     local ignored_fts = { '', 'neo-tree' }

@@ -1,6 +1,5 @@
 local events = require 'events'
 local keys = require 'keys'
-local settings = require 'settings'
 local icons = require 'icons'
 -- TODO: can we preload eslind and prettier? or make sure the async works?
 
@@ -86,7 +85,7 @@ local toggle = ide.config.register_toggle('auto_formatting_enabled', function(en
     if enabled then
         M.apply(buffer.id)
     end
-end, { icon = icons.UI.Format, name = 'Auto-formatting', scope = { 'buffer', 'global' } })
+end, { icon = icons.UI.Format, desc = 'Auto-formatting', scope = { 'buffer', 'global' } })
 
 --- Checks whether formatting is enabled for a buffer
 ---@param buffer integer|nil # the buffer to check the formatting for or 0 or nil for current

@@ -261,7 +261,7 @@ local ignore_hidden_files_option = ide.config.register_toggle('ignore_hidden_fil
         local mgr = require 'neo-tree.sources.manager'
         mgr.get_state('filesystem').filtered_items.visible = not enabled
     end
-end, { icon = icons.UI.ShowHidden, name = 'Ignore hidden files', scope = 'global' })
+end, { icon = icons.UI.ShowHidden, desc = 'Ignore hidden files', scope = 'global' })
 
 M.ignore_hidden_files = {
     --- Returns whether hidden files are ignored or not
@@ -282,6 +282,6 @@ ide.config.register_toggle('treesitter_enabled', function(enabled, buffer)
     else
         vim.treesitter.start(buffer.id)
     end
-end, { icon = icons.UI.SyntaxTree, name = 'Treesitter', scope = { 'buffer' } })
+end, { icon = icons.UI.SyntaxTree, desc = 'Treesitter', scope = { 'buffer' } })
 
 return M
