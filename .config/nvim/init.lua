@@ -42,7 +42,7 @@ end
 require 'options' -- TODO: this must go
 
 -- Setup the Lazy plugin manager
-ide.plugins.require_online('https://github.com/folke/lazy.nvim.git', ide.fs.join_paths('lazy', 'lazy.nvim'))
+ide.plugin.require_online('https://github.com/folke/lazy.nvim.git', ide.fs.join_paths('lazy', 'lazy.nvim'))
 
 require('lazy').setup {
     spec = { import = 'plugins' },

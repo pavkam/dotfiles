@@ -164,17 +164,17 @@ local function swap_sessions(old_name, new_name)
 end
 
 if enabled() then
-    ide.events.quitting.continue(function(args)
+    ide.process.quitting.continue(function(args)
         if not args.dying then
             swap_sessions(M.current(), nil)
         end
     end)
 
-    ide.events.ready.continue(function()
+    ide.process.ready.continue(function()
         swap_sessions(nil, M.current())
     end)
 
-    ide.events.focus_gained.continue(function()
+    ide.process.focus_gained.continue(function()
         swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
     end)
 

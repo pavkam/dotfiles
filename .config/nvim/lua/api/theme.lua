@@ -132,15 +132,30 @@ function M.set(name)
         name = { name, { 'nil', { 'string', ['>'] = 0 } } },
     }
 
-    vim.cmd.colorscheme(name)
+    vim.cmd.colorscheme(name) --TODO: pcall
 end
 
-local auto_group = vim.api.nvim_create_augroup('theme.apply_registered_highlight_groups', { clear = true })
-vim.api.nvim_create_autocmd('ColorScheme', {
-    callback = function()
-        apply_registered_highlight_groups()
-    end,
-    group = auto_group,
-})
+---@type string|nil
+M.current = vim.api.nvim_exec2('colorscheme', { output = true }).output
 
-return M
+-- Slot that triggers when the colors change.
+---@type evt_slot<{ color_scheme: string, before: boolean, after: boolean }>
+M.updated = require('api.process')
+    .observe_auto_command({ 'ColorSchemePre', 'ColorScheme' }, {
+        description = 'Updates the registered highlight groups when the colors change.',
+        group = 'theme.apply_registered_highlight_groups',
+    })
+    .continue(function(data)
+        if data.event == 'ColorScheme' then
+            M.current = data.match
+            apply_registered_highlight_groups()
+        end
+
+        return {
+            before = data.event == 'ColorSchemePre',
+            after = data.event == 'ColorScheme',
+            color_scheme = data.match,
+        }
+    end)
+
+return table.freeze(M)

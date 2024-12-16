@@ -382,6 +382,20 @@ function table.freeze(table)
     })
 end
 
+--- Makes a table weak.
+---@generic T: table
+---@param t T # the table to make weak.
+---@param mode string|nil # the mode of the weak table (`k`, `v` or `kv`; default is `k`).
+---@return T # the weak table.
+function table.weak(t, mode)
+    xassert {
+        t = { t, 'table' },
+        mode = { mode, { 'nil', { 'string', ['*'] = '^k|v|kv$' } } },
+    }
+
+    return setmetatable(t, { __mode = mode or 'k' })
+end
+
 ---@class (exact) smart_table_entity_prop # The property for a smart table.
 ---@field get fun(smart_table: table, entity: table): any # the getter function.
 ---@field set (fun(smart_table: table, entity: table, value: any)) | nil # the setter function (optional).
@@ -895,11 +909,11 @@ _G.ide = {
     command = require 'api.command',
     editor = require 'api.editor',
     process = require 'api.process',
-    events = require 'api.events',
+    evt = require 'api.evt',
     tui = require 'api.tui',
     async = require 'api.async',
     theme = require 'api.theme',
-    plugins = require 'api.plugins',
+    plugin = require 'api.plugin',
 }
 
 require 'api.vim.fn'

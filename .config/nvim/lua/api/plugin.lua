@@ -1,5 +1,4 @@
 local fs = require 'api.fs'
-local tui = require 'api.tui'
 
 --- Provides functionality for interacting with plugins.
 ---@class plugins
@@ -83,5 +82,19 @@ function M.require_online(url, path, opts)
     vim.opt.rtp:prepend(actual_path)
     return true
 end
+
+--- Slot that triggers when a plugin is loaded.
+---@type evt_slot<{ plugin: string }>
+M.loaded = require('api.process')
+    .observe_auto_command({ 'User' }, {
+        description = 'Triggers when a plugin is loaded.',
+        patterns = { 'LazyLoad' },
+        group = 'plugin.loaded',
+    })
+    .continue(function(data)
+        return type(data.data) == 'string' and {
+            plugin = data.data,
+        } or nil
+    end)
 
 return table.freeze(M)

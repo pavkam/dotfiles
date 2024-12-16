@@ -7,6 +7,7 @@ local fs = require 'api.fs'
 
 ---@class (exact) buffer # The buffer details.
 ---@field id integer # the buffer ID.
+---@field is_valid boolean # whether the buffer is valid.
 ---@field file_path string|nil # the file path of the buffer.
 ---@field file_type string # the file type of the buffer.
 ---@field windows window[] # the window IDs that display this buffer.
@@ -48,6 +49,13 @@ local M = table.smart {
                         return win[window_id]
                     end)
                 end
+            end,
+        },
+        is_valid = {
+            ---@param buffer buffer
+            ---@return boolean
+            get = function(_, buffer)
+                return vim.api.nvim_buf_is_valid(buffer.id)
             end,
         },
         is_listed = {

@@ -135,6 +135,155 @@ function M.tool_exists(command)
     return vim.fn.executable(command) == 1
 end
 
+-- HACK: This is a workaround for the fact that lua_ls doesn't support generic classes.
+-- luacheck: push ignore 631
+
+---@class (exact) evt_slot<TArgs>: { ["continue"]: (fun(continuation: fun(args: TArgs, slot: evt_slot<TArgs>): any|nil): evt_slot<TArgs>), ["trigger"]: fun(args: TArgs|nil) } # A slot object.
+
+-- luacheck: pop
+
+-- Create a new raw slot (internal).
+---@param handler (fun(args: any, slot: evt_slot<any>): any) | nil # the handler of the slot.
+---@return evt_slot<any> # the slot object.
+local function new_slot(handler)
+    ---@type table<evt_slot<any>, boolean>
+    local subscribers = {}
+
+    local obj = {}
+
+    obj.continue = function(continuation)
+        local follower = new_slot(continuation)
+        subscribers[follower] = true
+
+        return follower
+    end
+
+    obj.trigger = function(args)
+        args = handler and handler(args, obj) or args
+        if not args then
+            return
+        end
+
+        for subscriber in pairs(subscribers) do
+            subscriber.trigger(args)
+        end
+    end
+
+    return obj
+end
+
+---@class (exact) observe_auto_command_opts # The options for the auto command.
+---@field buffer integer|nil # the buffer to target (or `nil` for all buffers).
+---@field description string # the description of the auto command.
+---@field group string # the group of the auto command.
+---@field clear boolean|nil # whether to clear the group before creating it.
+---@field patterns string[]|nil # the pattern to target (or `nil` for all patterns).
+
+---@class (exact) vim.auto_command_data # The event data received by the auto command.
+---@field id integer # the id of the auto command.
+---@field event string # the event that was triggered.
+---@field buf integer|nil # the buffer the event was triggered on (or `nil` of no buffer).
+---@field group integer|nil # the group of the auto command.
+---@field match string|nil # the match of the auto command.
+---@field data table|nil # the data of the auto command.
+
+-- Create a new slot that observes an auto command.
+---@param events string[] # the list of events to trigger on.
+---@param opts observe_auto_command_opts # the options for the auto command.
+---@return evt_slot<vim.auto_command_data> # the slot object.
+function M.observe_auto_command(events, opts)
+    xassert {
+        events = { events, { ['*'] = 'string' } },
+        opts = {
+            opts,
+            {
+                buffer = { 'number', 'nil' },
+                description = { 'string', ['>'] = 0 },
+                group = { 'string', ['>'] = 0 },
+                patterns = { 'nil', { 'list', ['*'] = 'string' } },
+                clear = { 'nil', 'boolean' },
+            },
+        },
+    }
+
+    local slot = new_slot()
+    local slot_trigger = slot.trigger
+
+    local reg_trace_back = M.get_formatted_trace_back(4)
+    local auto_group_id = vim.api.nvim_create_augroup(opts.group, { clear = opts.clear or false })
+
+    ---@type vim.api.keyset.create_autocmd
+    local auto_command_opts = {
+        callback = function(args)
+            local ok, err = pcall(slot_trigger, args)
+
+            if not ok then
+                local formatted = table.concat(
+                    #events == 1 and events[1] == 'User' and opts.patterns and #opts.patterns > 0 and opts.patterns
+                        or events,
+                    ', '
+                )
+
+                ide.tui.error(
+                    string.format(
+                        'Error in auto command `%s`: %s\nPayload:\n%s\nRegistered at:\n%s',
+                        formatted,
+                        err,
+                        vim.inspect(args),
+                        reg_trace_back
+                    )
+                )
+            end
+        end,
+        group = auto_group_id,
+        pattern = opts.patterns,
+        desc = opts.description,
+        nested = false,
+    }
+
+    -- create auto command
+    vim.api.nvim_create_autocmd(events, auto_command_opts)
+
+    slot.trigger = function(args)
+        vim.api.nvim_exec_autocmds(events, { pattern = opts.patterns, modeline = false, data = args })
+    end
+
+    return slot
+end
+
 M.is_headless = vim.list_contains(vim.api.nvim_get_vvar 'argv', '--headless') or #vim.api.nvim_list_uis() == 0
+
+-- Slot that triggers when vim is fully ready.
+---@type evt_slot<{}>
+M.ready = require('api.evt')
+    .observe_auto_command({ 'User' }, {
+        description = 'Triggers when vim is fully ready.',
+        patterns = { 'LazyVimStarted' },
+        group = 'process.status',
+    })
+    .continue(function()
+        return {}
+    end)
+
+-- Slot that triggers when vim is about to quit.
+---@type evt_slot<{ exit_code: integer, dying: boolean }>
+M.quitting = M.observe_auto_command({ 'VimLeavePre' }, {
+    description = 'Triggers when vim is ready to quit.',
+    group = 'process.status',
+}).continue(function()
+    return {
+        exit_code = vim.v.exiting == vim.v.null and 0 or vim.v.exiting --[[@as integer]],
+        dying = vim.v.dying > 0,
+    }
+end)
+
+-- Slot that triggers when vim receives focus.
+---@type evt_slot<{}>
+M.focus_gained = M.observe_auto_command({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, {
+    description = 'Triggers when vim receives focus.',
+    group = 'process.status',
+}).continue(function()
+    return {}
+end)
 
 return table.freeze(M)
