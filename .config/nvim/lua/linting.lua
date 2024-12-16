@@ -129,7 +129,7 @@ end, {
     scope = { 'buffer', 'global' },
 })
 
-if ide.plugins.has 'nvim-lint' then
+if ide.plugin.has 'nvim-lint' then
     -- setup auto-commands
     events.on_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(evt)
         if M.enabled(evt.buf) then

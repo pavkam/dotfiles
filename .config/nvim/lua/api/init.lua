@@ -909,7 +909,6 @@ _G.ide = {
     command = require 'api.command',
     editor = require 'api.editor',
     process = require 'api.process',
-    evt = require 'api.evt',
     tui = require 'api.tui',
     async = require 'api.async',
     theme = require 'api.theme',

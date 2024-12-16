@@ -13,7 +13,7 @@ local M = {}
 local function formatters(buffer)
     assert(type(buffer) == 'number' and buffer)
 
-    if not ide.plugins.has 'conform.nvim' then
+    if not ide.plugin.has 'conform.nvim' then
         return {}
     end
 
@@ -93,7 +93,7 @@ settings.register_toggle(setting_name, function(enabled, buffer)
     end
 end, { icon = icons.UI.Format, name = 'Auto-formatting', scope = { 'buffer', 'global' } })
 
-if ide.plugins.has 'conform.nvim' then
+if ide.plugin.has 'conform.nvim' then
     keys.map({ 'n', 'x' }, '=', function()
         M.apply()
     end, { desc = 'Format buffer/selection' })

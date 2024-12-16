@@ -227,7 +227,7 @@ local M = table.smart {
                 return
             end
 
-            for _, window in ipairs(buffer.windows) do
+            for _, window in ipairs(buffer.windows or {}) do
                 if window.is_pinned_to_buffer then
                     window.close()
                 else

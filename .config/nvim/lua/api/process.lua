@@ -255,15 +255,13 @@ M.is_headless = vim.list_contains(vim.api.nvim_get_vvar 'argv', '--headless') or
 
 -- Slot that triggers when vim is fully ready.
 ---@type evt_slot<{}>
-M.ready = require('api.evt')
-    .observe_auto_command({ 'User' }, {
-        description = 'Triggers when vim is fully ready.',
-        patterns = { 'LazyVimStarted' },
-        group = 'process.status',
-    })
-    .continue(function()
-        return {}
-    end)
+M.ready = M.observe_auto_command({ 'User' }, {
+    description = 'Triggers when vim is fully ready.',
+    patterns = { 'LazyVimStarted' },
+    group = 'process.status',
+}).continue(function()
+    return {}
+end)
 
 -- Slot that triggers when vim is about to quit.
 ---@type evt_slot<{ exit_code: integer, dying: boolean }>

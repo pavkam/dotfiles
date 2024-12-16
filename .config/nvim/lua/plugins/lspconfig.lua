@@ -340,7 +340,7 @@ return {
             end
 
             -- get all the servers that are available through mason-LSP-config
-            local using_mason = ide.plugins.has 'mason.nvim'
+            local using_mason = ide.plugin.has 'mason.nvim'
             local mason_packages = using_mason and require('mason-lspconfig.mappings.server').lspconfig_to_package or {}
 
             local ensure_installed = {}
@@ -373,13 +373,11 @@ return {
                 end
             end
 
-            local mason_lsp_config = ide.plugins.has 'mason-lspconfig.nvim'
-                    and using_mason
-                    and require 'mason-lspconfig'
+            local mason_lsp_config = ide.plugin.has 'mason-lspconfig.nvim' and using_mason and require 'mason-lspconfig'
                 or nil
 
             if mason_lsp_config then
-                local mason_opts = assert(ide.plugins.config 'mason-lspconfig.nvim')
+                local mason_opts = assert(ide.plugin.config 'mason-lspconfig.nvim')
 
                 mason_lsp_config.setup {
                     ensure_installed = vim.tbl_deep_extend(

@@ -24,7 +24,7 @@ local M = {}
 function M.map(mode, key, action, opts)
     opts = opts or {}
 
-    if ide.plugins.has 'which-key.nvim' and mode ~= 'c' then
+    if ide.plugin.has 'which-key.nvim' and mode ~= 'c' then
         local wk = require 'which-key'
         wk.add {
             key,

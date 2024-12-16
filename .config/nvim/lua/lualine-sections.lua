@@ -340,7 +340,7 @@ local components = {
         end,
     },
     --- The section that shows the status of the copilot.
-    copilot = ide.plugins.has 'copilot.lua' and {
+    copilot = ide.plugin.has 'copilot.lua' and {
         settings.transient(function()
             return sexify(icons.Symbols.Copilot, require('copilot.api').status.data.message or '')
         end),
