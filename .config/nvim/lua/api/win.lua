@@ -24,7 +24,13 @@
 ---@type win
 local M = table.smart {
     entity_ids = vim.api.nvim_list_wins,
-    entity_id_valid = vim.api.nvim_win_is_valid,
+    entity_id_valid = function(id)
+        xassert {
+            id = { id, { 'nil', 'integer' } },
+        }
+
+        return id and vim.api.nvim_win_is_valid(id) or false
+    end,
     entity_properties = {
         buffer = {
             ---@param window window

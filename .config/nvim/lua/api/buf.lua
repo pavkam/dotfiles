@@ -7,7 +7,6 @@ local fs = require 'api.fs'
 
 ---@class (exact) buffer # The buffer details.
 ---@field id integer # the buffer ID.
----@field is_valid boolean # whether the buffer is valid.
 ---@field file_path string|nil # the file path of the buffer.
 ---@field file_type string # the file type of the buffer.
 ---@field windows window[] # the window IDs that display this buffer.
@@ -15,6 +14,7 @@ local fs = require 'api.fs'
 ---@field is_listed boolean # whether the buffer is listed.
 ---@field is_hidden boolean # whether the buffer is hidden.
 ---@field is_loaded boolean # whether the buffer is loaded.
+---@field is_normal boolean # whether the buffer is a normal buffer.
 ---@field cursor position # the cursor position in the buffer.
 ---@field height integer # the height of the buffer.
 ---@field lines fun(start: integer|nil, end_: integer|nil): string[] # get the lines of the buffer.
@@ -37,7 +37,13 @@ local fs = require 'api.fs'
 ---@type buf
 local M = table.smart {
     entity_ids = vim.api.nvim_list_bufs,
-    entity_id_valid = vim.api.nvim_buf_is_valid,
+    entity_id_valid = function(id)
+        xassert {
+            id = { id, { 'nil', 'integer' } },
+        }
+
+        return id and vim.api.nvim_buf_is_valid(id) or false
+    end,
     entity_properties = {
         windows = {
             ---@param buffer buffer
@@ -49,13 +55,6 @@ local M = table.smart {
                         return win[window_id]
                     end)
                 end
-            end,
-        },
-        is_valid = {
-            ---@param buffer buffer
-            ---@return boolean
-            get = function(_, buffer)
-                return vim.api.nvim_buf_is_valid(buffer.id)
             end,
         },
         is_listed = {
@@ -94,11 +93,18 @@ local M = table.smart {
                 return vim.bo[buffer.id].modified
             end,
         },
+        is_normal = {
+            ---@param buffer buffer
+            ---@return boolean
+            get = function(_, buffer)
+                return vim.api.nvim_buf_is_valid(buffer.id) and vim.bo[buffer.id].buftype == '' and not buffer.is_hidden
+            end,
+        },
         file_path = {
             ---@param buffer buffer
             ---@return string|nil
             get = function(_, buffer)
-                if vim.bo[buffer.id].buftype == '' then
+                if buffer.is_normal then
                     return fs.expand_path(vim.api.nvim_buf_get_name(buffer.id))
                 end
 

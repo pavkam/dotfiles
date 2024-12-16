@@ -159,21 +159,13 @@ M.root_patterns = {
 ---@param target vim.fn.Target # the target to get the roots for
 ---@return string[] # the list of roots
 function M.roots(target)
-    local buffer, path, is_real = vim.fn.expand_target(target)
+    local buffer, path = vim.fn.expand_target(target)
     if not vim.api.nvim_buf_is_valid(buffer) then
         return {}
     end
+    -- TODO: cache
 
-    local setting_name = 'root_paths'
-
-    -- check for cached roots
-    local roots = is_real and settings.get(setting_name, { buffer = buffer, scope = 'transient' })
-    ---@cast roots string[]
-    if roots then
-        return roots
-    end
-
-    roots = {}
+    local roots = {}
     local function add(root)
         if not vim.tbl_contains(roots, root) then
             roots[#roots + 1] = root
@@ -209,12 +201,6 @@ function M.roots(target)
     table.sort(roots, function(a, b)
         return #a > #b
     end)
-
-    -- cache the roots for buffer
-    if is_real then
-        settings.set(setting_name, roots, { buffer = buffer, scope = 'transient' })
-    end
-
     return roots
 end
 
@@ -343,11 +329,15 @@ function M.get_eslint_config_path(target)
     return ide.fs.scan(M.roots(target), eslint_root_patterns)
 end
 
-settings.register_toggle('diagnostics_enabled', function(enabled, buffer)
+ide.config.register_toggle('diagnostics_enabled', function(enabled, buffer)
+    if not buffer then
+        return
+    end
+
     if not enabled then
-        vim.diagnostic.enable(false, { bufnr = buffer })
+        vim.diagnostic.enable(false, { bufnr = buffer.id })
     else
-        vim.diagnostic.enable(true, { bufnr = buffer })
+        vim.diagnostic.enable(true, { bufnr = buffer.id })
     end
 end, {
     icon = icons.Diagnostics.Prefix,
@@ -356,11 +346,15 @@ end, {
     default = true,
 })
 
-settings.register_toggle('inlay_hint_enabled', function(enabled, buffer)
+ide.config.register_toggle('inlay_hint_enabled', function(enabled, buffer)
+    if not buffer then
+        return
+    end
+
     if not enabled then
-        vim.lsp.inlay_hint.enable(false, { bufnr = buffer })
+        vim.lsp.inlay_hint.enable(false, { bufnr = buffer.id })
     else
-        vim.lsp.inlay_hint.enable(true, { bufnr = buffer })
+        vim.lsp.inlay_hint.enable(true, { bufnr = buffer.id })
     end
 end, {
     icon = icons.Diagnostics.LSP.Hint,
@@ -369,11 +363,15 @@ end, {
     default = true,
 })
 
-settings.register_toggle('code_lens_enabled', function(enabled, buffer)
+ide.config.register_toggle('code_lens_enabled', function(enabled, buffer)
+    if not buffer then
+        return
+    end
+
     if not enabled then
-        vim.lsp.codelens.clear(nil, buffer)
+        vim.lsp.codelens.clear(nil, buffer.id)
     else
-        vim.lsp.codelens.refresh { bufnr = buffer }
+        vim.lsp.codelens.refresh { bufnr = buffer.id }
     end
 end, {
     icon = icons.UI.CodeLens,
@@ -382,16 +380,16 @@ end, {
     default = true,
 })
 
-settings.register_toggle('semantic_tokens_enabled', function(enabled, buffer)
+ide.config.register_toggle('semantic_tokens_enabled', function(enabled, buffer)
     if not buffer then
         return
     end
 
-    local clients = lsp.active_for_buffer(buffer)
+    local clients = lsp.active_for_buffer(buffer.id)
     local fn = enabled and vim.lsp.semantic_tokens.start or vim.lsp.semantic_tokens.stop
 
-    vim.iter(clients):each(function(client)
-        fn(buffer, client.id)
+    table.list_iterate(clients, function(client)
+        fn(buffer.id, client.id)
     end)
 end, {
     icon = icons.UI.CodeLens,

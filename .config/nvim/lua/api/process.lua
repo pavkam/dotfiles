@@ -138,15 +138,15 @@ end
 -- HACK: This is a workaround for the fact that lua_ls doesn't support generic classes.
 -- luacheck: push ignore 631
 
----@class (exact) evt_slot<TArgs>: { ["continue"]: (fun(continuation: fun(args: TArgs, slot: evt_slot<TArgs>): any|nil): evt_slot<TArgs>), ["trigger"]: fun(args: TArgs|nil) } # A slot object.
+---@class (exact) evt_slot<I, O>: { ["continue"]: (fun(continuation: fun(args: O, slot: evt_slot<I, O>): any|nil): evt_slot<I, O>), ["trigger"]: fun(args: I) } # A slot object.
 
 -- luacheck: pop
 
 -- Create a new raw slot (internal).
----@param handler (fun(args: any, slot: evt_slot<any>): any) | nil # the handler of the slot.
----@return evt_slot<any> # the slot object.
+---@param handler (fun(args: any, slot: evt_slot<any, any>): any) | nil # the handler of the slot.
+---@return evt_slot<any, any> # the slot object.
 local function new_slot(handler)
-    ---@type table<evt_slot<any>, boolean>
+    ---@type table<evt_slot<any, any>, boolean>
     local subscribers = {}
 
     local obj = {}
@@ -179,18 +179,20 @@ end
 ---@field clear boolean|nil # whether to clear the group before creating it.
 ---@field patterns string[]|nil # the pattern to target (or `nil` for all patterns).
 
----@class (exact) vim.auto_command_data # The event data received by the auto command.
+---@class (exact) vim.auto_command_input_data # The event data received by the auto command.
+---@field buf integer|nil # the buffer the event was triggered on (or `nil` of no buffer).
+---@field data table|nil # the data of the auto command.
+
+---@class (exact) vim.auto_command_data: vim.auto_command_input_data # The event data received by the auto command.
 ---@field id integer # the id of the auto command.
 ---@field event string # the event that was triggered.
----@field buf integer|nil # the buffer the event was triggered on (or `nil` of no buffer).
 ---@field group integer|nil # the group of the auto command.
 ---@field match string|nil # the match of the auto command.
----@field data table|nil # the data of the auto command.
 
 -- Create a new slot that observes an auto command.
 ---@param events string[] # the list of events to trigger on.
 ---@param opts observe_auto_command_opts # the options for the auto command.
----@return evt_slot<vim.auto_command_data> # the slot object.
+---@return evt_slot<vim.auto_command_input_data, vim.auto_command_data> # the slot object.
 function M.observe_auto_command(events, opts)
     xassert {
         events = { events, { ['*'] = 'string' } },
@@ -254,7 +256,7 @@ end
 M.is_headless = vim.list_contains(vim.api.nvim_get_vvar 'argv', '--headless') or #vim.api.nvim_list_uis() == 0
 
 -- Slot that triggers when vim is fully ready.
----@type evt_slot<{}>
+---@type evt_slot<nil, nil>
 M.ready = M.observe_auto_command({ 'User' }, {
     description = 'Triggers when vim is fully ready.',
     patterns = { 'LazyVimStarted' },
@@ -264,7 +266,7 @@ M.ready = M.observe_auto_command({ 'User' }, {
 end)
 
 -- Slot that triggers when vim is about to quit.
----@type evt_slot<{ exit_code: integer, dying: boolean }>
+---@type evt_slot<nil, { exit_code: integer, dying: boolean }>
 M.quitting = M.observe_auto_command({ 'VimLeavePre' }, {
     description = 'Triggers when vim is ready to quit.',
     group = 'process.status',
@@ -276,7 +278,7 @@ M.quitting = M.observe_auto_command({ 'VimLeavePre' }, {
 end)
 
 -- Slot that triggers when vim receives focus.
----@type evt_slot<{}>
+---@type evt_slot<nil, nil>
 M.focus_gained = M.observe_auto_command({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, {
     description = 'Triggers when vim receives focus.',
     group = 'process.status',

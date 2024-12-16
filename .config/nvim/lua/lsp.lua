@@ -162,14 +162,18 @@ end
 
 --- Gets all active clients
 ---@param buffer integer|nil # the buffer to get the clients for or 0 or nil for current
----@return string[] # the names of the active clients
+---@return vim.lsp.Client[] # the active clients
 function M.active_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
+    ---@type vim.lsp.Client[]
     return vim.iter(vim.lsp.get_clients { bufnr = buffer })
-        :filter(function(client)
-            return not M.is_special(client)
-        end)
+        :filter(
+            ---@param client vim.lsp.Client
+            function(client)
+                return not M.is_special(client)
+            end
+        )
         :totable()
 end
 

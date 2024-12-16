@@ -1,24 +1,15 @@
 local icons = require 'icons'
-local settings = require 'settings'
 local qf = require 'qf'
 
 ---@class core.session
 local M = {}
-local session_dir = vim.fs.joinpath(ide.fs.DATA_DIRECTORY, 'sessions')
+local session_dir = ide.fs.join_paths(ide.fs.DATA_DIRECTORY, 'sessions')
+local enabled = not ide.process.is_headless and vim.fn.argc() == 0
 
----@type string
-local setting_name = 'current_session_name'
-
---- Check if the session support is enabled
---- @return boolean # true if enabled, false otherwise
-local function enabled()
-    return vim.fn.argc() == 0 and not ide.process.is_headless
-end
-
---- Get the current session name
+--- Get the current session name.
 ---@return string|nil # the current session name or nil if not enabled
 function M.current()
-    if not enabled() then
+    if not enabled then
         return nil
     end
 
@@ -31,11 +22,13 @@ function M.current()
     return full_name
 end
 
---- Encode the session name as file paths
----@param name string # the name of the session
----@return string, string, string # the session file paths
+--- Encode the session name as file paths.
+---@param name string # the name of the session.
+---@return string, string, string # the session file paths.
 function M.files(name)
-    assert(type(name) == 'string')
+    xassert {
+        name = { name, { 'string', ['>'] = 0 } },
+    }
 
     -- escape special characters in full name (URL encoding)
     name = string.gsub(name, '([^%w %-%_%.%~])', function(c)
@@ -43,17 +36,17 @@ function M.files(name)
     end)
     name = string.gsub(name, ' ', '+')
 
-    local res = vim.fs.joinpath(session_dir, name)
-
+    local res = ide.fs.join_paths(session_dir, name)
     return res .. '.vim', res .. '.shada', res .. '.json'
 end
 
---- Call a function with error handling
----@param what string # the name of the function
----@param session string # the name of the session
----@vararg any # the function and its arguments
----@return boolean, any # the result of the function
+--- Call a function with error handling.
+---@param what string # the name of the function.
+---@param session string # the name of the session.
+---@vararg any # the function and its arguments.
+---@return boolean, any # the result of the function.
 local function error_call(what, session, ...)
+    -- TODO: this can be moved out
     local ok, res_or_error = pcall(...)
     if not ok then
         ide.tui.error(
@@ -66,13 +59,15 @@ local function error_call(what, session, ...)
 end
 
 ---@class (exact) core.session.CustomData
----@field settings core.settings.Exported
+---@field config config_persistent_data
 ---@field qf ui.qf.Exported
 
 --- Save the current session
 ---@param name string # the name of the session
 function M.save_session(name)
-    assert(type(name) == 'string')
+    xassert {
+        name = { name, { 'string', ['>'] = 0 } },
+    }
 
     local session_file, shada_file, custom_file = M.files(name)
 
@@ -83,29 +78,33 @@ function M.save_session(name)
 
     ---@type core.session.CustomData
     local custom = {
-        settings = settings.export(),
+        config = ide.config.export(),
         qf = qf.export(),
     }
 
     local json = vim.json.encode(custom) or '{}'
-    error_call('save settings', name, ide.fs.write_text_file, custom_file, json, { throw_errors = true })
+    error_call('save configuration', name, ide.fs.write_text_file, custom_file, json, { throw_errors = true })
 
     ide.tui.hint(string.format('Saved session `%s`', name), { prefix_icon = icons.UI.SessionSave })
 end
 
 --- Resets the UI
 local function reset_ui()
+    -- TODO: this can be moved out
     vim.cmd [[silent! tabonly!]]
     vim.cmd [[silent! %bd!]]
     vim.cmd [[silent! %bw!]]
 
     vim.args = {}
+    enabled = true
 end
 
 --- Restore a session
 ---@param name string # the name of the session
 function M.restore_session(name)
-    assert(type(name) == 'string')
+    xassert {
+        name = { name, { 'string', ['>'] = 0 } },
+    }
 
     if M.saved(name) then
         local session_file, shada_file, custom_file = M.files(name)
@@ -119,7 +118,7 @@ function M.restore_session(name)
                 ---@type boolean, core.session.CustomData
                 ok, data = error_call('deserialize custom data', name, vim.json.decode, data[1])
                 if ok then
-                    error_call('apply settings', name, settings.import, data.settings)
+                    error_call('apply configuration', name, ide.config.import, data.config)
                     error_call('apply quickfix', name, qf.import, data.qf)
                 end
             end
@@ -140,16 +139,18 @@ end
 function M.saved(name)
     local session_file, shada_file, custom_file = M.files(name)
 
-    return vim.fn.filereadable(session_file) == 1
-        and vim.fn.filereadable(shada_file) == 1
-        and vim.fn.filereadable(custom_file) == 1
+    return ide.fs.file_is_readable(session_file)
+        and ide.fs.file_is_readable(shada_file)
+        and ide.fs.file_is_readable(custom_file)
 end
+
+local option = ide.config.use('current_session', { persistent = false })
 
 --- Swap sessions
 ---@param old_name string|nil # the name of the old session
 ---@param new_name string|nil # the name of the new session
 local function swap_sessions(old_name, new_name)
-    if enabled() then
+    if enabled then
         if old_name ~= new_name then
             if old_name then
                 M.save_session(old_name)
@@ -157,13 +158,14 @@ local function swap_sessions(old_name, new_name)
 
             if new_name then
                 M.restore_session(new_name)
-                settings.set(setting_name, new_name, { scope = 'instance' })
+                option.set(new_name)
             end
         end
     end
 end
 
-if enabled() then
+if enabled then
+    -- TODO: this won't run on reset
     ide.process.quitting.continue(function(args)
         if not args.dying then
             swap_sessions(M.current(), nil)
@@ -175,9 +177,10 @@ if enabled() then
     end)
 
     ide.process.focus_gained.continue(function()
-        swap_sessions(settings.get(setting_name, { scope = 'instance' }), M.current())
+        swap_sessions(option.get(), M.current())
     end)
 
+    -- TODO: this is incorrect (runs only once)
     vim.defer_fn(function()
         swap_sessions(M.current(), nil)
     end, 60000)

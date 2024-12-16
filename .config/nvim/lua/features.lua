@@ -135,6 +135,10 @@ local function attach_keymaps(client, buffer)
     end
 end
 
+local code_lens_toggle = ide.config.use_toggle 'code_lens_enabled'
+local semantic_tokens_toggle = ide.config.use_toggle 'semantic_tokens_enabled'
+local inlay_hint_toggle = ide.config.use_toggle 'inlay_hint_enabled'
+
 --- Attaches keymaps to a client
 ---@param client vim.lsp.Client # the client to attach the keymaps to
 ---@param buffer integer|nil # the buffer to attach the keymaps to or nil for current
@@ -151,13 +155,13 @@ function M.attach(client, buffer)
         vim.lsp.protocol.Methods.textDocument_codeLens,
         buffer,
         function()
-            if settings.get_toggle('code_lens_enabled', buffer) then
+            if code_lens_toggle.get(ide.buf[buffer]) then
                 if buffer_changed_tick < 0 then
                     buffer_changed_tick = buffer_changed_tick + 1
                     return
                 end
 
-                local current_tick = vim.api.nvim_buf_get_changedtick(buffer)
+                local current_tick = vim.api.nvim_buf_get_changedtick(buffer) -- TODO: this seems to need to move out
 
                 if buffer_changed_tick ~= current_tick then
                     vim.lsp.codelens.refresh { bufnr = buffer }
@@ -188,7 +192,7 @@ function M.attach(client, buffer)
     )
 
     if client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
-        vim.lsp.inlay_hint.enable(settings.get_toggle('inlay_hint_enabled', buffer), { bufnr = buffer })
+        vim.lsp.inlay_hint.enable(inlay_hint_toggle.get(ide.buf[buffer]), { bufnr = buffer })
     end
 
     if
@@ -196,7 +200,7 @@ function M.attach(client, buffer)
         or client.supports_method(vim.lsp.protocol.Methods.textDocument_semanticTokens_full_delta)
         or client.supports_method(vim.lsp.protocol.Methods.textDocument_semanticTokens_range)
     then
-        if not settings.get_toggle('semantic_tokens_enabled', buffer) then
+        if not semantic_tokens_toggle.get(ide.buf[buffer]) then
             vim.defer_fn(function()
                 vim.lsp.semantic_tokens.stop(buffer, client.id)
             end, 100)

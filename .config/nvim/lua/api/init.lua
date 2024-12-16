@@ -666,7 +666,7 @@ function table.list_to_set(list)
     return result
 end
 
---- Removes the keys from a table.
+-- Removes the keys from a table.
 ---@generic K, V
 ---@param t table<K, V> # the table to remove the keys from.
 ---@param keys K[] # the keys to remove.
@@ -689,7 +689,7 @@ function table.without_keys(t, keys)
     return result
 end
 
---- Returns a new list that contains only unique values.
+-- Returns a new list that contains only unique values.
 ---@param list any[] # the list to make unique.
 ---@param key_fn (fun(value: any): any)|nil # the function to get the key from the value.
 ---@return any[] # the list with unique values.
@@ -713,7 +713,7 @@ function table.list_uniq(list, key_fn)
     return result
 end
 
---- Inflates a list to a table.
+-- Inflates a list to a table.
 ---@generic T: table
 ---@param list T[] # the list to inflate.
 ---@param key_fn fun(value: T): any # the function to get the key from the value.
@@ -734,7 +734,7 @@ function table.inflate(list, key_fn)
     return result
 end
 
---- Checks if a table is empty.
+-- Checks if a table is empty.
 ---@param t table # the table to check.
 ---@return boolean # whether the table is empty.
 function table.is_empty(t)
@@ -745,7 +745,7 @@ function table.is_empty(t)
     return next(t) == nil
 end
 
---- Checks if a table is a list.
+-- Checks if a table is a list.
 ---@param t table # the table to check.
 ---@return boolean # whether the table is a list.
 function table.is_list(t)
@@ -757,7 +757,7 @@ function table.is_list(t)
     return ty == 'list'
 end
 
---- Converts the elements of a list to a new list.
+-- Converts the elements of a list to a new list.
 ---@generic I, O
 ---@param list I[] # the list to map.
 ---@param fn fun(value: I): O # the function to map the values.
@@ -776,7 +776,39 @@ function table.list_map(list, fn)
     return result
 end
 
---- Filters the elements of a list.
+-- Iterates over the elements of a list.
+---@generic T
+---@param list T[] # the list to iterate over.
+---@param fn fun(value: T) # the function to iterate the values.
+function table.list_iterate(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    for _, item in ipairs(list) do
+        fn(item)
+    end
+end
+
+-- Sorts the elements of a list.
+---@generic T
+---@param list T[] # the list to sort.
+---@param fn fun(a: T, b: T): boolean # the function to sort the values.
+---@return T[] # the sorted list.
+function table.list_sort(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    list = table.clone(list)
+    table.sort(list, fn)
+
+    return list
+end
+
+-- Filters the elements of a list.
 ---@generic T
 ---@param list T[] # the list to filter.
 ---@param fn fun(value: T): boolean # the function to filter the values.
@@ -906,6 +938,7 @@ _G.ide = {
     buf = require 'api.buf',
     win = require 'api.win',
     ft = require 'api.ft',
+    config = require 'api.config',
     command = require 'api.command',
     editor = require 'api.editor',
     process = require 'api.process',

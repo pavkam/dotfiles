@@ -70,7 +70,7 @@ local function toggle_typos_lsp(enabled)
     end
 end
 
-settings.register_toggle('spelling', function(enabled)
+ide.config.register_toggle('spelling', function(enabled)
     ---@diagnostic disable-next-line: undefined-field
     vim.opt.spell = enabled
 

@@ -160,6 +160,8 @@ keys.attach(nil, function(set)
     end, { desc = 'Chat with AI', icon = icons.UI.AI })
 end)
 
+keys.map('n', '<leader>u', require('api.config').manage, { icon = icons.UI.UI, desc = 'Manage options' })
+
 -- Specials using "Command/Super" key (when available!)
 keys.map('n', '<M-]>', '<C-i>', { icon = icons.UI.Next, desc = 'Next location' })
 keys.map('n', '<M-[>', '<C-o>', { icon = icons.UI.Prev, desc = 'Previous location' })
@@ -182,28 +184,31 @@ events.on_event('FileType', function(evt)
     end
 end)
 
+---@module 'api.buf'
+---
 -- file detection commands
 events.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
-    local current_file = vim.api.nvim_buf_get_name(evt.buf)
+    local buffer = ide.buf[
+        evt.buf --[[@as integer]]
+    ]
 
-    -- if custom events have been triggered, bail
-    if settings.get('custom_events_triggered', { buffer = evt.buf, scope = 'instance' }) then
-        return
-    end
+    if buffer and buffer.is_normal then
+        local option = ide.config.use('custom_events_triggered', { buffer = buffer, persistent = false })
 
-    if not vim.buf.is_special(evt.buf) then
+        -- if custom events have been triggered, bail
+        if option.get() or buffer.file_path == '' then
+            return
+        end
+
         events.trigger_user_event 'NormalFile'
 
-        git.check_tracked(vim.uv.fs_realpath(current_file) or current_file, function(yes)
+        git.check_tracked(buffer.file_path, function(yes)
             if yes then
                 events.trigger_user_event 'GitFile'
             end
         end)
-    end
 
-    -- do not retrigger these events if the file name is set
-    if current_file ~= '' then
-        settings.set('custom_events_triggered', true, { buffer = evt.buf, scope = 'instance' })
+        option.set(true)
     end
 end)
 
@@ -250,34 +255,32 @@ end)
 ---@class ui
 local M = {}
 
-local ignore_hidden_files_setting_name = 'ignore_hidden_files'
-
----@class ui.hidden_files
-M.ignore_hidden_files = {}
-
---- Returns whether hidden files are ignored or not
----@return boolean # true if hidden files are ignored, false otherwise
-function M.ignore_hidden_files.active()
-    return settings.get_toggle(ignore_hidden_files_setting_name)
-end
-
---- Toggles ignoring of hidden files on or off
----@param value boolean|nil # if nil, it will toggle the current value, otherwise it will set the value
-function M.ignore_hidden_files.toggle(value)
-    settings.set_toggle(ignore_hidden_files_setting_name, nil, value)
-end
-
-settings.register_toggle(ignore_hidden_files_setting_name, function(enabled)
-    -- Update neo-tree state
-    local mgr = require 'neo-tree.sources.manager'
-    mgr.get_state('filesystem').filtered_items.visible = not enabled
+local ignore_hidden_files_option = ide.config.register_toggle('ignore_hidden_files', function(enabled)
+    if package.loaded['neo-tree'] then
+        -- Update neo-tree state
+        local mgr = require 'neo-tree.sources.manager'
+        mgr.get_state('filesystem').filtered_items.visible = not enabled
+    end
 end, { icon = icons.UI.ShowHidden, name = 'Ignore hidden files', scope = 'global' })
 
-settings.register_toggle('treesitter_enabled', function(enabled, buffer)
+M.ignore_hidden_files = {
+    --- Returns whether hidden files are ignored or not
+    ---@return boolean # true if hidden files are ignored, false otherwise
+    active = ignore_hidden_files_option.get,
+    --- Toggles ignoring of hidden files on or off
+    ---@param value boolean|nil # if nil, it will toggle the current value, otherwise it will set the value
+    toggle = function(value)
+        ignore_hidden_files_option.set(value)
+    end,
+}
+
+ide.config.register_toggle('treesitter_enabled', function(enabled, buffer)
+    assert(buffer)
+
     if not enabled then
-        vim.treesitter.stop(buffer)
+        vim.treesitter.stop(buffer.id)
     else
-        vim.treesitter.start(buffer)
+        vim.treesitter.start(buffer.id)
     end
 end, { icon = icons.UI.SyntaxTree, name = 'Treesitter', scope = { 'buffer' } })
 

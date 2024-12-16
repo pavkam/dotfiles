@@ -107,20 +107,15 @@ function M.apply(buffer)
     debounced_lint(buffer, names)
 end
 
-local setting_name = 'auto_linting_enabled'
+local toggle = ide.config.register_toggle('auto_linting_enabled', function(enabled, buffer)
+    if not buffer then
+        return
+    end
 
---- Checks whether auto-linting is enabled for a buffer
----@param buffer integer|nil # the buffer to check the auto-linting for or 0 or nil for current
----@return boolean # whether auto-linting is enabled
-function M.enabled(buffer)
-    return settings.get_toggle(setting_name, buffer or vim.api.nvim_get_current_buf())
-end
-
-settings.register_toggle(setting_name, function(enabled, buffer)
     if not enabled then
-        M.apply(buffer)
+        M.apply(buffer.id)
     else
-        require('project.lsp').clear_diagnostics(M.active(buffer), buffer)
+        require('project.lsp').clear_diagnostics(M.active(buffer.id), buffer.id)
     end
 end, {
     icon = icons.UI.Lint,
@@ -128,6 +123,13 @@ end, {
     default = true,
     scope = { 'buffer', 'global' },
 })
+
+--- Checks whether auto-linting is enabled for a buffer
+---@param buffer integer|nil # the buffer to check the auto-linting for or 0 or nil for current
+---@return boolean # whether auto-linting is enabled
+function M.enabled(buffer)
+    return toggle.get(ide.buf[buffer or vim.api.nvim_get_current_buf()])
+end
 
 if ide.plugin.has 'nvim-lint' then
     -- setup auto-commands

@@ -69,6 +69,14 @@ function M.file_exists(path)
     return M.path_type(path) == 'file'
 end
 
+--- Checks if a file is readable.
+---@param path string # the path to check.
+---@return boolean # true if the file is readable, false otherwise.
+function M.file_is_readable(path)
+    local real_path = M.expand_path(path)
+    return real_path and vim.fn.filereadable(real_path) == 1 or false
+end
+
 --- Splits a file path into its components
 ---@param path string # the path to split
 ---@return string, string, string, string # the components of the path

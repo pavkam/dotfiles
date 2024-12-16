@@ -78,20 +78,22 @@ function M.apply(buffer)
     end
 end
 
-local setting_name = 'auto_formatting_enabled'
+local toggle = ide.config.register_toggle('auto_formatting_enabled', function(enabled, buffer)
+    if not buffer then
+        return
+    end
+
+    if enabled then
+        M.apply(buffer.id)
+    end
+end, { icon = icons.UI.Format, name = 'Auto-formatting', scope = { 'buffer', 'global' } })
 
 --- Checks whether formatting is enabled for a buffer
 ---@param buffer integer|nil # the buffer to check the formatting for or 0 or nil for current
 ---@return boolean # whether formatting is enabled
 function M.enabled(buffer)
-    return settings.get_toggle(setting_name, buffer or vim.api.nvim_get_current_buf())
+    return toggle.get(ide.buf[buffer or vim.api.nvim_get_current_buf()])
 end
-
-settings.register_toggle(setting_name, function(enabled, buffer)
-    if enabled then
-        M.apply(buffer)
-    end
-end, { icon = icons.UI.Format, name = 'Auto-formatting', scope = { 'buffer', 'global' } })
 
 if ide.plugin.has 'conform.nvim' then
     keys.map({ 'n', 'x' }, '=', function()

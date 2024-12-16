@@ -226,15 +226,18 @@ local folds_in_session = vim.list_contains(vim.opt.sessionoptions:get(), 'folds'
 if not folds_in_session then
     -- Turn on view generation and loading only if session management is not enabled
     events.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
-        if settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
+        local option = ide.config.use('view_activated', { buffer = ide.buf[evt.buf], persistent = false })
+        if option.get() then
             vim.cmd.mkview { mods = { emsg_silent = true } }
         end
     end)
 
     events.on_event('BufWinEnter', function(evt)
-        if not settings.get('view_activated', { buffer = evt.buf, scope = 'instance' }) then
+        local option = ide.config.use('view_activated', { buffer = ide.buf[evt.buf], persistent = false })
+
+        if not option.get() then
             if not vim.buf.is_transient(evt.buf) then
-                settings.set('view_activated', true, { buffer = evt.buf, scope = 'instance' })
+                option.set(true)
                 vim.cmd.loadview { mods = { emsg_silent = true } }
             end
         end
