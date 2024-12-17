@@ -166,17 +166,17 @@ end
 
 if enabled then
     -- TODO: this won't run on reset
-    ide.process.quitting.continue(function(args)
+    ide.process.on_exit(function(args)
         if not args.dying then
             swap_sessions(M.current(), nil)
         end
     end)
 
-    ide.process.ready.continue(function()
+    ide.process.on_ready(function()
         swap_sessions(nil, M.current())
     end)
 
-    ide.process.focus_gained.continue(function()
+    ide.process.on_focus(function()
         swap_sessions(option.get(), M.current())
     end)
 

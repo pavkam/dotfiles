@@ -27,7 +27,7 @@ vim.cmd.cnoreabbrev('bD', 'bd')
 local events = require 'events'
 
 -- Check if the file has been changed outside of Neovim
-events.on_focus_gained(function()
+ide.process.on_focus(function()
     local buffer = vim.api.nvim_get_current_buf()
 
     vim.api.nvim_buf_get_changedtick(buffer)

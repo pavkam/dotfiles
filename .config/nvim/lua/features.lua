@@ -2,7 +2,6 @@ local keys = require 'keys'
 local syntax = require 'syntax'
 local lsp = require 'lsp'
 local icons = require 'icons'
-local settings = require 'settings'
 local highlight_nav = require 'highlight-nav'
 
 ---@class languages.keymaps

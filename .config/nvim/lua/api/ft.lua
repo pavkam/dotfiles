@@ -136,19 +136,20 @@ local function apply_file_type_options(file_type)
     end
 end
 
-local auto_group = vim.api.nvim_create_augroup('ft.apply_file_type_options', { clear = true })
-vim.api.nvim_create_autocmd('FileType', {
-    callback = function(evt)
-        apply_file_type_options(evt.match)
-    end,
-    group = auto_group,
-})
+require('api.async').subscribe_event({ 'FileType', 'BufWinEnter' }, function(args)
+    local buffer = assert(require('api.buf')[args.buf])
 
-vim.api.nvim_create_autocmd('BufWinEnter', {
-    callback = function(evt)
-        apply_file_type_options(vim.bo[evt.buf].filetype)
-    end,
-    group = auto_group,
+    apply_file_type_options(buffer.file_type)
+
+    if not buffer.is_normal then
+        buffer.is_listed = false
+    end
+
+    if buffer.is_terminal then
+        vim.opt_local.wrap = true
+    end
+end, {
+    group = 'ft.apply_file_type_options',
 })
 
 return M

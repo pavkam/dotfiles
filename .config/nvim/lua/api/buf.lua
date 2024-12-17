@@ -275,8 +275,8 @@ local M = table.smart {
                 },
             }
 
-            for _, other_buffer in ipairs(t) do
-                if other_buffer ~= buffer.id then
+            for _, other_buffer in pairs(t) do -- TODO: the enumeration doesn't work
+                if other_buffer.id ~= buffer.id and other_buffer.is_normal then
                     other_buffer.remove(opts)
                 end
             end
@@ -365,16 +365,5 @@ local M = table.smart {
         end,
     },
 }
-
-require('events').on_event('FileType', function(evt)
-    local buffer = M[evt.buf]
-    if not buffer.is_normal then
-        buffer.is_listed = false
-    end
-
-    if buffer.is_terminal then
-        vim.opt_local.wrap = true
-    end
-end)
 
 return M

@@ -8,7 +8,7 @@ local M = {}
 ---@param name string # the name of the plugin
 ---@return boolean # true if the plugin is available, false otherwise
 function M.has(name)
-    assert(type(name) == 'string' and name ~= '')
+    xassert { name = { name, { 'string', ['>'] = 0 } } }
 
     if package.loaded['lazy'] then
         return require('lazy.core.config').spec.plugins[name] ~= nil
@@ -21,7 +21,7 @@ end
 ---@param name string # the name of the plugin
 ---@return table<string, any>|nil # the configuration of the plugin
 function M.config(name)
-    assert(type(name) == 'string' and name ~= '')
+    xassert { name = { name, { 'string', ['>'] = 0 } } }
 
     if package.loaded['lazy'] then
         local plugin = require('lazy.core.config').spec.plugins[name]
@@ -83,18 +83,26 @@ function M.require_online(url, path, opts)
     return true
 end
 
---- Slot that triggers when a plugin is loaded.
----@type evt_slot<{ plugin: string }>
-M.loaded = require('api.process')
-    .observe_auto_command({ 'User' }, {
-        description = 'Triggers when a plugin is loaded.',
-        patterns = { 'LazyLoad' },
-        group = 'plugin.loaded',
+-- Triggers when a plugin is loaded.
+---@param name string # the name of the plugin.
+---@param callback fun(args: vim.auto_command_event_arguments) # the callback to trigger.
+---@return fun() # the unsubscribe function.
+function M.on_loaded(name, callback)
+    xassert {
+        name = { name, { 'string', ['>'] = 0 } },
+        fn = { callback, { 'callable' } },
+    }
+
+    return require('api.async').subscribe_event('@LazyLoad', function(args)
+        if args.data == name then
+            callback(args)
+        end
+    end, {
+        description = string.format('Triggers when the plugin `%s` is loaded.', name),
+        patterns = { name },
+        group = string.format('plugin.loaded.%s', name),
+        once = true,
     })
-    .continue(function(data)
-        return type(data.data) == 'string' and {
-            plugin = data.data,
-        } or nil
-    end)
+end
 
 return table.freeze(M)

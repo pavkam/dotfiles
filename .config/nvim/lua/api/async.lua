@@ -83,6 +83,148 @@ function M.debounce(fn, wait)
     end
 end
 
+---@class (exact) subscribe_events_options # The options for the auto command.
+---@field buffer integer|nil # the buffer to target (or `nil` for all buffers).
+---@field description string|nil # the description of the auto command.
+---@field group string|nil # the group of the auto command.
+---@field clear boolean|nil # whether to clear the group before creating it.
+---@field once boolean|nil # whether to only trigger once.
+---@field patterns string|string[]|nil # the pattern to target (or `nil` for all patterns).
+
+---@class (exact) vim.auto_command_event_arguments # The event args received by the auto command.
+---@field id integer # the id of the auto command.
+---@field event string # the event that was triggered.
+---@field buf integer|nil # the buffer the event was triggered on (or `nil` of no buffer).
+---@field data table|nil # the data of the auto command.
+---@field group integer|nil # the group of the auto command.
+---@field match string|nil # the match of the auto command.
+
+-- Subscribes to events.
+---@param events string|string[] # the list of events to trigger on.
+---@param handler fun(args: vim.auto_command_event_arguments) # the handler for the event.
+---@param opts subscribe_events_options|nil # the options for the auto command.
+---@return fun() # the deregister function.
+function M.subscribe_event(events, handler, opts)
+    opts = table.merge(opts, {
+        clear = false,
+        once = false,
+    })
+
+    xassert {
+        events = {
+            events,
+            {
+                { 'string', ['>'] = 0 },
+                { ['*'] = { 'string', ['>'] = 0 } },
+            },
+        },
+        handler = { handler, 'callable' },
+        opts = {
+            opts,
+            {
+                buffer = { 'number', 'nil' },
+                description = { nil, { 'string', ['>'] = 0 } },
+                group = { nil, { 'string', ['>'] = 0 } },
+                patterns = {
+                    'nil',
+                    { 'string', ['>'] = 0 },
+                    { 'list', ['*'] = { 'string', ['>'] = 0 } },
+                },
+                clear = { 'boolean' },
+                once = { 'boolean' },
+            },
+        },
+    }
+
+    local reg_trace_back = require('api.process').get_formatted_trace_back(4)
+    local auto_group_id = opts.group and vim.api.nvim_create_augroup(opts.group, { clear = opts.clear or false }) or nil
+
+    local real_events = {}
+    local real_patterns = {}
+    for _, event in ipairs(table.to_list(events)) do --[[@cast event string]]
+        if event:starts_with '@' then
+            real_patterns[event:sub(2)] = true
+            real_events['User'] = true
+        else
+            real_events[event] = true
+        end
+    end
+
+    events = table.keys(real_events)
+    opts.patterns = table.list_merge(opts.patterns, table.keys(real_patterns))
+
+    ---@type vim.api.keyset.create_autocmd
+    local auto_command_opts = {
+        callback = function(args)
+            local ok, err = pcall(handler, args)
+
+            if not ok then
+                local formatted = table.concat(
+                    #events == 1 and events[1] == 'User' and opts.patterns and #opts.patterns > 0 and opts.patterns
+                        or events,
+                    ', '
+                )
+
+                ide.tui.error(
+                    string.format(
+                        'Error in auto command `%s`: %s\nPayload:\n%s\nRegistered at:\n%s',
+                        formatted,
+                        err,
+                        vim.inspect(args),
+                        reg_trace_back
+                    )
+                )
+            end
+        end,
+        group = auto_group_id,
+        pattern = opts.patterns,
+        desc = opts.description,
+        once = opts.once,
+        nested = false,
+    }
+
+    -- create auto command
+    local id = vim.api.nvim_create_autocmd(events, auto_command_opts)
+
+    return function()
+        vim.api.nvim_del_autocmd(id)
+    end
+end
+
+---@class (exact) define_events_options # The options for the auto command.
+---@field description string|nil # the description of the auto command.
+---@field group string|nil # the group of the auto command.
+
+---@alias define_event_subscribe_function
+---|fun(handler: fun(args: vim.auto_command_event_arguments), opts: subscribe_events_options|nil): fun()
+
+-- Defines a new event.
+---@param name string # the name of the event.
+---@return define_event_subscribe_function, fun(data: any)
+function M.define_event(name)
+    xassert {
+        name = { name, { 'string', ['>'] = 0 } },
+    }
+
+    local subscribe = function(handler, opts)
+        return M.subscribe_event(
+            string.format('@%s', name),
+            handler,
+            { group = opts.group, description = opts.description }
+        )
+    end
+
+    local trigger = function(data)
+        vim.api.nvim_exec_autocmds('User', {
+            pattern = name,
+            modeline = false,
+            data = data,
+        })
+    end
+
+    return subscribe, trigger
+end
+
 ---@class (exact) async_tracked_task # Tracks the progress of a task.
 ---@field name string # the name of the task.
 ---@field buffer buffer|nil # the buffer to track the task for.

@@ -138,24 +138,28 @@ end
 ---@type string|nil
 M.current = vim.api.nvim_exec2('colorscheme', { output = true }).output
 
--- Slot that triggers when the colors change.
----@type evt_slot<{ color_scheme: string, before: boolean, after: boolean }>
-M.updated = require('api.process')
-    .observe_auto_command({ 'ColorSchemePre', 'ColorScheme' }, {
-        description = 'Updates the registered highlight groups when the colors change.',
-        group = 'theme.apply_registered_highlight_groups',
-    })
-    .continue(function(data)
-        if data.event == 'ColorScheme' then
-            M.current = data.match
-            apply_registered_highlight_groups()
-        end
+-- Triggered when the theme changes.
+---@param callback fun(data: { color_scheme: string, before: boolean, after: boolean })
+function M.on_change(callback)
+    xassert { callback = { callback, 'callable' } }
 
-        return {
-            before = data.event == 'ColorSchemePre',
-            after = data.event == 'ColorScheme',
-            color_scheme = data.match,
-        }
-    end)
+    return require('api.async').subscribe_event({ 'ColorSchemePre', 'ColorScheme' }, function(args)
+        callback(table.merge(args, {
+            before = args.event == 'ColorSchemePre',
+            after = args.event == 'ColorScheme',
+            color_scheme = args.match,
+        }))
+    end, {
+        description = 'Triggers when the theme changes.',
+        group = 'theme.change',
+    })
+end
+
+M.on_change(function(args)
+    if args.after then
+        M.current = args.color_scheme
+        apply_registered_highlight_groups()
+    end
+end)
 
 return table.freeze(M)

@@ -9,18 +9,26 @@ local persistent_data = {
     file = {},
 }
 
----@class (exact) config_message_data # The data of the config message.
+---@class (exact) config_update_event_data # The data for the `ConfigUpdated` event.
 ---@field option string # the name of the option.
 ---@field value any # the value of the option.
----@field buffer_id integer|nil # the buffer that the option belongs to.
+---@field buffer_id number|nil # the buffer id.
 
--- Slot that triggers when the colors change.
----@type evt_slot<{ data: config_message_data }, { data: config_message_data }>
-local config_updated_slot = require('api.process').observe_auto_command({ 'User' }, {
-    patterns = { 'ConfigUpdated' },
-    description = 'Triggers when the config is updated.',
-    group = 'config.updated',
-})
+local subscribe, trigger = require('api.async').define_event 'ConfigUpdated'
+
+-- Notifies that the configuration has been updated.
+---@param args config_update_event_data # the data for the event.
+local notify_config_updated = function(args)
+    trigger { data = args }
+end
+
+-- Triggered when the configuration is updated.
+---@param handler fun(args: { data: config_update_event_data }) # the handler for the event.
+---@param opts subscribe_events_options|nil # the options for the auto command.
+---@return fun() # the deregister function.
+M.on_config_updated = function(handler, opts)
+    return subscribe(handler, opts)
+end
 
 -- Gets the value of a config option.
 ---@generic T
@@ -81,12 +89,10 @@ local function set(name, persistent, value, buffer)
         end
     end
 
-    config_updated_slot.trigger {
-        data = {
-            option = name,
-            value = value,
-            buffer_id = buffer and buffer.id,
-        },
+    notify_config_updated {
+        option = name,
+        value = value,
+        buffer_id = buffer and buffer.id,
     }
 end
 
@@ -355,11 +361,9 @@ function M.import(data)
 
     for option, value in pairs(data.global) do
         vim.g[option] = value
-        config_updated_slot.trigger {
-            data = {
-                option = option,
-                value = value,
-            },
+        notify_config_updated {
+            option = option,
+            value = value,
         }
     end
 
@@ -370,12 +374,10 @@ function M.import(data)
         if buffer and buffer.is_loaded then
             for option, value in pairs(options) do
                 vim.b[buffer.id][option] = value
-                config_updated_slot.trigger {
-                    data = {
-                        option = option,
-                        value = value,
-                        buffer_id = buffer.id,
-                    },
+                notify_config_updated {
+                    option = option,
+                    value = value,
+                    buffer_id = buffer.id,
                 }
             end
         end
@@ -441,63 +443,24 @@ function M.manage(buffer)
     })
 end
 
--- Slot that triggers when the buffer config needs to be updated.
----@type evt_slot<{ buf: integer }, { buffer: buffer, options: table<string, any> }>
-M.buffer_config_updated = require('api.process')
-    .observe_auto_command({ 'BufReadPost' }, {
-        description = 'Triggers when a buffer is read and the config needs to be updated.',
-        group = 'config.apply_buffer_config',
-    })
-    .continue(function(data)
-        xassert {
-            data = { data, { buf = 'number' } },
-        }
+require('api.async').subscribe_event('BufReadPost', function(args)
+    local buffer = assert(require('api.buf')[args.buf])
 
-        local buffer = require('api.buf')[data.buf]
-
-        if not buffer then
-            return nil
+    ---@type table<string, any>
+    local options = persistent_data.file[buffer.file_path]
+    if options then
+        for option, value in pairs(options) do
+            vim.b[buffer.id][option] = value
+            notify_config_updated {
+                option = option,
+                value = value,
+                buffer_id = buffer.id,
+            }
         end
-
-        ---@type table<string, any>
-        local options = persistent_data.file[buffer.file_path]
-        if options then
-            for option, value in pairs(options) do
-                vim.b[buffer.id][option] = value
-                config_updated_slot.trigger {
-                    data = {
-                        option = option,
-                        value = value,
-                        buffer_id = buffer.id,
-                    },
-                }
-            end
-        end
-
-        return {
-            buffer = buffer,
-            options = options,
-        }
-    end)
-
--- Slot that triggers when the colors change.
----@type evt_slot<{ data: config_message_data }, { option: string, value: any, buffer: buffer|nil }>
-M.updated = config_updated_slot.continue(function(data)
-    xassert {
-        data = {
-            data,
-            {
-                option = 'string',
-                buffer_id = { 'nil', 'integer' },
-            },
-        },
-    }
-
-    return {
-        option = data.data.option,
-        value = data.data.value,
-        buffer = data.data.buffer_id and require('api.buf')[data.data.buffer_id],
-    }
-end)
+    end
+end, {
+    description = 'Triggers when a buffer is read and the config needs to be updated.',
+    group = 'config.apply_buffer_config',
+})
 
 return table.freeze(M)
