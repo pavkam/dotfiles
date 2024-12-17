@@ -98,6 +98,13 @@ return {
         telescope.setup(opts)
 
         telescope.load_extension 'fzf'
+
+        -- Fix telescope modified buffers when closing window
+        require('events').on_event({ 'BufModifiedSet' }, function(evt)
+            if vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'TelescopePrompt' then
+                vim.api.nvim_set_option_value('modified', false, { buf = evt.buf })
+            end
+        end)
     end,
     init = function()
         --- Wraps the options for telescope to add some defaults

@@ -313,18 +313,6 @@ local components = {
         end,
     },
 
-    --- The section that shows the status of the workspace diagnostics.
-    workspace_diagnostics = {
-        function()
-            local spinner, msg = progress.status 'workspace'
-            return spinner and sexify(spinner, msg)
-        end,
-        cond = function()
-            return progress.status 'workspace' ~= nil
-        end,
-        color = hl_fg_color_and_attrs 'ActiveLSPsStatus',
-    },
-
     --- The section that shows the status of the LSP.
     lsp = {
         settings.transient(function(buffer)
@@ -638,7 +626,6 @@ M.status_line = {
         components.formatting,
         components.neotest,
         components.shell,
-        components.workspace_diagnostics,
     },
     lualine_x = {},
     lualine_y = {

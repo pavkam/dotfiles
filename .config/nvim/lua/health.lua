@@ -1,5 +1,4 @@
 local keys = require 'keys'
-local markdown = require 'markdown'
 local sessions = require 'sessions'
 
 local M = {}
@@ -68,13 +67,12 @@ local function show_for_buffer(buffer)
     buffer = buffer or vim.api.nvim_get_current_buf()
 
     local lsp = require 'lsp'
-    local settings = require 'settings'
     local project = require 'project'
     local debugging = require 'debugging'
     local progress = require 'progress'
 
     local current_session = sessions.current()
-    local md = markdown.from_value
+    local md = ide.text.markdown.format
 
     local buffer_info = md {
         id = buffer,

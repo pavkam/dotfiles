@@ -15,12 +15,15 @@ local fs = require 'api.fs'
 ---@field is_hidden boolean # whether the buffer is hidden.
 ---@field is_loaded boolean # whether the buffer is loaded.
 ---@field is_normal boolean # whether the buffer is a normal buffer.
+---@field is_terminal boolean # whether the buffer is a terminal buffer.
 ---@field cursor position # the cursor position in the buffer.
 ---@field height integer # the height of the buffer.
+---@field diagnostics_at_cursor vim.Diagnostic[] # the diagnostics at the cursor.
 ---@field lines fun(start: integer|nil, end_: integer|nil): string[] # get the lines of the buffer.
 ---@field confirm_saved fun(reason: string|nil): boolean # confirm if the buffer is saved.
 ---@field remove fun(opts: remove_buffer_options|nil)  # remove the buffer.
 ---@field remove_others fun(opts: remove_buffer_options|nil) # remove all other buffers.
+---@field next_diagnostic fun(next_or_prev: boolean, severity: vim.diagnostic.Severity|nil) # jump to diagnostic.
 
 ---@class (exact) create_buffer_options # Options for creating a buffer.
 ---@field listed boolean|nil # whether the buffer is listed.
@@ -100,6 +103,13 @@ local M = table.smart {
                 return vim.api.nvim_buf_is_valid(buffer.id) and vim.bo[buffer.id].buftype == '' and not buffer.is_hidden
             end,
         },
+        is_terminal = {
+            ---@param buffer buffer
+            ---@return boolean
+            get = function(_, buffer)
+                return vim.bo[buffer.id].buftype == 'terminal'
+            end,
+        },
         file_path = {
             ---@param buffer buffer
             ---@return string|nil
@@ -146,6 +156,13 @@ local M = table.smart {
             ---@return integer
             get = function(_, buffer)
                 return vim.api.nvim_buf_line_count(buffer.id)
+            end,
+        },
+        diagnostics_at_cursor = {
+            ---@param buffer buffer
+            ---@return vim.Diagnostic[]
+            get = function(_, buffer)
+                return vim.diagnostic.get(buffer.id, { lnum = buffer.cursor[1] })
             end,
         },
     },
@@ -264,6 +281,29 @@ local M = table.smart {
                 end
             end
         end,
+
+        ---@param next_or_prev boolean # whether to jump to the next or previous diagnostic
+        ---@param severity vim.diagnostic.Severity|nil "ERROR"|"WARN"|"INFO"|"HINT"|nil # the severity
+        next_diagnostic = function(_, buffer, next_or_prev, severity)
+            xassert {
+                next_or_prev = { next_or_prev, 'boolean' },
+                severity = {
+                    severity,
+                    {
+                        'nil',
+                        { 'string', ['*'] = '^ERROR$|^WARN$|^INFO$|^HINT$' },
+                    },
+                },
+            }
+
+            if not buffer.is_normal then
+                return
+            end
+
+            local go = next_or_prev and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
+            local sev = severity and vim.diagnostic.severity[severity] or nil
+            go { severity = sev }
+        end,
     },
     properties = {
         current = {
@@ -325,5 +365,16 @@ local M = table.smart {
         end,
     },
 }
+
+require('events').on_event('FileType', function(evt)
+    local buffer = M[evt.buf]
+    if not buffer.is_normal then
+        buffer.is_listed = false
+    end
+
+    if buffer.is_terminal then
+        vim.opt_local.wrap = true
+    end
+end)
 
 return M

@@ -16,19 +16,19 @@ local function on_event(events, callback, target)
     target = table.to_list(target)
 
     -- create/update group
-    local group_name = ide.process.get_trace_back(3)[1].file
+    local group_name = require('api.process').get_trace_back(3)[1].file
     local group = group_registry[group_name]
     if not group then
         group = group or vim.api.nvim_create_augroup(group_name, { clear = true })
         group_registry[group_name] = group
     end
 
-    local reg_trace_back = ide.process.get_formatted_trace_back(4)
+    local reg_trace_back = require('api.process').get_formatted_trace_back(4)
     local opts = {
         callback = function(evt)
             local ok, err = pcall(callback, evt, group)
             if not ok then
-                ide.tui.error(
+                require('api.tui').error(
                     string.format('Error in auto command `%s`: `%s`\n\n%s', vim.inspect(events), err, reg_trace_back)
                 )
             end

@@ -1,5 +1,4 @@
 local progress = require 'progress'
-local markdown = require 'markdown'
 local progress_class = 'shell'
 
 ---@class core.shell
@@ -135,9 +134,9 @@ local function async_cmd(cmd, args, input, callback, opts)
         ide.tui.error(
             string.format(
                 'Failed to spawn command *"%s"* with arguments *"%s"*: **%s**!',
-                markdown.escape(cmd),
-                markdown.escape(table.concat(args, ' ')),
-                markdown.escape(spawn_error_or_pid)
+                ide.text.markdown.escape(cmd),
+                ide.text.markdown.escape(table.concat(args, ' ')),
+                ide.text.markdown.escape(spawn_error_or_pid)
             )
         )
         return
@@ -195,8 +194,8 @@ local function async_cmd(cmd, args, input, callback, opts)
         ide.tui.error(
             string.format(
                 'Failed to read/write from/to pipes for command *"%s"*: **%s**!',
-                markdown.escape(cmd),
-                markdown.escape(stdin_write_error or stdout_read_error or stderr_read_error)
+                ide.text.markdown.escape(cmd),
+                ide.text.markdown.escape(stdin_write_error or stdout_read_error or stderr_read_error)
             )
         )
     end
@@ -244,8 +243,8 @@ function M.async_cmd(cmd, args, input, callback, opts)
                 ide.tui.error(
                     string.format(
                         'Error running command `%s %s` (error: **%s**):\n\n```\n%s\n```',
-                        markdown.escape(cmd),
-                        markdown.escape(table.concat(args, ' ')),
+                        ide.text.markdown.escape(cmd),
+                        ide.text.markdown.escape(table.concat(args, ' ')),
                         tostring(code),
                         markdown.escape(message)
                     )
@@ -254,8 +253,8 @@ function M.async_cmd(cmd, args, input, callback, opts)
                 ide.tui.error(
                     string.format(
                         'Error running command `%s %s` (error: **%s**)',
-                        markdown.escape(cmd),
-                        markdown.escape(table.concat(args, ' ')),
+                        ide.text.markdown.escape(cmd),
+                        ide.text.markdown.escape(table.concat(args, ' ')),
                         tostring(code)
                     )
                 )
@@ -317,16 +316,16 @@ ide.command.register('Run', {
         M.async_cmd(cmd, args.split_args, args.lines, function(output)
             if not args.bang then
                 if #output > 0 then
-                    local message = markdown.escape(table.concat(output, '\n'))
+                    local message = ide.text.markdown.escape(table.concat(output, '\n'))
                     ide.tui.info(
                         string.format(
                             'Command "%s" finished:\n\n```sh\n%s\n```',
-                            markdown.escape(cmd_line_desc),
-                            markdown.escape(message)
+                            ide.text.markdown.escape(cmd_line_desc),
+                            ide.text.markdown.escape(message)
                         )
                     )
                 else
-                    ide.tui.info(string.format('Command "%s" finished', markdown.escape(cmd_line_desc)))
+                    ide.tui.info(string.format('Command "%s" finished', ide.text.markdown.escape(cmd_line_desc)))
                 end
             else
                 if args.range == 2 then

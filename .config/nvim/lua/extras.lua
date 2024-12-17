@@ -32,7 +32,7 @@ events.on_user_event('NormalFile', function(_, evt)
             delete_buffer(evt.buf)
 
             vim.api.nvim_command(string.format('e %s', new_path))
-            require('project.lsp').notify_file_renamed(old_path, new_path)
+            require('lsp').notify_file_renamed(old_path, new_path)
         end
 
         if args.args ~= '' then

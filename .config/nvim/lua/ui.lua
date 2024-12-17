@@ -1,8 +1,6 @@
 local events = require 'events'
 local keys = require 'keys'
-local settings = require 'settings'
 local git = require 'git'
-local diagnostics = require 'diagnostics'
 local icons = require 'icons'
 local progress = require 'progress'
 
@@ -14,6 +12,10 @@ require 'mouse'
 
 ide.ft['help'].pinned_to_window = true
 ide.ft['query'].pinned_to_window = true
+ide.ft['markdown'].wrap_enabled = true
+ide.ft['gitcommit'].wrap_enabled = true
+ide.ft['gitrebase'].wrap_enabled = true
+ide.ft['hgcommit'].wrap_enabled = true
 
 keys.group { lhs = 'g', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Go-to' }
 keys.group { lhs = ']', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Next' }
@@ -67,22 +69,22 @@ keys.map('n', '[t', '<cmd>tabprevious<cr>', { icons = icons.UI.Prev, desc = 'Pre
 
 -- diagnostics
 keys.map('n', ']m', function()
-    diagnostics.jump(true)
+    ide.buf.current.next_diagnostic(true)
 end, { icon = icons.UI.Next, desc = 'Next Diagnostic' })
 keys.map('n', '[m', function()
-    diagnostics.jump(false)
+    ide.buf.current.next_diagnostic(false)
 end, { icon = icons.UI.Prev, desc = 'Previous Diagnostic' })
 keys.map('n', ']e', function()
-    diagnostics.jump(true, 'ERROR')
+    ide.buf.current.next_diagnostic(true, 'ERROR')
 end, { icon = icons.UI.Next, desc = 'Next Error' })
 keys.map('n', '[e', function()
-    diagnostics.jump(false, 'ERROR')
+    ide.buf.current.next_diagnostic(false, 'ERROR')
 end, { icon = icons.UI.Prev, desc = 'Previous Error' })
 keys.map('n', ']w', function()
-    diagnostics.jump(true, 'WARN')
+    ide.buf.current.next_diagnostic(true, 'WARN')
 end, { icon = icons.UI.Next, desc = 'Next Warning' })
 keys.map('n', '[w', function()
-    diagnostics.jump(false, 'WARN')
+    ide.buf.current.next_diagnostic(false, 'WARN')
 end, { icon = icons.UI.Prev, desc = 'Previous Warning' })
 
 -- Command mode remaps to make my life easier using the keyboard
@@ -165,24 +167,6 @@ keys.map('n', '<leader>u', require('api.config').manage, { icon = icons.UI.UI, d
 -- Specials using "Command/Super" key (when available!)
 keys.map('n', '<M-]>', '<C-i>', { icon = icons.UI.Next, desc = 'Next location' })
 keys.map('n', '<M-[>', '<C-o>', { icon = icons.UI.Prev, desc = 'Previous location' })
-
--- Fix telescope modified buffers when closing window
-events.on_event({ 'BufModifiedSet' }, function(evt)
-    if vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'TelescopePrompt' then
-        vim.api.nvim_set_option_value('modified', false, { buf = evt.buf })
-    end
-end)
-
-events.on_event('FileType', function(evt)
-    if vim.buf.is_special(evt.buf) then
-        vim.bo[evt.buf].buflisted = false
-    elseif
-        vim.buf.is_transient(evt.buf)
-        or vim.api.nvim_get_option_value('filetype', { buf = evt.buf }) == 'markdown'
-    then
-        vim.opt_local.wrap = true
-    end
-end)
 
 ---@module 'api.buf'
 ---

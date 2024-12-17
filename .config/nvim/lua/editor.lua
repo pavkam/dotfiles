@@ -1,6 +1,5 @@
 local events = require 'events'
 local keys = require 'keys'
-local settings = require 'settings'
 local syntax = require 'syntax'
 
 require 'spelling'
