@@ -95,7 +95,7 @@ local M = table.smart {
             ---@param window window
             ---@return string
             get = function(_, window)
-                if not vim.fn.in_visual_mode() then
+                if not require('api.editor').in_visual_mode() then
                     return ''
                 end
 

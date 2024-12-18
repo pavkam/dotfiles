@@ -37,9 +37,9 @@ end
 ---@param level integer|nil # the level of the trace-back to get
 ---@return vim.TraceBackEntry[] # the trace-back entries
 function M.get_trace_back(level)
-    xassert { level = { level, { 'integer', ['>'] = 0 } } }
+    xassert { level = { level, { 'nil', { 'integer', ['>'] = 0 } } } }
 
-    local trace = level and debug.traceback('', level) or debug.traceback()
+    local trace = level and debug.traceback('', (level or 1) + 1) or debug.traceback()
 
     -- split trace by new-line into an array
     local lines = vim.split(trace, '\n', { plain = true, trimempty = true })
@@ -76,7 +76,7 @@ end
 ---@return string # the formatted trace-back
 function M.get_formatted_trace_back(level)
     -- TODO: merge with the other function
-    local trace = M.get_trace_back(level)
+    local trace = M.get_trace_back((level or 1) + 1)
 
     local result = {}
     for _, entry in pairs(trace) do

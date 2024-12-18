@@ -81,7 +81,8 @@ local function escape_markdown(value, opts)
 
     local substitutions = opts.full and markdown_substitutions or essential_markdown_substitutions
 
-    local str = inspect(value)
+    local str = inspect(value, { new_line = '' })
+
     for _, replacement in ipairs(substitutions) do
         str = str:gsub(replacement[1], replacement[2])
     end
@@ -103,7 +104,7 @@ local function escape_table(t)
     }
 
     for key, val in pairs(t) do
-        table.insert(res, '| ' .. escape_markdown(tostring(key)) .. ' | ' .. escape_markdown(tostring(val)) .. ' |')
+        table.insert(res, '| ' .. escape_markdown(key) .. ' | ' .. escape_markdown(val) .. ' |')
     end
 
     return table.concat(res, '\n')
@@ -129,8 +130,9 @@ end
 ---@param value any # the value to convert.
 ---@param indent integer # the indentation level.
 ---@param max_length integer # the maximum length of an expanded list.
+---@param path table<table, boolean> # the path to the value.
 ---@return string # The markdown string
-local function from_value(value, indent, max_length)
+local function from_value(value, indent, max_length, path)
     xassert {
         indent = { indent, { 'integer', ['>'] = -1 } },
         max_length = { max_length, { 'integer', ['>'] = 0 } },
@@ -140,7 +142,14 @@ local function from_value(value, indent, max_length)
     local markdown_parts = {}
     local prefix = string.rep('  ', indent)
 
-    local _, ty = xtype(value)
+    local t, ty = xtype(value)
+    if t == 'table' then
+        if path[value] then
+            return string.format('%s- **[circular reference]**', prefix)
+        end
+
+        path[value] = true
+    end
 
     if ty == 'list' then
         local list_length = #value
@@ -150,7 +159,7 @@ local function from_value(value, indent, max_length)
 
             _, ty = xtype(single_value)
             if ty == 'table' then
-                table.insert(markdown_parts, from_value(single_value, indent, max_length))
+                table.insert(markdown_parts, from_value(single_value, indent, max_length, path))
             else
                 table.insert(markdown_parts, string.format('%s- `%s`', prefix, escape_markdown(single_value)))
             end
@@ -164,7 +173,7 @@ local function from_value(value, indent, max_length)
                     if ty == 'table' then
                         table.insert(
                             markdown_parts,
-                            string.format('%s- (%d):\n%s', prefix, i, from_value(v, indent + 1, max_length))
+                            string.format('%s- (%d):\n%s', prefix, i, from_value(v, indent + 1, max_length, path))
                         )
                     else
                         table.insert(markdown_parts, string.format('%s- (%d): `%s`', prefix, i, escape_markdown(v)))
@@ -178,7 +187,12 @@ local function from_value(value, indent, max_length)
             if ty == 'table' then
                 table.insert(
                     markdown_parts,
-                    string.format('%s- **%s**:\n%s', prefix, escape_markdown(k), from_value(v, indent + 1, max_length))
+                    string.format(
+                        '%s- **%s**:\n%s',
+                        prefix,
+                        escape_markdown(k),
+                        from_value(v, indent + 1, max_length, path)
+                    )
                 )
             elseif ty == 'list' then
                 local escaped_list = escape_list(v)
@@ -195,7 +209,7 @@ local function from_value(value, indent, max_length)
                             '%s- **%s**:\n%s',
                             prefix,
                             escape_markdown(k),
-                            from_value(v, indent + 1, max_length)
+                            from_value(v, indent + 1, max_length, path)
                         )
                     )
                 end
@@ -208,6 +222,10 @@ local function from_value(value, indent, max_length)
         end
     else
         table.insert(markdown_parts, string.format('%s- `%s`', prefix, escape_markdown(value)))
+    end
+
+    if t == 'table' then
+        path[value] = nil
     end
 
     return table.concat(markdown_parts, '\n')
@@ -234,7 +252,7 @@ M.markdown = {
             },
         }
 
-        return from_value(value, 0, opts.max_length)
+        return from_value(value, 0, opts.max_length, {})
     end,
 
     -- Escapes a value for markdown.

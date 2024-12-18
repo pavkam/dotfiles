@@ -15,7 +15,6 @@ local fs = require 'api.fs'
 ---@field is_hidden boolean # whether the buffer is hidden.
 ---@field is_loaded boolean # whether the buffer is loaded.
 ---@field is_normal boolean # whether the buffer is a normal buffer.
----@field is_terminal boolean # whether the buffer is a terminal buffer.
 ---@field cursor position # the cursor position in the buffer.
 ---@field height integer # the height of the buffer.
 ---@field diagnostics_at_cursor vim.Diagnostic[] # the diagnostics at the cursor.
@@ -101,13 +100,6 @@ local M = table.smart {
             ---@return boolean
             get = function(_, buffer)
                 return vim.api.nvim_buf_is_valid(buffer.id) and vim.bo[buffer.id].buftype == '' and not buffer.is_hidden
-            end,
-        },
-        is_terminal = {
-            ---@param buffer buffer
-            ---@return boolean
-            get = function(_, buffer)
-                return vim.bo[buffer.id].buftype == 'terminal'
             end,
         },
         file_path = {
@@ -275,8 +267,14 @@ local M = table.smart {
                 },
             }
 
-            for _, other_buffer in pairs(t) do -- TODO: the enumeration doesn't work
-                if other_buffer.id ~= buffer.id and other_buffer.is_normal then
+            for _, other_buffer in ipairs(t) do -- TODO: the enumeration doesn't work
+                if
+                    other_buffer.id ~= buffer.id
+                    and other_buffer.is_loaded
+                    and other_buffer.is_listed
+                    and other_buffer.is_normal
+                then
+                    dbg('closing buffer', other_buffer.id, other_buffer.file_path)
                     other_buffer.remove(opts)
                 end
             end

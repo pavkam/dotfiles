@@ -75,15 +75,17 @@ local function show_for_buffer(buffer)
     local md = ide.text.markdown.format
 
     local buffer_info = md {
-        id = buffer,
-        windows = vim.fn.win_findbuf(buffer),
-        name = vim.api.nvim_buf_get_name(buffer),
-        file_type = vim.api.nvim_get_option_value('filetype', { buf = buffer }),
-        buf_type = vim.api.nvim_get_option_value('buftype', { buf = buffer }),
-        modifiable = vim.api.nvim_get_option_value('modifiable', { buf = buffer }),
-        modified = vim.api.nvim_get_option_value('modified', { buf = buffer }),
-        read_only = vim.api.nvim_get_option_value('readonly', { buf = buffer }),
-        spell_files = vim.api.nvim_get_option_value('spellfile', { buf = buffer }),
+        id = ide.buf[buffer].id,
+        file_path = ide.buf[buffer].file_path,
+        file_type = ide.buf[buffer].file_type,
+        windows = ide.buf[buffer].windows,
+        is_modified = ide.buf[buffer].is_modified,
+        is_listed = ide.buf[buffer].is_listed,
+        is_hidden = ide.buf[buffer].is_hidden,
+        is_loaded = ide.buf[buffer].is_loaded,
+        is_normal = ide.buf[buffer].is_normal,
+        cursor = ide.buf[buffer].cursor,
+        height = ide.buf[buffer].height,
     }
 
     local progress_info = md(progress.snapshot())

@@ -9,8 +9,6 @@ local file_to_file_type = {}
 ---@field keep_swap_file boolean # whether to keep a swap file.
 ---@field auto_read boolean # whether to automatically read the file.
 ---@field is_binary boolean # whether the file is binary.
----@field is_listed boolean # whether the file is listed.
----@field is_hidden boolean # whether the file is hidden.
 ---@field is_readonly boolean # whether the file is read-only.
 ---@field is_modifiable boolean # whether the file is modifiable.
 ---@field comment_format string # the comment format.
@@ -31,14 +29,12 @@ local properties = {
     keep_swap_file = { 'swapfile', 'bo', 'boolean' },
     auto_read = { 'autoread', 'bo', 'boolean' },
     is_binary = { 'binary', 'bo', 'boolean' },
-    is_listed = { 'buflisted', 'bo', 'boolean' },
-    is_hidden = { 'bufhidden', 'bo', 'boolean' },
     is_readonly = { 'readonly', 'bo', 'boolean' },
     is_modifiable = { 'modifiable', 'bo', 'boolean' },
     comment_format = { 'commentstring', 'bo', 'string' },
     show_cursorline = { 'cursorline', 'wo', 'boolean' },
     spell_check = { 'spell', 'wo', 'boolean' },
-    spell_file_path = { 'spellfile', 'wo', 'string' },
+    spell_file_path = { 'spellfile', 'bo', 'string' },
     wrap_enabled = { 'wrap', 'wo', 'boolean' },
     show_sign_column = { 'signcolumn', 'wo', 'string' },
     pinned_to_window = { 'winfixbuf', 'wo', 'boolean' },
@@ -136,17 +132,16 @@ local function apply_file_type_options(file_type)
     end
 end
 
-require('api.async').subscribe_event({ 'FileType', 'BufWinEnter' }, function(args)
+require('api.async').subscribe_event({ 'FileType' }, function(args)
     local buffer = assert(require('api.buf')[args.buf])
 
     apply_file_type_options(buffer.file_type)
 
-    if not buffer.is_normal then
+    if not buffer.is_normal then -- TODO: should this be somewhere else?
         buffer.is_listed = false
-    end
-
-    if buffer.is_terminal then
-        vim.opt_local.wrap = true
+        vim.opt_local.wrap = true -- TODO: move into their right places
+        vim.opt_local.cursorline = false
+        vim.opt_local.signcolumn = 'no'
     end
 end, {
     group = 'ft.apply_file_type_options',

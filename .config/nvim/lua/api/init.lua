@@ -1,7 +1,5 @@
 math.randomseed(os.time())
 
-_G.inspect = vim.inspect
-
 ---@alias xtype # The extended type.
 ---| 'nil' # a nil value.
 ---| 'string' # a string.
@@ -20,13 +18,23 @@ _G.inspect = vim.inspect
 function _G.xtype(value)
     local t = type(value)
     if t == 'table' then
-        if vim.islist(value) then
-            return t, 'list'
+        local mt = getmetatable(value)
+        if mt then
+            if type(mt.__pairs) == 'function' then
+                return t, 'table'
+            end
+
+            if type(mt.__ipairs) == 'function' then
+                return t, 'list'
+            end
+
+            if type(mt.__call) == 'function' then
+                return t, 'callable'
+            end
         end
 
-        local m = getmetatable(t)
-        if m and type(m.__call) == 'function' then
-            return t, 'callable'
+        if vim.islist(value) then
+            return t, 'list'
         end
     elseif t == 'number' then
         if value % 1 == 0 then
@@ -366,6 +374,148 @@ end
 
 -- luacheck: push ignore 121 122 113
 
+local __lua_pairs = pairs
+local __lua_ipairs = ipairs
+
+-- Iterates over all key–value pairs of a table.
+---@generic K, V
+---@param t table<K, V>
+---@return (fun(t: table<K, V>, i: K|nil): K, V), table<K, V>, K
+_G.pairs = function(t)
+    assert(type(t) == 'table', 'expected a table')
+
+    local mt = getmetatable(t)
+    local n, p, k = (mt and mt.__pairs or __lua_pairs)(t)
+    return n, p, k
+end
+
+-- Iterates over a list of values.
+---@generic T
+---@param t T[]
+---@return (fun(table: T[], i: integer|nil): integer, T), T[], integer
+_G.ipairs = function(t)
+    assert(type(t) == 'table', 'expected a table')
+
+    local mt = getmetatable(t)
+    local n, p, i = (mt and mt.__ipairs or __lua_ipairs)(t)
+    return n, p, i
+end
+
+---@class (exact) inspect_options # The options for the inspect function.
+---@field unroll_meta boolean|nil # whether to unroll meta tables (default: `true`).
+---@field new_line string|nil # the newline character to use (default: '\n').
+---@field indent string|nil # the indent string to use (default: '  ').
+---@field separator string|nil # the separator to use (default: ', ').
+---@field max_depth integer|nil # the maximum depth to inspect (default: 3).
+
+--- Inspects a value.
+---@param value any # the value to inspect.
+---@param opts inspect_options|nil # the options to use.
+---@param depth integer|nil # the current depth.
+---@return string # the inspected value.
+function _G.inspect(value, opts, depth)
+    ---@type inspect_options
+    opts = table.merge(opts, {
+        unroll_meta = true,
+        new_line = '\n',
+        indent = '  ',
+        separator = ', ',
+        max_depth = 3,
+    })
+
+    depth = (depth or -2) + 1
+
+    xassert {
+        opts = {
+            opts,
+            {
+                unroll_meta = 'boolean',
+                new_line = 'string',
+                separator = 'string',
+                indent = 'string',
+                max_depth = { 'integer', ['>'] = 0 },
+            },
+        },
+        depth = { depth, 'integer' },
+    }
+
+    local t, ty = xtype(value)
+
+    if ty == 'nil' then
+        return 'nil'
+    elseif ty == 'string' then
+        return string.format("'%s'", value)
+    elseif ty == 'number' or ty == 'integer' or ty == 'boolean' then
+        return tostring(value)
+    elseif ty == 'table' or ty == 'callable' and t == 'table' then
+        if depth <= opts.max_depth then
+            local parts = {}
+
+            local mt = getmetatable(value)
+            if mt then
+                if opts.unroll_meta and mt.__tostring then
+                    return mt.__tostring(value)
+                elseif opts.unroll_meta and mt.__ipairs or mt.__pairs then
+                    local unrolled = table.clone(value)
+                    return inspect(unrolled, opts, depth)
+                end
+
+                table.insert(parts, string.format('<metatable> = %s', inspect(mt, opts, depth)))
+            end
+
+            for k, v in pairs(value) do
+                table.insert(
+                    parts,
+                    string.format(
+                        '%s = %s',
+                        inspect(k, {
+                            newline = '',
+                            unroll_meta = opts.unroll_meta,
+                            indent = '',
+                            max_depth = 1,
+                            separator = opts.separator,
+                        }, depth),
+                        inspect(v, opts, depth)
+                    )
+                )
+            end
+
+            local item_str = table.concat(parts, opts.new_line)
+
+            if item_str == '' then
+                return '{}'
+            elseif item_str:find '\n' then
+                return string.format('{%s%s%s}', opts.new_line, string.indent(item_str, opts.indent), opts.new_line)
+            else
+                return string.format('{%s}', item_str)
+            end
+        else
+            return string.format '{...}'
+        end
+    elseif ty == 'list' then
+        if depth <= opts.max_depth then
+            local parts = {}
+
+            for _, v in ipairs(value) do
+                table.insert(parts, inspect(v, opts, depth))
+            end
+
+            local item_str = table.concat(parts, opts.separator)
+            if item_str == '' then
+                return '{}'
+            elseif item_str:find '\n' then
+                return string.format('[%s%s%s]', opts.new_line, string.indent(item_str, opts.indent), opts.new_line)
+            else
+                return string.format('[%s]', item_str)
+            end
+        else
+            return string.format '[...]'
+        end
+    end
+
+    return vim.inspect(value, { newline = opts.new_line, depth = opts.max_depth })
+end
+
 --- Makes a table read-only.
 ---@generic T: table
 ---@param table T # the table to make read-only.
@@ -461,13 +611,18 @@ function table.smart(opts)
         },
     }
 
-    local entity_keys = table.list_merge(table.keys(opts.entity_functions), table.keys(opts.entity_properties))
+    local entity_keys =
+        table.list_to_set(table.list_merge(table.keys(opts.entity_functions), table.keys(opts.entity_properties)))
 
     ---@param root table
     ---@param entity_id any
     local function make_entity_table(root, entity_id)
         return setmetatable({}, {
             __index = function(entity, key)
+                if key == nil then
+                    return
+                end
+
                 if key == 'id' then
                     return entity_id
                 end
@@ -494,25 +649,40 @@ function table.smart(opts)
                     return prop.get(root, entity)
                 end
 
-                error(string.format('unknown property, function or property %s.', inspect(key)), 2)
+                error(string.format('unknown function or property `%s`', inspect(key)), 2)
             end,
             __newindex = function(entity, key, value)
+                if key == nil then
+                    return
+                end
+
+                if key == 'id' then
+                    error(string.format('property `%s` is read-only', inspect(key)), 2)
+                end
+
                 local prop = opts.entity_properties[key]
 
                 if prop then
-                    if prop.cache then
-                        rawset(entity, key, value)
-                    end
-
                     if prop.set then
+                        if prop.cache then
+                            rawset(entity, key, value)
+                        end
+
                         return prop.set(root, entity, value)
+                    else
+                        error(string.format('property `%s` is read-only', inspect(key)), 2)
                     end
                 end
 
-                error(string.format('unknown property, function or property %s.', inspect(key)), 2)
+                error(string.format('unknown property `%s`', inspect(key)), 2)
             end,
-            __pairs = function()
-                return entity_keys
+            __pairs = function(entity)
+                local iter = function(t, k)
+                    k = next(t, k)
+                    return k, entity[k]
+                end
+
+                return iter, entity_keys, nil
             end,
         })
     end
@@ -545,15 +715,51 @@ function table.smart(opts)
         end,
         __newindex = function(root, key, value)
             local prop = opts.properties[key]
-            if prop and prop.set then
-                prop.set(root, value)
-                return
+
+            if prop then
+                if prop.set then
+                    prop.set(root, value)
+                    return
+                else
+                    error(string.format('property `%s` is read-only', inspect(key)), 2)
+                end
             end
 
-            error(string.format('unknown property %s.', inspect(key)), 2)
+            error(string.format('unknown property `%s`', inspect(key)), 2)
         end,
-        __pairs = opts.entity_ids and function()
-            return opts.entity_ids()
+        __pairs = opts.entity_ids and function(root)
+            local iter = function(t, k)
+                local v
+                repeat
+                    k, v = next(t, k)
+                until k == nil or opts.entity_id_valid(v)
+
+                if k == nil then
+                    return
+                end
+
+                return k, root[v]
+            end
+
+            return iter, opts.entity_ids(), nil
+        end or function()
+            error 'this table is not enumerable'
+        end,
+        __ipairs = opts.entity_ids and function(root)
+            local iter = function(t, i)
+                local v
+                repeat
+                    i, v = i + 1, t[i]
+                until i > #t or opts.entity_id_valid(v)
+
+                if i > #t then
+                    return
+                end
+
+                return i, root[t[i]]
+            end
+
+            return iter, opts.entity_ids(), 0
         end or function()
             error 'this table is not enumerable'
         end,
@@ -866,9 +1072,21 @@ end
 -- Clones a table or a list.
 ---@generic T: table
 ---@param t T # the table or list to clone.
+---@param shallow boolean|nil # whether to do a shallow clone (default: `true`).
 ---@return T # the cloned table or list.
-function table.clone(t)
-    return vim.deepcopy(t)
+function table.clone(t, shallow)
+    xassert {
+        t = { t, { 'table', 'list' } },
+        shallow = { shallow, { 'nil', 'boolean' } },
+    }
+
+    if shallow == false then
+        return vim.deepcopy(t)
+    elseif table.is_list(t) then
+        return table.list_merge({}, t)
+    else
+        return table.merge({}, t)
+    end
 end
 
 --- Checks if a string starts with a given prefix.
@@ -884,7 +1102,7 @@ function string.starts_with(s, prefix)
     return string.sub(s, 1, #prefix) == prefix
 end
 
---- Checks if a string ends with a given suffix.
+-- Checks if a string ends with a given suffix.
 ---@param s string # the string to check.
 ---@param suffix string # the suffix to check.
 function string.ends_with(s, suffix)
@@ -896,7 +1114,20 @@ function string.ends_with(s, suffix)
     return string.sub(s, -#suffix) == suffix
 end
 
---- Gets the timezone offset for a given timestamp
+-- Indents a string.
+---@param s string # the string to indent.
+---@param indent string # the indent to use.
+---@return string # the indented string.
+function string.indent(s, indent)
+    xassert {
+        s = { s, 'string' },
+        indent = { indent, 'string' },
+    }
+
+    return indent .. s:gsub('\n', '\n' .. indent)
+end
+
+-- Gets the timezone offset for a given timestamp
 ---@param timestamp integer # the timestamp to get the offset for
 ---@return integer # the timezone offset
 function os.timezone_offset(timestamp)
@@ -916,7 +1147,7 @@ end
 ---@type string
 local uuid_template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
 
---- Generates a new UUID
+-- Generates a new UUID
 ---@return string # the generated UUID
 function os.uuid()
     ---@param c string
@@ -951,36 +1182,20 @@ _G.ide = {
 require 'api.vim.fn'
 require 'api.vim.buf'
 
---- Returns the formatted arguments for debugging
----@param ... any # the arguments to format
-local function format_args(...)
-    local objects = {}
-    for i = 1, select('#', ...) do
-        local v = select(i, ...)
-        ---@type string
-        local val = 'nil'
-
-        if type(v) == 'string' then
-            val = v
-        elseif type(v) == 'number' or type(v) == 'boolean' then
-            val = tostring(v)
-        elseif type(v) == 'table' then
-            val = inspect(v)
-        end
-
-        table.insert(objects, val)
-    end
-
-    return table.concat(objects, '\n')
-end
-
 ---@type table<string, boolean>
 local shown_messages = {}
 
 --- Global debug function to help me debug (duh)
 ---@param ... any # anything to debug
 function _G.dbg(...)
-    local formatted = format_args(...)
+    local objects = {}
+    for i = 1, select('#', ...) do
+        local v = select(i, ...)
+        table.insert(objects, inspect(v))
+    end
+
+    local trace = ide.process.get_formatted_trace_back(2)
+    local formatted = string.format('%s\n\ntraceback:\n%s', table.concat(objects, '\n'), trace)
     local key = vim.fn.sha256(formatted)
 
     if not shown_messages[key] then
@@ -993,13 +1208,4 @@ function _G.dbg(...)
     end
 
     return ...
-end
-
---- Prints the call stack if a condition is met
----@param condition any # the condition to print the call stack
----@vararg any # anything to print
-function _G.who(condition, ...)
-    if condition == nil or condition then
-        dbg(debug.traceback(nil, 2), ...)
-    end
 end
