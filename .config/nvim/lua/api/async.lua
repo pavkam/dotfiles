@@ -2,6 +2,18 @@
 ---@class async
 local M = {}
 
+-- Delays a function call by a given time.
+---@param fn fun(): any # the function to call.
+---@param time integer # the time to wait in milliseconds.
+function M.delay(fn, time)
+    xassert {
+        fn = { fn, 'callable' },
+        time = { time, { 'number', ['>'] = 0 } },
+    }
+
+    vim.defer_fn(fn, time)
+end
+
 --- Polls a function until it returns a "falsy" value.
 ---@param fn fun(...): any # the function to call.
 ---@param interval integer # the interval in milliseconds.
@@ -210,7 +222,7 @@ function M.define_event(name)
         return M.subscribe_event(
             string.format('@%s', name),
             handler,
-            { group = opts.group, description = opts.description }
+            opts and { group = opts.group, description = opts.description }
         )
     end
 
@@ -483,6 +495,142 @@ function M.bind_to_buffer_task(name, fn)
         end
         return res and res.data
     end
+end
+
+---@class (exact) monitored_task # Tracks the progress of a task.
+---@field name string # the name of the task.
+---@field buffer buffer|nil # the buffer to track the task for.
+---@field data any|nil # custom data for the task.
+---@field spent integer # the time spent on the task in milliseconds.
+---@field ttl integer # the time to live of the task in milliseconds.
+---@field timeout integer # the timeout of the task in milliseconds.
+
+---@type monitored_task[]
+local monitored_tasks = {}
+
+local monitored_tasks_tick = 0
+local update_interval = 100
+local subscribe_to_tasks_update, trigger_tasks_update = M.define_event 'TasksRunning'
+
+subscribe_to_tasks_update(function()
+    if next(monitored_tasks) == nil then
+        monitored_tasks_tick = 0
+        return
+    end
+
+    monitored_tasks_tick = monitored_tasks_tick + 1
+
+    for _, task in pairs(monitored_tasks) do
+        task.ttl = task.ttl - update_interval
+        task.spent = task.spent + update_interval
+
+        if task.ttl <= 0 then
+            local task_str = task.buffer and string.format('`%s` in buffer `%s`', task.name, task.buffer.id)
+                or string.format('`%s`', task.name)
+
+            require('api.tui').warn(
+                string.format('Task %s is running for over `%d` seconds', task_str, task.timeout / 1000)
+            )
+
+            task.ttl = task.timeout
+        end
+    end
+
+    M.delay(trigger_tasks_update, update_interval)
+end, {
+    description = 'Updates the listeners for monitored tasks',
+    group = 'async.monitored_tasks',
+})
+
+---@class (exact) monitor_task_options # The options for monitoring a task.
+---@field timeout nil|integer # the timeout of the task in milliseconds (default: 60 seconds).
+---@field buffer nil|buffer # the buffer to track the task for.
+---@field data any|nil # the data for the task.
+
+-- Starts monitoring a task.
+---@param name string # the name of the task to monitor.
+---@param opts monitor_task_options|nil # the options.
+---@return fun() # the done function.
+function M.monitor_task(name, opts)
+    ---@type monitor_task_options
+    opts = table.merge(opts, {
+        timeout = 60 * 1000,
+    })
+
+    xassert {
+        name = { name, { 'string', ['>'] = 0 } },
+        opts = {
+            opts,
+            {
+                timeout = { 'integer', ['>'] = 0 },
+                buffer = { 'table', 'nil' },
+            },
+        },
+    }
+
+    local task
+    for _, t in ipairs(monitored_tasks) do
+        if
+            t.name == name
+            and (not t.buffer and not opts.buffer or t.buffer and opts.buffer and t.buffer.id == opts.buffer.id)
+        then
+            t.timeout = opts.timeout
+            t.ttl = opts.timeout
+            t.data = opts.data
+
+            task = t
+            break
+        end
+    end
+
+    if not task then
+        task = {
+            name = name,
+            buffer = opts.buffer,
+            timeout = opts.timeout,
+            ttl = opts.timeout,
+            data = opts.data,
+            spent = 0,
+        }
+
+        table.insert(monitored_tasks, task)
+    end
+
+    M.delay(trigger_tasks_update, update_interval)
+
+    return function()
+        for i, t in ipairs(monitored_tasks) do
+            if t.name == name then
+                table.remove(monitored_tasks, i)
+                break
+            end
+        end
+    end
+end
+
+---@class (exact) monitored_task_update # The callback for monitored task updates.
+---@field task monitored_task # the task being updated.
+---@field buffer buffer|nil # the buffer the task is being updated for.
+---@field tick integer # the current tick.
+
+-- Triggered when a monitored tasks are updated (tick)
+---@param name string # the name of the task to monitor.
+---@param buffer buffer|nil # the buffer to track the task for.
+---@param callback fun(data: monitored_task_update) # the callback to call.
+function M.on_monitored_task_update(name, buffer, callback)
+    xassert {
+        name = { name, { 'string', ['>'] = 0 } },
+        callback = { callback, 'callable' },
+        buffer = { buffer, { 'table', 'nil' } },
+    }
+
+    return M.subscribe_event(event_pattern, function()
+        for _, task in ipairs(monitored_tasks) do
+            if task.name == name and (not buffer or task.buffer and task.buffer.id == buffer.id) then
+                callback { task = task, tick = monitored_tasks_tick, buffer = task.buffer }
+            end
+        end
+    end)
 end
 
 return table.freeze(M)
