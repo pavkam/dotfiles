@@ -99,7 +99,7 @@ local M = table.smart {
             ---@param buffer buffer
             ---@return boolean
             get = function(_, buffer)
-                return vim.api.nvim_buf_is_valid(buffer.id) and vim.bo[buffer.id].buftype == '' and not buffer.is_hidden
+                return vim.api.nvim_buf_is_valid(buffer.id) and vim.bo[buffer.id].buftype == ''
             end,
         },
         file_path = {
@@ -237,7 +237,7 @@ local M = table.smart {
                 },
             }
 
-            local should_remove = opts.force or buffer.confirm_saved 'closing'
+            local should_remove = not buffer.is_loaded or opts.force or buffer.confirm_saved 'closing'
             if not should_remove then
                 return
             end
@@ -267,14 +267,8 @@ local M = table.smart {
                 },
             }
 
-            for _, other_buffer in ipairs(t) do -- TODO: the enumeration doesn't work
-                if
-                    other_buffer.id ~= buffer.id
-                    and other_buffer.is_loaded
-                    and other_buffer.is_listed
-                    and other_buffer.is_normal
-                then
-                    dbg('closing buffer', other_buffer.id, other_buffer.file_path)
+            for _, other_buffer in pairs(t) do
+                if other_buffer.id ~= buffer.id and other_buffer.is_listed and other_buffer.is_normal then
                     other_buffer.remove(opts)
                 end
             end
