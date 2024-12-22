@@ -39,8 +39,6 @@ return {
     },
     {
         'CopilotC-Nvim/CopilotChat.nvim',
-        -- TODO: make sure the c-y works as expected (updates the buffer)
-
         cmd = {
             'CopilotChat',
             'CopilotChatStop',

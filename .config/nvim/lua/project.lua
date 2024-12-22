@@ -178,7 +178,7 @@ function M.roots(target)
     end
 
     -- find also roots based on patterns
-    local cwd = vim.uv.cwd()
+    local cwd = assert(vim.uv.cwd())
     path = path and vim.fs.dirname(path) or cwd
 
     -- now add all the roots from the patterns
@@ -207,12 +207,10 @@ end
 --- Returns the primary root for a given target
 ---@param target vim.fn.Target # the target to get the root for
 ---@param deepest boolean|nil # whether to return the deepest or the shallowest root (default is deepest)
----@return string|nil # the root
+---@return string # the root
 function M.root(target, deepest)
     local roots = M.roots(target)
-    if #roots == 0 then
-        return nil
-    end
+    assert(#roots > 0)
 
     if deepest == nil then
         deepest = true

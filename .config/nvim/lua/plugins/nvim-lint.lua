@@ -1,7 +1,6 @@
 return {
     'mfussenegger/nvim-lint',
     cond = not ide.process.is_headless,
-    event = 'User NormalFile',
     opts = function()
         local project = require 'project'
         local eslint_severities = {
@@ -116,5 +115,119 @@ return {
 
         -- setup my linters
         lint.linters_by_ft = opts.linters_by_ft
+    end,
+    init = function()
+        local poll_time = 100
+
+        local debounced_lint = ide.async.debounce(
+            ---@param buffer buffer
+            ---@param names string[]
+            ---@param callback fun()
+            function(buffer, names, callback)
+                require('lint').try_lint(names, { cwd = buffer.root })
+                callback()
+            end,
+            poll_time
+        )
+
+        ---@param buffer_id integer
+        ---@return boolean
+        local function linting_status(buffer_id)
+            local lint = require 'lint'
+
+            ---@type table<integer, table<string, lint.LintProc>>
+            local tbl = ide.process.get_up_value(lint.try_lint, 'running_procs_by_buf')
+            local running_linters = tbl and tbl[buffer_id] or {}
+
+            for _, linter in pairs(running_linters) do
+                ---@diagnostic disable-next-line: undefined-field
+                local running = linter.handle and not linter.handle:is_closing()
+
+                if running then
+                    return true
+                end
+            end
+
+            return false
+        end
+
+        ---@param buffer buffer
+        local function get_linters(buffer)
+            xassert {
+                buffer = { buffer, 'table' },
+            }
+
+            if not buffer.file_type or not buffer.file_path then
+                return {}
+            end
+
+            local lint = require 'lint'
+            local clients = lint.linters_by_ft[buffer.file_type] or {}
+
+            local ctx = {
+                filename = buffer.file_path,
+                dirname = require('api.fs').directory_name(buffer.file_path),
+                buf = buffer.id,
+            }
+
+            ---@class (exact) lint.LinterEx: lint.Linter
+            ---@field condition nil|fun(ctx: table<string, any>): boolean
+
+            return table.list_filter(clients, function(name)
+                local linter = lint.linters[name] --[[@as lint.LinterEx|fun():lint.LinterEx]]
+
+                if type(linter) == 'function' then
+                    linter = linter()
+                end
+
+                if type(linter) == 'table' and linter.condition then
+                    return linter.condition(ctx)
+                end
+
+                return linter
+            end)
+        end
+
+        require('api.plugin').register_linter {
+            ---@param buffer buffer
+            status = function(buffer)
+                local lint = require 'lint'
+
+                local all = get_linters(buffer)
+                local running = lint.get_running(buffer.id)
+
+                ---@type table<string, boolean>
+                local result = {}
+
+                for _, name in ipairs(all) do
+                    result[name] = table.list_any(running, name)
+                end
+
+                return result
+            end,
+            run = function(buffer, callback)
+                xassert {
+                    buffer = { buffer, 'table' },
+                    callback = { callback, 'callable' },
+                }
+
+                -- check if we have any linters for this fie type
+                local names = get_linters(buffer)
+                if #names == 0 then
+                    return
+                end
+
+                debounced_lint(buffer, names, function()
+                    require('api.async').poll(function()
+                        local running = require('lint').get_running(buffer.id)
+                        if #running == 0 then
+                            callback(true)
+                        else
+                            return true
+                        end
+                    end, poll_time)
+                end)
+            end,
+        }
     end,
 }

@@ -1,9 +1,68 @@
 return {
     'stevearc/conform.nvim',
     cond = not ide.process.is_headless,
-    cmd = 'ConformInfo',
     init = function()
         vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
+
+        ---@type table<integer, boolean>
+        local running_for_buffers = {}
+        require('api.plugin').register_formatter {
+            ---@param buffer buffer
+            ---@return table<string, boolean>
+            status = function(buffer)
+                xassert {
+                    buffer = { buffer, 'table' },
+                }
+
+                local conform = require 'conform'
+                local ok, clients = pcall(conform.list_formatters, buffer.id)
+
+                if not ok then
+                    return {}
+                end
+
+                local status = {}
+                for _, client in pairs(clients) do
+                    status[client.name] = running_for_buffers[buffer.id] or false
+                end
+
+                return status
+            end,
+            run = function(buffer, callback)
+                xassert {
+                    buffer = { buffer, 'table' },
+                    callback = { callback, 'callable' },
+                }
+
+                local conform = require 'conform'
+                local ok, clients = pcall(conform.list_formatters, buffer.id)
+
+                if not ok then
+                    callback(false)
+                    return
+                end
+
+                if #clients > 0 then
+                    running_for_buffers[buffer.id] = true
+                    conform.format({
+                        bufnr = buffer.id,
+                        formatters = table.list_map(clients, function(v)
+                            return v.name
+                        end),
+                        quiet = true,
+                        lsp_format = 'fallback',
+                        timeout_ms = 5000,
+                    }, function(err, edited)
+                        running_for_buffers[buffer.id] = nil
+                        if err then
+                            callback(err)
+                        else
+                            callback(edited or false)
+                        end
+                    end)
+                end
+            end,
+        }
     end,
     opts = function()
         local project = require 'project'

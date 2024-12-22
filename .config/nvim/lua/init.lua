@@ -12,9 +12,7 @@ require 'health'
 require 'git'
 require 'editor'
 require 'lsp'
-require 'linting'
 require 'extras'
-require 'formatting'
 
 -- common misspellings
 vim.cmd.cnoreabbrev('qw', 'wq')

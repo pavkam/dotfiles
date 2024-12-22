@@ -1,7 +1,5 @@
 local icons = require 'icons'
 local lsp = require 'lsp'
-local format = require 'formatting'
-local lint = require 'linting'
 local shell = require 'shell'
 local settings = require 'settings'
 local progress = require 'progress'
@@ -9,6 +7,13 @@ local ui = require 'ui'
 
 ---@class ui.lualine.sections
 local M = {}
+
+---@type string|nil
+local spinner_icon
+ide.async.on_task_monitor_tick(function(tasks, tick)
+    spinner_icon = icons.Progress[tick % #icons.Progress + 1]
+    pcall(require('lualine').refresh --[[@as function]])
+end)
 
 local function hl_fg_color_and_attrs(name)
     assert(type(name) == 'string' and name ~= '')
@@ -266,50 +271,37 @@ local components = {
         color = hl_fg_color_and_attrs 'AuxiliaryProgressStatus',
     },
 
-    --- The section that shows the status of the linters.
-    linting = {
-        settings.transient(function(buffer)
-            local prefix = icons.UI.Disabled
-            if lint.enabled(buffer) then
-                prefix = lint.progress(buffer) or icons.UI.Format
+    --- The section that shows the status of running tools.
+    tools = {
+        function()
+            local buffer = ide.buf.current
+            if not buffer then
+                return nil
             end
 
-            return sexify(prefix, lint.active(buffer))
-        end),
-        cond = settings.transient(function(buffer)
-            return #lint.active(buffer) > 0
-        end),
-        color = settings.transient(function(buffer)
-            if not lint.enabled(buffer) then
-                return hl_fg_color_and_attrs 'DisabledLintersStatus'
-            else
-                return hl_fg_color_and_attrs 'ActiveLintersStatus'
-            end
-        end),
-    },
+            return table.concat(
+                table.list_map(buffer.tools, function(tool)
+                    ---@type string|nil
+                    local prefix
+                    if tool.running then
+                        prefix = spinner_icon
+                    elseif tool.enabled then
+                        prefix = icons.get_tool_icon(tool.name)
+                    end
+                    prefix = prefix or icons.UI.Disabled
 
-    --- The section that shows the status of the formatters.
-    formatting = {
-        ide.async.bind_to_buffer_task('formatting', function(buffer, running, tick)
-            local prefix = icons.UI.Disabled
-            if format.enabled(buffer.id) then
-                prefix = running and icons.Progress[tick % #icons.Progress + 1] or icons.UI.Lint
+                    return string.format('%s%s', icons.fit(prefix, 2), tool.name)
+                end),
+                ' '
+            )
+        end,
+        cond = function()
+            local buffer = ide.buf.current
+            if not buffer then
+                return nil
             end
 
-            return sexify(prefix, format.active(buffer.id))
-        end),
-        cond = ide.async.bind_to_buffer_task('formatting', function(buffer)
-            return #format.active(buffer.id) > 0
-        end),
-        color = ide.async.bind_to_buffer_task('formatting', function(buffer)
-            if not format.enabled(buffer.id) then
-                return hl_fg_color_and_attrs 'DisabledFormattersStatus'
-            else
-                return hl_fg_color_and_attrs 'ActiveFormattersStatus'
-            end
-        end),
-        on_click = function()
-            vim.cmd.ConformInfo()
+            return #buffer.tools > 0
         end,
     },
 
@@ -394,6 +386,9 @@ local components = {
         color = hl_fg_color_and_attrs 'Comment',
         cond = function()
             return require('tmux').socket() ~= nil
+        end,
+        on_click = function()
+            require('tmux').manage_sessions()
         end,
     },
 
@@ -622,8 +617,7 @@ M.status_line = {
     },
     lualine_c = {
         components.lsp,
-        components.linting,
-        components.formatting,
+        components.tools,
         components.neotest,
         components.shell,
     },

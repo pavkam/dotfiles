@@ -105,4 +105,70 @@ function M.on_loaded(name, callback)
     })
 end
 
+---@class (exact) formatter_plugin # Describes a formatter plugin.
+---@field status fun(buffer: buffer): table<string, boolean> # gets the status of the supported formatters.
+---@field run fun(buffer: buffer, callback: fun(result: boolean|string)) # runs the formatters.
+
+local fmt_subscribe, fmt_trigger = require('api.async').define_event 'FormatterPluginRegistered'
+
+---@type formatter_plugin[]
+M.formatter_plugins = {}
+
+--- Registers a formatter plugin.
+---@param plugin formatter_plugin # the formatter plugin to register.
+function M.register_formatter(plugin)
+    xassert {
+        plugin = {
+            plugin,
+            {
+                status = 'callable',
+                run = 'callable',
+            },
+        },
+    }
+
+    if table.list_any(M.formatter_plugins, plugin) then
+        return
+    end
+
+    table.insert(M.formatter_plugins, plugin)
+    fmt_trigger()
+end
+
+--- Triggers when a formatter plugin is registered.
+M.on_formatter_registered = fmt_subscribe
+
+---@class (exact) linter_plugin # Describes a linting plugin.
+---@field status fun(buffer: buffer): table<string, boolean> # gets the status of the supported linters.
+---@field run fun(buffer: buffer, callback: fun(result: boolean|string)) # runs the linters.
+
+local lint_subscribe, lint_trigger = require('api.async').define_event 'LinterPluginRegistered'
+
+---@type linter_plugin[]
+M.linter_plugins = {}
+
+--- Registers a linter plugin.
+---@param plugin linter_plugin # the linter plugin to register.
+function M.register_linter(plugin)
+    xassert {
+        plugin = {
+            plugin,
+            {
+                status = 'callable',
+                run = 'callable',
+            },
+        },
+    }
+
+    if table.list_any(M.linter_plugins, plugin) then
+        return
+    end
+
+    table.insert(M.linter_plugins, plugin)
+    lint_trigger()
+end
+
+--- Triggers when a linter plugin is registered.
+M.on_linter_registered = lint_subscribe
+
 return table.freeze(M)

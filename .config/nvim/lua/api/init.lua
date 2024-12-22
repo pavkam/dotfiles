@@ -52,7 +52,7 @@ end
 ---| xassert_type[] # a list of types.
 ---| { [1]: 'list', ['*']: xassert_type|nil, ['<']: integer|nil, ['>']: integer|nil  } # a list of values.
 ---| { [1]: 'number'|'integer', ['<']: integer|nil, ['>']: integer|nil } # a number.
----| { [1]: 'number'|'integer'|'string', ['*']: string|nil, ['<']: integer|nil, ['>']: integer|nil } # a string.
+---| { [1]: 'string', ['*']: string|string[]|function|nil, ['<']: integer|nil, ['>']: integer|nil } # a string.
 ---| { [string]: xassert_type } # a sub-table.
 
 ---@class (exact) xassert_entry # An assertion entry.
@@ -64,8 +64,8 @@ end
 
 ---@class (exact) xassert_error # The error of a validation.
 ---@field field string|nil # the field that failed the validation.
----@field expected_type xtype # the expected type.
----@field actual_type xtype # the actual type.
+---@field expected_cond string # the expected type.
+---@field actual_cond string # the actual type.
 ---@field message string # the message to display.
 
 ---@type fun(parent_field_name: string|nil, schema: xassert_schema): xassert_error[] # the validation function.
@@ -79,8 +79,8 @@ local function validate_entry(field_name, entry)
     if xtype(entry) ~= 'table' then
         return {
             field = field_name,
-            expected_type = 'table',
-            actual_type = type(entry),
+            expected_cond = 'table',
+            actual_cond = type(entry),
             message = 'invalid schema entry',
         }
     end
@@ -100,8 +100,8 @@ local function validate_entry(field_name, entry)
         if field_value_type ~= field_schema then
             return {
                 field = field_name,
-                expected_type = field_schema,
-                actual_type = field_value_type,
+                expected_cond = field_schema,
+                actual_cond = field_value_type,
                 message = 'invalid type',
             }
         end
@@ -112,9 +112,9 @@ local function validate_entry(field_name, entry)
     if field_schema_raw_type ~= 'table' then
         return {
             field = field_name,
-            expected_type = 'table',
-            actual_type = field_schema_raw_type,
-            message = 'invalid schema entry',
+            expected_cond = 'table',
+            actual_cond = field_schema_raw_type,
+            message = 'invalid schema entry: not a table',
         }
     end
 
@@ -126,8 +126,8 @@ local function validate_entry(field_name, entry)
             if field_value_type ~= possible_type and not field_value_type_maybe_table then
                 return {
                     field = field_name,
-                    expected_type = possible_type,
-                    actual_type = field_value_type,
+                    expected_cond = possible_type,
+                    actual_cond = field_value_type,
                     message = 'not a table',
                 }
             end
@@ -157,8 +157,8 @@ local function validate_entry(field_name, entry)
             if field_value_type ~= possible_type then
                 return {
                     field = field_name,
-                    expected_type = possible_type,
-                    actual_type = field_value_type,
+                    expected_cond = possible_type,
+                    actual_cond = field_value_type,
                     message = 'not a list',
                 }
             end
@@ -166,18 +166,18 @@ local function validate_entry(field_name, entry)
             if lt and #field_value > lt then
                 return {
                     field = field_name,
-                    expected_type = field_value_type,
-                    actual_type = field_value_type,
-                    message = string.format('list is too long (expected at most `%d`)', lt),
+                    expected_cond = string.format('max. %d items', lt),
+                    actual_cond = string.format('%d items', #field_value),
+                    message = 'list is too long',
                 }
             end
 
             if gt and #field_value < gt then
                 return {
                     field = field_name,
-                    expected_type = field_value_type,
-                    actual_type = field_value_type,
-                    message = string.format('list is too short (expected at least `%d`)', gt),
+                    expected_cond = string.format('max. %d items', gt),
+                    actual_cond = string.format('%d items', #field_value),
+                    message = 'list is too short',
                 }
             end
 
@@ -200,8 +200,8 @@ local function validate_entry(field_name, entry)
             if field_value_type ~= possible_type then
                 return {
                     field = field_name,
-                    expected_type = possible_type,
-                    actual_type = field_value_type,
+                    expected_cond = possible_type,
+                    actual_cond = field_value_type,
                     message = 'invalid type',
                 }
             end
@@ -209,18 +209,18 @@ local function validate_entry(field_name, entry)
             if lt and field_value > lt then
                 return {
                     field = field_name,
-                    expected_type = field_value_type,
-                    actual_type = field_value_type,
-                    message = string.format('value is too large (expected at most `%d`)', lt),
+                    expected_cond = string.format('max. %d', lt),
+                    actual_cond = tostring(field_value),
+                    message = 'number is too big',
                 }
             end
 
             if gt and field_value < gt then
                 return {
                     field = field_name,
-                    expected_type = field_value_type,
-                    actual_type = field_value_type,
-                    message = string.format('value is too small (expected at least `%d`)', gt),
+                    expected_cond = string.format('max. %d', gt),
+                    actual_cond = tostring(field_value),
+                    message = 'number is too small',
                 }
             end
 
@@ -231,8 +231,8 @@ local function validate_entry(field_name, entry)
             if field_value_type ~= possible_type then
                 return {
                     field = field_name,
-                    expected_type = possible_type,
-                    actual_type = field_value_type,
+                    expected_cond = possible_type,
+                    actual_cond = field_value_type,
                     message = 'invalid type',
                 }
             end
@@ -240,28 +240,59 @@ local function validate_entry(field_name, entry)
             if lt and #field_value > lt then
                 return {
                     field = field_name,
-                    expected_type = field_value_type,
-                    actual_type = field_value_type,
-                    message = string.format('string is too long (expected at most `%d`)', lt),
+                    expected_cond = string.format('max. %d characters', lt),
+                    actual_cond = string.format('%d characters', #field_value),
+                    message = 'string is too long',
                 }
             end
 
             if gt and #field_value < gt then
                 return {
                     field = field_name,
-                    expected_type = field_value_type,
-                    actual_type = field_value_type,
-                    message = string.format('string is too short (expected at least `%d`)', gt),
+                    expected_cond = string.format('max. %d characters', gt),
+                    actual_cond = string.format('%d characters', #field_value),
+                    message = 'string is too short',
                 }
             end
 
-            local string_match = xtype(field_schema['*']) == 'string' and field_schema['*'] or nil
-            if string_match ~= nil and not field_value:match(string_match) then
+            local string_match = field_schema['*']
+            local _, string_match_type = xtype(string_match)
+
+            if string_match_type == 'string' then
+                if not field_value:match(string_match) then
+                    return {
+                        field = field_name,
+                        expected_cond = string.format('string matching "%s"', string_match),
+                        actual_cond = field_value,
+                        message = 'string does not match pattern',
+                    }
+                end
+            elseif string_match_type == 'callable' then
+                if not string_match(field_value) then
+                    return {
+                        field = field_name,
+                        expected_cond = 'validated string',
+                        actual_cond = field_value,
+                        message = 'string does not pass validation',
+                    }
+                end
+            elseif string_match_type == 'list' then
+                local found = table.list_any(string_match --[[@as table]], field_value)
+
+                if not found then
+                    return {
+                        field = field_name,
+                        expected_cond = string.format('string matching any of [%s]', table.concat(string_match, ', ')),
+                        actual_cond = field_value,
+                        message = 'string does not match any candidate',
+                    }
+                end
+            elseif string_match_type ~= 'nil' then
                 return {
                     field = field_name,
-                    expected_type = field_value_type,
-                    actual_type = field_value_type,
-                    message = string.format('string does not match pattern `%s`', string_match),
+                    expected_cond = 'string | callable | list',
+                    actual_cond = string_match_type,
+                    message = 'invalid schema: invalid string match type',
                 }
             end
 
@@ -283,14 +314,29 @@ local function validate_entry(field_name, entry)
             end
         end
 
-        return errors
+        return {
+            field = field_name,
+            expected_cond = table.concat(
+                table.list_uniq(table.list_map(errors, function(e)
+                    return e.expected_cond
+                end)),
+                ' | '
+            ),
+            actual_cond = table.concat(
+                table.list_uniq(table.list_map(errors, function(e)
+                    return e.actual_cond
+                end)),
+                ' | '
+            ),
+            message = 'invalid type or assertions of value failed',
+        }
     end
 
     if field_value_raw_type ~= 'table' then
         return {
             field = field_name,
-            expected_type = 'table | list',
-            actual_type = field_value_type,
+            expected_cond = 'table | list',
+            actual_cond = field_value_type,
             message = 'invalid type',
         }
     end
@@ -313,8 +359,8 @@ validate = function(parent_field_name, schema)
         return {
             {
                 field = parent_field_name,
-                expected_type = 'table',
-                actual_type = type(schema),
+                expected_cond = 'table',
+                actual_cond = type(schema),
                 message = 'invalid schema',
             },
         }
@@ -350,13 +396,15 @@ end
 local format_assert_error = function(errors)
     local formatted = 'assert failed:'
     for _, error in ipairs(errors) do
+        assert(error.field, 'validation internal error')
+
         formatted = formatted
             .. string.format(
-                '\n  - [`%s`]: %s. expected type(s) `%s`, got `%s`.',
+                '\n  - [`%s`]: %s. expected `%s`, got `%s`.',
                 error.field,
                 error.message,
-                error.expected_type,
-                error.actual_type
+                error.expected_cond,
+                error.actual_cond
             )
     end
 
@@ -771,6 +819,7 @@ end
 ---@param t table<K, V> # the table to check.
 ---@param fn fun(key: K, value: V): boolean # the function to check the key/value.
 ---@return boolean # whether the table has the key/value.
+---@nodiscard
 function table.any(t, fn)
     for k, v in pairs(t) do
         if fn(k, v) then
@@ -782,8 +831,9 @@ function table.any(t, fn)
 end
 
 --- Merges multiple tables into one.
----@vararg table|nil # the tables to merge.
+---@param ... table|nil # the tables to merge.
 ---@return table # the merged table.
+---@nodiscard
 function table.merge(...)
     local list = table.to_list { ... }
     xassert {
@@ -808,6 +858,8 @@ end
 -- Merge multiple lists into one.
 ---@generic T: table
 ---@param ... T # the lists to merge.
+---@return T # the merged list.
+---@nodiscard
 function table.list_merge(...)
     local lists = table.to_list { ... }
 
@@ -829,6 +881,7 @@ end
 ---@generic T
 ---@param value T|T[]|table<any,T>|nil # any value that will be converted to a list.
 ---@return T[] # the listified version of the value.
+---@nodiscard
 function table.to_list(value)
     local _, t = xtype(value)
 
@@ -855,9 +908,13 @@ function table.to_list(value)
     return result
 end
 
---- Converts a list to a set.
----@param list any[] # the list to convert to a set.
----@return table<any, boolean> # the set.
+---@class (exact) set<T>: { [T]: true } # Represents a set.
+
+-- Converts a list to a set.
+---@generic T
+---@param list T[] # the list to convert to a set.
+---@return set<T>
+---@nodiscard
 function table.list_to_set(list)
     xassert {
         list = { list, 'list' },
@@ -872,33 +929,11 @@ function table.list_to_set(list)
     return result
 end
 
--- Removes the keys from a table.
----@generic K, V
----@param t table<K, V> # the table to remove the keys from.
----@param keys K[] # the keys to remove.
----@return table<K, V> # the table without the keys.
-function table.without_keys(t, keys)
-    xassert {
-        t = { t, 'table' },
-        keys = { keys, 'list' },
-    }
-
-    local result = {}
-    local set = table.list_to_set(keys)
-
-    for k, v in pairs(t) do
-        if not set[k] then
-            result[k] = v
-        end
-    end
-
-    return result
-end
-
 -- Returns a new list that contains only unique values.
 ---@param list any[] # the list to make unique.
 ---@param key_fn (fun(value: any): any)|nil # the function to get the key from the value.
 ---@return any[] # the list with unique values.
+---@nodiscard
 function table.list_uniq(list, key_fn)
     xassert {
         list = { list, 'list' },
@@ -924,6 +959,7 @@ end
 ---@param list T[] # the list to inflate.
 ---@param key_fn fun(value: T): any # the function to get the key from the value.
 ---@return table<string, T> # the inflated table.
+---@nodiscard
 function table.inflate(list, key_fn)
     xassert {
         list = { list, 'list' },
@@ -943,6 +979,7 @@ end
 -- Checks if a table is empty.
 ---@param t table # the table to check.
 ---@return boolean # whether the table is empty.
+---@nodiscard
 function table.is_empty(t)
     xassert {
         t = { t, { 'table', 'list' } },
@@ -954,6 +991,7 @@ end
 -- Checks if a table is a list.
 ---@param t table # the table to check.
 ---@return boolean # whether the table is a list.
+---@nodiscard
 function table.is_list(t)
     xassert {
         t = { t, { 'table', 'list' } },
@@ -968,6 +1006,7 @@ end
 ---@param list I[] # the list to map.
 ---@param fn fun(value: I): O # the function to map the values.
 ---@return O[] # the mapped list.
+---@nodiscard
 function table.list_map(list, fn)
     xassert {
         list = { list, 'list' },
@@ -1002,6 +1041,7 @@ end
 ---@param list T[] # the list to sort.
 ---@param fn fun(a: T, b: T): boolean # the function to sort the values.
 ---@return T[] # the sorted list.
+---@nodiscard
 function table.list_sort(list, fn)
     xassert {
         list = { list, 'list' },
@@ -1017,8 +1057,9 @@ end
 -- Filters the elements of a list.
 ---@generic T
 ---@param list T[] # the list to filter.
----@param fn fun(value: T): boolean # the function to filter the values.
+---@param fn fun(value: T): any # the function to filter the values.
 ---@return T[] # the filtered list.
+---@nodiscard
 function table.list_filter(list, fn)
     xassert {
         list = { list, 'list' },
@@ -1035,11 +1076,67 @@ function table.list_filter(list, fn)
     return result
 end
 
+-- Checks if a list has a value that matches a condition.
+---@generic T
+---@param list T[] # the list to check.
+---@param cond T|fun(value: T): any # the function to check the values.
+---@return boolean # whether the list has any matching value.
+---@nodiscard
+function table.list_any(list, cond)
+    xassert {
+        list = { list, 'list' },
+    }
+
+    local _, ty = xtype(cond)
+
+    if ty == 'callable' then
+        for _, item in ipairs(list) do
+            if cond(item) then
+                return true
+            end
+        end
+    else
+        for _, item in ipairs(list) do
+            if item == cond then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+-- Checks if a list has all values that match a condition.
+---@generic T
+---@param list T[] # the list to check.
+---@param fn fun(value: T): any # the function to check the values.
+---@return boolean # whether the list has all matching values.
+---@nodiscard
+function table.list_all(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    if #list == 0 then
+        return true
+    end
+
+    for _, item in ipairs(list) do
+        if fn(item) then
+            return true
+        end
+    end
+
+    return false
+end
+
 --- Converts the values of a table to a new table.
 ---@generic K, I, O
 ---@param t table<K, I> # the table to map.
 ---@param fn fun(value: I): O # the function to map the values.
 ---@return table<K, O> # the mapped list.
+---@nodiscard
 function table.map(t, fn)
     xassert {
         t = { t, 'table' },
@@ -1055,7 +1152,10 @@ function table.map(t, fn)
 end
 
 --- Extracts the keys from a table.
----@param t table # the table to extract the keys from.
+---@generic K, V
+---@param t table<K, V> # the table to extract the keys from.
+---@return K[] # the keys of the table.
+---@nodiscard
 function table.keys(t)
     xassert {
         t = { t, 'table' },
@@ -1074,6 +1174,7 @@ end
 ---@param t T # the table or list to clone.
 ---@param shallow boolean|nil # whether to do a shallow clone (default: `true`).
 ---@return T # the cloned table or list.
+---@nodiscard
 function table.clone(t, shallow)
     xassert {
         t = { t, { 'table', 'list' } },
@@ -1093,6 +1194,7 @@ end
 ---@param s string # the string to check.
 ---@param prefix string # the prefix to check.
 ---@return boolean # whether the string starts with the prefix.
+---@nodiscard
 function string.starts_with(s, prefix)
     xassert {
         s = { s, 'string' },
@@ -1118,6 +1220,7 @@ end
 ---@param s string # the string to indent.
 ---@param indent string # the indent to use.
 ---@return string # the indented string.
+---@nodiscard
 function string.indent(s, indent)
     xassert {
         s = { s, 'string' },
@@ -1130,6 +1233,7 @@ end
 -- Gets the timezone offset for a given timestamp
 ---@param timestamp integer # the timestamp to get the offset for
 ---@return integer # the timezone offset
+---@nodiscard
 function os.timezone_offset(timestamp)
     assert(type(timestamp) == 'number')
 
@@ -1149,6 +1253,7 @@ local uuid_template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
 
 -- Generates a new UUID
 ---@return string # the generated UUID
+---@nodiscard
 function os.uuid()
     ---@param c string
     local function subs(c)

@@ -195,6 +195,13 @@ keys.map('n', '<C-x>', function()
     end
 end, { desc = 'Decrement/Toggle value' })
 
+keys.map({ 'n', 'x' }, '=', function()
+    local buffer = require('api.buf').current
+    if buffer and buffer.is_normal then
+        buffer.format()
+    end
+end, { desc = 'Format buffer/selection' })
+
 -- better search
 vim.on_key(function(char)
     if vim.fn.mode() == 'n' then

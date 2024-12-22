@@ -84,7 +84,7 @@ function M.get_formatted_trace_back(level)
             result,
             string.format(
                 ' - %s %s:%d',
-                fs.format_relative_path(fs.CONFIGURATION_DIRECTORY, entry.file),
+                fs.format_relative_path(fs.CONFIGURATION_DIRECTORY, entry.file, { ellipsis = '...' }),
                 entry.fn_name,
                 entry.line
             )

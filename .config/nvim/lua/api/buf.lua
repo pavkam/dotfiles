@@ -1,4 +1,5 @@
 local fs = require 'api.fs'
+local icons = require 'icons'
 
 ---@module 'api.win'
 
@@ -15,14 +16,24 @@ local fs = require 'api.fs'
 ---@field is_hidden boolean # whether the buffer is hidden.
 ---@field is_loaded boolean # whether the buffer is loaded.
 ---@field is_normal boolean # whether the buffer is a normal buffer.
+---@field changed_tick integer # the changed tick of the buffer.
 ---@field cursor position # the cursor position in the buffer.
 ---@field height integer # the height of the buffer.
 ---@field diagnostics_at_cursor vim.Diagnostic[] # the diagnostics at the cursor.
+---@field auto_formatting_enabled boolean # whether formatting is enabled for the buffer.
+---@field auto_linting_enabled boolean # whether linting is enabled for the buffer.
+---@field tools buf_tool[] # the tools available for the buffer.
+---@field roots string[] # the project roots for the buffer.
+---@field root string # the project root for the buffer.
+---@field check_changed fun(what: string): boolean # check if the buffer has changed (for a task).
 ---@field lines fun(start: integer|nil, end_: integer|nil): string[] # get the lines of the buffer.
 ---@field confirm_saved fun(reason: string|nil): boolean # confirm if the buffer is saved.
 ---@field remove fun(opts: remove_buffer_options|nil)  # remove the buffer.
 ---@field remove_others fun(opts: remove_buffer_options|nil) # remove all other buffers.
 ---@field next_diagnostic fun(next_or_prev: boolean, severity: vim.diagnostic.Severity|nil) # jump to diagnostic.
+---@field clear_diagnostics fun(sources: string[]|string|nil) # clear the diagnostics.
+---@field format fun() # format the buffer.
+---@field lint fun() # lint the buffer.
 
 ---@class (exact) create_buffer_options # Options for creating a buffer.
 ---@field listed boolean|nil # whether the buffer is listed.
@@ -32,8 +43,22 @@ local fs = require 'api.fs'
 ---@field [integer] buffer|nil # the details for a given buffer.
 ---@field alternate buffer|nil # the alternate buffer.
 ---@field current buffer # the current buffer.
+---@field auto_formatting_enabled boolean # whether formatting is enabled.
+---@field auto_linting_enabled boolean # whether linting is enabled.
 ---@field new fun(opts: create_buffer_options|nil): buffer # create a new buffer.
 ---@field load fun(file_path: string): buffer|nil # load a buffer from a file.
+
+---@class (exact) buf_tool # The tools available for a buffer.
+---@field name string # the name of the tool.
+---@field enabled boolean # whether the tool is enabled.
+---@field running boolean # whether the tool is running.
+---@field type 'formatter'|'linter' # the type of the tool.
+
+---@type config_toggle|nil
+local auto_formatting_toggle
+
+---@type config_toggle|nil
+local auto_linting_toggle
 
 -- The buffer API.
 ---@type buf
@@ -102,6 +127,13 @@ local M = table.smart {
                 return vim.api.nvim_buf_is_valid(buffer.id) and vim.bo[buffer.id].buftype == ''
             end,
         },
+        changed_tick = {
+            ---@param buffer buffer
+            ---@return integer
+            get = function(_, buffer)
+                return vim.api.nvim_buf_get_changedtick(buffer.id)
+            end,
+        },
         file_path = {
             ---@param buffer buffer
             ---@return string|nil
@@ -157,8 +189,94 @@ local M = table.smart {
                 return vim.diagnostic.get(buffer.id, { lnum = buffer.cursor[1] })
             end,
         },
+        auto_formatting_enabled = {
+            ---@param buffer buffer
+            ---@return boolean
+            get = function(_, buffer)
+                return auto_formatting_toggle and auto_formatting_toggle.get(buffer) or false
+            end,
+        },
+        auto_linting_enabled = {
+            ---@param buffer buffer
+            ---@return boolean
+            get = function(_, buffer)
+                return auto_linting_toggle and auto_linting_toggle.get(buffer) or false
+            end,
+        },
+        tools = {
+            ---@param buffer buffer
+            ---@return buf_tool[]
+            get = function(_, buffer)
+                ---@type buf_tool[]
+                local result = {}
+
+                -- TODO: flat map
+                table.list_iterate(require('api.plugin').formatter_plugins, function(plugin)
+                    for formatter, running in pairs(plugin.status(buffer)) do
+                        table.insert(result, {
+                            name = formatter,
+                            enabled = buffer.auto_formatting_enabled,
+                            running = running,
+                            type = 'formatter',
+                        })
+                    end
+                end)
+
+                table.list_iterate(require('api.plugin').linter_plugins, function(plugin)
+                    for linter, running in pairs(plugin.status(buffer)) do
+                        table.insert(result, {
+                            name = linter,
+                            enabled = buffer.auto_linting_enabled,
+                            running = running,
+                            type = 'linter',
+                        })
+                    end
+                end)
+
+                return result
+            end,
+        },
+        roots = {
+            ---@param buffer buffer
+            ---@return string[]
+            get = function(_, buffer)
+                return require('project').roots(buffer.id)
+            end,
+        },
+        root = {
+            ---@param buffer buffer
+            ---@return string
+            get = function(_, buffer)
+                return require('project').root(buffer.id)
+            end,
+        },
     },
     entity_functions = {
+        ---@param buffer buffer
+        ---@param what string
+        ---@return boolean
+        check_changed = function(_, buffer, what)
+            xassert {
+                what = {
+                    what,
+                    {
+                        'string',
+                        ['>'] = 0,
+                    },
+                },
+            }
+
+            local name = string.format('check_%s_at_tick', what)
+            local buffer_changed_tick = buffer.changed_tick
+            local prev_changed_tick = vim.b[buffer.id][name]
+            if prev_changed_tick and prev_changed_tick == buffer_changed_tick then
+                return false
+            end
+
+            vim.b[buffer.id][name] = buffer_changed_tick
+            return true
+        end,
+
         ---@param buffer buffer
         ---@param start integer|nil
         ---@param end_ integer|nil
@@ -274,6 +392,7 @@ local M = table.smart {
             end
         end,
 
+        ---@param buffer buffer
         ---@param next_or_prev boolean # whether to jump to the next or previous diagnostic
         ---@param severity vim.diagnostic.Severity|nil "ERROR"|"WARN"|"INFO"|"HINT"|nil # the severity
         next_diagnostic = function(_, buffer, next_or_prev, severity)
@@ -283,7 +402,7 @@ local M = table.smart {
                     severity,
                     {
                         'nil',
-                        { 'string', ['*'] = '^ERROR$|^WARN$|^INFO$|^HINT$' },
+                        { 'string', ['*'] = { 'ERROR', 'WARN', 'INFO', 'HINT' } },
                     },
                 },
             }
@@ -295,6 +414,113 @@ local M = table.smart {
             local go = next_or_prev and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
             local sev = severity and vim.diagnostic.severity[severity] or nil
             go { severity = sev }
+        end,
+
+        ---@param buffer buffer
+        ---@param sources string[]|string|nil
+        clear_diagnostics = function(_, buffer, sources)
+            xassert {
+                sources = {
+                    sources,
+                    {
+                        'nil',
+                        {
+                            'string',
+                            ['>'] = 0,
+                        },
+                        {
+                            'list',
+                            ['>'] = 0,
+                            ['*'] = 'string',
+                        },
+                    },
+                },
+            }
+
+            if not sources then
+                vim.diagnostic.reset(nil, buffer.id)
+                return
+            end
+
+            local ns = vim.diagnostic.get_namespaces()
+
+            for _, source in ipairs(table.to_list(sources)) do
+                for id, n in pairs(ns) do
+                    if n.name == source or string.starts_with(n.name, 'vim.lsp.' .. source) then
+                        vim.diagnostic.reset(id, buffer.id)
+                    end
+                end
+            end
+        end,
+
+        ---@param buffer buffer
+        format = function(_, buffer)
+            assert(buffer.is_normal, 'buffer is not a normal buffer')
+
+            if not buffer.check_changed 'format' then
+                return
+            end
+
+            local plugins = require('api.plugin').formatter_plugins
+
+            if #plugins == 0 then
+                require('api.tui').warn(
+                    string.format('No formatter plugins found for buffer "%s"', buffer.file_path),
+                    { prefix_icon = require('icons').UI.Format }
+                )
+
+                return
+            end
+
+            local completed = require('api.async').monitor_task('formatting', { buffer = buffer })
+
+            table.list_iterate(plugins, function(formatter)
+                formatter.run(buffer, function(result)
+                    completed()
+
+                    if type(result) == 'string' then
+                        require('api.tui').warn(
+                            string.format('Failed to format buffer: %s', result),
+                            { prefix_icon = require('icons').UI.Format }
+                        )
+                    end
+                end)
+            end)
+        end,
+
+        ---@param buffer buffer
+        lint = function(_, buffer)
+            assert(buffer.is_normal, 'buffer is not a normal buffer')
+
+            if not buffer.check_changed 'lint' then
+                return
+            end
+
+            local plugins = require('api.plugin').linter_plugins
+
+            if #plugins == 0 then
+                require('api.tui').warn(
+                    string.format('No linter plugins found for buffer "%s"', buffer.file_path),
+                    { prefix_icon = require('icons').UI.Lint }
+                )
+
+                return
+            end
+
+            local completed = require('api.async').monitor_task('linting', { buffer = buffer })
+
+            table.list_iterate(plugins, function(linter)
+                linter.run(buffer, function(result)
+                    completed()
+
+                    if type(result) == 'string' then
+                        require('api.tui').warn(
+                            string.format('Failed to lint buffer: %s', result),
+                            { prefix_icon = require('icons').UI.Lint }
+                        )
+                    end
+                end)
+            end)
         end,
     },
     properties = {
@@ -315,6 +541,18 @@ local M = table.smart {
                 end
 
                 return nil
+            end,
+        },
+        auto_formatting_enabled = {
+            ---@return boolean
+            get = function()
+                return auto_formatting_toggle and auto_formatting_toggle.get() or false
+            end,
+        },
+        auto_linting_enabled = {
+            ---@return boolean
+            get = function()
+                return auto_linting_toggle and auto_linting_toggle.get() or false
             end,
         },
     },
@@ -357,5 +595,63 @@ local M = table.smart {
         end,
     },
 }
+
+require('api.plugin').on_formatter_registered(function()
+    if auto_formatting_toggle then
+        return
+    end
+
+    require('api.async').subscribe_event({ 'BufWritePre' }, function(args)
+        local buffer = M[args.buf]
+        if buffer and buffer.is_normal and buffer.auto_formatting_enabled then
+            buffer.format()
+        end
+    end)
+
+    auto_formatting_toggle = require('api.config').register_toggle('auto_formatting_enabled', function(enabled, buffer)
+        if buffer and enabled then
+            buffer.format()
+        end
+    end, {
+        icon = icons.UI.Format,
+        desc = 'Auto-formatting',
+        scope = { 'buffer', 'global' },
+    })
+end)
+
+require('api.plugin').on_linter_registered(function()
+    if auto_linting_toggle then
+        return
+    end
+
+    require('api.async').subscribe_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(args)
+        local buffer = M[args.buf]
+        if buffer and buffer.is_normal and buffer.auto_linting_enabled then
+            buffer.lint()
+        end
+    end)
+
+    auto_linting_toggle = require('api.config').register_toggle('auto_linting_enabled', function(enabled, buffer)
+        if buffer and enabled then
+            buffer.lint()
+        elseif buffer then
+            ---@type string[]
+            local linters = {}
+            for _, tool in ipairs(buffer.tools) do
+                if tool.type == 'linter' then
+                    table.insert(linters, tool.name)
+                end
+            end
+
+            if #linters > 0 then
+                buffer.clear_diagnostics(linters)
+            end
+        end
+    end, {
+        icon = icons.UI.Lint,
+        desc = 'Auto-linting',
+        scope = { 'buffer', 'global' },
+    })
+end)
 
 return M

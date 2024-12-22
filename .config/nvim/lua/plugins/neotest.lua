@@ -66,8 +66,8 @@ return {
             },
         }, neotest_ns)
 
-        local function confirm_saved(buffer)
-            return ide.buf[buffer].confirm_saved 'running tests'
+        local function confirm_saved()
+            return ide.buf.current.confirm_saved 'running tests'
         end
 
         -- register neotest mappings

@@ -214,6 +214,21 @@ function M.get_file_icon(path, width, ltr)
     end
 end
 
+---@param tool string # The name of the tool
+function M.get_tool_icon(tool)
+    if string.starts_with(tool, 'prettier') then
+        return ''
+    elseif string.starts_with(tool, 'eslint') then
+        return ''
+    elseif tool == 'luacheck' then
+        return M.UI.Lint
+    elseif tool == 'stylua' or tool == 'injected' then
+        return M.UI.Lint
+    end
+
+    return M.UI.Tool
+end
+
 --- Fits the icon to the given width.
 ---@param icon string # The icon to fit
 ---@param width number # The width to fit the icon to

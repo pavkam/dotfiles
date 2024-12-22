@@ -76,7 +76,4 @@ return {
                 end
         end,
     },
-    config = function(_, opts)
-        require('ufo').setup(opts)
-    end,
 }

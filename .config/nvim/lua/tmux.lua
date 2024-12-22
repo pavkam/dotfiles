@@ -158,7 +158,7 @@ local function display(items)
 end
 
 --- Lists all the sessions
-local function manage_sessions()
+function M.manage_sessions()
     local projects_dirs = vim.env.PROJECTS_ROOT and find_git_enabled_dirs(vim.env.PROJECTS_ROOT) or {}
 
     shell.async_cmd(
@@ -281,7 +281,7 @@ function M.navigate(direction)
 end
 
 if M.socket() ~= nil then
-    keys.map('n', '<leader>s', manage_sessions, { icon = icons.UI.TMux, desc = 'Tmux sessions' })
+    keys.map('n', '<leader>s', M.manage_sessions, { icon = icons.UI.TMux, desc = 'Tmux sessions' })
 end
 
 -- window navigation
