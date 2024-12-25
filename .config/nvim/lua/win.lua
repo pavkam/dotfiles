@@ -35,7 +35,7 @@ local M = table.smart {
         buffer = {
             ---@param window window
             get = function(_, window)
-                return require('api.buf')[vim.api.nvim_win_get_buf(window.id)]
+                return ide.buf[vim.api.nvim_win_get_buf(window.id)]
             end,
             ---@param window window
             ---@param buffer buffer
@@ -66,8 +66,10 @@ local M = table.smart {
                     cursor = {
                         cursor,
                         {
-                            { 'integer', ['>'] = 0 },
-                            { 'integer', ['>'] = 0 },
+                            'list',
+                            ['>'] = 0,
+                            ['<'] = 3,
+                            ['*'] = { 'integer', ['>'] = 0 },
                         },
                     },
                 }
@@ -95,7 +97,7 @@ local M = table.smart {
             ---@param window window
             ---@return string
             get = function(_, window)
-                if not require('api.editor').in_visual_mode() then
+                if not ide.editor.in_visual_mode() then
                     return ''
                 end
 
@@ -156,7 +158,7 @@ local M = table.smart {
 
         ---@param window window
         display_alternate_buffer = function(_, window)
-            local alt_buffer = require('api.buf')[vim.fn.bufnr '#']
+            local alt_buffer = ide.buf[vim.fn.bufnr '#']
             local current_buffer = window.buffer
 
             if alt_buffer and alt_buffer.id ~= current_buffer.id and alt_buffer.is_listed then
@@ -167,7 +169,7 @@ local M = table.smart {
                 end)
 
                 if not switched then
-                    window.buffer = require('api.buf').new()
+                    window.buffer = ide.buf.new()
                 end
             end
         end,

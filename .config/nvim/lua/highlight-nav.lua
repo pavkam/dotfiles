@@ -41,7 +41,7 @@ local function jump(window, forward)
         buffer,
         vim.lsp.protocol.Methods.textDocument_documentHighlight,
         vim.lsp.util.make_position_params(),
-        100
+        1000
     )
 
     -- get the first element of the table

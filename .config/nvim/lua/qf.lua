@@ -1,8 +1,6 @@
 local icons = require 'icons'
 local keys = require 'keys'
 
-ide.ft['qf'].pinned_to_window = true
-
 ---@class ui.qf`
 local M = {}
 

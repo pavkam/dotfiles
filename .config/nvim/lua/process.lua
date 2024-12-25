@@ -2,8 +2,6 @@
 ---@class api.process
 local M = {}
 
-local fs = require 'api.fs'
-
 --- Gets the value of an up-value of a function
 ---@param fn function # the function to get the up-value from
 ---@param name string # the name of the up-value to get
@@ -84,7 +82,7 @@ function M.get_formatted_trace_back(level)
             result,
             string.format(
                 ' - %s %s:%d',
-                fs.format_relative_path(fs.CONFIGURATION_DIRECTORY, entry.file, { ellipsis = '...' }),
+                ide.fs.format_relative_path(ide.fs.CONFIGURATION_DIRECTORY, entry.file, { ellipsis = '...' }),
                 entry.fn_name,
                 entry.line
             )
@@ -145,7 +143,7 @@ M.is_headless = vim.list_contains(vim.api.nvim_get_vvar 'argv', '--headless') or
 function M.on_ready(callback)
     xassert { callback = { callback, 'callable' } }
 
-    return require('api.async').subscribe_event('@LazyVimStarted', callback, {
+    return ide.sched.subscribe_event('@LazyVimStarted', callback, {
         description = 'Triggers when vim is fully ready.',
         group = 'process.status',
         once = true,
@@ -158,7 +156,7 @@ end
 function M.on_exit(callback)
     xassert { callback = { callback, 'callable' } }
 
-    return require('api.async').subscribe_event('VimLeavePre', function(args)
+    return ide.sched.subscribe_event('VimLeavePre', function(args)
         callback(table.merge(args, {
             exit_code = vim.v.exiting == vim.v.null and 0 or vim.v.exiting --[[@as integer]],
             dying = vim.v.dying > 0,
@@ -176,7 +174,7 @@ end
 function M.on_focus(callback)
     xassert { callback = { callback, 'callable' } }
 
-    return require('api.async').subscribe_event({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, callback, {
+    return ide.sched.subscribe_event({ 'FocusGained', 'TermClose', 'TermLeave', 'DirChanged' }, callback, {
         description = 'Triggers when vim receives focus.',
         group = 'process.status',
     })

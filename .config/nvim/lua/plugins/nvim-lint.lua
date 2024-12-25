@@ -117,39 +117,20 @@ return {
         lint.linters_by_ft = opts.linters_by_ft
     end,
     init = function()
+        local lint = xrequire 'lint'
+
         local poll_time = 100
 
-        local debounced_lint = ide.async.debounce(
+        local debounced_lint = ide.sched.debounce(
             ---@param buffer buffer
             ---@param names string[]
             ---@param callback fun()
             function(buffer, names, callback)
-                require('lint').try_lint(names, { cwd = buffer.root })
+                lint.try_lint(names, { cwd = buffer.root })
                 callback()
             end,
             poll_time
         )
-
-        ---@param buffer_id integer
-        ---@return boolean
-        local function linting_status(buffer_id)
-            local lint = require 'lint'
-
-            ---@type table<integer, table<string, lint.LintProc>>
-            local tbl = ide.process.get_up_value(lint.try_lint, 'running_procs_by_buf')
-            local running_linters = tbl and tbl[buffer_id] or {}
-
-            for _, linter in pairs(running_linters) do
-                ---@diagnostic disable-next-line: undefined-field
-                local running = linter.handle and not linter.handle:is_closing()
-
-                if running then
-                    return true
-                end
-            end
-
-            return false
-        end
 
         ---@param buffer buffer
         local function get_linters(buffer)
@@ -161,12 +142,11 @@ return {
                 return {}
             end
 
-            local lint = require 'lint'
             local clients = lint.linters_by_ft[buffer.file_type] or {}
 
             local ctx = {
                 filename = buffer.file_path,
-                dirname = require('api.fs').directory_name(buffer.file_path),
+                dirname = ide.fs.directory_name(buffer.file_path),
                 buf = buffer.id,
             }
 
@@ -188,11 +168,9 @@ return {
             end)
         end
 
-        require('api.plugin').register_linter {
+        ide.plugin.register_linter {
             ---@param buffer buffer
             status = function(buffer)
-                local lint = require 'lint'
-
                 local all = get_linters(buffer)
                 local running = lint.get_running(buffer.id)
 
@@ -218,7 +196,7 @@ return {
                 end
 
                 debounced_lint(buffer, names, function()
-                    require('api.async').poll(function()
+                    ide.sched.poll(function()
                         local running = require('lint').get_running(buffer.id)
                         if #running == 0 then
                             callback(true)

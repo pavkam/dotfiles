@@ -1,633 +1,1394 @@
-require 'shell'
-require 'sessions'
-require 'project'
-require 'settings'
-require 'lsp'
-require 'debugging'
-require 'neotest'
-require 'health'
-require 'lsp'
-require 'extras'
-require 'marks'
-require 'qf'
-require 'tmux'
-require 'file-palette'
-require 'spelling'
-require 'comments'
+math.randomseed(os.time())
 
-local events = require 'events'
-local keys = require 'keys'
-local syntax = require 'syntax'
-local git = require 'git'
-local icons = require 'icons'
-local progress = require 'progress'
+---@alias xtype # The extended type.
+---| 'nil' # a nil value.
+---| 'string' # a string.
+---| 'number' # a number.
+---| 'boolean' # a boolean.
+---| 'table' # a table.
+---| 'thread' # a thread.
+---| 'userdata' # userdata.
+---| 'integer' # an integer.
+---| 'list' # a list.
+---| 'callable' # a callable.
 
--- additional file types
-vim.filetype.add {
-    extension = {
-        snap = 'javascript',
-    },
-    pattern = {
-        ['.env'] = 'bash',
-        ['.env.*'] = 'bash',
-    },
+--- Gets the type of a given value.
+---@param value any # the value to get the type of.
+---@return type, xtype # the type of the value.
+function _G.xtype(value)
+    local t = type(value)
+    if t == 'table' then
+        local mt = getmetatable(value)
+        if mt then
+            if type(mt.__pairs) == 'function' then
+                return t, 'table'
+            end
+
+            if type(mt.__ipairs) == 'function' then
+                return t, 'list'
+            end
+
+            if type(mt.__call) == 'function' then
+                return t, 'callable'
+            end
+        end
+
+        if vim.islist(value) then
+            return t, 'list'
+        end
+    elseif t == 'number' then
+        if value % 1 == 0 then
+            return t, 'integer'
+        end
+    elseif t == 'function' then
+        return t, 'callable'
+    end
+
+    return t, t --[[@as xtype]]
+end
+
+---@alias xassert_type # The assertion condition.
+---| xtype # the base type.
+---| xassert_type[] # a list of types.
+---| { [1]: 'list', ['*']: xassert_type|nil, ['<']: integer|nil, ['>']: integer|nil  } # a list of values.
+---| { [1]: 'number'|'integer', ['<']: integer|nil, ['>']: integer|nil } # a number.
+---| { [1]: 'string', ['*']: string|string[]|function|nil, ['<']: integer|nil, ['>']: integer|nil } # a string.
+---| { [string]: xassert_type } # a sub-table.
+
+---@class (exact) xassert_entry # An assertion entry.
+---@field [1] any # the value to assert.
+---@field [2] xassert_type # the type of the value.
+
+---@alias xassert_schema # An assertion schema.
+---| { [string]: xassert_entry } # The field to assert.
+
+---@class (exact) xassert_error # The error of a validation.
+---@field field string|nil # the field that failed the validation.
+---@field expected_cond string # the expected type.
+---@field actual_cond string # the actual type.
+---@field message string # the message to display.
+
+---@type fun(parent_field_name: string|nil, schema: xassert_schema): xassert_error[] # the validation function.
+local validate
+
+-- Validates a given schema entry.
+---@param field_name string # the key to assert.
+---@param entry xassert_entry # the schema to validate.
+---@return xassert_error|xassert_error[]|nil # the result of the validation.
+local function validate_entry(field_name, entry)
+    if xtype(entry) ~= 'table' then
+        return {
+            field = field_name,
+            expected_cond = 'table',
+            actual_cond = type(entry),
+            message = 'invalid schema entry',
+        }
+    end
+
+    local field_value = entry[1]
+    local field_schema = entry[2]
+    local field_value_raw_type, field_value_type = xtype(field_value)
+    local field_schema_raw_type, field_schema_type = xtype(field_schema)
+
+    local field_value_type_maybe_table = field_value_type == 'list' and next(field_value) == nil
+
+    if field_schema_type == 'string' then --[[@cast field_schema string]]
+        if field_schema == 'table' and field_value_type_maybe_table then
+            return
+        end
+
+        if field_value_type ~= field_schema then
+            return {
+                field = field_name,
+                expected_cond = field_schema,
+                actual_cond = field_value_type,
+                message = 'invalid type',
+            }
+        end
+
+        return
+    end
+
+    if field_schema_raw_type ~= 'table' then
+        return {
+            field = field_name,
+            expected_cond = 'table',
+            actual_cond = field_schema_raw_type,
+            message = 'invalid schema entry: not a table',
+        }
+    end
+
+    ---@cast field_schema table
+    if field_schema_type == 'table' and xtype(field_schema[1]) == 'string' then
+        local possible_type = field_schema[1] --[[@as xtype]]
+
+        if possible_type == 'table' then
+            if field_value_type ~= possible_type and not field_value_type_maybe_table then
+                return {
+                    field = field_name,
+                    expected_cond = possible_type,
+                    actual_cond = field_value_type,
+                    message = 'not a table',
+                }
+            end
+
+            local table_item_schema = field_schema['*']
+
+            if table_item_schema ~= nil then
+                ---@type xassert_schema
+                local composite_schema = {
+                    ['__keys__'] = { table.keys(field_value), { 'list', ['*'] = 'string' } },
+                }
+
+                for k, v in pairs(field_value) do
+                    composite_schema[tostring(k)] = { v, table_item_schema }
+                end
+
+                return validate(field_name, composite_schema)
+            end
+
+            return
+        end
+
+        local lt = xtype(field_schema['<']) == 'number' and field_schema['<'] or nil
+        local gt = xtype(field_schema['>']) == 'number' and field_schema['>'] or nil
+
+        if possible_type == 'list' then
+            if field_value_type ~= possible_type then
+                return {
+                    field = field_name,
+                    expected_cond = possible_type,
+                    actual_cond = field_value_type,
+                    message = 'not a list',
+                }
+            end
+
+            if lt and #field_value > lt then
+                return {
+                    field = field_name,
+                    expected_cond = string.format('max. %d items', lt),
+                    actual_cond = string.format('%d items', #field_value),
+                    message = 'list is too long',
+                }
+            end
+
+            if gt and #field_value < gt then
+                return {
+                    field = field_name,
+                    expected_cond = string.format('max. %d items', gt),
+                    actual_cond = string.format('%d items', #field_value),
+                    message = 'list is too short',
+                }
+            end
+
+            local list_item_schema = field_schema['*']
+
+            if list_item_schema ~= nil then
+                ---@type xassert_schema
+                local composite_schema = {}
+                for i, v in ipairs(field_value) do
+                    composite_schema[tostring(i)] = { v, list_item_schema }
+                end
+
+                return validate(field_name, composite_schema)
+            end
+
+            return
+        end
+
+        if possible_type == 'integer' or possible_type == 'number' then
+            if field_value_type ~= possible_type then
+                return {
+                    field = field_name,
+                    expected_cond = possible_type,
+                    actual_cond = field_value_type,
+                    message = 'invalid type',
+                }
+            end
+
+            if lt and field_value > lt then
+                return {
+                    field = field_name,
+                    expected_cond = string.format('max. %d', lt),
+                    actual_cond = tostring(field_value),
+                    message = 'number is too big',
+                }
+            end
+
+            if gt and field_value < gt then
+                return {
+                    field = field_name,
+                    expected_cond = string.format('max. %d', gt),
+                    actual_cond = tostring(field_value),
+                    message = 'number is too small',
+                }
+            end
+
+            return
+        end
+
+        if possible_type == 'string' then
+            if field_value_type ~= possible_type then
+                return {
+                    field = field_name,
+                    expected_cond = possible_type,
+                    actual_cond = field_value_type,
+                    message = 'invalid type',
+                }
+            end
+
+            if lt and #field_value > lt then
+                return {
+                    field = field_name,
+                    expected_cond = string.format('max. %d characters', lt),
+                    actual_cond = string.format('%d characters', #field_value),
+                    message = 'string is too long',
+                }
+            end
+
+            if gt and #field_value < gt then
+                return {
+                    field = field_name,
+                    expected_cond = string.format('max. %d characters', gt),
+                    actual_cond = string.format('%d characters', #field_value),
+                    message = 'string is too short',
+                }
+            end
+
+            local string_match = field_schema['*']
+            local _, string_match_type = xtype(string_match)
+
+            if string_match_type == 'string' then
+                if not field_value:match(string_match) then
+                    return {
+                        field = field_name,
+                        expected_cond = string.format('string matching "%s"', string_match),
+                        actual_cond = field_value,
+                        message = 'string does not match pattern',
+                    }
+                end
+            elseif string_match_type == 'callable' then
+                if not string_match(field_value) then
+                    return {
+                        field = field_name,
+                        expected_cond = 'validated string',
+                        actual_cond = field_value,
+                        message = 'string does not pass validation',
+                    }
+                end
+            elseif string_match_type == 'list' then
+                local found = table.list_any(string_match --[[@as table]], field_value)
+
+                if not found then
+                    return {
+                        field = field_name,
+                        expected_cond = string.format('string matching any of [%s]', table.concat(string_match, ', ')),
+                        actual_cond = field_value,
+                        message = 'string does not match any candidate',
+                    }
+                end
+            elseif string_match_type ~= 'nil' then
+                return {
+                    field = field_name,
+                    expected_cond = 'string | callable | list',
+                    actual_cond = string_match_type,
+                    message = 'invalid schema: invalid string match type',
+                }
+            end
+
+            return
+        end
+    end
+
+    if field_schema_type == 'list' then
+        local errors = {}
+        for i, candidate_schema in ipairs(field_schema) do
+            local inner_errors = validate(field_name, { [tostring(i)] = { field_value, candidate_schema } })
+
+            if #inner_errors == 0 then
+                return
+            else
+                for _, error in ipairs(inner_errors) do
+                    table.insert(errors, error)
+                end
+            end
+        end
+
+        return {
+            field = field_name,
+            expected_cond = table.concat(
+                table.list_uniq(table.list_map(errors, function(e)
+                    return e.expected_cond
+                end)),
+                ' | '
+            ),
+            actual_cond = table.concat(
+                table.list_uniq(table.list_map(errors, function(e)
+                    return e.actual_cond
+                end)),
+                ' | '
+            ),
+            message = 'invalid type or assertions of value failed',
+        }
+    end
+
+    if field_value_raw_type ~= 'table' then
+        return {
+            field = field_name,
+            expected_cond = 'table | list',
+            actual_cond = field_value_type,
+            message = 'invalid type',
+        }
+    end
+
+    ---@type xassert_schema
+    local composite_schema = {}
+    for k, v in pairs(composite_schema) do
+        composite_schema[k] = { field_value[k], v }
+    end
+
+    return validate(field_name, composite_schema)
+end
+
+-- Validates a given schema.
+---@param parent_field_name string|nil # the key to assert.
+---@param schema xassert_schema # the schema to validate.
+---@return xassert_error[] # the result of the validation.
+validate = function(parent_field_name, schema)
+    if type(schema) ~= 'table' then
+        return {
+            {
+                field = parent_field_name,
+                expected_cond = 'table',
+                actual_cond = type(schema),
+                message = 'invalid schema',
+            },
+        }
+    end
+
+    ---@type xassert_error[]
+    local errors = {}
+
+    for key, entry in pairs(schema) do
+        local field_name = parent_field_name and string.format('%s.%s', parent_field_name, tostring(key))
+            or tostring(key)
+
+        local validation_result = validate_entry(field_name, entry)
+        if validation_result then
+            local _, ty = xtype(validation_result)
+
+            if ty == 'list' then
+                for _, error in ipairs(validation_result) do
+                    table.insert(errors, error)
+                end
+            else
+                table.insert(errors, validation_result)
+            end
+        end
+    end
+
+    return errors
+end
+
+-- Formats the errors of a validation.
+---@param errors xassert_error[] # the errors to format.
+---@return string # the formatted errors.
+local format_assert_error = function(errors)
+    local formatted = 'assert failed:'
+    for _, error in ipairs(errors) do
+        assert(error.field, 'validation internal error')
+
+        formatted = formatted
+            .. string.format(
+                '\n  - [`%s`]: %s. expected `%s`, got `%s`.',
+                error.field,
+                error.message,
+                error.expected_cond,
+                error.actual_cond
+            )
+    end
+
+    return formatted
+end
+
+-- Asserts the validity of a schema.
+---@param input xassert_schema # the input to assert.
+_G.xassert = function(input)
+    local errors = validate(nil, input)
+    if #errors > 0 then
+        error(format_assert_error(errors))
+    end
+end
+
+-- Creates a hash from a list of values.
+---@param ... any # the values to hash.
+---@return string # the hash.
+_G.hash = function(...)
+    local key = ''
+    for i = 1, select('#', ...) do
+        local v = select(i, ...)
+        key = key .. '|' .. inspect(v)
+    end
+
+    return vim.fn.sha256(key)
+end
+
+-- Memoizes a the value of a function.
+---@generic T: fun(...): any
+---@param fn T # the function to memoize.
+---@return T # the memoized function.
+_G.memoize = function(fn)
+    ---@type table<string, any>
+    local data = {}
+
+    return function(...)
+        local key = hash(...)
+        if not data[key] then
+            data[key] = fn(...)
+        end
+
+        return data[key]
+    end
+end
+
+-- Reuires a module lazyly.
+---@param module string # the module to require.
+_G.xrequire = function(module)
+    xassert {
+        module = { module, 'string', ['>'] = 0 },
+    }
+
+    ---@type any|nil
+    local loaded_module
+    return setmetatable({}, {
+        __index = function(_, key)
+            loaded_module = loaded_module or require(module)
+            return loaded_module[key]
+        end,
+        __newindex = function(_, key, value)
+            loaded_module = loaded_module or require(module)
+            loaded_module[key] = value
+        end,
+        __call = function(_, ...)
+            loaded_module = loaded_module or require(module) --TODO: probably can be made smarter
+            return loaded_module(...)
+        end,
+        __ipairs = function()
+            loaded_module = loaded_module or require(module)
+            local a, b, c = ipairs(loaded_module)
+            return a, b, c
+        end,
+        __pairs = function()
+            loaded_module = loaded_module or require(module)
+            local a, b, c = pairs(loaded_module)
+            return a, b, c
+        end,
+    })
+end
+
+-- luacheck: push ignore 121 122 113
+
+local __lua_pairs = pairs
+local __lua_ipairs = ipairs
+
+-- Iterates over all key–value pairs of a table.
+---@generic K, V
+---@param t table<K, V>
+---@return (fun(t: table<K, V>, i: K|nil): K, V), table<K, V>, K
+_G.pairs = function(t)
+    assert(type(t) == 'table', 'expected a table')
+
+    local mt = getmetatable(t)
+    local n, p, k = (mt and mt.__pairs or __lua_pairs)(t)
+    return n, p, k
+end
+
+-- Iterates over a list of values.
+---@generic T
+---@param t T[]
+---@return (fun(table: T[], i: integer|nil): integer, T), T[], integer
+_G.ipairs = function(t)
+    assert(type(t) == 'table', 'expected a table')
+
+    local mt = getmetatable(t)
+    local n, p, i = (mt and mt.__ipairs or __lua_ipairs)(t)
+    return n, p, i
+end
+
+---@class (exact) inspect_options # The options for the inspect function.
+---@field unroll_meta boolean|nil # whether to unroll meta tables (default: `true`).
+---@field new_line string|nil # the newline character to use (default: '\n').
+---@field indent string|nil # the indent string to use (default: '  ').
+---@field separator string|nil # the separator to use (default: ', ').
+---@field max_depth integer|nil # the maximum depth to inspect (default: 3).
+
+--- Inspects a value.
+---@param value any # the value to inspect.
+---@param opts inspect_options|nil # the options to use.
+---@param depth integer|nil # the current depth.
+---@return string # the inspected value.
+function _G.inspect(value, opts, depth)
+    ---@type inspect_options
+    opts = table.merge(opts, {
+        unroll_meta = true,
+        new_line = '\n',
+        indent = '  ',
+        separator = ', ',
+        max_depth = 3,
+    })
+
+    depth = (depth or -2) + 1
+
+    xassert {
+        opts = {
+            opts,
+            {
+                unroll_meta = 'boolean',
+                new_line = 'string',
+                separator = 'string',
+                indent = 'string',
+                max_depth = { 'integer', ['>'] = 0 },
+            },
+        },
+        depth = { depth, 'integer' },
+    }
+
+    local t, ty = xtype(value)
+
+    if ty == 'nil' then
+        return 'nil'
+    elseif ty == 'string' then
+        return string.format("'%s'", value)
+    elseif ty == 'number' or ty == 'integer' or ty == 'boolean' then
+        return tostring(value)
+    elseif ty == 'table' or ty == 'callable' and t == 'table' then
+        if depth <= opts.max_depth then
+            local parts = {}
+
+            local mt = getmetatable(value)
+            if mt then
+                if opts.unroll_meta and mt.__tostring then
+                    return mt.__tostring(value)
+                elseif opts.unroll_meta and mt.__ipairs or mt.__pairs then
+                    local unrolled = table.clone(value)
+                    return inspect(unrolled, opts, depth)
+                end
+
+                table.insert(parts, string.format('<metatable> = %s', inspect(mt, opts, depth)))
+            end
+
+            for k, v in pairs(value) do
+                table.insert(
+                    parts,
+                    string.format(
+                        '%s = %s',
+                        inspect(k, {
+                            newline = '',
+                            unroll_meta = opts.unroll_meta,
+                            indent = '',
+                            max_depth = 1,
+                            separator = opts.separator,
+                        }, depth),
+                        inspect(v, opts, depth)
+                    )
+                )
+            end
+
+            local item_str = table.concat(parts, opts.new_line)
+
+            if item_str == '' then
+                return '{}'
+            elseif item_str:find '\n' then
+                return string.format('{%s%s%s}', opts.new_line, string.indent(item_str, opts.indent), opts.new_line)
+            else
+                return string.format('{%s}', item_str)
+            end
+        else
+            return string.format '{...}'
+        end
+    elseif ty == 'list' then
+        if depth <= opts.max_depth then
+            local parts = {}
+
+            for _, v in ipairs(value) do
+                table.insert(parts, inspect(v, opts, depth))
+            end
+
+            local item_str = table.concat(parts, opts.separator)
+            if item_str == '' then
+                return '{}'
+            elseif item_str:find '\n' then
+                return string.format('[%s%s%s]', opts.new_line, string.indent(item_str, opts.indent), opts.new_line)
+            else
+                return string.format('[%s]', item_str)
+            end
+        else
+            return string.format '[...]'
+        end
+    end
+
+    return vim.inspect(value, { newline = opts.new_line, depth = opts.max_depth })
+end
+
+--- Makes a table read-only.
+---@generic T: table
+---@param table T # the table to make read-only.
+---@return T # the read-only table.
+function table.freeze(table)
+    assert(type(table) == 'table', 'expected a table')
+
+    return setmetatable({}, {
+        __index = table,
+        __newindex = function()
+            error('attempt to modify read-only table', 2)
+        end,
+        __metatable = false,
+    })
+end
+
+--- Makes a table weak.
+---@generic T: table
+---@param t T # the table to make weak.
+---@param mode string|nil # the mode of the weak table (`k`, `v` or `kv`; default is `k`).
+---@return T # the weak table.
+function table.weak(t, mode)
+    xassert {
+        t = { t, 'table' },
+        mode = { mode, { 'nil', { 'string', ['*'] = '^k|v|kv$' } } },
+    }
+
+    return setmetatable(t, { __mode = mode or 'k' })
+end
+
+---@class (exact) smart_table_entity_prop # The property for a smart table.
+---@field get fun(smart_table: table, entity: table): any # the getter function.
+---@field set (fun(smart_table: table, entity: table, value: any)) | nil # the setter function (optional).
+---@field cache boolean|nil # whether to cache the values (default `false`).
+
+---@class (exact) smart_table_prop # The property for a smart table.
+---@field get fun(smart_table: table): any # the getter function.
+---@field set (fun(smart_table: table, value: any)) | nil # the setter function (optional).
+
+---@alias smart_table_func fun(smart_table: table, ...): any # The function for a smart table.
+---@alias smart_table_entity_func fun(entity: table, ...): any # The function for an entity.
+
+---@class smart_table_options # The options for a synthetic table.
+---@field functions table<string, smart_table_func>|nil # the functions for the smart table (optional).
+---@field properties table<string, smart_table_prop>|nil # the properties for the smart table (optional).
+---@field entity_id_valid fun(id: any): boolean # the function to check if an entity is valid.
+---@field entity_ids (fun(): any[])|nil # the entities to make smart tables for (optional).
+---@field entity_functions table<string, smart_table_entity_func>|nil # the functions for the smart table (optional).
+---@field entity_properties table<string, smart_table_entity_prop>|nil # the properties for the smart table (optional).
+
+--- Creates a new smart table.
+---@param opts smart_table_options # the options for the smart table.
+---@return table # the smart table.
+function table.smart(opts)
+    ---@type smart_table_options
+    opts = table.merge(opts, {
+        functions = {},
+        properties = {},
+        entity_functions = {},
+        entity_properties = {},
+    })
+
+    xassert {
+        opts = {
+            opts,
+            {
+                functions = {
+                    'table',
+                    ['*'] = 'callable',
+                },
+                properties = {
+                    'table',
+                    ['*'] = {
+                        get = 'callable',
+                        set = { 'nil', 'callable' },
+                    },
+                },
+                entity_ids = { 'nil', 'callable' },
+                entity_id_valid = 'callable',
+                entity_functions = {
+                    'table',
+                    ['*'] = 'callable',
+                },
+                entity_properties = {
+                    'table',
+                    ['*'] = {
+                        get = 'callable',
+                        set = { 'nil', 'callable' },
+                        cache = { 'nil', 'boolean' },
+                    },
+                },
+            },
+        },
+    }
+
+    local entity_keys =
+        table.list_to_set(table.list_merge(table.keys(opts.entity_functions), table.keys(opts.entity_properties)))
+
+    ---@param root table
+    ---@param entity_id any
+    local function make_entity_table(root, entity_id)
+        return setmetatable({}, {
+            __index = function(entity, key)
+                if key == nil then
+                    return
+                end
+
+                if key == 'id' then
+                    return entity_id
+                end
+
+                local fn = opts.entity_functions[key]
+                if fn then
+                    return function(...)
+                        return fn(root, entity, ...)
+                    end
+                end
+
+                local prop = opts.entity_properties[key]
+                if prop then
+                    if prop.cache then
+                        local value = rawget(entity, key)
+                        if value == nil then
+                            value = prop.get(root, entity)
+                            rawset(entity, key, value)
+                        end
+
+                        return value
+                    end
+
+                    return prop.get(root, entity)
+                end
+
+                error(string.format('unknown function or property `%s`', inspect(key)), 2)
+            end,
+            __newindex = function(entity, key, value)
+                if key == nil then
+                    return
+                end
+
+                if key == 'id' then
+                    error(string.format('property `%s` is read-only', inspect(key)), 2)
+                end
+
+                local prop = opts.entity_properties[key]
+
+                if prop then
+                    if prop.set then
+                        if prop.cache then
+                            rawset(entity, key, value)
+                        end
+
+                        return prop.set(root, entity, value)
+                    else
+                        error(string.format('property `%s` is read-only', inspect(key)), 2)
+                    end
+                end
+
+                error(string.format('unknown property `%s`', inspect(key)), 2)
+            end,
+            __pairs = function(entity)
+                local iter = function(t, k)
+                    k = next(t, k)
+                    return k, entity[k]
+                end
+
+                return iter, entity_keys, nil
+            end,
+        })
+    end
+
+    return setmetatable({}, {
+        __index = function(root, key)
+            local fn = opts.functions[key]
+            if fn then
+                return function(...)
+                    return fn(root, ...)
+                end
+            end
+
+            local prop = opts.properties[key]
+            if prop and prop.get then
+                return prop.get(root)
+            end
+
+            if opts.entity_id_valid(key) then
+                local entity = rawget(root, key)
+                if entity == nil then
+                    entity = make_entity_table(root, key)
+                    rawset(root, key, entity)
+                end
+
+                return entity
+            end
+
+            return nil
+        end,
+        __newindex = function(root, key, value)
+            local prop = opts.properties[key]
+
+            if prop then
+                if prop.set then
+                    prop.set(root, value)
+                    return
+                else
+                    error(string.format('property `%s` is read-only', inspect(key)), 2)
+                end
+            end
+
+            error(string.format('unknown property `%s`', inspect(key)), 2)
+        end,
+        __pairs = opts.entity_ids and function(root)
+            local iter = function(t, k)
+                local v
+                repeat
+                    k, v = next(t, k)
+                until k == nil or opts.entity_id_valid(v)
+
+                if k == nil then
+                    return
+                end
+
+                return k, root[v]
+            end
+
+            return iter, opts.entity_ids(), nil
+        end or function()
+            error 'this table is not enumerable'
+        end,
+        __ipairs = opts.entity_ids and function(root)
+            local iter = function(t, i)
+                local v
+                repeat
+                    i, v = i + 1, t[i]
+                until i > #t or opts.entity_id_valid(v)
+
+                if i > #t then
+                    return
+                end
+
+                return i, root[t[i]]
+            end
+
+            return iter, opts.entity_ids(), 0
+        end or function()
+            error 'this table is not enumerable'
+        end,
+    })
+end
+
+-- Checks if a table has a specific kay/value.
+---@generic K, V
+---@param t table<K, V> # the table to check.
+---@param fn fun(key: K, value: V): boolean # the function to check the key/value.
+---@return boolean # whether the table has the key/value.
+---@nodiscard
+function table.any(t, fn)
+    for k, v in pairs(t) do
+        if fn(k, v) then
+            return true
+        end
+    end
+
+    return false
+end
+
+--- Merges multiple tables into one.
+---@param ... table|nil # the tables to merge.
+---@return table # the merged table.
+---@nodiscard
+function table.merge(...)
+    local list = table.to_list { ... }
+    xassert {
+        args = { list, { 'list', ['*'] = { 'list', 'table' } } },
+    }
+
+    ---@type table
+    local result
+
+    if #list == 0 then
+        result = {}
+    elseif #list == 1 then
+        result = list[1] --[[@as table]]
+    else
+        -- TODO: make my own
+        result = vim.tbl_extend('keep', unpack(list))
+    end
+
+    return result
+end
+
+-- Merge multiple lists into one.
+---@generic T: table
+---@param ... T # the lists to merge.
+---@return T # the merged list.
+---@nodiscard
+function table.list_merge(...)
+    local lists = table.to_list { ... }
+
+    local result = {}
+    for i, list in ipairs(lists) do
+        xassert {
+            [tostring(i)] = { list, 'list' },
+        }
+
+        for _, item in ipairs(list) do
+            table.insert(result, item)
+        end
+    end
+
+    return result
+end
+
+--- Coerces a value to a list.
+---@generic T
+---@param value T|T[]|table<any,T>|nil # any value that will be converted to a list.
+---@return T[] # the listified version of the value.
+---@nodiscard
+function table.to_list(value)
+    local _, t = xtype(value)
+
+    ---@type table
+    local result
+
+    if t == 'nil' then
+        result = {}
+    elseif t == 'list' then
+        result = value --[[@as table]]
+    elseif t == 'table' then
+        local list = {}
+        for _, item in
+            pairs(value --[[@as table]])
+        do
+            table.insert(list, item)
+        end
+
+        result = list
+    else
+        result = { value }
+    end
+
+    return result
+end
+
+---@class (exact) set<T>: { [T]: true } # Represents a set.
+
+-- Converts a list to a set.
+---@generic T
+---@param list T[] # the list to convert to a set.
+---@return set<T>
+---@nodiscard
+function table.list_to_set(list)
+    xassert {
+        list = { list, 'list' },
+    }
+
+    local result = {}
+
+    for _, item in ipairs(list) do
+        result[item] = true
+    end
+
+    return result
+end
+
+-- Returns a new list that contains only unique values.
+---@param list any[] # the list to make unique.
+---@param key_fn (fun(value: any): any)|nil # the function to get the key from the value.
+---@return any[] # the list with unique values.
+---@nodiscard
+function table.list_uniq(list, key_fn)
+    xassert {
+        list = { list, 'list' },
+        key_fn = { key_fn, { 'nil', 'callable' } },
+    }
+
+    local seen = {}
+    local result = {}
+
+    for _, item in ipairs(list) do
+        local key = key_fn and key_fn(item) or item
+        if not seen[key] then
+            table.insert(result, item)
+            seen[key] = true
+        end
+    end
+
+    return result
+end
+
+-- Inflates a list to a table.
+---@generic T: table
+---@param list T[] # the list to inflate.
+---@param key_fn fun(value: T): any # the function to get the key from the value.
+---@return table<string, T> # the inflated table.
+---@nodiscard
+function table.inflate(list, key_fn)
+    xassert {
+        list = { list, 'list' },
+        key_fn = { key_fn, 'callable' },
+    }
+
+    local result = {}
+
+    for _, value in ipairs(list) do
+        local key = key_fn(value)
+        result[key] = value
+    end
+
+    return result
+end
+
+-- Checks if a table is empty.
+---@param t table # the table to check.
+---@return boolean # whether the table is empty.
+---@nodiscard
+function table.is_empty(t)
+    xassert {
+        t = { t, { 'table', 'list' } },
+    }
+
+    return next(t) == nil
+end
+
+-- Checks if a table is a list.
+---@param t table # the table to check.
+---@return boolean # whether the table is a list.
+---@nodiscard
+function table.is_list(t)
+    xassert {
+        t = { t, { 'table', 'list' } },
+    }
+
+    local _, ty = xtype(t)
+    return ty == 'list'
+end
+
+-- Converts the elements of a list to a new list.
+---@generic I, O
+---@param list I[] # the list to map.
+---@param fn fun(value: I): O # the function to map the values.
+---@return O[] # the mapped list.
+---@nodiscard
+function table.list_map(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    local result = {}
+    for _, item in ipairs(list) do
+        table.insert(result, fn(item))
+    end
+
+    return result
+end
+
+-- Iterates over the elements of a list.
+---@generic T
+---@param list T[] # the list to iterate over.
+---@param fn fun(value: T) # the function to iterate the values.
+function table.list_iterate(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    for _, item in ipairs(list) do
+        fn(item)
+    end
+end
+
+-- Sorts the elements of a list.
+---@generic T
+---@param list T[] # the list to sort.
+---@param fn fun(a: T, b: T): boolean # the function to sort the values.
+---@return T[] # the sorted list.
+---@nodiscard
+function table.list_sort(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    list = table.clone(list)
+    table.sort(list, fn)
+
+    return list
+end
+
+-- Filters the elements of a list.
+---@generic T
+---@param list T[] # the list to filter.
+---@param fn fun(value: T): any # the function to filter the values.
+---@return T[] # the filtered list.
+---@nodiscard
+function table.list_filter(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    local result = {}
+    for _, item in ipairs(list) do
+        if fn(item) then
+            table.insert(result, item)
+        end
+    end
+
+    return result
+end
+
+-- Checks if a list has a value that matches a condition.
+---@generic T
+---@param list T[] # the list to check.
+---@param cond T|fun(value: T): any # the function to check the values.
+---@return boolean # whether the list has any matching value.
+---@nodiscard
+function table.list_any(list, cond)
+    xassert {
+        list = { list, 'list' },
+    }
+
+    local _, ty = xtype(cond)
+
+    if ty == 'callable' then
+        for _, item in ipairs(list) do
+            if cond(item) then
+                return true
+            end
+        end
+    else
+        for _, item in ipairs(list) do
+            if item == cond then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+-- Checks if a list has all values that match a condition.
+---@generic T
+---@param list T[] # the list to check.
+---@param fn fun(value: T): any # the function to check the values.
+---@return boolean # whether the list has all matching values.
+---@nodiscard
+function table.list_all(list, fn)
+    xassert {
+        list = { list, 'list' },
+        fn = { fn, 'callable' },
+    }
+
+    if #list == 0 then
+        return true
+    end
+
+    for _, item in ipairs(list) do
+        if fn(item) then
+            return true
+        end
+    end
+
+    return false
+end
+
+--- Converts the values of a table to a new table.
+---@generic K, I, O
+---@param t table<K, I> # the table to map.
+---@param fn fun(value: I): O # the function to map the values.
+---@return table<K, O> # the mapped list.
+---@nodiscard
+function table.map(t, fn)
+    xassert {
+        t = { t, 'table' },
+        fn = { fn, 'callable' },
+    }
+
+    local result = {}
+    for key, value in pairs(t) do
+        result[key] = fn(value)
+    end
+
+    return result
+end
+
+--- Extracts the keys from a table.
+---@generic K, V
+---@param t table<K, V> # the table to extract the keys from.
+---@return K[] # the keys of the table.
+---@nodiscard
+function table.keys(t)
+    xassert {
+        t = { t, 'table' },
+    }
+
+    local keys = {}
+    for k in pairs(t) do
+        table.insert(keys, k)
+    end
+
+    return keys
+end
+
+-- Clones a table or a list.
+---@generic T: table
+---@param t T # the table or list to clone.
+---@param shallow boolean|nil # whether to do a shallow clone (default: `true`).
+---@return T # the cloned table or list.
+---@nodiscard
+function table.clone(t, shallow)
+    xassert {
+        t = { t, { 'table', 'list' } },
+        shallow = { shallow, { 'nil', 'boolean' } },
+    }
+
+    if shallow == false then
+        return vim.deepcopy(t)
+    elseif table.is_list(t) then
+        return table.list_merge({}, t)
+    else
+        return table.merge({}, t)
+    end
+end
+
+--- Checks if a string starts with a given prefix.
+---@param s string # the string to check.
+---@param prefix string # the prefix to check.
+---@return boolean # whether the string starts with the prefix.
+---@nodiscard
+function string.starts_with(s, prefix)
+    xassert {
+        s = { s, 'string' },
+        prefix = { prefix, 'string' },
+    }
+
+    return string.sub(s, 1, #prefix) == prefix
+end
+
+-- Checks if a string ends with a given suffix.
+---@param s string # the string to check.
+---@param suffix string # the suffix to check.
+function string.ends_with(s, suffix)
+    xassert {
+        s = { s, 'string' },
+        suffix = { suffix, 'string' },
+    }
+
+    return string.sub(s, -#suffix) == suffix
+end
+
+-- Indents a string.
+---@param s string # the string to indent.
+---@param indent string # the indent to use.
+---@return string # the indented string.
+---@nodiscard
+function string.indent(s, indent)
+    xassert {
+        s = { s, 'string' },
+        indent = { indent, 'string' },
+    }
+
+    return indent .. s:gsub('\n', '\n' .. indent)
+end
+
+-- Gets the timezone offset for a given timestamp
+---@param timestamp integer # the timestamp to get the offset for
+---@return integer # the timezone offset
+---@nodiscard
+function os.timezone_offset(timestamp)
+    assert(type(timestamp) == 'number')
+
+    local utc_date = os.date('!*t', timestamp)
+    local local_date = os.date('*t', timestamp)
+
+    local_date.isdst = false
+
+    local diff = os.difftime(os.time(local_date --[[@as osdateparam]]), os.time(utc_date --[[@as osdateparam]]))
+    local h, m = math.modf(diff / 3600)
+
+    return 100 * h + 60 * m
+end
+
+---@type string
+local uuid_template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+
+-- Generates a new UUID
+---@return string # the generated UUID
+---@nodiscard
+function os.uuid()
+    ---@param c string
+    local function subs(c)
+        local v = (((c == 'x') and math.random(0, 15)) or math.random(8, 11))
+        return string.format('%x', v)
+    end
+
+    local res = uuid_template:gsub('[xy]', subs)
+    return res
+end
+
+-- luacheck: pop
+
+---@class api
+_G.ide = {
+    ---@module 'text'
+    text = xrequire 'text',
+    ---@module 'fs'
+    fs = xrequire 'fs',
+    ---@module 'buf'
+    buf = xrequire 'buf',
+    ---@module 'win'
+    win = xrequire 'win',
+    ---@module 'ft'
+    ft = xrequire 'ft',
+    ---@module 'config'
+    config = xrequire 'config',
+    ---@module 'command'
+    command = xrequire 'command',
+    ---@module 'editor'
+    editor = xrequire 'editor',
+    ---@module 'process'
+    process = xrequire 'process',
+    ---@module 'tui'
+    tui = xrequire 'tui',
+    ---@module 'sched'
+    sched = xrequire 'sched',
+    ---@module 'theme'
+    theme = xrequire 'theme',
+    ---@module 'plugin'
+    plugin = xrequire 'plugin',
 }
 
-ide.ft['help'].pinned_to_window = true
-ide.ft['query'].pinned_to_window = true
-ide.ft['markdown'].wrap_enabled = true
-ide.ft['gitcommit'].wrap_enabled = true
-ide.ft['gitrebase'].wrap_enabled = true
-ide.ft['hgcommit'].wrap_enabled = true
+require '__unsorted'
 
--- common misspellings
-vim.cmd.cnoreabbrev('qw', 'wq')
-vim.cmd.cnoreabbrev('Wq', 'wq')
-vim.cmd.cnoreabbrev('WQ', 'wq')
-vim.cmd.cnoreabbrev('Qa', 'qa')
-vim.cmd.cnoreabbrev('Bd', 'bd')
-vim.cmd.cnoreabbrev('bD', 'bd')
+---@type table<string, boolean>
+local shown_messages = {}
 
-vim.cmd [[
-aunmenu PopUp.How-to\ disable\ mouse
-aunmenu PopUp.-1-
-]]
-
--- Remap for dealing with word wrap
-keys.map('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
-keys.map('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
-keys.map('n', '<Up>', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
-keys.map('n', '<Down>', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
-
--- Better normal mode navigation
-keys.map({ 'n', 'x' }, 'gg', function()
-    if vim.v.count > 0 then
-        vim.cmd('normal! ' .. vim.v.count .. 'gg')
-    else
-        vim.cmd 'normal! gg0'
+--- Global debug function to help me debug (duh)
+---@param ... any # anything to debug
+function _G.dbg(...)
+    local objects = {}
+    for i = 1, select('#', ...) do
+        local v = select(i, ...)
+        table.insert(objects, inspect(v))
     end
-end, { desc = 'Start of buffer' })
 
-keys.map({ 'n', 'x' }, 'G', function()
-    vim.cmd 'normal! G$'
-end, { desc = 'End of buffer' })
+    local trace = ide.process.get_formatted_trace_back(2)
+    local formatted = string.format('%s\n\ntraceback:\n%s', table.concat(objects, '\n'), trace)
+    local key = vim.fn.sha256(formatted)
 
--- move selection up/down
-keys.map('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move selection downward' })
-keys.map('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move selection upward' })
+    if not shown_messages[key] then
+        shown_messages[key] = true
+        ide.tui.warn(formatted)
 
--- better indenting
-keys.map('x', '<', '<gv', { desc = 'Indent selection' })
-keys.map('x', '>', '>gv', { desc = 'Unindent selection' })
+        vim.defer_fn(function()
+            shown_messages[key] = nil
+        end, 5000)
+    end
 
-keys.map('x', '<Tab>', '>gv', { desc = 'Indent selection' })
-keys.map('x', '<S-Tab>', '<gv', { desc = 'Unindent selection' })
-
--- Add undo break-points
-for _, key in ipairs { '.', ',', '!', '?', ';', ':', '"', "'" } do
-    keys.map(
-        'i',
-        key,
-        string.format('%s<c-g>u', key),
-        { desc = string.format('Insert %s and an undo break-point', key) }
-    )
+    return ...
 end
-
--- Redo
-keys.map('n', 'U', '<C-r>', { desc = 'Redo' })
-
--- Some editor mappings
-keys.map('i', '<C-BS>', '<C-w>', { desc = 'Delete word' })
-
-keys.map('i', '<Tab>', function()
-    local r, c = unpack(vim.api.nvim_win_get_cursor(0))
-    if c and r then
-        local line = vim.api.nvim_buf_get_lines(vim.fn.winbufnr(0), r - 1, r, true)[1]
-
-        local before = string.sub(line, 1, c)
-        local after = string.sub(line, c + 1, -1)
-
-        if string.match(before, '^%s*$') ~= nil and string.match(after, '^%s*$') == nil then
-            return '<C-t>'
-        end
-    end
-
-    return '<Tab>'
-end, { desc = 'Indent/Tab', expr = true })
-
-keys.map('i', '<S-Tab>', '<C-d>', { desc = 'Unindent' })
-keys.map('n', '<Tab>', '>>', { desc = 'Indent' })
-keys.map('n', '<S-Tab>', '<<', { desc = 'Indent' })
-
--- Better page up/down
-local function page_expr(dir)
-    local jump = vim.api.nvim_win_get_height(0)
-    if vim.v.count > 0 then
-        jump = jump * vim.v.count
-    end
-
-    vim.cmd('normal! ' .. jump .. dir .. 'zz')
-end
-
-keys.map({ 'i', 'n' }, '<PageUp>', function()
-    page_expr 'k'
-end, { desc = 'Page up' })
-
-keys.map({ 'x' }, '<S-PageUp>', function()
-    page_expr 'k'
-end, { desc = 'Page up' })
-
-keys.map({ 'i', 'n' }, '<PageDown>', function()
-    page_expr 'j'
-end, { desc = 'Page down' })
-
-keys.map({ 'x' }, '<S-PageDown>', function()
-    page_expr 'j'
-end, { desc = 'Page down' })
-
--- Disable the annoying yank on change
-keys.map({ 'n', 'x' }, 'c', [["_c]], { desc = 'Change' })
-keys.map({ 'n', 'x' }, 'C', [["_C]], { desc = 'Change' })
-keys.map('x', 'p', 'P', { desc = 'Paste' })
-keys.map('x', 'P', 'p', { desc = 'Yank & paste' })
-keys.map('n', 'x', [["_x]], { desc = 'Delete character' })
-keys.map('n', '<Del>', [["_x]], { desc = 'Delete character' })
-keys.map('x', '<BS>', 'd', { desc = 'Delete selection' })
-
-keys.map('n', 'dd', function()
-    if vim.api.nvim_get_current_line():match '^%s*$' then
-        return '"_dd'
-    else
-        return 'dd'
-    end
-end, { desc = 'Delete line', expr = true })
-
---- Inserts a new line and pastes
----@param op "o"|"O" # the operation to perform
-local function ins_paste(op)
-    local count = vim.v.count
-
-    vim.cmd('normal! ' .. op)
-    vim.cmd 'stopinsert'
-    if count > 0 then
-        vim.cmd('normal! ' .. count .. 'p')
-    else
-        vim.cmd 'normal! p'
-    end
-end
-
-keys.map('n', 'gp', function()
-    ins_paste 'o'
-end, { desc = 'Paste below' })
-
-keys.map('n', 'gP', function()
-    ins_paste 'O'
-end, { desc = 'Paste above' })
-
--- search
-keys.map({ 'i', 'n' }, '<esc>', function()
-    vim.cmd.nohlsearch()
-    if package.loaded['noice'] then
-        pcall(vim.cmd.NoiceDismiss)
-    end
-
-    return '<esc>'
-end, { expr = true, desc = 'Escape and clear highlight' })
-
-keys.map('n', 'n', "'Nn'[v:searchforward].'zv'", { expr = true, desc = 'Next search result' })
-keys.map({ 'x', 'o' }, 'n', "'Nn'[v:searchforward]", { expr = true, desc = 'Next search result' })
-keys.map('n', 'N', "'nN'[v:searchforward].'zv'", { expr = true, desc = 'Previous search result' })
-keys.map({ 'x', 'o' }, 'N', "'nN'[v:searchforward]", { expr = true, desc = 'Previous search result' })
-
-keys.map('n', '\\', 'viw', { desc = 'Select word' })
-
-keys.map('x', '<C-r>', function()
-    local text = ide.win[vim.api.nvim_get_current_win()].selected_text
-    keys.feed(syntax.create_rename_expression { orig = text })
-end, { desc = 'Replace selection' })
-
-keys.map('x', '<C-S-r>', function()
-    local text = ide.win[vim.api.nvim_get_current_win()].selected_text
-    keys.feed(syntax.create_rename_expression { orig = text, whole_word = true })
-end, { desc = 'Replace selection (whole word)' })
-
-keys.map('n', '<C-r>', syntax.create_rename_expression(), { desc = 'Replace word under cursor' })
-keys.map(
-    'n',
-    '<C-S-r>',
-    syntax.create_rename_expression { whole_word = true },
-    { desc = 'Replace word under cursor (whole word)' }
-)
-
--- special keys
-keys.map('n', '<M-s>', '<cmd>w<cr>', { desc = 'Save buffer' })
-keys.map('n', '<M-x>', 'dd', { desc = 'Delete line' })
-keys.map('x', '<M-x>', 'd', { desc = 'Delete selection' })
-keys.map('n', '<M-a>', 'ggVG', { desc = 'Select all', remap = true })
-
-keys.map('x', '.', ':norm .<CR>', { desc = 'Repeat edit' })
-keys.map('x', '@', ':norm @q<CR>', { desc = 'Repeat macro' })
-
-keys.map('i', '<LeftMouse>', '<Esc><LeftMouse>', { desc = 'Exit insert mode and left-click' })
-keys.map('i', '<RightMouse>', '<Esc><RightMouse>', { desc = 'Exit insert mode and right-click' })
-
-keys.map('n', '<C-a>', function()
-    if not syntax.increment_node(1) then
-        vim.cmd 'norm! <C-a>'
-    end
-end, { desc = 'Increment/Toggle value' })
-
-keys.map('n', '<C-x>', function()
-    if not syntax.increment_node(-1) then
-        vim.cmd 'norm! <C-x>'
-    end
-end, { desc = 'Decrement/Toggle value' })
-
-keys.map({ 'n', 'x' }, '=', function()
-    local buffer = require('api.buf').current
-    if buffer and buffer.is_normal then
-        buffer.format()
-    end
-end, { desc = 'Format buffer/selection' })
-
--- better search
-vim.on_key(function(char)
-    if vim.fn.mode() == 'n' then
-        local new_hlsearch = vim.tbl_contains({ '<CR>', 'n', 'N', '*', '#', '?', '/' }, vim.fn.keytrans(char))
-        if vim.opt.hlsearch ~= new_hlsearch then
-            vim.opt.hlsearch = new_hlsearch
-        end
-    end
-end, vim.api.nvim_create_namespace 'auto_hlsearch')
-
-keys.group { lhs = 'g', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Go-to' }
-keys.group { lhs = ']', mode = { 'n', 'v' }, icon = icons.UI.Next, desc = 'Next' }
-keys.group { lhs = '[', mode = { 'n', 'v' }, icon = icons.UI.Prev, desc = 'Previous' }
-
--- Disable some sequences
-keys.map({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
-keys.map('n', '<BS>', '<Nop>', { silent = true })
-keys.map('n', '<M-v>', '<cmd>wincmd v<CR>', { desc = 'Split window below' })
-keys.map('n', '<M-h>', '<cmd>wincmd s<CR>', { desc = 'Split window right' })
-
--- Better jump list navigation
-keys.map('n', ']]', '<C-i>', { desc = 'Next location' })
-keys.map('n', '[[', '<C-o>', { desc = 'Previous location' })
-
--- terminal mappings
-keys.map('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Enter normal mode' })
-
--- buffer management
-keys.map('n', '<leader><leader>', function()
-    if not vim.buf.is_special() then
-        pcall(vim.cmd.edit, '#')
-    end
-end, { icon = icons.UI.Switch, desc = 'Switch buffer', silent = true })
-
-keys.map('n', '<leader>c', function()
-    ide.buf[vim.api.nvim_get_current_buf()].remove()
-end, { icon = icons.UI.Close, desc = 'Close buffer' })
-keys.map('n', '<leader>C', function()
-    ide.buf[vim.api.nvim_get_current_buf()].remove_others()
-end, { icon = icons.UI.Close, desc = 'Close other buffers' })
-
-for i = 1, 9 do
-    keys.map('n', '<M-' .. i .. '>', function()
-        local buffer = vim.buf.get_listed_buffers({ loaded = false })[i]
-        if buffer then
-            vim.cmd.buffer(buffer)
-        end
-    end, { desc = 'Go to buffer ' .. i })
-end
-
-keys.map('n', '<leader>w', '<cmd>w<cr>', { icon = icons.UI.Save, desc = 'Save buffer' })
-keys.map('n', '<leader>W', '<cmd>wa<cr>', { icon = icons.UI.SaveAll, desc = 'Save all buffers' })
-
-keys.map('n', '[b', '<cmd>bprevious<cr>', { icon = icons.UI.Next, desc = 'Previous buffer' })
-keys.map('n', ']b', '<cmd>bnext<cr>', { icons = icons.UI.Prev, desc = 'Next buffer' })
-
--- tabs
-keys.map('n', ']t', '<cmd>tabnext<cr>', { icon = icons.UI.Next, desc = 'Next tab' })
-keys.map('n', '[t', '<cmd>tabprevious<cr>', { icons = icons.UI.Prev, desc = 'Previous tab' })
-
--- diagnostics
-keys.map('n', ']m', function()
-    ide.buf.current.next_diagnostic(true)
-end, { icon = icons.UI.Next, desc = 'Next Diagnostic' })
-keys.map('n', '[m', function()
-    ide.buf.current.next_diagnostic(false)
-end, { icon = icons.UI.Prev, desc = 'Previous Diagnostic' })
-keys.map('n', ']e', function()
-    ide.buf.current.next_diagnostic(true, 'ERROR')
-end, { icon = icons.UI.Next, desc = 'Next Error' })
-keys.map('n', '[e', function()
-    ide.buf.current.next_diagnostic(false, 'ERROR')
-end, { icon = icons.UI.Prev, desc = 'Previous Error' })
-keys.map('n', ']w', function()
-    ide.buf.current.next_diagnostic(true, 'WARN')
-end, { icon = icons.UI.Next, desc = 'Next Warning' })
-keys.map('n', '[w', function()
-    ide.buf.current.next_diagnostic(false, 'WARN')
-end, { icon = icons.UI.Prev, desc = 'Previous Warning' })
-
--- Command mode remaps to make my life easier using the keyboard
-keys.map('c', '<Down>', function()
-    if vim.fn.wildmenumode() then
-        return '<C-n>'
-    else
-        return '<Down>'
-    end
-end, { expr = true })
-
-keys.map('c', '<Up>', function()
-    if vim.fn.wildmenumode() then
-        return '<C-p>'
-    else
-        return '<Up>'
-    end
-end, { expr = true })
-
-keys.map('c', '<Left>', function()
-    if vim.fn.wildmenumode() then
-        return '<Space><BS><Left>'
-    else
-        return '<Left>'
-    end
-end, { expr = true })
-
-keys.map('c', '<Right>', function()
-    if vim.fn.wildmenumode() then
-        return '<Space><BS><Right>'
-    else
-        return '<Right>'
-    end
-end, { expr = true })
-
--- Add "q" to special windows
-keys.attach(vim.buf.special_file_types, function(set)
-    set('n', 'q', '<cmd>close<cr>', { silent = true })
-    set('n', '<Esc>', '<cmd>close<cr>', { silent = true })
-end)
-
-keys.attach('help', function(set)
-    set('n', 'q', '<cmd>close<cr>', { icon = icons.UI.Close, silent = true })
-    set('n', '<Esc>', '<cmd>close<cr>', { icon = icons.UI.Close, silent = true })
-end, true)
-
-keys.attach(nil, function(set)
-    keys.group { mode = 'n', icon = icons.UI.AI, lhs = '<leader>x', desc = 'AI' }
-
-    set('n', '<leader>xx', function()
-        require('CopilotChat').open()
-    end, { desc = 'Open chat window', icon = icons.UI.Tool })
-
-    set('n', '<leader>xa', function()
-        require('CopilotChat').select_agent()
-    end, { desc = 'Select agent', icon = icons.UI.Tool })
-
-    set('n', '<leader>xm', function()
-        require('CopilotChat').select_model()
-    end, { desc = 'Select model', icon = icons.UI.Tool })
-
-    set('n', '<leader>xf', function()
-        require('CopilotChat').ask('Fix the code in the file', {
-            context = '#buffer',
-            clear_chat_on_new_prompt = true,
-            auto_insert_mode = false,
-            window = {
-                layout = 'float',
-                relative = 'cursor',
-                width = 1,
-                height = 0.4,
-                row = 1,
-            },
-        })
-    end, { desc = 'Chat with AI', icon = icons.UI.AI })
-end)
-
-keys.map('n', '<leader>u', require('api.config').manage, { icon = icons.UI.UI, desc = 'Manage options' })
-
--- Specials using "Command/Super" key (when available!)
-keys.map('n', '<M-]>', '<C-i>', { icon = icons.UI.Next, desc = 'Next location' })
-keys.map('n', '<M-[>', '<C-o>', { icon = icons.UI.Prev, desc = 'Previous location' })
-
--- show cursor only in active window
-events.on_event({ 'InsertLeave', 'WinEnter' }, function(evt)
-    if vim.bo[evt.buf].buftype == '' then
-        vim.opt_local.cursorline = true
-    end
-end)
-
-events.on_event({ 'InsertEnter', 'WinLeave' }, function()
-    vim.opt_local.cursorline = false
-end)
-
--- highlight on yank
-events.on_event('TextYankPost', function()
-    vim.highlight.on_yank()
-end)
-
-local folds_in_session = vim.list_contains(vim.opt.sessionoptions:get(), 'folds')
-if not folds_in_session then
-    -- Turn on view generation and loading only if session management is not enabled
-    events.on_event({ 'BufWinLeave', 'BufWritePost', 'WinLeave' }, function(evt)
-        local option = ide.config.use('view_activated', { buffer = ide.buf[evt.buf], persistent = false })
-        if option.get() then
-            vim.cmd.mkview { mods = { emsg_silent = true } }
-        end
-    end)
-
-    events.on_event('BufWinEnter', function(evt)
-        local option = ide.config.use('view_activated', { buffer = ide.buf[evt.buf], persistent = false })
-
-        if not option.get() then
-            if not vim.buf.is_transient(evt.buf) then
-                option.set(true)
-                vim.cmd.loadview { mods = { emsg_silent = true } }
-            end
-        end
-    end)
-end
-
--- disable swap/undo files for certain file-types
-events.on_event('BufWritePre', function(evt)
-    vim.opt_local.undofile = false
-    if evt.file == 'COMMIT_EDITMSG' or evt.file == 'MERGE_MSG' then
-        vim.opt_local.swapfile = false
-    end
-end, { '/tmp/*', '*.tmp', '*.bak', 'COMMIT_EDITMSG', 'MERGE_MSG' })
-
--- disable swap/undo/backup files in temp directories or SHM
-events.on_event({ 'BufNewFile', 'BufReadPre' }, function()
-    vim.opt_local.undofile = false
-    vim.opt_local.swapfile = false
-    vim.opt_global.backup = false
-    vim.opt_global.writebackup = false
-end, {
-    '/tmp/*',
-    '$TMPDIR/*',
-    '$TMP/*',
-    '$TEMP/*',
-    '*/shm/*',
-    '/private/var/*',
-})
-
--- Auto create dir when saving a file, in case some intermediate directory does not exist
-events.on_event('BufWritePre', function(evt)
-    if evt.match:match '^%w%w+://' then
-        return
-    end
-
-    local file = vim.uv.fs_realpath(evt.match) or evt.match
-    vim.fn.mkdir(vim.fn.fnamemodify(file, ':p:h'), 'p')
-end)
-
--- Forget files that have been deleted
-local new_files = {}
-events.on_event({ 'BufNew' }, function(evt)
-    if vim.buf.is_special(evt.buf) then
-        return
-    end
-
-    local file = vim.api.nvim_buf_get_name(evt.buf)
-
-    if file and file ~= '' and not ide.fs.file_exists(file) then
-        new_files[file] = true
-    end
-end)
-
-events.on_event({ 'BufDelete', 'BufEnter', 'FocusGained' }, function(evt)
-    if vim.buf.is_special(evt.buf) then
-        return
-    end
-
-    local file = vim.api.nvim_buf_get_name(evt.buf)
-    if not file or file == '' or ide.fs.file_exists(file) then
-        return
-    end
-
-    if new_files[file] then
-        if evt.event == 'BufDelete' then
-            new_files[file] = nil
-        else
-            return
-        end
-    end
-
-    require('marks').forget(file)
-    vim.fn.forget_oldfile(file)
-    require('qf').forget(file)
-
-    if evt.event ~= 'BufDelete' then
-        vim.cmd 'bdelete!'
-    end
-end)
-
--- Restore cursor position after opening a file
-events.on_event({ 'BufReadPost', 'BufNew' }, function(evt)
-    if vim.buf.is_special(evt.buf) or vim.buf.is_transient(evt.buf) then
-        return
-    end
-
-    local cursor_mark = vim.api.nvim_buf_get_mark(evt.buf, '"')
-    if cursor_mark[1] > 0 and cursor_mark[1] <= vim.api.nvim_buf_line_count(evt.buf) then
-        pcall(vim.api.nvim_win_set_cursor, 0, cursor_mark)
-    end
-end)
-
--- TODO: move this into vim.filetype
--- detect shebangs!
-events.on_event('BufReadPost', function(evt)
-    if vim.bo[evt.buf].filetype == '' and not vim.buf.is_special(evt.buf) then
-        local first_line = vim.api.nvim_buf_get_lines(evt.buf, 0, 1, false)[1]
-        if
-            first_line and string.match(first_line, '^#!.*/bin/bash')
-            or string.match(first_line, '^#!.*/bin/env%s+bash')
-        then
-            vim.bo[evt.buf].filetype = 'bash'
-        end
-    end
-end)
-
--- Check if the file has been changed outside of Neovim
-ide.process.on_focus(function()
-    local buffer = vim.api.nvim_get_current_buf()
-
-    if vim.buf.is_regular(buffer) then
-        vim.cmd.checktime() --TODO: use FileChangedShell to do all the whacky stuff
-    end
-end)
-
-events.on_event({ 'CursorHold', 'CursorHoldI' }, function(evt)
-    if vim.buf.is_regular(evt.buf) then
-        vim.cmd.checktime()
-    end
-end)
-
----@module 'api.buf'
----
--- file detection commands
-events.on_event({ 'BufReadPost', 'BufNewFile', 'BufWritePost' }, function(evt)
-    local buffer = ide.buf[
-        evt.buf --[[@as integer]]
-    ]
-
-    if buffer and buffer.is_normal then
-        local option = ide.config.use('custom_events_triggered', { buffer = buffer, persistent = false })
-
-        -- if custom events have been triggered, bail
-        if option.get() or buffer.file_path == '' then
-            return
-        end
-
-        events.trigger_user_event 'NormalFile'
-
-        git.check_tracked(buffer.file_path, function(yes)
-            if yes then
-                events.trigger_user_event 'GitFile'
-            end
-        end)
-
-        option.set(true)
-    end
-end)
-
--- resize splits if window got resized
-events.on_event('VimResized', function()
-    vim.schedule(function()
-        ide.tui.redraw()
-        events.trigger_status_update_event()
-    end)
-end)
-
---- Macro tracking
-events.on_event({ 'RecordingEnter' }, function()
-    ide.tui.info(
-        string.format(
-            'Started recording macro into register `%s`',
-            vim.fn.reg_recording(),
-            { prefix_icon = icons.UI.Macro, suffix_icon = icons.TUI.Ellipsis }
-        )
-    )
-
-    progress.update('recording_macro', {
-        fn = function()
-            return vim.fn.reg_recording() ~= ''
-        end,
-        desc = 'Recording macro',
-        ctx = vim.fn.reg_recording(),
-        timeout = math.huge,
-    })
-end)
-
-events.on_event({ 'RecordingLeave' }, function()
-    ide.tui.info(
-        string.format(
-            'Stopped recording macro into register `%s`',
-            vim.fn.reg_recording(),
-            { prefix_icon = icons.UI.Checkmark, suffix_icon = icons.TUI.Ellipsis }
-        )
-    )
-
-    progress.stop 'recording_macro'
-end)

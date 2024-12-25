@@ -47,7 +47,18 @@ local keymaps = {
         desc = 'Goto Type Definition',
         capability = vim.lsp.protocol.Methods.textDocument_typeDefinition,
     },
-    { '<C-k>', vim.lsp.buf.hover, desc = 'Inspect symbol', capability = vim.lsp.protocol.Methods.textDocument_hover },
+    {
+        'K',
+        vim.lsp.buf.hover,
+        desc = 'Inspect symbol',
+        capability = vim.lsp.protocol.Methods.textDocument_hover,
+    },
+    {
+        '<C-k>',
+        vim.diagnostic.open_float,
+        desc = 'View diagnostics at line',
+        capability = vim.lsp.protocol.Methods.textDocument_publishDiagnostics,
+    },
     {
         'gK',
         vim.lsp.buf.signature_help,
@@ -71,6 +82,7 @@ local keymaps = {
     {
         '<C-r>',
         function()
+            dbg 'Rename'
             local is_identifier = require('syntax').node_category() == 'identifier'
 
             if is_identifier then

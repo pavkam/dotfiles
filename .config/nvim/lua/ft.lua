@@ -1,5 +1,3 @@
-local fs = require 'api.fs'
-
 ---@type table<string, string>
 local file_to_file_type = {}
 
@@ -60,7 +58,7 @@ local M = table.smart {
                         value = { value, option[3] },
                     }
 
-                    for _, buffer in ipairs(require 'api.buf') do
+                    for _, buffer in ipairs(ide.buf) do
                         if buffer.file_type == file_type.id then
                             vim[option[2]][buffer.id][option] = value
                         end
@@ -79,7 +77,7 @@ local M = table.smart {
                 file_path = { file_path, { 'string', ['>'] = 0 } },
             }
 
-            file_path = fs.expand_path(file_path) or file_path
+            file_path = ide.fs.expand_path(file_path) or file_path
 
             ---@type string|nil
             local file_type = file_to_file_type[file_path]
@@ -89,14 +87,13 @@ local M = table.smart {
 
             file_type = vim.filetype.match { filename = file_path }
             if not file_type then
-                local buffers = require 'api.buf'
-                for _, buffer in ipairs(buffers) do
+                for _, buffer in ipairs(ide.buf) do
                     if buffer.file_path == file_path then
                         return vim.filetype.match { buf = buffer.id }
                     end
                 end
 
-                local buffer = buffers.load(file_path)
+                local buffer = ide.buf.load(file_path)
                 if buffer then
                     file_type = vim.filetype.match { buf = buffer.id }
                     buffer.remove { force = true }
@@ -132,8 +129,8 @@ local function apply_file_type_options(file_type)
     end
 end
 
-require('api.async').subscribe_event({ 'FileType' }, function(args)
-    local buffer = assert(require('api.buf')[args.buf])
+ide.sched.subscribe_event({ 'FileType' }, function(args)
+    local buffer = assert(ide.buf[args.buf])
 
     apply_file_type_options(buffer.file_type)
 

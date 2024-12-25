@@ -143,7 +143,7 @@ M.current = vim.api.nvim_exec2('colorscheme', { output = true }).output
 function M.on_change(callback)
     xassert { callback = { callback, 'callable' } }
 
-    return require('api.async').subscribe_event({ 'ColorSchemePre', 'ColorScheme' }, function(args)
+    return ide.sched.subscribe_event({ 'ColorSchemePre', 'ColorScheme' }, function(args)
         callback(table.merge(args, {
             before = args.event == 'ColorSchemePre',
             after = args.event == 'ColorScheme',

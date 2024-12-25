@@ -10,7 +10,7 @@ local M = {}
 
 ---@type string|nil
 local spinner_icon
-ide.async.on_task_monitor_tick(function(tasks, tick)
+ide.sched.on_task_monitor_tick(function(tasks, tick)
     spinner_icon = icons.Progress[tick % #icons.Progress + 1]
     pcall(require('lualine').refresh --[[@as function]])
 end)

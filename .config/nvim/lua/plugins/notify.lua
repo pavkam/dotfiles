@@ -10,7 +10,7 @@ return {
             return math.floor(vim.o.columns * 0.75)
         end,
         on_open = function(win)
-            vim.api.nvim_win_set_config(win, { zindex = 175, border = vim.g.borderStyle })
+            vim.api.nvim_win_set_config(win, { zindex = 175, border = vim.g.border_style })
 
             if not package.loaded['nvim-treesitter'] then
                 pcall(require, 'nvim-treesitter')

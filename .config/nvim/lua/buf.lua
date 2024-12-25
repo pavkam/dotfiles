@@ -1,4 +1,3 @@
-local fs = require 'api.fs'
 local icons = require 'icons'
 
 ---@module 'api.win'
@@ -139,7 +138,7 @@ local M = table.smart {
             ---@return string|nil
             get = function(_, buffer)
                 if buffer.is_normal then
-                    return fs.expand_path(vim.api.nvim_buf_get_name(buffer.id))
+                    return ide.fs.expand_path(vim.api.nvim_buf_get_name(buffer.id))
                 end
 
                 return nil
@@ -165,7 +164,7 @@ local M = table.smart {
             ---@param buffer buffer
             ---@return position
             get = function(_, buffer)
-                local window = require('api.win')[vim.fn.bufwinid(buffer.id)]
+                local window = ide.win[vim.fn.bufwinid(buffer.id)]
                 if window then
                     return window.cursor
                 end
@@ -211,7 +210,7 @@ local M = table.smart {
                 local result = {}
 
                 -- TODO: flat map
-                table.list_iterate(require('api.plugin').formatter_plugins, function(plugin)
+                table.list_iterate(ide.plugin.formatter_plugins, function(plugin)
                     for formatter, running in pairs(plugin.status(buffer)) do
                         table.insert(result, {
                             name = formatter,
@@ -222,7 +221,7 @@ local M = table.smart {
                     end
                 end)
 
-                table.list_iterate(require('api.plugin').linter_plugins, function(plugin)
+                table.list_iterate(ide.plugin.linter_plugins, function(plugin)
                     for linter, running in pairs(plugin.status(buffer)) do
                         table.insert(result, {
                             name = linter,
@@ -326,9 +325,7 @@ local M = table.smart {
 
             if buffer.is_modified then
                 local message = reason and 'Save changes to "%q" before %s?' or 'Save changes to "%q"?'
-                local choice = require('api.tui').confirm(
-                    string.format(message, require('api.fs').base_name(buffer.file_path), reason)
-                )
+                local choice = ide.tui.confirm(string.format(message, ide.fs.base_name(buffer.file_path), reason))
 
                 if choice == nil then -- Cancel
                     return false
@@ -461,10 +458,10 @@ local M = table.smart {
                 return
             end
 
-            local plugins = require('api.plugin').formatter_plugins
+            local plugins = ide.plugin.formatter_plugins
 
             if #plugins == 0 then
-                require('api.tui').warn(
+                ide.tui.warn(
                     string.format('No formatter plugins found for buffer "%s"', buffer.file_path),
                     { prefix_icon = require('icons').UI.Format }
                 )
@@ -472,14 +469,14 @@ local M = table.smart {
                 return
             end
 
-            local completed = require('api.async').monitor_task('formatting', { buffer = buffer })
+            local completed = ide.sched.monitor_task('formatting', { buffer = buffer })
 
             table.list_iterate(plugins, function(formatter)
                 formatter.run(buffer, function(result)
                     completed()
 
                     if type(result) == 'string' then
-                        require('api.tui').warn(
+                        ide.tui.warn(
                             string.format('Failed to format buffer: %s', result),
                             { prefix_icon = require('icons').UI.Format }
                         )
@@ -496,10 +493,10 @@ local M = table.smart {
                 return
             end
 
-            local plugins = require('api.plugin').linter_plugins
+            local plugins = ide.plugin.linter_plugins
 
             if #plugins == 0 then
-                require('api.tui').warn(
+                ide.tui.warn(
                     string.format('No linter plugins found for buffer "%s"', buffer.file_path),
                     { prefix_icon = require('icons').UI.Lint }
                 )
@@ -507,14 +504,14 @@ local M = table.smart {
                 return
             end
 
-            local completed = require('api.async').monitor_task('linting', { buffer = buffer })
+            local completed = ide.sched.monitor_task('linting', { buffer = buffer })
 
             table.list_iterate(plugins, function(linter)
                 linter.run(buffer, function(result)
                     completed()
 
                     if type(result) == 'string' then
-                        require('api.tui').warn(
+                        ide.tui.warn(
                             string.format('Failed to lint buffer: %s', result),
                             { prefix_icon = require('icons').UI.Lint }
                         )
@@ -582,7 +579,7 @@ local M = table.smart {
                 file_path = { file_path, { 'string', ['>'] = 0 } },
             }
 
-            if not fs.file_exists(file_path) then
+            if not ide.fs.file_exists(file_path) then
                 return nil
             end
 
@@ -596,19 +593,19 @@ local M = table.smart {
     },
 }
 
-require('api.plugin').on_formatter_registered(function()
+ide.plugin.on_formatter_registered(function()
     if auto_formatting_toggle then
         return
     end
 
-    require('api.async').subscribe_event({ 'BufWritePre' }, function(args)
+    ide.sched.subscribe_event({ 'BufWritePre' }, function(args)
         local buffer = M[args.buf]
         if buffer and buffer.is_normal and buffer.auto_formatting_enabled then
             buffer.format()
         end
     end)
 
-    auto_formatting_toggle = require('api.config').register_toggle('auto_formatting_enabled', function(enabled, buffer)
+    auto_formatting_toggle = ide.config.register_toggle('auto_formatting_enabled', function(enabled, buffer)
         if buffer and enabled then
             buffer.format()
         end
@@ -619,19 +616,19 @@ require('api.plugin').on_formatter_registered(function()
     })
 end)
 
-require('api.plugin').on_linter_registered(function()
+ide.plugin.on_linter_registered(function()
     if auto_linting_toggle then
         return
     end
 
-    require('api.async').subscribe_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(args)
+    ide.sched.subscribe_event({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, function(args)
         local buffer = M[args.buf]
         if buffer and buffer.is_normal and buffer.auto_linting_enabled then
             buffer.lint()
         end
     end)
 
-    auto_linting_toggle = require('api.config').register_toggle('auto_linting_enabled', function(enabled, buffer)
+    auto_linting_toggle = ide.config.register_toggle('auto_linting_enabled', function(enabled, buffer)
         if buffer and enabled then
             buffer.lint()
         elseif buffer then

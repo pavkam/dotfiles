@@ -1,5 +1,3 @@
-local fs = require 'api.fs'
-
 --- Provides functionality for interacting with plugins.
 ---@class plugins
 local M = {}
@@ -55,9 +53,9 @@ function M.require_online(url, path, opts)
         },
     }
 
-    local actual_path = fs.join_paths(fs.DATA_DIRECTORY, path)
+    local actual_path = ide.fs.join_paths(ide.fs.DATA_DIRECTORY, path)
 
-    if not fs.directory_exists(actual_path) then
+    if not ide.fs.directory_exists(actual_path) then
         local result = vim.system({
             'git',
             'clone',
@@ -70,9 +68,9 @@ function M.require_online(url, path, opts)
         if result.code ~= 0 then
             local message = string.format('failed to clone the repository `%s`: %s', url, result.stderr)
             if opts.quit then
-                require('api.process').fatal(message)
+                ide.process.fatal(message)
             else
-                require('api.tui').error(message)
+                ide.tui.error(message)
             end
 
             return false
@@ -93,7 +91,7 @@ function M.on_loaded(name, callback)
         fn = { callback, { 'callable' } },
     }
 
-    return require('api.async').subscribe_event('@LazyLoad', function(args)
+    return ide.sched.subscribe_event('@LazyLoad', function(args)
         if args.data == name then
             callback(args)
         end
@@ -109,7 +107,7 @@ end
 ---@field status fun(buffer: buffer): table<string, boolean> # gets the status of the supported formatters.
 ---@field run fun(buffer: buffer, callback: fun(result: boolean|string)) # runs the formatters.
 
-local fmt_subscribe, fmt_trigger = require('api.async').define_event 'FormatterPluginRegistered'
+local fmt_subscribe, fmt_trigger = ide.sched.define_event 'FormatterPluginRegistered'
 
 ---@type formatter_plugin[]
 M.formatter_plugins = {}
@@ -142,7 +140,7 @@ M.on_formatter_registered = fmt_subscribe
 ---@field status fun(buffer: buffer): table<string, boolean> # gets the status of the supported linters.
 ---@field run fun(buffer: buffer, callback: fun(result: boolean|string)) # runs the linters.
 
-local lint_subscribe, lint_trigger = require('api.async').define_event 'LinterPluginRegistered'
+local lint_subscribe, lint_trigger = ide.sched.define_event 'LinterPluginRegistered'
 
 ---@type linter_plugin[]
 M.linter_plugins = {}

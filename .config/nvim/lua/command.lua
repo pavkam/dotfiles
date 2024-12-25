@@ -173,7 +173,7 @@ function M.register(name, spec, opts)
             function(args)
                 spec.fn(table.merge(args, {
                     split_args = parse_command_args(args),
-                    lines = spec.range and extract_command_lines(require('api.buf').current, args) or nil,
+                    lines = spec.range and extract_command_lines(ide.buf.current, args) or nil,
                 }))
             end,
             {
@@ -223,7 +223,7 @@ function M.register(name, spec, opts)
                     func(table.merge(args, {
                         split_args = parse_command_args(args),
                         lines = type(func_or_spec) == 'table' and func_or_spec.range and extract_command_lines(
-                            require('api.buf').current,
+                            ide.buf.current,
                             args
                         ) or nil,
                     }))

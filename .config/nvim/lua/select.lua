@@ -1,25 +1,8 @@
-local pickers = require 'telescope.pickers'
-local finders = require 'telescope.finders'
-local actions = require 'telescope.actions'
-local themes = require 'telescope.themes'
-local action_state = require 'telescope.actions.state'
-local entry_display = require 'telescope.pickers.entry_display'
-local strings = require 'plenary.strings'
-local config = require('telescope.config').values
-local icons = require 'icons'
-
 ide.theme.register_highlight_groups {
     NormalMenuItem = 'Special',
 }
 
 local M = {}
-
--- TODO: fix bug pressing enter without a selection
--- E5108: Error executing lua: /Users/alex/.config/nvim/lua/ui/select.lua:180: attempt to index local 'selection' (a nil value)
---stack traceback:
---	/Users/alex/.config/nvim/lua/ui/select.lua:180: in function 'run_replace_or_original'
---	...re/nvim/lazy/telescope.nvim/lua/telescope/actions/mt.lua:65: in function 'key_func'
---	...hare/nvim/lazy/telescope.nvim/lua/telescope/mappings.lua:293: in function <...hare/nvim/lazy/telescope.nvim/lua/telescope/mappings.lua:292>
 
 ---@alias ui.select.SelectEntry
 ---|string
@@ -49,6 +32,16 @@ local v_padding = 4
 ---@param items ui.select.SelectEntry[] # The list of items to select from
 ---@param opts ui.select.SelectOpts|nil # The options for the select
 function M.advanced(items, opts)
+    local pickers = require 'telescope.pickers'
+    local finders = require 'telescope.finders'
+    local actions = require 'telescope.actions'
+    local themes = require 'telescope.themes'
+    local action_state = require 'telescope.actions.state'
+    local entry_display = require 'telescope.pickers.entry_display'
+    local strings = require 'plenary.strings'
+    local config = require('telescope.config').values
+    local icons = require 'icons'
+
     opts = opts or {}
 
     local callback = opts.callback
@@ -186,6 +179,10 @@ function M.advanced(items, opts)
             attach_mappings = function(prompt_bufnr)
                 actions.select_default:replace(function()
                     local selection = action_state.get_selected_entry()
+                    if not selection then
+                        return
+                    end
+
                     actions.close(prompt_bufnr)
 
                     callback(selection.value, selection.index)

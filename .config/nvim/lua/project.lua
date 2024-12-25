@@ -1,10 +1,6 @@
 local keys = require 'keys'
-local settings = require 'settings'
 local lsp = require 'lsp'
-local hover = require 'hover'
 local icons = require 'icons'
-
-keys.map('n', 'K', hover, { desc = 'Show hover' })
 
 ---@class project
 local M = {}

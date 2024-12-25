@@ -3,10 +3,11 @@ return {
     cond = not ide.process.is_headless,
     init = function()
         vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
+        local conform = xrequire 'conform'
 
         ---@type table<integer, boolean>
         local running_for_buffers = {}
-        require('api.plugin').register_formatter {
+        ide.plugin.register_formatter {
             ---@param buffer buffer
             ---@return table<string, boolean>
             status = function(buffer)
@@ -14,7 +15,6 @@ return {
                     buffer = { buffer, 'table' },
                 }
 
-                local conform = require 'conform'
                 local ok, clients = pcall(conform.list_formatters, buffer.id)
 
                 if not ok then
@@ -34,7 +34,6 @@ return {
                     callback = { callback, 'callable' },
                 }
 
-                local conform = require 'conform'
                 local ok, clients = pcall(conform.list_formatters, buffer.id)
 
                 if not ok then

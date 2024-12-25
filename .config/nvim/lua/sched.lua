@@ -1,5 +1,5 @@
 -- Provides functionality for asynchronous operations.
----@class async
+---@class sched
 local M = {}
 
 -- Delays a function call by a given time.
@@ -144,7 +144,7 @@ function M.subscribe_event(events, handler, opts)
         },
     }
 
-    local reg_trace_back = require('api.process').get_formatted_trace_back()
+    local reg_trace_back = ide.process.get_formatted_trace_back()
     local auto_group_id = opts.group and vim.api.nvim_create_augroup(opts.group, { clear = opts.clear or false }) or nil
 
     local real_events = {}
@@ -256,7 +256,7 @@ local function task_description(task)
             and string.format(
                 '`%s` in buffer `%s`',
                 task.name,
-                task.buffer.file_path and require('api.fs').base_name(task.buffer.file_path) or tostring(task.buffer.id)
+                task.buffer.file_path and ide.fs.base_name(task.buffer.file_path) or tostring(task.buffer.id)
             )
         or string.format('`%s`', task.name)
 end
@@ -274,7 +274,7 @@ subscribe_to_tasks_update(function()
         task.spent = task.spent + update_interval
 
         if task.ttl <= 0 then
-            require('api.tui').warn(
+            ide.tui.warn(
                 string.format('Task %s is running for over `%d` seconds', task_description(task), task.timeout / 1000)
             )
 
@@ -356,9 +356,7 @@ function M.monitor_task(name, opts)
             end
         end
 
-        require('api.tui').hint(
-            string.format('Task %s completed in `%d` seconds', task_description(task), task.spent / 1000)
-        )
+        ide.tui.hint(string.format('Task %s completed in `%d` seconds', task_description(task), task.spent / 1000))
     end
 end
 

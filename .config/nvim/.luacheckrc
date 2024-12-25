@@ -4,17 +4,17 @@ std = {
         'pcall',
         'pairs',
         'ipairs',
-        'table', -- remove
-        'error', -- remove
-        'type', -- remove
+        'table',
+        'error',
+        'type',
         'xtype',
-        'string', -- remove
+        'string',
         'fatal',
         'dbg',
-        'who',
-        'assert', -- remove
+        'assert',
         'xassert',
         'require',
+        'xrequire',
         'package', -- remove
         'unpack',
         'math',
@@ -28,6 +28,8 @@ std = {
         'getmetatable', -- remove
         'select', -- remove
         'inspect',
+        'hash',
+        'memoize',
         'io', -- remove
     },
 }

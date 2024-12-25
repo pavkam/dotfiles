@@ -26,18 +26,18 @@ return {
             },
         },
     },
-    init = function()
+    init = function(spec)
         local lazy = require 'lazy'
 
         ---@diagnostic disable-next-line: duplicate-set-field
         vim.ui.select = function(...)
-            lazy.load { plugins = { 'dressing.nvim' } }
+            lazy.load { plugins = { spec.name } }
             return vim.ui.select(...)
         end
 
         ---@diagnostic disable-next-line: duplicate-set-field
         vim.ui.input = function(...)
-            lazy.load { plugins = { 'dressing.nvim' } }
+            lazy.load { plugins = { spec.name } }
             return vim.ui.input(...)
         end
     end,

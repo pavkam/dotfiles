@@ -124,9 +124,7 @@ return {
                 emmet_ls = {},
                 marksman = {},
                 prismals = {},
-                buf_ls = {
-                    mason_package = 'bufls',
-                },
+                buf_ls = {},
                 pyright = {},
                 ruff = {},
                 jsonls = {

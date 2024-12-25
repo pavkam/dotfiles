@@ -14,7 +14,7 @@ local persistent_data = {
 ---@field value any # the value of the option.
 ---@field buffer_id number|nil # the buffer id.
 
-local subscribe, trigger = require('api.async').define_event 'ConfigUpdated'
+local subscribe, trigger = ide.sched.define_event 'ConfigUpdated'
 
 -- Notifies that the configuration has been updated.
 ---@param args config_update_event_data # the data for the event.
@@ -194,7 +194,6 @@ function M.register_toggle(name, toggle_fn, opts)
     }
 
     local scopes = table.to_list(opts.scope)
-    local buffers = require 'api.buf'
 
     for _, scope in ipairs(scopes) do
         local get_value = scope == 'buffer'
@@ -214,7 +213,7 @@ function M.register_toggle(name, toggle_fn, opts)
             local enabled = get_value(buffer)
 
             if buffer ~= nil then
-                local file_name = require('api.fs').base_name(buffer.file_path)
+                local file_name = ide.fs.base_name(buffer.file_path)
                 ide.tui.hint(
                     string.format(
                         'Turning **%s** `%s` for `%s`.',
@@ -242,7 +241,7 @@ function M.register_toggle(name, toggle_fn, opts)
                 toggle_fn(enabled, nil)
 
                 if vim.tbl_contains(scopes, 'buffer') then
-                    for _, b in ipairs(buffers) do
+                    for _, b in ipairs(ide.buf) do
                         if b.is_normal then
                             toggle_fn(enabled and get(name, opts.default --[[@as boolean]], b), b)
                         end
@@ -367,9 +366,8 @@ function M.import(data)
         }
     end
 
-    local buffers = require 'api.buf'
     for file_path, options in pairs(data.file) do
-        local buffer = buffers[vim.fn.bufnr(file_path)]
+        local buffer = ide.buf[vim.fn.bufnr(file_path)]
 
         if buffer and buffer.is_loaded then
             for option, value in pairs(options) do
@@ -389,7 +387,7 @@ end
 -- Manages the toggles.
 ---@param buffer buffer|nil # the buffer to show toggles for.
 function M.manage(buffer)
-    buffer = buffer or require('api.buf').current --[[@as buffer]]
+    buffer = buffer or ide.buf.current --[[@as buffer]]
     xassert {
         buffer = { buffer, { 'table' } },
     }
@@ -443,8 +441,8 @@ function M.manage(buffer)
     })
 end
 
-require('api.async').subscribe_event('BufReadPost', function(args)
-    local buffer = assert(require('api.buf')[args.buf])
+ide.sched.subscribe_event('BufReadPost', function(args)
+    local buffer = assert(ide.buf[args.buf])
 
     ---@type table<string, any>
     local options = persistent_data.file[buffer.file_path]
