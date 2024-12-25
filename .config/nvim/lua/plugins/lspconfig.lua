@@ -305,7 +305,15 @@ return {
             -- setup progress
             local progress_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress]
             vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress] = function(_, msg, info)
-                events.trigger_user_event('LspProgress', table.merge(msg, { client_id = info.client_id }))
+                local stop = ide.sched.monitor_task(
+                    string.format('%s.%s', info.client_id, msg.token),
+                    { data = msg.value, desc = 'lsp', buffer = info.bufnr and ide.buf[info.bufnr] or nil }
+                )
+
+                if msg.value.kind == 'end' then
+                    stop()
+                end
+
                 progress_capability_handler(_, msg, info)
             end
 

@@ -13,6 +13,7 @@ require 'qf'
 require 'tmux'
 require 'file-palette'
 require 'spelling'
+require 'editor' -- TODO: need to figure out what to do with some of these configs
 
 local events = require 'events'
 local keys = require 'keys'

@@ -1,46 +1,7 @@
 local events = require 'events'
-local progress = require 'progress'
-
-local progress_class = 'lsp'
 
 ---@class utils.lsp
 local M = {}
-
----@type table<string, any>
-local lsp_tasks = {}
-
-events.on_event('LspDetach', function(evt)
-    local client = vim.lsp.get_client_by_id(evt.data.client_id)
-    if not client or M.is_special(client) then
-        return
-    end
-
-    -- clear the tasks for the all clients to prevent infinite loops
-    lsp_tasks = {}
-end)
-
---- Checks whether there are any active LSP tasks
----@return boolean # whether there are any active tasks
-local function lsp_status()
-    local finished = vim.tbl_isempty(lsp_tasks)
-    return not finished
-end
-
-events.on_user_event('LspProgress', function(_, evt)
-    local key = string.format('%s.%s', evt.data.client_id, evt.data.token)
-    if evt.data.value.kind ~= 'end' then
-        lsp_tasks[key] = evt.data.value
-        progress.update(progress_class, { prv = true, fn = lsp_status, ctx = evt.data.value.message })
-    else
-        lsp_tasks[key] = nil
-    end
-end)
-
---- Gets the unified progress of all LSP tasks
----@return string|nil,any|nil # the progress of the LSP tasks or nil if not running
-function M.progress()
-    return progress.status(progress_class)
-end
 
 --- Checks whether a client is a special client
 ---@param client vim.lsp.Client # the client to check
@@ -211,33 +172,6 @@ function M.is_active_for_buffer(buffer, name)
     return #clients > 0
 end
 
---- Restarts all active, not-special clients
----@param buffer integer|nil # the buffer to check the client for or 0 or nil for current
-function M.restart_all_for_buffer(buffer)
-    buffer = buffer or vim.api.nvim_get_current_buf()
-
-    ---@type vim.lsp.Client[]
-    local clients = vim.iter(vim.lsp.get_clients { bufnr = buffer })
-        :filter(
-            ---@param client vim.lsp.Client
-            function(client)
-                return not M.is_special(client)
-            end
-        )
-        :totable()
-
-    if #clients == 0 then
-        ide.tui.warn 'No active clients to restart. Starting all.'
-        vim.cmd 'LspStart'
-        return
-    end
-
-    for _, client in ipairs(clients) do
-        ide.tui.warn('Restarting client ' .. client.name .. '...')
-        vim.cmd(string.format('LspRestart %s', client.name))
-    end
-end
-
 --- Gets the root directories of all active clients for a target buffer or path
 ---@param target integer|string|nil # the target to get the roots for or 0 or nil for current
 ---@param sort boolean|nil # whether to sort the roots by length
@@ -281,27 +215,6 @@ function M.roots(target, sort)
     end
 
     return roots
-end
-
---- Clears the diagnostics for a buffer or globally
----@param sources string|string[]|nil # the sources to clear the diagnostics for, or nil for all
----@param buffer integer|nil # the buffer to clear the diagnostics for or 0 or nil for all
-function M.clear_diagnostics(sources, buffer)
-    if not sources then
-        vim.diagnostic.reset(nil, buffer)
-        return
-    end
-
-    local ns = vim.diagnostic.get_namespaces()
-
-    for _, source in ipairs(table.to_list(sources)) do
-        assert(type(source) == 'string' and source)
-        for id, n in pairs(ns) do
-            if n.name == source or n.name:find('vim.lsp.' .. source, 1, true) then
-                vim.diagnostic.reset(id, buffer)
-            end
-        end
-    end
 end
 
 return M

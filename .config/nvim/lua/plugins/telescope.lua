@@ -111,9 +111,7 @@ return {
         --- @param opts table|nil
         --- @return table
         local function wrap(opts)
-            local ui = require 'ui'
-
-            local show_hidden = not ui.ignore_hidden_files.active()
+            local show_hidden = not ide.tui.ignore_hidden_files.active()
             local add = {
                 additional_args = show_hidden and function(args)
                     return vim.list_extend(args, { '--hidden', '--no-ignore' })
@@ -133,7 +131,7 @@ return {
 
                         -- toggle the hidden files
                         require('telescope.actions').close(prompt_bufnr)
-                        ui.ignore_hidden_files.toggle()
+                        ide.tui.ignore_hidden_files.toggle()
 
                         require('telescope.builtin')[opts.restart_picker](
                             wrap(vim.tbl_extend('force', opts, { default_text = line }))

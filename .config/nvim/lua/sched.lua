@@ -236,6 +236,7 @@ end
 
 ---@class (exact) monitored_task # Tracks the progress of a task.
 ---@field name string # the name of the task.
+---@field desc string # the description of the task.
 ---@field buffer buffer|nil # the buffer to track the task for.
 ---@field data any|nil # custom data for the task.
 ---@field spent integer # the time spent on the task in milliseconds.
@@ -255,10 +256,10 @@ local function task_description(task)
     return task.buffer
             and string.format(
                 '`%s` in buffer `%s`',
-                task.name,
+                task.desc,
                 task.buffer.file_path and ide.fs.base_name(task.buffer.file_path) or tostring(task.buffer.id)
             )
-        or string.format('`%s`', task.name)
+        or string.format('`%s`', task.desc)
 end
 
 subscribe_to_tasks_update(function()
@@ -292,6 +293,7 @@ end, {
 ---@field timeout nil|integer # the timeout of the task in milliseconds (default: 60 seconds).
 ---@field buffer nil|buffer # the buffer to track the task for.
 ---@field data any|nil # the data for the task.
+---@field desc string|nil # the description of the task.
 
 -- Starts monitoring a task.
 ---@param name string # the name of the task to monitor.
@@ -301,6 +303,7 @@ function M.monitor_task(name, opts)
     ---@type monitor_task_options
     opts = table.merge(opts, {
         timeout = 60 * 1000,
+        desc = name,
     })
 
     xassert {
@@ -310,6 +313,7 @@ function M.monitor_task(name, opts)
             {
                 timeout = { 'integer', ['>'] = 0 },
                 buffer = { 'table', 'nil' },
+                desc = { 'string', ['>'] = 0 },
             },
         },
     }
@@ -325,6 +329,7 @@ function M.monitor_task(name, opts)
             t.timeout = opts.timeout
             t.ttl = opts.timeout
             t.data = opts.data
+            t.desc = opts.desc
 
             task = t
             break
@@ -334,6 +339,7 @@ function M.monitor_task(name, opts)
     if not task then
         task = {
             name = name,
+            desc = opts.desc,
             buffer = opts.buffer,
             timeout = opts.timeout,
             ttl = opts.timeout,

@@ -104,24 +104,14 @@ function M.attach(file_types, callback, force)
     end, file_types)
 end
 
---- Feed keys to Neovim
----@param keys string # the keys to feed
----@param mode string|nil # the mode to feed the keys in
+-- Feed keys to Neovim.
+---@param keys string # the keys to feed.
+---@param mode 'm'|'n'|'t'|'L'|'i'|'x'|'!'||nil # the mode to feed the keys in.
 function M.feed(keys, mode)
     assert(type(keys) == 'string')
     mode = mode or 'n'
 
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), mode, false)
-end
-
---- Formats the term_codes to be human-readable
----@param str string # the string to format
----@return string # the formatted string
-function M.format_term_codes(str)
-    assert(type(str) == 'string')
-
-    local sub = str:gsub(string.char(9), '<TAB>'):gsub('', '<C-F>'):gsub(' ', '<Space>'):gsub('\n', '<CR>')
-    return sub
 end
 
 return M

@@ -3,7 +3,6 @@ local lsp = require 'lsp'
 local shell = require 'shell'
 local settings = require 'settings'
 local progress = require 'progress'
-local ui = require 'ui'
 
 ---@class ui.lualine.sections
 local M = {}
@@ -305,20 +304,6 @@ local components = {
         end,
     },
 
-    --- The section that shows the status of the LSP.
-    lsp = {
-        settings.transient(function(buffer)
-            local prefix = lsp.progress() or icons.UI.LSP
-            return sexify(prefix, lsp.active_names_for_buffer(buffer))
-        end),
-        cond = settings.transient(function(buffer)
-            return lsp.any_active_for_buffer(buffer)
-        end),
-        color = hl_fg_color_and_attrs 'ActiveLSPsStatus',
-        on_click = function()
-            vim.cmd.LspInfo()
-        end,
-    },
     --- The section that shows the status of the copilot.
     copilot = ide.plugin.has 'copilot.lua' and {
         settings.transient(function()
@@ -370,11 +355,11 @@ local components = {
     --- The section that shows the status of hidden files.
     ignore_hidden_files = {
         function()
-            return ui.ignore_hidden_files.active() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
+            return ide.tui.ignore_hidden_files.active() and icons.UI.IgnoreHidden or icons.UI.ShowHidden
         end,
         color = hl_fg_color_and_attrs 'Comment',
         on_click = function()
-            ui.ignore_hidden_files.toggle()
+            ide.tui.ignore_hidden_files.toggle()
         end,
     },
 
@@ -616,7 +601,6 @@ M.status_line = {
         table.merge(components.copilot, { separator = false, padding = { left = 1, right = 0 } }),
     },
     lualine_c = {
-        components.lsp,
         components.tools,
         components.neotest,
         components.shell,

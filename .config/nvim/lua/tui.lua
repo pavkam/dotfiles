@@ -78,6 +78,55 @@ function M.redraw()
     vim.cmd 'redraw!'
 end
 
+---@alias bar_format_text # A string that can be formatted with `bar_format`.
+---| string # the text to format.
+---| { [1]:string, hl: string } # the text to format with a highlight group.
+
+local default_status_line_hl = 'StatusLine'
+
+-- Formats a string for status line.
+---@param ... bar_format_text # the text to format.
+---@return string # the formatted string.
+function M.format_for_status_line(...)
+    local parts = { ... }
+
+    xassert {
+        parts = {
+            parts,
+            {
+                'list',
+                ['*'] = {
+                    'string',
+                    'table', -- TODO: better type checking
+                },
+            },
+        },
+    }
+
+    local result = ''
+    local last_hl = default_status_line_hl
+    for _, part in ipairs(parts) do
+        local _, ty = xtype(part)
+        if ty == 'table' then
+            if part.hl and part.hl ~= last_hl then
+                result = result .. string.format('%%#%s#%s', part.hl, part[1])
+                last_hl = part.hl
+            else
+                result = result .. part[1]
+            end
+        elseif ty == 'string' then
+            if last_hl ~= default_status_line_hl then
+                result = result .. string.format('%%#%s#%s', last_hl, part)
+                last_hl = default_status_line_hl
+            else
+                result = result .. part
+            end
+        end
+    end
+
+    return result
+end
+
 local function extract_shortcut(label)
     xassert {
         label = { label, { 'string', ['>'] = 0 } },
@@ -154,5 +203,24 @@ function M.confirm(question)
         { '&Cancel', nil },
     })
 end
+
+local ignore_hidden_files_option = ide.config.register_toggle('ignore_hidden_files', function(enabled)
+    if package.loaded['neo-tree'] then
+        -- Update neo-tree state
+        local mgr = require 'neo-tree.sources.manager'
+        mgr.get_state('filesystem').filtered_items.visible = not enabled
+    end
+end, { icon = require('icons').UI.ShowHidden, desc = 'Ignore hidden files', scope = 'global' })
+
+M.ignore_hidden_files = {
+    --- Returns whether hidden files are ignored or not
+    ---@return boolean # true if hidden files are ignored, false otherwise
+    active = ignore_hidden_files_option.get,
+    --- Toggles ignoring of hidden files on or off
+    ---@param value boolean|nil # if nil, it will toggle the current value, otherwise it will set the value
+    toggle = function(value)
+        ignore_hidden_files_option.set(value)
+    end,
+}
 
 return table.freeze(M)

@@ -3,6 +3,7 @@ return {
     cond = not ide.process.is_headless,
     init = function()
         vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
+        ---@module 'conform'
         local conform = xrequire 'conform'
 
         ---@type table<integer, boolean>

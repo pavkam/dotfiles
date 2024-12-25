@@ -28,4 +28,14 @@ function M.insert_undo_point()
     return is_insert
 end
 
+ide.config.register_toggle('treesitter_enabled', function(enabled, buffer)
+    assert(buffer)
+
+    if not enabled then
+        vim.treesitter.stop(buffer.id)
+    else
+        vim.treesitter.start(buffer.id)
+    end
+end, { icon = require('icons').UI.SyntaxTree, desc = 'Treesitter', scope = { 'buffer' } })
+
 return table.freeze(M)

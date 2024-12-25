@@ -134,7 +134,13 @@ function M.register_formatter(plugin)
 end
 
 --- Triggers when a formatter plugin is registered.
-M.on_formatter_registered = fmt_subscribe
+M.on_formatter_registered = function(...)
+    fmt_subscribe(...)
+
+    if not table.is_empty(M.formatter_plugins) then
+        fmt_trigger()
+    end
+end
 
 ---@class (exact) linter_plugin # Describes a linting plugin.
 ---@field status fun(buffer: buffer): table<string, boolean> # gets the status of the supported linters.
@@ -167,6 +173,12 @@ function M.register_linter(plugin)
 end
 
 --- Triggers when a linter plugin is registered.
-M.on_linter_registered = lint_subscribe
+M.on_linter_registered = function(...)
+    lint_subscribe(...)
+
+    if not table.is_empty(M.linter_plugins) then
+        lint_trigger()
+    end
+end
 
 return table.freeze(M)

@@ -51,7 +51,7 @@ local icons = require 'icons'
 ---@field name string # the name of the tool.
 ---@field enabled boolean # whether the tool is enabled.
 ---@field running boolean # whether the tool is running.
----@field type 'formatter'|'linter' # the type of the tool.
+---@field type 'formatter'|'linter'|'lsp' # the type of the tool.
 
 ---@type config_toggle|nil
 local auto_formatting_toggle
@@ -208,6 +208,15 @@ local M = table.smart {
             get = function(_, buffer)
                 ---@type buf_tool[]
                 local result = {}
+
+                table.list_iterate(vim.lsp.get_clients { bufnr = buffer.id }, function(client)
+                    table.insert(result, {
+                        name = client.name,
+                        enabled = not client.is_stopped(),
+                        running = not table.is_empty(client.requests),
+                        type = 'lsp',
+                    })
+                end)
 
                 -- TODO: flat map
                 table.list_iterate(ide.plugin.formatter_plugins, function(plugin)

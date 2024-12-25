@@ -160,7 +160,7 @@ return {
                 handler = function()
                     local state = require('neo-tree.sources.manager').get_state 'filesystem'
 
-                    require('ui').ignore_hidden_files.toggle(not state.filtered_items.visible)
+                    ide.tui.ignore_hidden_files.toggle(not state.filtered_items.visible)
                 end,
             },
         },
