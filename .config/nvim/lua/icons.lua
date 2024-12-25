@@ -200,7 +200,6 @@ function M.get_file_icon(path, width, ltr)
     if dev_icons_available and path and #path > 0 then
         local dev_icons = require 'nvim-web-devicons'
         local _, base_name, _, compound_extension = ide.fs.split_path(path)
-
         local icon, icon_highlight = dev_icons.get_icon(base_name, compound_extension, { default = false })
 
         if not icon then

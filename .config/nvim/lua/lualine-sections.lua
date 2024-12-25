@@ -4,13 +4,15 @@ local shell = require 'shell'
 local settings = require 'settings'
 local progress = require 'progress'
 
+---@module 'symb'
+
 ---@class ui.lualine.sections
 local M = {}
 
 ---@type string|nil
 local spinner_icon
 ide.sched.on_task_monitor_tick(function(tasks, tick)
-    spinner_icon = icons.Progress[tick % #icons.Progress + 1]
+    spinner_icon = ide.symb.progress.default[tick % #ide.symb.progress.default + 1]
     pcall(require('lualine').refresh --[[@as function]])
 end)
 
@@ -280,16 +282,16 @@ local components = {
 
             return table.concat(
                 table.list_map(buffer.tools, function(tool)
-                    ---@type string|nil
+                    ---@type symb_icon|nil
                     local prefix
                     if tool.running then
                         prefix = spinner_icon
                     elseif tool.enabled then
-                        prefix = icons.get_tool_icon(tool.name)
+                        prefix = ide.symb.tools[tool.type][tool.name]
                     end
                     prefix = prefix or icons.UI.Disabled
 
-                    return string.format('%s%s', icons.fit(prefix, 2), tool.name)
+                    return ide.tui.format_for_status_line(prefix, ' ', tool.name)
                 end),
                 ' '
             )

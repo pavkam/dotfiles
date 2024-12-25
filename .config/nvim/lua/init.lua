@@ -1361,6 +1361,8 @@ _G.ide = {
     theme = xrequire 'theme',
     ---@module 'plugin'
     plugin = xrequire 'plugin',
+    ---@module 'symb'
+    symb = xrequire 'symb',
 }
 
 require '__unsorted'
