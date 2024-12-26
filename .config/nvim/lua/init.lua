@@ -368,7 +368,7 @@ local function validate_entry(field_name, entry)
         composite_schema[k] = { field_value[k], v }
     end
 
-    return validate(field_name, composite_schema)
+    return validate(field_name, composite_schema) -- TODO: this does not work for nested tables.
 end
 
 -- Validates a given schema.
@@ -1078,21 +1078,21 @@ function table.list_uniq(list, key_fn)
 end
 
 -- Inflates a list to a table.
----@generic T: table
+---@generic T, K, V
 ---@param list T[] # the list to inflate.
----@param key_fn fun(value: T): any # the function to get the key from the value.
----@return table<string, T> # the inflated table.
+---@param fn fun(value: T, index: integer): K, V  # the function to inflate the values.
+---@return {[K]: V} # the inflated table.
 ---@nodiscard
-function table.inflate(list, key_fn)
+function table.inflate(list, fn)
     xassert {
         list = { list, 'list' },
-        key_fn = { key_fn, 'callable' },
+        fn = { fn, 'callable' },
     }
 
     local result = {}
 
-    for _, value in ipairs(list) do
-        local key = key_fn(value)
+    for index, item in ipairs(list) do
+        local key, value = fn(item, index)
         result[key] = value
     end
 
@@ -1281,7 +1281,7 @@ end
 ---@nodiscard
 function table.keys(t)
     xassert {
-        t = { t, 'table' },
+        t = { t, { 'table', 'list' } },
     }
 
     local keys = {}
@@ -1404,8 +1404,8 @@ _G.ide = {
     ft = xrequire 'ft',
     ---@module 'config'
     config = xrequire 'config',
-    ---@module 'command'
-    command = xrequire 'command',
+    ---@module 'cmd'
+    cmd = xrequire 'cmd',
     ---@module 'editor'
     editor = xrequire 'editor',
     ---@module 'process'

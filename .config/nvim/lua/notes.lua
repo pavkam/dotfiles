@@ -81,7 +81,7 @@ local function append(title, lines, global)
     vim.api.nvim_put(lines, 'l', true, true)
 end
 
-ide.command.register('Note', {
+ide.cmd.register('Note', {
     open = function(args)
         edit(args.bang)
     end,
@@ -109,7 +109,7 @@ ide.command.register('Note', {
     bang = true,
 })
 
-ide.command.register('Notes', {
+ide.cmd.register('Notes', {
     list = function(args)
         find(args.bang)
     end,

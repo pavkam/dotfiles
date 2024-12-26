@@ -103,130 +103,109 @@ function M.on_loaded(name, callback)
     })
 end
 
+-- Creates a plugin slot.
+---@param name string # the name of the plugin slot.
+---@return table # the plugin slot.
+local function define_plugin_slot(name)
+    xassert { name = { name, { 'string', ['>'] = 0 } } }
+
+    local subscribe, trigger = ide.sched.define_event('PluginRegistered_' .. name)
+    local plugins = {}
+
+    return {
+        plugins = plugins,
+        register = function(plugin)
+            xassert {
+                plugin = {
+                    plugin,
+                    {
+                        status = 'callable',
+                        run = 'callable',
+                    },
+                },
+            }
+
+            if table.list_any(plugins, plugin) then
+                return
+            end
+
+            table.insert(plugins, plugin)
+            trigger()
+        end,
+        on_registered = function(...)
+            local res = subscribe(...)
+
+            if not table.is_empty(plugins) then
+                trigger()
+            end
+
+            return res
+        end,
+    }
+end
+
 ---@class (exact) formatter_plugin # Describes a formatter plugin.
 ---@field status fun(buffer: buffer): table<string, boolean> # gets the status of the supported formatters.
 ---@field run fun(buffer: buffer, callback: fun(result: boolean|string)) # runs the formatters.
 
-local fmt_subscribe, fmt_trigger = ide.sched.define_event 'FormatterPluginRegistered'
-
----@type formatter_plugin[]
-M.formatter_plugins = {}
-
--- Registers a formatter plugin.
----@param plugin formatter_plugin # the formatter plugin to register.
-function M.register_formatter(plugin)
-    xassert {
-        plugin = {
-            plugin,
-            {
-                status = 'callable',
-                run = 'callable',
-            },
-        },
-    }
-
-    if table.list_any(M.formatter_plugins, plugin) then
-        return
-    end
-
-    table.insert(M.formatter_plugins, plugin)
-    fmt_trigger()
-end
-
--- Triggers when a formatter plugin is registered.
----@type define_event_subscribe_function
-M.on_formatter_registered = function(...)
-    local res = fmt_subscribe(...)
-
-    if not table.is_empty(M.formatter_plugins) then
-        fmt_trigger()
-    end
-
-    return res
-end
+-- Formatter plugin slot.
+---@class (exact) formatter_plugin_slot
+---@field plugins formatter_plugin[] # the registered formatter plugins.
+---@field register fun(plugin: formatter_plugin) # registers a formatter plugin.
+---@field on_registered fun(callback: fun()) # triggers when a formatter plugin is registered.
+M.formatter = define_plugin_slot 'Formatter'
 
 ---@class (exact) linter_plugin # Describes a linting plugin.
 ---@field status fun(buffer: buffer): table<string, boolean> # gets the status of the supported linters.
 ---@field run fun(buffer: buffer, callback: fun(result: boolean|string)) # runs the linters.
 
-local lint_subscribe, lint_trigger = ide.sched.define_event 'LinterPluginRegistered'
+-- Linter plugin slot.
+---@class (exact) linter_plugin_slot
+---@field plugins linter_plugin[] # the registered linter plugins.
+---@field register fun(plugin: linter_plugin) # registers a linter plugin.
+---@field on_registered fun(callback: fun()) # triggers when a linter plugin is registered.
+M.linter = define_plugin_slot 'Linter'
 
----@type linter_plugin[]
-M.linter_plugins = {}
-
--- Registers a linter plugin.
----@param plugin linter_plugin # the linter plugin to register.
-function M.register_linter(plugin)
-    xassert {
-        plugin = {
-            plugin,
-            {
-                status = 'callable',
-                run = 'callable',
-            },
-        },
-    }
-
-    if table.list_any(M.linter_plugins, plugin) then
-        return
-    end
-
-    table.insert(M.linter_plugins, plugin)
-    lint_trigger()
-end
-
--- Triggers when a linter plugin is registered.
----@type define_event_subscribe_function
-M.on_linter_registered = function(...)
-    local res = lint_subscribe(...)
-
-    if not table.is_empty(M.linter_plugins) then
-        lint_trigger()
-    end
-
-    return res
-end
+---@module 'symb'
 
 ---@class (exact) symbol_provider_plugin # Describes an icon provider plugin.
 ---@field get_file_symbol fun(path: string): symbol # gets the icon for a file.
 ---@field get_file_type_symbol fun(file_type: string): symbol # gets the icon for a file type.
 
-local symb_subscribe, symb_trigger = ide.sched.define_event 'SymbolProviderPluginRegistered'
+-- Symbol provider plugin slot.
+---@class (exact) symbol_provider_plugin_slot
+---@field plugins symbol_provider_plugin[] # the registered symbol provider plugins.
+---@field register fun(plugin: symbol_provider_plugin) # registers a symbol provider plugin.
+---@field on_registered fun(callback: fun()) # triggers when a symbol provider plugin is registered.
+M.symbol_provider = define_plugin_slot 'SymbolProvider'
 
----@type symbol_provider_plugin[]
-M.symbol_provider_plugins = {}
+---@alias select_ui_row string[] # The row of a select plugin.
+---@alias select_ui_rows select_ui_row[] # The rows of a select plugin.
 
--- Registers a symbol provider plugin.
----@param plugin symbol_provider_plugin # the symbol provider plugin to register.
-function M.register_symbol_provider(plugin)
-    xassert {
-        plugin = {
-            plugin,
-            {
-                status = 'callable',
-                run = 'callable',
-            },
-        },
-    }
+---@alias select_ui_callback # The callback to call when an item is selected.
+---| fun(item: select_ui_row, row: integer)
 
-    if table.list_any(M.symbol_provider_plugins, plugin) then
-        return
-    end
+---@alias select_ui_highlighter # The highlighter to use for entry.
+---| fun(row: select_ui_row, row: integer, col: integer): string|nil
 
-    table.insert(M.symbol_provider_plugins, plugin)
-    symb_trigger()
-end
+---@class (exact) select_ui_options # The options for the select.
+---@field prompt string|nil # the prompt to display.
+---@field at_cursor boolean|nil # whether to display the select at the cursor.
+---@field separator string|nil # the separator to use between columns.
+---@field callback ui.select.SelectCallback|nil # the callback to call when an item is selected.
+---@field highlighter ui.select.SelectHighlighter|nil # the highlighter to use for the entry.
+---@field index_cols integer[]|nil # the fields to use for the index.
+---@field width number|nil # the width of the select.
+---@field height number|nil # the height of the select.
 
--- Triggers when a symbol provider plugin is registered.
----@type define_event_subscribe_function
-M.on_symbol_provider_registered = function(...)
-    local res = symb_subscribe(...)
+---@class (exact) select_ui_plugin # Describes a select plugin.
+---@field select fun(items: select_ui_rows, opts: select_ui_options): boolean # selects an item from a list of items.
 
-    if not table.is_empty(M.symbol_provider_plugins) then
-        symb_trigger()
-    end
-
-    return res
-end
+-- Select plugin slot.
+---@class (exact) select_ui_plugin_slot
+---@field plugins select_ui_plugin[] # the registered select plugins.
+---@field register fun(plugin: select_ui_plugin) # registers a select plugin.
+---@field on_registered fun(callback: fun()) # triggers when a select plugin is registered.
+M.select_ui = define_plugin_slot 'SelectUi'
 
 return table.freeze(M)

@@ -236,6 +236,12 @@ function M.write_text_file(path, content, opts)
     return true, nil
 end
 
+-- Gets the current working directory.
+---@return string # the current working directory.
+function M.cwd()
+    return assert(vim.fn.getcwd()) --[[@as string]]
+end
+
 ---@class (exact) fs.format_relative_path_opts # The options for formatting a relative path.
 ---@field ellipsis string|nil # the ellipsis to use, defaults to '…'.
 ---@field include_base_dir boolean|nil # whether to include the base directory in the path, defaults to false.

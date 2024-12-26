@@ -133,7 +133,7 @@ local function show_for_buffer(buffer)
                 end)
                 :totable(),
             function(client)
-                return client.name
+                return client.name, client
             end
         ),
     }
@@ -206,7 +206,7 @@ function M.register_stack_trace_highlights(buffer)
 end
 
 -- Show buffer information
-ide.command.register('Debug', function()
+ide.cmd.register('Debug', function()
     show_for_buffer()
 end, { desc = 'Show buffer information', nargs = 0 })
 

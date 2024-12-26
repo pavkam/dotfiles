@@ -304,7 +304,7 @@ function M.grep_dir(term, dir, callback)
     end, { ignore_codes = { 0, 1 } })
 end
 
-ide.command.register('Run', {
+ide.cmd.register('Run', {
     fn = function(args)
         if #args.split_args == 0 then
             error 'No command specified'

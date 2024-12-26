@@ -88,7 +88,7 @@ return {
         ---@module 'nvim-web-devicons'
         local dev_icons = xrequire 'nvim-web-devicons'
 
-        ide.plugin.register_symbol_provider {
+        ide.plugin.symbol_provider.register {
             get_file_symbol = function(path)
                 xassert {
                     path = { path, { 'string', ['>'] = 0 } },

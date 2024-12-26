@@ -215,6 +215,108 @@ function M.confirm(question)
     })
 end
 
+---@class (exact) select_options # The options for the select.
+---@field prompt string|nil # the prompt to display.
+---@field at_cursor boolean|nil # whether to display the select at the cursor.
+---@field separator string|nil # the separator to use between columns.
+---@field highlighter nil|fun(row: select_ui_row, row: integer, col: integer): string|nil # the highlighter.
+---@field width number|nil # the width of the select.
+---@field height number|nil # the height of the select.
+
+---@class (exact) select_column # The column to display.
+---@field [1] any # the key of the column.
+---@field prio integer|nil # the priority of the column.
+
+--- Select an item from a list of items.
+---@generic T: table
+---@param items T[] # the list of items to select from.
+---@param cols select_column[] # the columns to display.
+---@param callback fun(item: T) # the callback to call when an item is selected.
+---@param opts select_options|nil # the options for the select.
+function M.select(items, cols, callback, opts)
+    xassert {
+        items = {
+            items,
+            {
+                'list',
+                ['>'] = 0,
+                ['*'] = 'table',
+            },
+        },
+        callback = { callback, 'callable' },
+        cols = {
+            cols,
+            {
+                'list',
+                ['>'] = 0,
+                ['*'] = 'table', -- TODO: better type checking
+            },
+        },
+        opts = {
+            opts,
+            {
+                'nil',
+                {
+                    prompt = { 'string', 'nil' },
+                    at_cursor = { 'boolean', 'nil' },
+                    separator = { 'string', 'nil' },
+                    highlighter = { 'callable', 'nil' },
+                    width = { 'integer', 'number', 'nil' },
+                    height = { 'integer', 'number', 'nil' },
+                },
+            },
+        },
+    }
+
+    ---@type string[][]
+    local rows = {}
+    for _, item in ipairs(items) do
+        local row = {}
+        for _, conf in ipairs(cols) do
+            table.insert(row, item[conf[1]] or '')
+        end
+        table.insert(rows, row)
+    end
+
+    ---@type table<integer, integer>
+    local prio_to_index = {}
+    for i, conf in ipairs(cols) do
+        if conf.prio then
+            prio_to_index[i] = conf.prio
+        end
+    end
+
+    local prios = table.keys(prio_to_index)
+    table.sort(prios, function(a, b)
+        return a < b
+    end)
+
+    local indexes = table.list_map(prios, function(prio)
+        return prio_to_index[prio]
+    end)
+
+    for _, plugin in ipairs(ide.plugin.select_ui.plugins) do
+        local served = plugin.select(rows, {
+            prompt = opts and opts.prompt,
+            at_cursor = opts and opts.at_cursor,
+            separator = opts and opts.separator or (' ' .. require('icons').Symbols.ColumnSeparator .. ' '),
+            callback = function(_, row)
+                callback(items[row])
+            end,
+            highlighter = opts and opts.highlighter,
+            index_cols = indexes,
+            width = opts and opts.width,
+            height = opts and opts.height,
+        })
+
+        if served then
+            return
+        end
+    end
+
+    M.error 'No select plugin available'
+end
+
 local ignore_hidden_files_option = ide.config.register_toggle('ignore_hidden_files', function(enabled)
     if package.loaded['neo-tree'] then
         -- Update neo-tree state

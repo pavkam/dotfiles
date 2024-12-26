@@ -8,7 +8,7 @@ return {
 
         ---@type table<integer, boolean>
         local running_for_buffers = {}
-        ide.plugin.register_formatter {
+        ide.plugin.formatter.register {
             ---@param buffer buffer
             ---@return table<string, boolean>
             status = function(buffer)

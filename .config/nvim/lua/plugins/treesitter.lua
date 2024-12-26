@@ -159,7 +159,6 @@ return {
     {
         'windwp/nvim-ts-autotag',
         event = 'User NormalFile',
-        ---@type nvim-ts-autotag.PluginSetup
         opts = {
             opts = {
                 enable_rename = true,

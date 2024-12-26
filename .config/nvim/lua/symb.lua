@@ -73,7 +73,7 @@ end
 
 local file_type_to_icon_cache = {}
 
-ide.plugin.on_symbol_provider_registered(function()
+ide.plugin.symbol_provider.on_registered(function()
     table.clear(file_type_to_icon_cache)
 end)
 
@@ -86,7 +86,7 @@ local file_type_to_icon_map = setmetatable(file_type_to_icon_cache, {
 
         local icn = rawget(t, key)
         if not icn then
-            for _, plugin in ipairs(ide.plugin.symbol_provider_plugins) do
+            for _, plugin in ipairs(ide.plugin.symbol_provider.plugins) do
                 local symb = plugin.get_file_type_symbol(key)
                 if symb then
                     if type(symb) == 'table' then

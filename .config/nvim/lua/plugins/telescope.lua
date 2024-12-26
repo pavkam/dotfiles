@@ -181,5 +181,175 @@ return {
         keys.map('n', [[""]], function()
             require('telescope.builtin').registers()
         end, { desc = 'Registers' })
+
+        local h_padding = 14
+        local v_padding = 4
+
+        ide.plugin.select_ui.register {
+            select = function(items, opts)
+                local pickers = require 'telescope.pickers'
+                local finders = require 'telescope.finders'
+                local actions = require 'telescope.actions'
+                local themes = require 'telescope.themes'
+                local action_state = require 'telescope.actions.state'
+                local entry_display = require 'telescope.pickers.entry_display'
+                local strings = require 'plenary.strings'
+                local config = require('telescope.config').values
+
+                ---@type select_ui_options
+                opts = table.merge(opts, {
+                    prompt = opts.prompt or 'Select one of',
+                    at_cursor = false,
+                    separator = ' ',
+                    callback = function(item)
+                        ide.tui.warn('No handler defined, selected: ' .. inspect(item))
+                    end,
+                    highlighter = function()
+                        return nil
+                    end,
+                    index_cols = { 1 },
+                })
+
+                local prompt = opts.prompt --[[@as string]]
+                if prompt:sub(-1, -1) == ':' then
+                    prompt = prompt:sub(1, -2)
+                end
+                prompt = string.gsub(prompt, '\n', ' ')
+
+                local item_length = #items[1]
+                local max_width = strings.strdisplaywidth(prompt) + h_padding
+
+                ---@type number[]
+                local max_lengths = table.list_map(
+                    items[1],
+                    ---@param item string
+                    function(item)
+                        local l = strings.strdisplaywidth(tostring(item))
+                        max_width = math.max(max_width, l)
+
+                        return l
+                    end
+                )
+
+                for _, item in ipairs(items) do
+                    if #item ~= item_length then
+                        error(
+                            string.format(
+                                'all items should be of the same length %d: %s',
+                                item_length,
+                                vim.inspect(item)
+                            )
+                        )
+                    end
+
+                    for i, field in ipairs(item) do
+                        max_lengths[i] = math.max(max_lengths[i], strings.strdisplaywidth(tostring(field)))
+                    end
+
+                    local line_width = strings.strdisplaywidth(table.concat(item, opts.separator)) + h_padding
+                    max_width = math.max(max_width, line_width)
+                end
+
+                local max_height = math.min(vim.o.pumheight, #items) + v_padding
+
+                local displayer = entry_display.create {
+                    separator = opts.separator,
+                    items = table.list_map(
+                        max_lengths,
+                        ---@param w number
+                        function(w)
+                            return { width = w }
+                        end
+                    ),
+                }
+
+                local display = function(e)
+                    local mapped = {}
+                    for i, field in ipairs(e.value) do
+                        table.insert(mapped, { field, opts.highlighter(e.value, e.index, i) })
+                    end
+
+                    return displayer(mapped)
+                end
+
+                local picker_opts = opts.at_cursor
+                        and themes.get_cursor {
+                            layout_config = {
+                                width = opts.width or max_width,
+                                height = opts.height or max_height,
+                            },
+                        }
+                    or themes.get_dropdown {
+                        layout_config = {
+                            width = opts.width or max_width,
+                            height = opts.height or max_height,
+                        },
+                    }
+
+                local function make_ordinal(entry)
+                    local ordinal = ''
+
+                    for _, index in ipairs(opts.index_cols) do
+                        local v = tostring(entry[index])
+                        if v == '' then
+                            v = '\u{FFFFF}'
+                        end
+
+                        ordinal = ordinal .. '\u{FFFFE}' .. v
+                    end
+
+                    return ordinal
+                end
+
+                local orig_ordinals = table.inflate(
+                    items,
+                    ---@param item string[]
+                    ---@param index integer
+                    ---@return string, integer
+                    function(item, index)
+                        return make_ordinal(item), index
+                    end
+                )
+
+                table.sort(items, function(a, b)
+                    return make_ordinal(a) < make_ordinal(b)
+                end)
+
+                pickers
+                    .new(picker_opts, {
+                        prompt_title = prompt,
+                        finder = finders.new_table {
+                            results = items,
+                            entry_maker = function(e)
+                                return {
+                                    value = e,
+                                    display = display,
+                                    ordinal = make_ordinal(e),
+                                }
+                            end,
+                        },
+                        sorter = config.generic_sorter(opts),
+                        attach_mappings = function(prompt_bufnr)
+                            actions.select_default:replace(function()
+                                local selection = action_state.get_selected_entry()
+                                if not selection then
+                                    return
+                                end
+
+                                local orig_index = assert(orig_ordinals[selection.ordinal])
+
+                                actions.close(prompt_bufnr)
+
+                                opts.callback(selection.value, orig_index)
+                            end)
+
+                            return true
+                        end,
+                    })
+                    :find()
+
+                return true
+            end,
+        }
     end,
 }

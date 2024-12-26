@@ -216,7 +216,7 @@ local M = table.smart {
                 end)
 
                 -- TODO: flat map
-                table.list_iterate(ide.plugin.formatter_plugins, function(plugin)
+                table.list_iterate(ide.plugin.formatter.plugins, function(plugin)
                     for formatter, running in pairs(plugin.status(buffer)) do
                         table.insert(result, {
                             name = formatter,
@@ -227,7 +227,7 @@ local M = table.smart {
                     end
                 end)
 
-                table.list_iterate(ide.plugin.linter_plugins, function(plugin)
+                table.list_iterate(ide.plugin.linter.plugins, function(plugin)
                     for linter, running in pairs(plugin.status(buffer)) do
                         table.insert(result, {
                             name = linter,
@@ -464,7 +464,7 @@ local M = table.smart {
                 return
             end
 
-            local plugins = ide.plugin.formatter_plugins
+            local plugins = ide.plugin.formatter.plugins
 
             if #plugins == 0 then
                 ide.tui.warn(
@@ -499,7 +499,7 @@ local M = table.smart {
                 return
             end
 
-            local plugins = ide.plugin.linter_plugins
+            local plugins = ide.plugin.linter.plugins
 
             if #plugins == 0 then
                 ide.tui.warn(
@@ -599,7 +599,7 @@ local M = table.smart {
     },
 }
 
-ide.plugin.on_formatter_registered(function()
+ide.plugin.formatter.on_registered(function()
     if auto_formatting_toggle then
         return
     end
@@ -622,7 +622,7 @@ ide.plugin.on_formatter_registered(function()
     })
 end)
 
-ide.plugin.on_linter_registered(function()
+ide.plugin.linter.on_registered(function()
     if auto_linting_toggle then
         return
     end

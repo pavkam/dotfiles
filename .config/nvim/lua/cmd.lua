@@ -1,4 +1,4 @@
----@class command
+---@class cmd
 local M = {}
 
 ---@class (exact) vim.command_callback_arguments # The arguments passed to a command callback.

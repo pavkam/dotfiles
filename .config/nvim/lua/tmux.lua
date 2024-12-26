@@ -105,42 +105,46 @@ end
 
 local new_session_label = '<new session>'
 
---- Displays the UI to select and manage sessions
----@param items table<string, ui.tmux.SessionItem> # the items to display
+-- Displays the UI to select and manage sessions.
+---@param items table<string, ui.tmux.SessionItem> # the items to display.
 local function display(items)
-    ---@type string[][]
-    local lines = {}
-
-    table.insert(lines, { new_session_label, '', vim.fn.getcwd() })
+    ---@type { name: string, status: string, dir: string }[]
+    local entries = {
+        {
+            name = new_session_label,
+            status = '',
+            dir = ide.fs.cwd(),
+        },
+    }
 
     for name, data in pairs(items) do
-        local status = data.current and 'current' or data.attached and 'attached' or data.session and 'active' or ''
-        table.insert(lines, { name, status, ide.fs.format_relative_path(vim.env.PROJECTS_ROOT, data.root or data.cwd) })
+        table.insert(entries, {
+            name = name,
+            status = data.current and 'current' or data.attached and 'attached' or data.session and 'active' or '',
+            dir = ide.fs.format_relative_path(vim.env.PROJECTS_ROOT, data.root or data.cwd),
+        })
     end
 
-    select.advanced(lines, {
+    ide.tui.select(entries, {
+        { 'name', prio = 2 },
+        { 'status', prio = 1 },
+        { 'dir', prio = 3 },
+    }, function(item)
+        if item.name == new_session_label then
+            create_or_switch_to_session(nil, true, item.dir)
+            return
+        end
+
+        local i = items[item.name]
+        local dir = i.root or i.cwd
+
+        if item.status == '' then
+            create_or_switch_to_session(item.name ~= new_session_label and item.name or nil, true, dir)
+        else
+            create_or_switch_to_session(item.name, false, dir)
+        end
+    end, {
         prompt = 'Select a session',
-        index_fields = { 2, 1, 3 },
-        callback = function(item)
-            local name = item[1]
-            if name == new_session_label then
-                create_or_switch_to_session(nil, true, item[3] --[[@as string]])
-                return
-            end
-
-            local i = items[item[1]]
-            local dir = i.root or i.cwd
-
-            if item[2] == '' then
-                create_or_switch_to_session(
-                    item[1] ~= new_session_label and item[1] or nil --[[@as string|nil]],
-                    true,
-                    dir
-                )
-            else
-                create_or_switch_to_session(item[1] --[[@as string]], false, dir)
-            end
-        end,
         highlighter = function(item)
             if item[2] == 'current' then
                 return 'DiagnosticOk'

@@ -168,7 +168,7 @@ return {
             end)
         end
 
-        ide.plugin.register_linter {
+        ide.plugin.linter.register {
             ---@param buffer buffer
             status = function(buffer)
                 local all = get_linters(buffer)

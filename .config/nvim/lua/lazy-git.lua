@@ -143,7 +143,7 @@ end
 
 -- Add a command to run lazygit
 if vim.fn.executable(command) == 1 then
-    ide.command.register('Lazygit', function()
+    ide.cmd.register('Lazygit', function()
         run_lazygit()
     end, { desc = 'Run Lazygit', nargs = 0 })
 

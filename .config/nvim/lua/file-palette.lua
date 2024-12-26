@@ -327,7 +327,7 @@ function M.show_file_palette(opts)
     show_file_palette(opts)
 end
 
-ide.command.register('Files', function()
+ide.cmd.register('Files', function()
     M.show_file_palette()
 end, { desc = 'Show file palette' })
 
