@@ -51,8 +51,10 @@ end
 ---| xtype # the base type.
 ---| xassert_type[] # a list of types.
 ---| { [1]: 'list', ['*']: xassert_type|nil, ['<']: integer|nil, ['>']: integer|nil  } # a list of values.
+---| { [1]: 'list', ['*']: xassert_type|nil, ['=']: integer|nil } # a list of values.
 ---| { [1]: 'number'|'integer', ['<']: integer|nil, ['>']: integer|nil } # a number.
 ---| { [1]: 'string', ['*']: string|string[]|function|nil, ['<']: integer|nil, ['>']: integer|nil } # a string.
+---| { [1]: 'string', ['*']: string|string[]|function|nil, ['=']: integer|nil } # a string.
 ---| { [string]: xassert_type } # a sub-table.
 
 ---@class (exact) xassert_entry # An assertion entry.
@@ -152,6 +154,7 @@ local function validate_entry(field_name, entry)
 
         local lt = xtype(field_schema['<']) == 'number' and field_schema['<'] or nil
         local gt = xtype(field_schema['>']) == 'number' and field_schema['>'] or nil
+        local eq = xtype(field_schema['=']) == 'number' and field_schema['='] or nil
 
         if possible_type == 'list' then
             if field_value_type ~= possible_type then
@@ -178,6 +181,15 @@ local function validate_entry(field_name, entry)
                     expected_cond = string.format('max. %d items', gt),
                     actual_cond = string.format('%d items', #field_value),
                     message = 'list is too short',
+                }
+            end
+
+            if eq and #field_value ~= eq then
+                return {
+                    field = field_name,
+                    expected_cond = string.format('exactly %d items', eq),
+                    actual_cond = string.format('%d items', #field_value),
+                    message = 'list is not of the expected length',
                 }
             end
 
@@ -252,6 +264,15 @@ local function validate_entry(field_name, entry)
                     expected_cond = string.format('max. %d characters', gt),
                     actual_cond = string.format('%d characters', #field_value),
                     message = 'string is too short',
+                }
+            end
+
+            if eq and #field_value ~= eq then
+                return {
+                    field = field_name,
+                    expected_cond = string.format('exactly %d characters', eq),
+                    actual_cond = string.format('%d characters', #field_value),
+                    message = 'string is not of the expected length',
                 }
             end
 
@@ -630,7 +651,7 @@ function _G.inspect(value, opts, depth)
     return vim.inspect(value, { newline = opts.new_line, depth = opts.max_depth })
 end
 
---- Makes a table read-only.
+-- Makes a table read-only.
 ---@generic T: table
 ---@param table T # the table to make read-only.
 ---@return T # the read-only table.
@@ -638,12 +659,48 @@ function table.freeze(table)
     assert(type(table) == 'table', 'expected a table')
 
     return setmetatable({}, {
-        __index = table,
+        __index = table, -- TODO: freeze deep.
+        __newindex = function()
+            error('attempt to modify read-only table', 2)
+        end,
+        __pairs = function()
+            local a, b, c = pairs(table)
+            return a, b, c
+        end,
+        __ipairs = function()
+            local a, b, c = ipairs(table)
+            return a, b, c
+        end,
+    })
+end
+
+-- Creates a read-only table from a function.
+---@generic K, V
+---@param fn fun(key: K): V # the function to read from.
+---@return table<K, V> # the read-only table.
+function table.read_proxy(fn)
+    xassert {
+        fn = { fn, 'callable' },
+    }
+
+    return setmetatable({}, {
+        __index = function(_, key)
+            return fn(key)
+        end,
         __newindex = function()
             error('attempt to modify read-only table', 2)
         end,
         __metatable = false,
     })
+end
+
+-- Clears a table.
+---@generic T: table
+---@param t T # the table to clear.
+function table.clear(t)
+    for k, _ in pairs(t) do
+        t[k] = nil
+    end
 end
 
 --- Makes a table weak.
@@ -1199,9 +1256,9 @@ end
 
 --- Converts the values of a table to a new table.
 ---@generic K, I, O
----@param t table<K, I> # the table to map.
+---@param t { [K]: I } # the table to map.
 ---@param fn fun(value: I): O # the function to map the values.
----@return table<K, O> # the mapped list.
+---@return { [K]: O } # the mapped list.
 ---@nodiscard
 function table.map(t, fn)
     xassert {

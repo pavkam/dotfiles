@@ -1,7 +1,5 @@
 local icons = require 'icons'
 
----@module 'api.win'
-
 ---@class (exact) remove_buffer_options # Options for removing a buffer.
 ---@field force boolean|nil # whether to force the removal of the buffer.
 
@@ -76,9 +74,8 @@ local M = table.smart {
             get = function(_, buffer)
                 local window_ids = vim.fn.getbufinfo(buffer.id)[1].windows
                 if not table.is_empty(window_ids) then
-                    local win = require 'api.win'
                     return table.list_map(window_ids, function(window_id)
-                        return win[window_id]
+                        return ide.win[window_id]
                     end)
                 end
             end,

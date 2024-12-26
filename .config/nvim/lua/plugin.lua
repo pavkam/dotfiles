@@ -112,7 +112,7 @@ local fmt_subscribe, fmt_trigger = ide.sched.define_event 'FormatterPluginRegist
 ---@type formatter_plugin[]
 M.formatter_plugins = {}
 
---- Registers a formatter plugin.
+-- Registers a formatter plugin.
 ---@param plugin formatter_plugin # the formatter plugin to register.
 function M.register_formatter(plugin)
     xassert {
@@ -133,13 +133,16 @@ function M.register_formatter(plugin)
     fmt_trigger()
 end
 
---- Triggers when a formatter plugin is registered.
+-- Triggers when a formatter plugin is registered.
+---@type define_event_subscribe_function
 M.on_formatter_registered = function(...)
-    fmt_subscribe(...)
+    local res = fmt_subscribe(...)
 
     if not table.is_empty(M.formatter_plugins) then
         fmt_trigger()
     end
+
+    return res
 end
 
 ---@class (exact) linter_plugin # Describes a linting plugin.
@@ -151,7 +154,7 @@ local lint_subscribe, lint_trigger = ide.sched.define_event 'LinterPluginRegiste
 ---@type linter_plugin[]
 M.linter_plugins = {}
 
---- Registers a linter plugin.
+-- Registers a linter plugin.
 ---@param plugin linter_plugin # the linter plugin to register.
 function M.register_linter(plugin)
     xassert {
@@ -172,13 +175,58 @@ function M.register_linter(plugin)
     lint_trigger()
 end
 
---- Triggers when a linter plugin is registered.
+-- Triggers when a linter plugin is registered.
+---@type define_event_subscribe_function
 M.on_linter_registered = function(...)
-    lint_subscribe(...)
+    local res = lint_subscribe(...)
 
     if not table.is_empty(M.linter_plugins) then
         lint_trigger()
     end
+
+    return res
+end
+
+---@class (exact) symbol_provider_plugin # Describes an icon provider plugin.
+---@field get_file_symbol fun(path: string): symbol # gets the icon for a file.
+---@field get_file_type_symbol fun(file_type: string): symbol # gets the icon for a file type.
+
+local symb_subscribe, symb_trigger = ide.sched.define_event 'SymbolProviderPluginRegistered'
+
+---@type symbol_provider_plugin[]
+M.symbol_provider_plugins = {}
+
+-- Registers a symbol provider plugin.
+---@param plugin symbol_provider_plugin # the symbol provider plugin to register.
+function M.register_symbol_provider(plugin)
+    xassert {
+        plugin = {
+            plugin,
+            {
+                status = 'callable',
+                run = 'callable',
+            },
+        },
+    }
+
+    if table.list_any(M.symbol_provider_plugins, plugin) then
+        return
+    end
+
+    table.insert(M.symbol_provider_plugins, plugin)
+    symb_trigger()
+end
+
+-- Triggers when a symbol provider plugin is registered.
+---@type define_event_subscribe_function
+M.on_symbol_provider_registered = function(...)
+    local res = symb_subscribe(...)
+
+    if not table.is_empty(M.symbol_provider_plugins) then
+        symb_trigger()
+    end
+
+    return res
 end
 
 return table.freeze(M)

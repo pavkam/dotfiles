@@ -9,7 +9,7 @@ local progress = require 'progress'
 ---@class ui.lualine.sections
 local M = {}
 
----@type string|nil
+---@type icon|nil
 local spinner_icon
 ide.sched.on_task_monitor_tick(function(tasks, tick)
     spinner_icon = ide.symb.progress.default[tick % #ide.symb.progress.default + 1]
@@ -282,16 +282,15 @@ local components = {
 
             return table.concat(
                 table.list_map(buffer.tools, function(tool)
-                    ---@type symb_icon|nil
-                    local prefix
+                    ---@type icon|nil
+                    local icon = ide.symb.tool[tool.type][tool.name]
                     if tool.running then
-                        prefix = spinner_icon
-                    elseif tool.enabled then
-                        prefix = ide.symb.tools[tool.type][tool.name]
+                        icon = icon and spinner_icon and spinner_icon.replace_hl(icon) or spinner_icon
                     end
-                    prefix = prefix or icons.UI.Disabled
 
-                    return ide.tui.format_for_status_line(prefix, ' ', tool.name)
+                    icon = icon or ide.symb.state.disabled
+
+                    return ide.tui.stl_format(icon.fit(2), tool.name)
                 end),
                 ' '
             )

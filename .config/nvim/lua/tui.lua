@@ -78,16 +78,19 @@ function M.redraw()
     vim.cmd 'redraw!'
 end
 
----@alias bar_format_text # A string that can be formatted with `bar_format`.
+---@alias stl_format_item # An item to format for the status line.
 ---| string # the text to format.
----| { [1]:string, hl: string } # the text to format with a highlight group.
+---| number # the number to format.
+---| boolean # the boolean to format.
+---| icon # the icon to format.
+---| symbol # the symbol to format.
 
 local default_status_line_hl = 'StatusLine'
 
 -- Formats a string for status line.
----@param ... bar_format_text # the text to format.
+---@param ... stl_format_item # the text items to format.
 ---@return string # the formatted string.
-function M.format_for_status_line(...)
+function M.stl_format(...)
     local parts = { ... }
 
     xassert {
@@ -104,23 +107,31 @@ function M.format_for_status_line(...)
     }
 
     local result = ''
-    local last_hl = default_status_line_hl
+
+    ---@type string|nil
+    local last_hl = nil
+
     for _, part in ipairs(parts) do
         local _, ty = xtype(part)
-        if ty == 'table' then
-            if part.hl and part.hl ~= last_hl then
-                result = result .. string.format('%%#%s#%s', part.hl, part[1])
-                last_hl = part.hl
+
+        if ty == 'table' and part.symbol then
+            part = part.symbol
+        end
+
+        if ty == 'table' then --[[@cast part symbol]]
+            local hl = part.hl or default_status_line_hl
+            if hl ~= last_hl then
+                result = result .. string.format('%%#%s#%s', hl, part[1])
+                last_hl = hl
             else
                 result = result .. part[1]
             end
         elseif ty == 'string' then
-            if last_hl ~= default_status_line_hl then
-                result = result .. string.format('%%#%s#%s', last_hl, part)
-                last_hl = default_status_line_hl
-            else
-                result = result .. part
-            end
+            result = result .. part
+        elseif ty == 'boolean' or ty == 'number' or ty == 'integer' then
+            result = result .. tostring(part)
+        else
+            result = result .. inspect(part, { newline = '', indent = '', separator = ',' })
         end
     end
 
