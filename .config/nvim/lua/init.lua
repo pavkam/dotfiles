@@ -1127,7 +1127,7 @@ end
 -- Converts the elements of a list to a new list.
 ---@generic I, O
 ---@param list I[] # the list to map.
----@param fn fun(value: I): O # the function to map the values.
+---@param fn fun(value: I, index: integer): O # the function to map the values.
 ---@return O[] # the mapped list.
 ---@nodiscard
 function table.list_map(list, fn)
@@ -1137,8 +1137,8 @@ function table.list_map(list, fn)
     }
 
     local result = {}
-    for _, item in ipairs(list) do
-        table.insert(result, fn(item))
+    for index, item in ipairs(list) do
+        table.insert(result, fn(item, index))
     end
 
     return result
@@ -1147,15 +1147,15 @@ end
 -- Iterates over the elements of a list.
 ---@generic T
 ---@param list T[] # the list to iterate over.
----@param fn fun(value: T) # the function to iterate the values.
+---@param fn fun(value: T, index: integer) # the function to iterate the values.
 function table.list_iterate(list, fn)
     xassert {
         list = { list, 'list' },
         fn = { fn, 'callable' },
     }
 
-    for _, item in ipairs(list) do
-        fn(item)
+    for index, item in ipairs(list) do
+        fn(item, index)
     end
 end
 
@@ -1180,7 +1180,7 @@ end
 -- Filters the elements of a list.
 ---@generic T
 ---@param list T[] # the list to filter.
----@param fn fun(value: T): any # the function to filter the values.
+---@param fn fun(value: T, index: integer): any # the function to filter the values.
 ---@return T[] # the filtered list.
 ---@nodiscard
 function table.list_filter(list, fn)
@@ -1190,8 +1190,8 @@ function table.list_filter(list, fn)
     }
 
     local result = {}
-    for _, item in ipairs(list) do
-        if fn(item) then
+    for index, item in ipairs(list) do
+        if fn(item, index) then
             table.insert(result, item)
         end
     end
@@ -1202,7 +1202,7 @@ end
 -- Checks if a list has a value that matches a condition.
 ---@generic T
 ---@param list T[] # the list to check.
----@param cond T|fun(value: T): any # the function to check the values.
+---@param cond T|fun(value: T, index: integer): any # the function to check the values.
 ---@return boolean # whether the list has any matching value.
 ---@nodiscard
 function table.list_any(list, cond)
@@ -1213,8 +1213,8 @@ function table.list_any(list, cond)
     local _, ty = xtype(cond)
 
     if ty == 'callable' then
-        for _, item in ipairs(list) do
-            if cond(item) then
+        for index, item in ipairs(list) do
+            if cond(item, index) then
                 return true
             end
         end
@@ -1232,7 +1232,7 @@ end
 -- Checks if a list has all values that match a condition.
 ---@generic T
 ---@param list T[] # the list to check.
----@param fn fun(value: T): any # the function to check the values.
+---@param fn fun(value: T, index: integer): any # the function to check the values.
 ---@return boolean # whether the list has all matching values.
 ---@nodiscard
 function table.list_all(list, fn)
@@ -1245,8 +1245,8 @@ function table.list_all(list, fn)
         return true
     end
 
-    for _, item in ipairs(list) do
-        if fn(item) then
+    for index, item in ipairs(list) do
+        if fn(item, index) then
             return true
         end
     end

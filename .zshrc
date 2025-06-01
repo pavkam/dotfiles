@@ -107,7 +107,7 @@ bindkey "$terminfo[kcud1]" history-substring-search-down
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
-# Arch/Manjaro-specific feaure. Offer to install missing package if command is not found.
+# Arch/Manjaro-specific feature. Offer to install missing package if command is not found.
 if [[ -r /usr/share/zsh/functions/command-not-found.zsh ]]; then
     source /usr/share/zsh/functions/command-not-found.zsh
     export PKGFILE_PROMPT_INSTALL_MISSING=1
@@ -350,23 +350,37 @@ if command -v heroku &> /dev/null; then
     }
 fi
 
-sesh() {
-    local TMUX_SESSIONS=""
-    tmux ls &>/dev/null && TMUX_SESSIONS=$(tmux ls -F "#{session_name}")
+local SESSION_MANAGER=""
+if [ "$TMUX" != "" ]; then
+    SESSION_MANAGER="tmux"
+elif [ "$TERM" = "xterm-kitty" ]; then
+    SESSION_MANAGER="kitty"
+fi
+
+ss() {
+    local SESSIONS=""
+    if [ "$SESSION_MANAGER" = "tmux" ]; then
+        tmux ls &>/dev/null && SESSIONS=$(tmux ls -F "#{session_name}")
+    fi
 
     local PROJECTS=$(
         [ "$PROJECTS_ROOT" != "" ] && fd -c never --follow --hidden --no-ignore --relative-path --base-directory $PROJECTS_ROOT .git$ -t directory -E .github | xargs dirname
     )
 
     local OPTIONS=$(
-        [ "$TMUX_SESSIONS" != "" ] && echo $TMUX_SESSIONS
+        [ "$SESSIONS" != "" ] && echo $SESSIONS
         [ "$PROJECTS" != "" ] && echo $PROJECTS
         echo "+new"
     )
 
     OPTIONS=$(echo "$OPTIONS" | sort | uniq)
+    local SESSION=""
 
-    local SESSION=$(echo $OPTIONS | fzf --reverse --preview-window 'right:80%:nohidden' --preview="[ '{}' != '+new' ] && tmux capture-pane -e -pt {} 2> /dev/null || echo 'Session not running'")
+    if [ "$SESSION_MANAGER" = "tmux" ]; then
+        SESSION=$(echo $OPTIONS | fzf --reverse --preview-window 'right:80%:nohidden' --preview="[ '{}' != '+new' ] && tmux capture-pane -e -pt {} 2> /dev/null || echo 'Session not running'")
+    elif [ "$SESSION_MANAGER" = "kitty" ]; then
+        SESSION=$(echo $OPTIONS | fzf --reverse)
+    fi
 
     if [ "$SESSION" = "+new" ]; then
         echo -ne " Enter session name (empty to cancel): "
@@ -375,18 +389,26 @@ sesh() {
         SESSION=$(echo "$SESSION" | sed 's/[^a-zA-Z0-9\/]/_/g')
 
         if [ "$SESSION" != "" ]; then
-            tmux new -d -s "$SESSION" && tmux switch -t "$SESSION"
+            if [ "$SESSION_MANAGER" = "tmux" ]; then
+                tmux new -d -s "$SESSION" && tmux switch -t "$SESSION"
+            elif [ "$SESSION_MANAGER" = "kitty" ]; then
+                kitten @ launch --type=tab --title="$SESSION"
+            fi
         fi
     elif [ "$SESSION" != "" ]; then
-        title "tmux" "$SESSION"
+        title "$SESSION_MANAGER" "$SESSION"
 
         DIR="${PROJECTS_ROOT}/$SESSION"
         SESSION=$(echo "$SESSION" | sed 's/[^a-zA-Z0-9\/]/_/g')
 
-        if tmux has -t "$SESSION" &> /dev/null; then
-            tmux switch -t "$SESSION"
-        else
-            tmux new -d -s "$SESSION" -c "$DIR" && tmux switch -t "$SESSION"
+        if [ "$SESSION_MANAGER" = "tmux" ]; then
+            if tmux has -t "$SESSION" &> /dev/null; then
+                tmux switch -t "$SESSION"
+            else
+                tmux new -d -s "$SESSION" -c "$DIR" && tmux switch -t "$SESSION"
+            fi
+        elif [ "$SESSION_MANAGER" = "kitty" ]; then
+            kitten @ launch --type=tab --title="$SESSION" --cwd="$DIR"
         fi
     fi
 }

@@ -2,6 +2,10 @@
 ---@class tui
 local M = {}
 
+ide.theme.register_highlight_groups {
+    NormalMenuItem = 'Special',
+}
+
 ---@class (exact) tui.notify_opts # the options to pass to the notification.
 ---@field prefix_icon string|nil # the icon to prefix the message with.
 ---@field suffix_icon string|nil # the icon to suffix the message with.
@@ -219,7 +223,7 @@ end
 ---@field prompt string|nil # the prompt to display.
 ---@field at_cursor boolean|nil # whether to display the select at the cursor.
 ---@field separator string|nil # the separator to use between columns.
----@field highlighter nil|fun(row: select_ui_row, row: integer, col: integer): string|nil # the highlighter.
+---@field highlighter nil|fun(item: any, col: any): string|nil # the highlighter.
 ---@field width number|nil # the width of the select.
 ---@field height number|nil # the height of the select.
 
@@ -249,7 +253,7 @@ function M.select(items, cols, callback, opts)
             {
                 'list',
                 ['>'] = 0,
-                ['*'] = 'table', -- TODO: better type checking
+                ['*'] = { 'table', { 'list', ['='] = 1 } }, -- TODO: better type checking
             },
         },
         opts = {
@@ -301,9 +305,11 @@ function M.select(items, cols, callback, opts)
             at_cursor = opts and opts.at_cursor,
             separator = opts and opts.separator or (' ' .. require('icons').Symbols.ColumnSeparator .. ' '),
             callback = function(_, row)
-                callback(items[row])
+                callback(assert(items[row]))
             end,
-            highlighter = opts and opts.highlighter,
+            highlighter = opts and opts.highlighter and function(_, row, col)
+                return opts.highlighter(assert(items[row]), assert(cols[col][1]))
+            end,
             index_cols = indexes,
             width = opts and opts.width,
             height = opts and opts.height,

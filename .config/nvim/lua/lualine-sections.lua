@@ -39,11 +39,7 @@ end
 
 ide.theme.register_highlight_groups {
     AuxiliaryProgressStatus = 'Comment',
-    ActiveLintersStatus = { 'Statement', { italic = true } },
-    DisabledLintersStatus = { 'ActiveLintersStatus', { strikethrough = true } },
-    ActiveFormattersStatus = { 'Function', { italic = true } },
-    DisabledFormattersStatus = { 'ActiveFormattersStatus', { strikethrough = true } },
-    ActiveLSPsStatus = 'PreProc',
+
     CopilotIdle = 'Special',
     CopilotFetching = 'DiagnosticWarn',
     CopilotWarning = 'DiagnosticError',
@@ -288,7 +284,9 @@ local components = {
                         icon = icon and spinner_icon and spinner_icon.replace_hl(icon) or spinner_icon
                     end
 
-                    icon = icon or ide.symb.state.disabled
+                    if not icon or not tool.enabled then
+                        icon = ide.symb.state.disabled
+                    end
 
                     return ide.tui.stl_format(icon.fit(2), tool.name)
                 end),

@@ -38,8 +38,9 @@ docs/_build/
 .pybuilder/
 __pypackages__/
 
-.vscode/
 .history/
 .ionide/
 .DS_Store
 .nvim/
+
+.cursorrules

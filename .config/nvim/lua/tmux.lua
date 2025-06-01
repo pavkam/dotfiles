@@ -1,6 +1,5 @@
 local keys = require 'keys'
 local shell = require 'shell'
-local select = require 'select'
 local icons = require 'icons'
 
 ---@class ui.tmux
@@ -145,14 +144,15 @@ local function display(items)
         end
     end, {
         prompt = 'Select a session',
+        ---@param item { name: string, status: string, dir: string }
         highlighter = function(item)
-            if item[2] == 'current' then
+            if item.status == 'current' then
                 return 'DiagnosticOk'
-            elseif item[2] == 'attached' then
+            elseif item.status == 'attached' then
                 return 'DiagnosticWarn'
-            elseif item[2] == 'active' then
+            elseif item.status == 'active' then
                 return 'DiagnosticHint'
-            elseif item[1] == new_session_label then
+            elseif item.status == new_session_label then
                 return 'Question'
             else
                 return 'Comment'
@@ -305,4 +305,4 @@ keys.map('n', '<M-Up>', function()
     M.navigate 'k'
 end, { desc = 'Go to window above' })
 
-return M
+return table.freeze(M)

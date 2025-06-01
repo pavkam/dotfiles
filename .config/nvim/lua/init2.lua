@@ -54,6 +54,9 @@ aunmenu PopUp.How-to\ disable\ mouse
 aunmenu PopUp.-1-
 ]]
 
+keys.map('n', '<F12>', 'i', { desc = 'Insert mode' })
+keys.map('i', '<F12>', '<Esc>', { desc = 'Normal mode' })
+
 -- Remap for dealing with word wrap
 keys.map('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
 keys.map('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })

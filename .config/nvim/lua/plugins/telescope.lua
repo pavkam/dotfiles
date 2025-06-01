@@ -263,15 +263,6 @@ return {
                     ),
                 }
 
-                local display = function(e)
-                    local mapped = {}
-                    for i, field in ipairs(e.value) do
-                        table.insert(mapped, { field, opts.highlighter(e.value, e.index, i) })
-                    end
-
-                    return displayer(mapped)
-                end
-
                 local picker_opts = opts.at_cursor
                         and themes.get_cursor {
                             layout_config = {
@@ -314,6 +305,14 @@ return {
                 table.sort(items, function(a, b)
                     return make_ordinal(a) < make_ordinal(b)
                 end)
+
+                local display = function(e)
+                    local mapped = table.list_map(e.value, function(field, index)
+                        return { field, opts.highlighter(e.value, assert(orig_ordinals[e.ordinal]), index) }
+                    end)
+
+                    return displayer(mapped)
+                end
 
                 pickers
                     .new(picker_opts, {

@@ -192,8 +192,8 @@ M.symbol_provider = define_plugin_slot 'SymbolProvider'
 ---@field prompt string|nil # the prompt to display.
 ---@field at_cursor boolean|nil # whether to display the select at the cursor.
 ---@field separator string|nil # the separator to use between columns.
----@field callback ui.select.SelectCallback|nil # the callback to call when an item is selected.
----@field highlighter ui.select.SelectHighlighter|nil # the highlighter to use for the entry.
+---@field callback select_ui_callback|nil # the callback to call when an item is selected.
+---@field highlighter select_ui_highlighter|nil # the highlighter to use for the entry.
 ---@field index_cols integer[]|nil # the fields to use for the index.
 ---@field width number|nil # the width of the select.
 ---@field height number|nil # the height of the select.
@@ -207,5 +207,32 @@ M.symbol_provider = define_plugin_slot 'SymbolProvider'
 ---@field register fun(plugin: select_ui_plugin) # registers a select plugin.
 ---@field on_registered fun(callback: fun()) # triggers when a select plugin is registered.
 M.select_ui = define_plugin_slot 'SelectUi'
+
+---@class (exact) keymap_plugin_set_options # The options to pass to the keymap.
+---@field mode string|string[] # the mode(s) to map the key in.
+---@field buffer buffer|nil # whether the keymap is buffer-local.
+---@field silent boolean|nil # whether the keymap is silent.
+---@field returns_expr boolean|nil # whether the keymap returns an expression.
+---@field no_remap boolean|nil # whether the keymap is non-recursive.
+---@field no_wait boolean|nil # whether the keymap is non-blocking.
+---@field desc string|nil # the description of the keymap.
+---@field icon icon|nil # the icon of the keymap.
+
+---@class (exact) keymap_plugin_prefix_options # The options to pass to the keymap.
+---@field mode string|string[] # the mode(s) to map the key in.
+---@field buffer buffer|nil # whether the keymap is buffer-local.
+---@field desc string|nil # the description of the keymap.
+---@field icon icon|nil # the icon of the keymap.
+
+---@class (exact) keymap_plugin # Describes a keymap plugin.
+---@field set fun(keymap: string, action: string|function, opts: keymap_plugin_set_options|nil) # sets a keymap.
+---@field prefix fun(prefix: string,  opts: keymap_plugin_prefix_options|nil) # sets a keymap prefix.
+
+-- Keymap plugin slot.
+---@class (exact) keymap_plugin_slot
+---@field plugins keymap_plugin[] # the registered keymap plugins.
+---@field register fun(plugin: keymap_plugin) # registers a keymap plugin.
+---@field on_registered fun(callback: fun()) # triggers when a keymap plugin is registered.
+M.keymap = define_plugin_slot 'Keymap'
 
 return table.freeze(M)

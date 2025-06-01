@@ -28,6 +28,10 @@ if [ -d "$HOME/.local/bin" ]; then
     PATH="$HOME/.local/bin"
 fi
 
+if [ -d "$HOME/.dotnet/tools" ]; then
+    PATH="$HOME/.dotnet/tools:$PATH"
+fi
+
 if [ "$(uname)" = "Darwin" ]; then
     IS_DARWIN=1
 

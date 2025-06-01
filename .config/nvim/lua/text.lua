@@ -268,4 +268,15 @@ M.markdown = {
     end,
 }
 
+-- Gets the display width of a string (in cells).
+---@param str string # the string to measure.
+---@return number # the display width of the string.
+function M.display_width(str)
+    xassert {
+        str = { str, 'string' },
+    }
+
+    return vim.fn.strdisplaywidth(str)
+end
+
 return table.freeze(M)

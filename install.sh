@@ -363,8 +363,8 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
 
   PACKS=(
     zsh git nvim fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go protobuf
-    automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4 mono-runtime perl
-    python3 ruby wget zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
+    automake global binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4
+    mono-runtime perl python3 ruby wget zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
     shellcheck luarocks tmux kitty
   )
 
@@ -386,7 +386,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
     warn "Forcing the installation of 'ripgrep' and 'bat'..."
 
     if ! sudo apt install -y -o Dpkg::Options::="--force-overwrite" bat ripgrep 1>>$LOG_FILE 2>>$LOG_FILE; then
-      warn "Failed to instakk 'ripgrep' and 'bat' in parallel. Fix it by hand."
+      warn "Failed to install 'ripgrep' and 'bat' in parallel. Fix it by hand."
     fi
   fi
 
@@ -438,9 +438,10 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
   roll "Installing brew packages ..."
   PACKS=(
     git nvim fd mc make diffutils less ripgrep gnu-sed bat tree gcc
-    golang protobuf automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop
-    llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv pyenv-virtualenv node npm yarn
-    grep jq moreutils thefuck ncdu shellcheck luarocks tmux buf
+    golang protobuf automake binutils bc bash bzip2 cmake global coreutils curl
+    cython dialog docker htop llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv
+    pyenv-virtualenv node npm yarn grep jq moreutils thefuck ncdu shellcheck luarocks
+    tmux buf
   )
 
   TO_INSTALL=""
@@ -548,7 +549,6 @@ link .zprofile
 link .zshrc.p10k
 link .curlrc
 link .wgetrc
-link .ideavimrc
 link .nuget/NuGet/NuGet.Config
 link .config/mc
 link .config/htop
@@ -564,10 +564,13 @@ if [ "$DISTRO_DARWIN" = "" ]; then
   link .config/Code/User/keybindings.json
   link .config/lazygit/config.yml
 else
-  link .config/Code/User/settings.json "./Application Support/Code/User/settings.json"
-  link .config/Code/User/keybindings.json "./Application Support/Code/User/keybindings.json"
+  link .config/Code/User/settings.json "./Library/Application Support/Code/User/settings.json"
+  link .config/Code/User/keybindings.json "./Library/Application Support/Code/User/keybindings.json"
+  link .config/Cursor/User/settings.json "./Library/Application Support/Cursor/User/settings.json"
+  link .config/Cursor/User/keybindings.json "./Library/Application Support/Cursor/User/keybindings.json"
   link .terminfo
   link "./Library/KeyBindings/DefaultKeyBinding.dict"
+  link "./Library/LaunchAgents/com.local.KeyRemapping.plist"
   link .config/lazygit/config.yml "./Library/Application Support/lazygit/config.yml"
 fi
 

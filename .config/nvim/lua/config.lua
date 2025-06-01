@@ -400,21 +400,26 @@ function M.manage(buffer)
         end
     end)
 
-    ---@type string[][]
-    local items = table.list_map(sorted, function(item)
-        return {
-            item.desc,
-            item.scope,
-            item.value_fn(item.scope == 'buffer' and buffer or nil) and 'on' or 'off',
-        }
+    local entries = table.list_map(sorted, function(item)
+        return table.merge(item, {
+            status = item.value_fn(item.scope == 'buffer' and buffer or nil) and 'on' or 'off',
+        })
     end)
 
-    require('select').advanced(items, {
-        prompt = 'Toggle option',
-        separator = ' | ',
-        highlighter = function(_, index, col_index)
-            local item = sorted[index]
-            if col_index < 3 then
+    ide.tui.select(entries, {
+        { 'desc', prio = 1 },
+        { 'scope', prio = 2 },
+        { 'status' },
+    }, function(item)
+        if item.scope == 'buffer' then
+            item.toggle_fn(buffer)
+        else
+            item.toggle_fn()
+        end
+    end, {
+        prompt = 'Toggle an option',
+        highlighter = function(item, col)
+            if col == 'desc' or col == 'scope' then
                 if item.scope == 'buffer' then
                     return 'NormalMenuItem'
                 else
@@ -429,15 +434,6 @@ function M.manage(buffer)
                 end
             end
         end,
-        callback = function(_, index)
-            local fn = sorted[index].toggle_fn
-            if sorted[index].scope == 'buffer' then
-                fn(buffer)
-            else
-                fn()
-            end
-        end,
-        index_fields = { 1, 2 },
     })
 end
 
