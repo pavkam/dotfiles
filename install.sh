@@ -6,31 +6,72 @@
 # | own! I will recommend you backup your home before trying this script.   |
 # ---------------------------------------------------------------------------
 
-# Logging.
-LOG_FILE=~/.dotfiles.log
-if ! echo -ne "" >~/.dotfiles.log 2>/dev/null; then
+# ============================================================================
+# Constants and Configuration
+# ============================================================================
+
+# Paths
+LOG_FILE="$HOME/.dotfiles.log"
+BACKUP_DIR="$HOME/.dotfiles.backup"
+DOTFILES_SCRIPT_PATH=$(realpath "$0")
+DOTFILES_DIR=$(dirname "$DOTFILES_SCRIPT_PATH")
+
+# Git repositories
+OH_MY_ZSH_GIT_REPO="https://github.com/ohmyzsh/ohmyzsh.git"
+POWER_LEVEL_10K_GIT_REPO="https://github.com/romkatv/powerlevel10k.git"
+ZSH_AUTO_SUGGESTIONS_GIT_REPO="https://github.com/zsh-users/zsh-autosuggestions"
+ZSH_HISTORY_SUBSTRING_GIT_REPO="https://github.com/zsh-users/zsh-history-substring-search"
+ZSH_SYNTAX_HIGHLIGHTING_GIT_REPO="https://github.com/zsh-users/zsh-syntax-highlighting"
+TMUX_PLUGIN_MANAGER_GIT_REPO="https://github.com/tmux-plugins/tpm"
+NVM_INSTALL_URL="https://raw.githubusercontent.com/creationix/nvm/master/install.sh"
+PY_ENV_GIT_REPO="https://github.com/pyenv/pyenv.git"
+
+# Colors
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+MAGENTA=$(tput setaf 5)
+CYAN=$(tput setaf 6)
+NORMAL=$(tput sgr0)
+BOLD=$(tput bold)
+DIM=$(tput dim)
+CLEAR_LINE="\r$(tput el)"
+
+# Output state
+IS_ROLLING=0
+
+# ============================================================================
+# Color Helper Functions
+# ============================================================================
+
+function color_red() { echo -n "${RED}$*${NORMAL}"; }
+function color_green() { echo -n "${GREEN}$*${NORMAL}"; }
+function color_yellow() { echo -n "${YELLOW}$*${NORMAL}"; }
+function color_blue() { echo -n "${BLUE}$*${NORMAL}"; }
+function color_magenta() { echo -n "${MAGENTA}$*${NORMAL}"; }
+function color_cyan() { echo -n "${CYAN}$*${NORMAL}"; }
+function color_bold() { echo -n "${BOLD}$*${NORMAL}"; }
+function color_dim() { echo -n "${DIM}$*${NORMAL}"; }
+
+# ============================================================================
+# Setup and Error Handling
+# ============================================================================
+
+# Test log file creation
+if ! echo -ne "" >"$LOG_FILE" 2>/dev/null; then
   echo "Unable to create a log file in your home directory. This is a minimum requirement."
   exit 1
 fi
 
-# Colors .
-RED=$(tput setaf 1)
-BROWN=$(tput setaf 3)
-NORMAL=$(tput sgr0)
-BLUE=$(tput setaf 4)
-CLEARRET="\r$(tput el)"
-ROLLING=0
-
-# Death
+# Death trap for nested errors
 trap "exit 1" TERM
 export TOP_PID=$$
 
-DFN=$(realpath "$0")
-DF=$(dirname "$DFN")
-
 function die() {
+  [ $IS_ROLLING -eq 1 ] && echo
   echo
-  echo "${RED}Terminating due to an error! Check '$LOG_FILE' for details."
+  echo "$(color_red "✗ Terminating due to an error! Check '$LOG_FILE' for details.")"
 
   if [ $$ -eq $TOP_PID ]; then
     exit 1
@@ -41,8 +82,9 @@ function die() {
 
 # Logging
 function log() {
-  TIME=$(date '+%d/%m/%Y %H:%M:%S')
-  echo "[$TIME] $1" | sed -r "s/\\x1B\\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g" >>$LOG_FILE
+  local timestamp
+  timestamp=$(date '+%d/%m/%Y %H:%M:%S')
+  echo "[$timestamp] $1" | sed -r "s/\\x1B\\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g" >>"$LOG_FILE"
 }
 
 function log_echo() {
@@ -51,284 +93,269 @@ function log_echo() {
 }
 
 function whoops() {
-  if [ $ROLLING -eq 1 ]; then
-    echo
-  fi
+  [ $IS_ROLLING -eq 1 ] && echo
 
-  log_echo "${RED}Whoops: $1"
+  log_echo "$(color_red "✗ Whoops: $1")"
   die
 }
 
 function err() {
-  if [ $ROLLING -eq 1 ]; then
-    echo
-  fi
+  [ $IS_ROLLING -eq 1 ] && echo
 
-  log_echo "${RED}Error: $1"
+  log_echo "$(color_red "✗ Error: $1")"
   die
 }
 
 function warn() {
-  if [ $ROLLING -eq 1 ]; then
-    echo
-  fi
+  [ $IS_ROLLING -eq 1 ] && echo
 
-  log_echo "${BROWN}Warning: $1"
-  ROLLING=0
+  log_echo "$(color_yellow "⚠ Warning: $1")"
+  IS_ROLLING=0
 }
 
 function info() {
-  if [ $ROLLING -eq 1 ]; then
-    echo
-  fi
+  [ $IS_ROLLING -eq 1 ] && echo
 
-  log_echo "${NORMAL}$1"
-  ROLLING=0
+  log_echo "$1"
+  IS_ROLLING=0
 }
 
 function roll() {
   log "$1"
-  echo -ne "${CLEARRET}${NORMAL}$1"
-  ROLLING=1
+  echo -ne "${CLEAR_LINE}$(color_cyan "→") $1\r"
+  IS_ROLLING=1
 }
 
-# Deal with backups.
+function success() {
+  [ $IS_ROLLING -eq 1 ] && echo
 
-BACKUP=$HOME/.dotfiles.backup
+  log_echo "$(color_green "✓ $1")"
+  IS_ROLLING=0
+}
+
+# Run command with output redirected to log file
+function run() {
+  "$@" 1>>"$LOG_FILE" 2>>"$LOG_FILE"
+}
+
+# ============================================================================
+# File and Directory Management
+# ============================================================================
 
 function force_dir() {
-  if [ "$1" = "" ]; then
-    whoops "Expected one argument to function."
-  fi
+  [ -z "$1" ] && whoops "Expected one argument to function."
 
-  DN=$(dirname -- "$1")
-
-  if ! mkdir -p "$DN" 1>>$LOG_FILE 2>>$LOG_FILE; then
-    err "Failed to create the directory '$DN'."
+  local dir_name
+  dir_name=$(dirname -- "$1")
+  if ! run mkdir -p "$dir_name"; then
+    err "Failed to create the directory '$dir_name'."
   fi
 }
 
 function link() {
-  FROM=$1
-  TO=$2
-  if [ "$FROM" = "" ]; then
-    whoops "Expected at least one  argument to function."
-  fi
+  [ -z "$1" ] && whoops "Expected at least one argument to function."
 
-  if [ "$TO" == "" ]; then
-    TO=$FROM
-  fi
+  local source_path=$1
+  local target_path=${2:-$1}
+  local source_full="$DOTFILES_DIR/$source_path"
+  local target_full="$HOME/$target_path"
+  local backup_path="$BACKUP_DIR/$target_path"
 
-  if [ ! -e "$DF/$FROM" ]; then
-    whoops "The file or directory '$DF/$FROM' does not exist."
-  fi
+  [ ! -e "$source_full" ] && whoops "The file or directory '$source_full' does not exist."
 
-  roll "Creating a symlink from '$DF/$FROM' to '$HOME/$TO'..."
+  roll "Creating a symlink from '$source_full' to '$target_full'..."
 
-  HAS_BACKUP=0
-  DO_LN=1
-  if [ -e "$HOME/$TO" ]; then
-    roll "The file or directory '$HOME/$TO' already exists. Checking if backup necessary..."
+  local has_backup=0
+  local should_link=1
 
-    CHECK_DEST=$(readlink "$HOME/$TO" || echo "$HOME/$TO")
-    if [ "$CHECK_DEST" != "$DF/$FROM" ]; then
-      warn "Backing up '$HOME/$TO'..."
+  if [ -e "$target_full" ]; then
+    roll "The file or directory '$target_full' already exists. Checking if backup necessary..."
 
-      force_dir "$BACKUP/$TO"
+    local current_target
+    current_target=$(readlink "$target_full" || echo "$target_full")
+    if [ "$current_target" != "$source_full" ]; then
+      warn "Backing up '$target_full'..."
+      force_dir "$backup_path"
+      run rm -r -f -d "${backup_path}"
 
-      rm -r -f -d "${BACKUP:?}/${TO}" 1>>$LOG_FILE 2>>$LOG_FILE
-      if ! mv "$HOME/$TO" "$BACKUP/$TO" 1>>$LOG_FILE 2>>$LOG_FILE; then
-        err "Failed to backup file '$HOME/$TO'."
+      if ! run mv "$target_full" "$backup_path"; then
+        err "Failed to backup file '$target_full'."
       fi
 
-      roll "Backed up file '$HOME/$TO' to '$BACKUP/$TO'."
-      HAS_BACKUP=1
+      roll "Backed up file '$target_full' to '$backup_path'."
+      has_backup=1
     else
-      DO_LN=0
-      roll "The file or directory '$HOME/$TO' points to .dotfiles. No backup will be performed."
+      should_link=0
+      roll "The file or directory '$target_full' points to .dotfiles. No backup will be performed."
     fi
   fi
 
-  if [ $DO_LN -eq 1 ]; then
-    force_dir "$HOME/$TO"
+  if [ $should_link -eq 1 ]; then
+    force_dir "$target_full"
 
-    if ! ln -s "$DF/$FROM" "$HOME/$TO" 1>>$LOG_FILE 2>>$LOG_FILE; then
-      if [ $HAS_BACKUP -eq 1 ]; then
-
-        if ! mv "$BACKUP/$TO" "$HOME/$TO" 1>>$LOG_FILE 2>>$LOG_FILE; then
-          warn "Failed to restore file '$HOME/$TO' from its backup."
-        fi
-      fi
-
-      err "Symlink between '$DF/$FROM' and '$HOME/$TO' failed."
+    if ! run ln -s "$source_full" "$target_full"; then
+      [ $has_backup -eq 1 ] && run mv "$backup_path" "$target_full"
+      err "Symlink between '$source_full' and '$target_full' failed."
     else
-      roll "Symlink between '$DF/$FROM' and '$HOME/$TO' created."
+      roll "Symlink between '$source_full' and '$target_full' created."
     fi
   fi
 }
 
 function check_installed() {
-  if [ "$1" = "" ]; then
-    whoops "Expected one argument to function."
-  fi
+  [ -z "$1" ] && whoops "Expected one argument to function."
 
-  if ! which "$1" 1>>$LOG_FILE 2>>$LOG_FILE && [ ! -f "$1" ]; then
-    warn "Command '$1' not found."
-    return 1
-  else
+  if run which "$1" || [ -f "$1" ]; then
     roll "Command '$1' has been found."
     return 0
+  else
+    warn "Command '$1' not found."
+    return 1
   fi
 }
 
 function pull_or_clone_repo() {
-  if [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ]; then
-    whoops "Expected three arguments to function."
-  fi
+  [ -z "$3" ] && whoops "Expected three arguments to function."
 
-  NAME=$1
-  DIR=$2
-  URL=$3
+  local repo_name=$1
+  local target_dir=$2
+  local repo_url=$3
 
-  roll "Installing $NAME using git..."
-  if [ -d "$DIR/.git" ]; then
-    roll "$NAME is already installed. Pulling..."
+  roll "Installing $repo_name using git..."
+  if [ -d "$target_dir/.git" ]; then
+    roll "$repo_name is already installed. Pulling..."
     (
-      if ! cd "$DIR"; then
-        err "Failed to change directory to '$DIR'."
-      fi
-
-      if ! git pull 1>>$LOG_FILE 2>>$LOG_FILE; then
-        err "Failed to update '$NAME' git repository."
+      cd "$target_dir" || err "Failed to change directory to '$target_dir'."
+      if run git pull; then
+        roll "Updated the '$repo_name' git repository to the latest version."
       else
-        roll "Updated the '$NAME' git repository to the latest version."
+        err "Failed to update '$repo_name' git repository."
       fi
     )
   else
-    roll "Cloning '$NAME' repository from '$URL'..."
-
-    if ! git clone "$URL" "$DIR" 1>>$LOG_FILE 2>>$LOG_FILE; then
-      err "Failed to clone '$NAME' git repository."
+    roll "Cloning '$repo_name' repository from '$repo_url'..."
+    if ! run git clone "$repo_url" "$target_dir"; then
+      err "Failed to clone '$repo_name' git repository."
     fi
-
-    roll "Cloned the '$NAME' repository into '$DIR'."
+    roll "Cloned the '$repo_name' repository into '$target_dir'."
   fi
 }
 
 function is_package_installed() {
-  if [ "$2" = "" ]; then
-    whoops "Expected two arguments to function."
-  fi
-
-  roll "Checking if package '$2' is installed..."
-  if ! $1 "$2" 1>>$LOG_FILE 2>>$LOG_FILE; then
-    roll "Package '$2' not installed."
-    return 1
-  else
-    roll "Package '$2' is already installed."
-    return 0
-  fi
+  [ -z "$2" ] && whoops "Expected two arguments to function."
+  run $1 "$2"
 }
 
 function install_packages() {
-  if [ "$2" = "" ]; then
-    whoops "Expected two arguments to function."
-  fi
+  [ -z "$2" ] && whoops "Expected two arguments to function."
 
-  warn "Installing packages ['$2']..."
-
-  if ! $1 "$2" 1>>$LOG_FILE 2>>$LOG_FILE; then
-    err "Failed to install one or more packages from the list ['$2']."
+  warn "Installing packages: $2"
+  # shellcheck disable=SC2086
+  if ! run $1 $2; then
+    err "Failed to install one or more packages from the list: $2"
   fi
+}
+
+function check_and_collect_packages() {
+  local check_command=$1
+  shift
+  local packages_to_install=""
+
+  for package in "$@"; do
+    if ! is_package_installed "$check_command" "$package"; then
+      packages_to_install="${packages_to_install:+$packages_to_install }$package"
+    fi
+  done
+
+  echo "$packages_to_install"
 }
 
 function check_or_install_zsh() {
-  roll "Checking if the the current shell is zsh..."
-  SHELL_NAME=$(basename -- "$SHELL")
-  if [ "$SHELL_NAME" != "zsh" ]; then
-    warn "The current shell ('$SHELL_NAME') is not zsh. Setting zsh as default..."
-    if ! chsh -s "$(which zsh)"; then
-      err "Failed to switch shell to zsh."
-    fi
+  roll "Checking if the current shell is zsh..."
+  local shell_name
+  shell_name=$(basename -- "$SHELL")
+
+  if [ "$shell_name" != "zsh" ]; then
+    warn "The current shell ('$shell_name') is not zsh. Setting zsh as default..."
+    chsh -s "$(which zsh)" || err "Failed to switch shell to zsh."
   else
-    roll "Nothing to do, current shell is already set to zsh."
+    roll "Current shell is already set to zsh."
   fi
 }
 
-info "${BLUE}                              MEOW        |\__/,|   (\`\                "
-info "${BLUE}                                  MEOW  _.|o o  |_   ) )                "
-info ".-------------------------------------- ${BLUE}(((${NORMAL}---${BLUE}(((${NORMAL}-----------------------."
-info "| Welcome to pavkam's .dotfiles installer. Hope you enjoy the process! |"
-info "| This installer will perform the following changes:                   |"
-info "|     *   Installs dependencies (Arch/Debian/Darwin),                  |"
-info "|     *   Configures zsh, oh-my-zsh and plugins,                       |"
-info "|     *   Configures git and its settings,                             |"
-info "|     *   Configures nvim, and its plugins.                            |"
-info ":----------------------------------------------------------------------:"
-info "| ${RED}WARNING: This installer comes with absolutely no guarantees!${NORMAL}         |"
-info "| ${RED}Please backup your home directory for safety reasons.${NORMAL}                |"
-info "------------------------------------------------------------------------"
-info ""
+echo
+info "$(color_blue "                              MEOW        |\__/,|   (\`\ ")"
+info "$(color_blue "                                  MEOW  _.|o o  |_   ) )")"
+info ".------------------------------------- $(color_blue "(((")---$(color_blue "(((")------------------------."
+info "$(color_bold "| Welcome to pavkam's .dotfiles installer. Hope you enjoy the process!  |")"
+info "|                                                                       |"
+info "| This installer will perform the following changes:                    |"
+info "|   $(color_cyan "→") Installs system dependencies (Arch/Debian/Darwin)                 |"
+info "|   $(color_cyan "→") Configures zsh, oh-my-zsh and plugins (powerlevel10k, etc.)       |"
+info "|   $(color_cyan "→") Sets up git configuration and global settings                     |"
+info "|   $(color_cyan "→") Configures nvim with plugins                                      |"
+info "|   $(color_cyan "→") Sets up tmux with plugin manager (tpm)                            |"
+info "|   $(color_cyan "→") Creates symlinks for all dotfiles and configurations              |"
+info "|   $(color_cyan "→") Installs development tools (Go, npm packages, pyenv, nvm)         |"
+info "|   $(color_cyan "→") Configures terminal tools (kitty, bat, fzf, ripgrep, etc.)        |"
+info "|   $(color_cyan "→") Sets up VS Code extensions (if installed)                         |"
+info "|   $(color_cyan "→") Creates backups of existing configurations                        |"
+info ":-----------------------------------------------------------------------:"
+info "| $(color_yellow "⚠  WARNING: This installer comes with absolutely no guarantees!")       |"
+info "| $(color_yellow "⚠  Please backup your home directory for safety reasons.")              |"
+info "-------------------------------------------------------------------------"
+echo
 
 roll "Checking for basic dependencies..."
 
-CORE_DEPS=(sudo git)
-for i in "${CORE_DEPS[@]}"; do
-  if [ "$(which "$i")" == "" ]; then
-    err "The core utility '$i' is not installed."
+CORE_DEPENDENCIES=(sudo git)
+for utility in "${CORE_DEPENDENCIES[@]}"; do
+  if [ "$(which "$utility")" == "" ]; then
+    err "The core utility '$utility' is not installed."
   fi
 done
 
 # Auto-update code
 roll "Checking for the latest version of these .dotfiles..."
 (
-  if ! cd "$DF"; then
-    err "Failed to change directory to '$DF'."
+  cd "$DOTFILES_DIR" || err "Failed to change directory to '$DOTFILES_DIR'."
+
+  current_branch=$(git branch --show-current)
+  current_revision=$(git rev-parse HEAD)
+
+  if [ "$current_branch" != "main" ]; then
+    warn "Skipping the update of .dotfiles located at '$DOTFILES_DIR'. The current branch is not 'main'."
+    exit 0
   fi
 
-  CURB=$(git branch --show-current)
-  CREV=$(git rev-parse HEAD)
-
-  if [ "$CURB" != "main" ]; then
-    warn "Skipping the update of .dotfiles located at '$DF'. The current branch is not 'master'."
-  else
-
-    if ! git pull 1>>$LOG_FILE 2>>$LOG_FILE; then
-      err "Failed to update the .dotfiles located at '$DF'."
-      exit 1
-    else
-      VREV=$(git rev-parse HEAD)
-      if [ "$CREV" != "$VREV" ]; then
-        exit 2
-      fi
-    fi
+  if ! run git pull; then
+    err "Failed to update the .dotfiles located at '$DOTFILES_DIR'."
   fi
 
+  new_revision=$(git rev-parse HEAD)
+  [ "$current_revision" != "$new_revision" ] && exit 2
   exit 0
 )
 
-PULL_CODE=$?
-if [ $PULL_CODE -eq 2 ]; then
-  warn "A new version of the .dotfiles has been pulled. Re-running the install script..."
-  # shellcheck disable=SC1090
-  . "$0"
-  exit $?
-elif [ $PULL_CODE -eq 1 ]; then
-  exit 1
-fi
+case $? in
+  2)
+    warn "A new version of the .dotfiles has been pulled. Re-running the install script..."
+    # shellcheck disable=SC1090
+    . "$0"
+    exit $?
+    ;;
+  1)
+    exit 1
+    ;;
+esac
 
-# Setup the backup
-roll "Checking if the backup directory '$BACKUP' already exists..."
-if [ ! -d "$BACKUP" ]; then
-  roll "The backup directory '$BACKUP' does not exist. Creating..."
-
-  if ! mkdir -p "$BACKUP" 1>>$LOG_FILE 2>>$LOG_FILE; then
-    err "Failed to create the backup directory '$BACKUP'."
-  fi
-
-  roll "Created the backup directory '$BACKUP'."
+# Setup the backup directory
+roll "Ensuring backup directory '$BACKUP_DIR' exists..."
+if [ ! -d "$BACKUP_DIR" ]; then
+  run mkdir -p "$BACKUP_DIR" || err "Failed to create the backup directory '$BACKUP_DIR'."
+  roll "Created the backup directory '$BACKUP_DIR'."
 else
-  roll "The backup directory '$BACKUP' already exists."
+  roll "Backup directory already exists."
 fi
 
 # Check dependencies (commands that should be installed)
@@ -341,102 +368,81 @@ DISTRO_DARWIN="$(uname -a | grep Darwin)"
 if [ "$DISTRO_ARCH" != "" ]; then
   roll "This is an Arch-based distribution '$DISTRO_ARCH'. Checking installed packages..."
 
-  PACKS=(
+  PACKAGES=(
     yay zsh git nvim fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go protobuf
     automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv
     python ruby wget zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono ttf-nerd-fonts-symbols-mono
     bluez-tools fzf thefuck ncdu shellcheck luarocks tmux kitty
   )
 
-  TO_INSTALL=""
-  for i in "${PACKS[@]}"; do
-    if is_package_installed "pacman -Q" "$i"; then
-      TO_INSTALL="$TO_INSTALL $i"
-    fi
-  done
-
-  if [ "$TO_INSTALL" != "" ]; then
-    install_packages "sudo pacman -S --noconfirm" "$TO_INSTALL"
+  roll "Checking which packages need to be installed..."
+  packages_to_install=$(check_and_collect_packages "pacman -Q" "${PACKAGES[@]}")
+  if [ "$packages_to_install" != "" ]; then
+    install_packages "sudo pacman -S --noconfirm" "$packages_to_install"
+    success "Packages installed successfully"
+  else
+    success "All packages already installed"
   fi
 elif [ "$DISTRO_DEBIAN" != "" ]; then
   roll "This is a Debian-based distribution '$DISTRO_DEBIAN'. Checking installed packages..."
 
-  PACKS=(
+  PACKAGES=(
     zsh git nvim fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go protobuf
     automake global binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4
     mono-runtime perl python3 ruby wget zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
     shellcheck luarocks tmux kitty
   )
 
-  TO_INSTALL=""
-  for i in "${PACKS[@]}"; do
-    if is_package_installed "dpkg -s" "$i"; then
-      TO_INSTALL="$TO_INSTALL $i"
-    fi
-  done
-
-  if [ "$TO_INSTALL" != "" ]; then
-    install_packages "apt install -y" "$TO_INSTALL"
+  roll "Checking which packages need to be installed..."
+  packages_to_install=$(check_and_collect_packages "dpkg -s" "${PACKAGES[@]}")
+  if [ "$packages_to_install" != "" ]; then
+    install_packages "apt install -y" "$packages_to_install"
+    success "Packages installed successfully"
+  else
+    success "All packages already installed"
   fi
 
-  # Special case over here for bat/rip on some Debians
+  # Special case over here for bat/rip on some Debian(s)
   roll "Checking if there are issues between 'ripgrep' and 'bat' due to bad packaging..."
-  apt install -y ripgrep bat 1>>$LOG_FILE 2>>$LOG_FILE
-  if ! apt install -y ripgrep bat 1>>$LOG_FILE 2>>$LOG_FILE; then
+  if ! run apt install -y ripgrep bat; then
     warn "Forcing the installation of 'ripgrep' and 'bat'..."
 
-    if ! sudo apt install -y -o Dpkg::Options::="--force-overwrite" bat ripgrep 1>>$LOG_FILE 2>>$LOG_FILE; then
+    if ! run sudo apt install -y -o Dpkg::Options::="--force-overwrite" bat ripgrep; then
       warn "Failed to install 'ripgrep' and 'bat' in parallel. Fix it by hand."
     fi
   fi
 
   roll "Checking for packages outside repositories..."
 
-  # Check for tools not in repos - nvm.
-  if [ ! -e "$HOME/.nvm/nvm.sh" ] && [ "$(which nvm)" == "" ]; then
+  # Check for tools not in repos - nvm
+  if [ ! -e "$HOME/.nvm/nvm.sh" ] && ! command -v nvm &>/dev/null; then
     roll "Installing 'nvm'..."
-    if ! curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash 1>>$LOG_FILE 2>>$LOG_FILE; then
+    curl -s "$NVM_INSTALL_URL" | run bash || \
       warn "Failed to install nvm script. Please install by hand."
-    fi
   fi
 
-  # Check for tools not in repos - pyenv.
-  if [ ! -e "$HOME/.pyenv/bin/pyenv" ] && [ "$(which pyenv)" == "" ]; then
+  # Check for tools not in repos - pyenv
+  if [ ! -e "$HOME/.pyenv/bin/pyenv" ] && ! command -v pyenv &>/dev/null; then
     roll "Installing 'pyenv'..."
-    (
-      git clone https://github.com/pyenv/pyenv.git ~/.pyenv 1>>$LOG_FILE 2>>$LOG_FILE || exit 1
-      cd ~/.pyenv || exit 1
-      src/configure 1>>$LOG_FILE 2>>$LOG_FILE || exit 1
-      make -C src 1>>$LOG_FILE 2>>$LOG_FILE || exit 1
-    )
-
-    # shellcheck disable=SC2181
-    if [ $? -ne 0 ]; then
+    if ! (run git clone "$PY_ENV_GIT_REPO" ~/.pyenv && \
+          cd ~/.pyenv && \
+          run src/configure && \
+          run make -C src); then
       warn "Failed to install pyenv script. Please install by hand."
     fi
   fi
 elif [ "$DISTRO_DARWIN" != "" ]; then
   roll "This is Mac. Checking installed packages using brew..."
-  if ! command -v brew &>/dev/null; then
-    err "Can only proceed if 'homebrew' is installed already."
-    die
-  fi
+  command -v brew &>/dev/null || err "Can only proceed if 'homebrew' is installed already."
 
   roll "Preparing brew ..."
-  (
-    brew update 1>>$LOG_FILE 2>>$LOG_FILE || exit 1
-    brew upgrade 1>>$LOG_FILE 2>>$LOG_FILE || exit 1
-  )
-
-  # shellcheck disable=SC2181
-  if [ $? -ne 0 ]; then
+  if ! run brew update || ! run brew upgrade; then
     err "Failed to prepare 'brew' for our needs."
-    die
   fi
 
   # Brew packages
-  roll "Installing brew packages ..."
-  PACKS=(
+  roll "Checking brew packages..."
+  PACKAGES=(
     git nvim fd mc make diffutils less ripgrep gnu-sed bat tree gcc
     golang protobuf automake binutils bc bash bzip2 cmake global coreutils curl
     cython dialog docker htop llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv
@@ -444,74 +450,65 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     tmux buf
   )
 
-  TO_INSTALL=""
-  for i in "${PACKS[@]}"; do
-
-    if ! is_package_installed "brew list" "$i"; then
-      TO_INSTALL="$TO_INSTALL $i"
-    fi
-  done
-
-  if [ "$TO_INSTALL" != "" ]; then
-    install_packages "brew install" "$TO_INSTALL"
+  roll "Checking which packages need to be installed..."
+  packages_to_install=$(check_and_collect_packages "brew list" "${PACKAGES[@]}")
+  if [ "$packages_to_install" != "" ]; then
+    install_packages "brew install" "$packages_to_install"
+  else
+    roll "All brew packages already installed."
   fi
 
   # Brew cask packages
-  roll "Installing brew cask packages ..."
-  PACKS=(
+  roll "Checking brew cask packages..."
+  PACKAGES=(
     temurin font-hack-nerd-font font-symbols-only-nerd-font font-jetbrains-mono kitty
   )
 
-  TO_INSTALL=""
-  for i in "${PACKS[@]}"; do
-    if is_package_installed "brew list" "$i"; then
-      TO_INSTALL="$TO_INSTALL $i"
-    fi
-  done
-
-  if [ "$TO_INSTALL" != "" ]; then
-    install_packages "brew install --cask" "$TO_INSTALL"
+  roll "Checking which cask packages need to be installed..."
+  packages_to_install=$(check_and_collect_packages "brew list" "${PACKAGES[@]}")
+  if [ "$packages_to_install" != "" ]; then
+    install_packages "brew install --cask" "$packages_to_install"
+  else
+    roll "All brew cask packages already installed."
   fi
 else
   warn "This GNU/Linux distribution is not supported. Install the dependencies by hand."
 fi
 
 # Optional dependencies
-if command -v npm 1>$LOG_FILE 2>&1; then
+if command -v npm &>/dev/null; then
   roll "Installing npm packages ..."
 
-  if ! npm install -g editorconfig 1>>$LOG_FILE 2>>$LOG_FILE; then
+  if ! run npm install -g editorconfig; then
     whoops "Failed to install npm packages."
   fi
 fi
 
-# ...
-
-CORE_DEPS=(git nvim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink)
-ARCH_DEPS=(fd "$HOME/.nvm/nvm.sh" rg bat pyenv)
-DEBIAN_DEPS=(fdfind "$HOME/.nvm/nvm.sh" rg batcat "$HOME/.pyenv/bin/pyenv")
-DARWIN_DEPS=(fd "/opt/homebrew/opt/nvm/nvm.sh" rg bat pyenv)
+# Check all required dependencies are installed
+CORE_DEPENDENCIES_CHECK=(git nvim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink)
+ARCH_DEPENDENCIES=(fd "$HOME/.nvm/nvm.sh" rg bat pyenv)
+DEBIAN_DEPENDENCIES=(fdfind "$HOME/.nvm/nvm.sh" rg batcat "$HOME/.pyenv/bin/pyenv")
+DARWIN_DEPENDENCIES=(fd "/opt/homebrew/opt/nvm/nvm.sh" rg bat pyenv)
 
 if [ "$DISTRO_ARCH" != "" ]; then
-  DEPS=("${CORE_DEPS[@]}" "${ARCH_DEPS[@]}")
+  DEPENDENCIES=("${CORE_DEPENDENCIES_CHECK[@]}" "${ARCH_DEPENDENCIES[@]}")
 elif [ "$DISTRO_DEBIAN" != "" ]; then
-  DEPS=("${CORE_DEPS[@]}" "${DEBIAN_DEPS[@]}")
+  DEPENDENCIES=("${CORE_DEPENDENCIES_CHECK[@]}" "${DEBIAN_DEPENDENCIES[@]}")
 elif [ "$DISTRO_DARWIN" != "" ]; then
-  DEPS=("${CORE_DEPS[@]}" "${DARWIN_DEPS[@]}")
+  DEPENDENCIES=("${CORE_DEPENDENCIES_CHECK[@]}" "${DARWIN_DEPENDENCIES[@]}")
 else
-  DEPS=("${CORE_DEPS[@]}")
+  DEPENDENCIES=("${CORE_DEPENDENCIES_CHECK[@]}")
 fi
 
-MUST_DIE=0
-for i in "${DEPS[@]}"; do
-  if ! check_installed "$i"; then
-    MUST_DIE=1
+has_missing_dependencies=0
+for dependency in "${DEPENDENCIES[@]}"; do
+  if ! check_installed "$dependency"; then
+    has_missing_dependencies=1
   fi
 done
 
-if [ $MUST_DIE -eq 1 ]; then
+if [ $has_missing_dependencies -eq 1 ]; then
   err "Please install the missing dependencies before continuing the installation!"
-  die
 else
   roll "All dependencies are installed."
 fi
@@ -519,20 +516,20 @@ fi
 # Setup the shell & Oh-My-Zsh
 check_or_install_zsh
 
-OHMYZSH_DIR=${ZSH:-$HOME/.oh-my-zsh}
-pull_or_clone_repo "Oh-My-Zsh" "$OHMYZSH_DIR" "https://github.com/ohmyzsh/ohmyzsh.git"
+oh_my_zsh_dir=${ZSH:-$HOME/.oh-my-zsh}
+pull_or_clone_repo "Oh-My-Zsh" "$oh_my_zsh_dir" "$OH_MY_ZSH_GIT_REPO"
 
-POWERLEVEL_10K_DIR=${ZSH_CUSTOM:-$OHMYZSH_DIR/custom}/themes/powerlevel10k
-pull_or_clone_repo "Power-level 10K" "$POWERLEVEL_10K_DIR" "https://github.com/romkatv/powerlevel10k.git"
+power_level_10k_dir=${ZSH_CUSTOM:-$oh_my_zsh_dir/custom}/themes/powerlevel10k
+pull_or_clone_repo "Power-level 10K" "$power_level_10k_dir" "$POWER_LEVEL_10K_GIT_REPO"
 
-ZSH_AUTOSUGGESTIONS_DIR=${ZSH_CUSTOM:-$OHMYZSH_DIR/custom}/plugins/zsh-autosuggestions
-pull_or_clone_repo "Zsh Auto-Suggestions" "$ZSH_AUTOSUGGESTIONS_DIR" "https://github.com/zsh-users/zsh-autosuggestions"
+zsh_autosuggestions_dir=${ZSH_CUSTOM:-$oh_my_zsh_dir/custom}/plugins/zsh-autosuggestions
+pull_or_clone_repo "Zsh Auto-Suggestions" "$zsh_autosuggestions_dir" "$ZSH_AUTO_SUGGESTIONS_GIT_REPO"
 
-ZSH_HISTORY_SUBSTRING_SEARCH_DIR=${ZSH_CUSTOM:-$OHMYZSH_DIR/custom}/plugins/zsh-history-substring-search
-pull_or_clone_repo "Zsh History Substring Search" "$ZSH_HISTORY_SUBSTRING_SEARCH_DIR" "https://github.com/zsh-users/zsh-history-substring-search"
+zsh_history_substring_dir=${ZSH_CUSTOM:-$oh_my_zsh_dir/custom}/plugins/zsh-history-substring-search
+pull_or_clone_repo "Zsh History Substring Search" "$zsh_history_substring_dir" "$ZSH_HISTORY_SUBSTRING_GIT_REPO"
 
-ZSH_SYNTAX_HIGHLIGHTING_DIR=${ZSH_CUSTOM:-$OHMYZSH_DIR/custom}/plugins/zsh-syntax-highlighting
-pull_or_clone_repo "Zsh Syntax Highlighting" "$ZSH_SYNTAX_HIGHLIGHTING_DIR" "https://github.com/zsh-users/zsh-syntax-highlighting"
+zsh_syntax_highlighting_dir=${ZSH_CUSTOM:-$oh_my_zsh_dir/custom}/plugins/zsh-syntax-highlighting
+pull_or_clone_repo "Zsh Syntax Highlighting" "$zsh_syntax_highlighting_dir" "$ZSH_SYNTAX_HIGHLIGHTING_GIT_REPO"
 
 # Create all the symlinks
 roll "Creating all symlinks..."
@@ -582,7 +579,7 @@ roll "NeoVim ready to use..."
 
 # Setup tmux
 roll "Setting up Tmux..."
-pull_or_clone_repo "Tmux" "$HOME/.tmux/plugins/tpm" "https://github.com/tmux-plugins/tpm"
+pull_or_clone_repo "Tmux Plugin Manager" "$HOME/.tmux/plugins/tpm" "$TMUX_PLUGIN_MANAGER_GIT_REPO"
 
 roll "Tmux is installed and at the latest version."
 link .config/tmux/tmux.conf
@@ -590,14 +587,14 @@ link .config/tmux/tmux.conf
 roll "Tmux ready to use!"
 
 roll "Setting up bat..."
-if ! bat cache --build 1>>$LOG_FILE 2>>$LOG_FILE; then
+if ! run bat cache --build; then
   warn "Failed to build bat cache. Please run 'bat cache --build' by hand."
 fi
 roll "Bat ready to use!"
 
-if ! check_installed "code"; then
+if check_installed "code"; then
   roll "Installing VS Code extensions..."
-  if cat <"$DF"/vs-extensions.txt | xargs -L 1 code --install-extension 1>>$LOG_FILE 2>>$LOG_FILE; then
+  if ! cat <"$DOTFILES_DIR"/vs-extensions.txt | xargs -L 1 run code --install-extension; then
     err "Failed install VS Code extensions."
   fi
 
@@ -607,11 +604,11 @@ else
 fi
 
 # Prepare go stuff, if installed
-if command -v go 1>$LOG_FILE 2>&1; then
+if command -v go &>/dev/null; then
   roll "Installing go packages..."
   export GOPATH="$HOME/.go"
 
-  GO_PACKS=(
+  GO_PACKAGES=(
     "github.com/pressly/goose/v3/cmd/goose@latest"
     "github.com/incu6us/goimports-reviser/v3@latest"
     "github.com/golang/protobuf/protoc-gen-go@latest"
@@ -621,32 +618,33 @@ if command -v go 1>$LOG_FILE 2>&1; then
     "github.com/go-delve/delve/cmd/dlv@latest"
   )
 
-  for i in "${GO_PACKS[@]}"; do
-    roll "Installing go package: $i ..."
-    if ! go install -v "$i" 1>>$LOG_FILE 2>>$LOG_FILE; then
-      err "Failed to install go package: $i"
+  for go_package in "${GO_PACKAGES[@]}"; do
+    roll "Installing go package: $go_package ..."
+    if ! run go install -v "$go_package"; then
+      err "Failed to install go package: $go_package"
     fi
   done
 
   roll "Finished installing go packages..."
 fi
 
-LOCALF="$HOME/.zshrc.local"
-if [ ! -f "$LOCALF" ]; then
-  echo "# Place all your personalized '.zshrc' commands in this file." >"$LOCALF"
-  roll "Created the $LOCALF file to hold personalized commands."
-fi
+# Create local configuration files if they don't exist
+for config_file in .zshrc.local .zshenv.local; do
+  local_config_file="$HOME/$config_file"
+  if [ ! -f "$local_config_file" ]; then
+    config_name="${config_file%.local}"
+    echo "# Place all your personalized '$config_name' commands in this file." >"$local_config_file"
+    roll "Created $local_config_file file to hold personalized commands."
+  fi
+done
 
-LOCALF="$HOME/.zshenv.local"
-if [ ! -f "$LOCALF" ]; then
-  echo "# Place all your personalized '.zshenv' commands in this file." >"$LOCALF"
-  roll "Created the $LOCALF file to hold personalized commands."
-fi
+echo
+info "$(color_blue "                                   |\      _,,,---,,_         ")"
+info "$(color_blue "                              ZZZzz /,\`.-'\`'    -.  ;-;;,_  ")"
+info "$(color_blue "                                   |,4-  ) )-,_. ,\ (  \`'-'  ")"
+info "$(color_blue "                                  '---''(_/--'  \`-'\_)       ")"
 
-info
-info "${BLUE}                                   |\      _,,,---,,_        "
-info "${BLUE}                              ZZZzz /,\`.-'\`'    -.  ;-;;,_  "
-info "${BLUE}                                   |,4-  ) )-,_. ,\ (  \`'-'  "
-info "${BLUE}                                  '---''(_/--'  \`-'\_)       "
-info
-info "All done! You're good to go!"
+echo
+success "All done! You're good to go!"
+
+echo
