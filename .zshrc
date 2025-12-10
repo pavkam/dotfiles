@@ -9,10 +9,21 @@
 # Oh-My-Zsh Setup.
 export ZSH="$HOME/.oh-my-zsh"
 
+# PyEnv virtualenv integration (must be before compinit)
+if command -v pyenv &>/dev/null; then
+    # Skip in sandbox environments to avoid rehash errors
+    if [ -w "$PYENV_ROOT/shims" ] 2>/dev/null; then
+        eval "$(pyenv init -)"
+        eval "$(pyenv virtualenv-init -)"
+    fi
+fi
+
 plugins=( git z fzf docker zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting sdk vscode )
 
 autoload -Uz compinit
-compinit
+
+# Use -u flag to skip insecure directory checks in sandbox environments
+compinit -u
 
 COMM=$(basename "$(cat "/proc/$PPID/comm" 1>/dev/null 2>/dev/null)")
 if [ "$COMM" = "login" ] || [ "$TERM" = "linux" ] || [ "$MC_SID" != "" ]; then
@@ -21,21 +32,24 @@ else
   export ZSH_THEME="powerlevel10k/powerlevel10k"
 fi
 
-source $ZSH/oh-my-zsh.sh
+source "$ZSH/oh-my-zsh.sh"
 
 P10K_INIT="$HOME/.zshrc.p10k"
 if [ -s "$P10K_INIT" ]; then
-  source $P10K_INIT
+  source "$P10K_INIT"
 fi
 
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# Helper function to check if a command exists
+has_cmd() { command -v "$1" &>/dev/null; }
+
 # Other settings and general options
 export EDITOR='nvim'
 export MANPAGER='less -X'
-export LESS_TERMCAP_md="${yellow}"
+# Note: LESS_TERMCAP_md is set below in the "Color man pages" section
 export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
 
@@ -90,12 +104,13 @@ bindkey '^[[1;5C' forward-word
 bindkey '^H' backward-kill-word
 
 # Color man pages
+local _reset=$'\E[0m'
 export LESS_TERMCAP_mb=$'\E[01;32m'
 export LESS_TERMCAP_md=$'\E[01;32m'
-export LESS_TERMCAP_me=$'\E[0m'
-export LESS_TERMCAP_se=$'\E[0m'
+export LESS_TERMCAP_me=$_reset
+export LESS_TERMCAP_se=$_reset
 export LESS_TERMCAP_so=$'\E[01;47;34m'
-export LESS_TERMCAP_ue=$'\E[0m'
+export LESS_TERMCAP_ue=$_reset
 export LESS_TERMCAP_us=$'\E[01;36m'
 export LESS=-R
 
@@ -184,6 +199,33 @@ function mzc_termsupport_preexec {
 
 autoload -U add-zsh-hook
 
+# Auto-activate Python virtual environments
+autoload-python-venv() {
+    local venv_dirs=(".venv" "venv" ".virtualenv")
+    local venv_dir=""
+
+    # Check for venv in current directory
+    for dir in $venv_dirs; do
+        if [ -f "$dir/bin/activate" ]; then
+            venv_dir="$dir"
+            break
+        fi
+    done
+
+    # Deactivate if we left a venv directory
+    if [ -n "$VIRTUAL_ENV" ]; then
+        local parent_dir="$(dirname "$VIRTUAL_ENV")"
+        if [ "$PWD" != "$parent_dir" ] && [[ "$PWD" != "$parent_dir"/* ]] && [ -z "$venv_dir" ]; then
+            deactivate 2>/dev/null
+        fi
+    fi
+
+    # Activate if we found a venv and it's not already active
+    if [ -n "$venv_dir" ] && [ "$VIRTUAL_ENV" != "$PWD/$venv_dir" ]; then
+        source "$venv_dir/bin/activate"
+    fi
+}
+
 load-nvmrc() {
   local nvmrc_path
   nvmrc_path="$(nvm_find_nvmrc)"
@@ -206,8 +248,10 @@ load-nvmrc() {
 add-zsh-hook precmd mzc_termsupport_precmd
 add-zsh-hook preexec mzc_termsupport_preexec
 add-zsh-hook chpwd load-nvmrc
+add-zsh-hook chpwd autoload-python-venv
 
 load-nvmrc
+autoload-python-venv
 
 # aliases
 alias ls='ls --color'
@@ -223,7 +267,7 @@ alias sudo='sudo '
 alias map='xargs -n1'
 alias reload='exec ${SHELL} -l'
 alias ts='date -d @1639018800 "+%F %T"'
-alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu | tail -10
+alias h='cat $HOME/.zhistory | sed -n "s|.*;\(.*\)|\1|p" | grep -v quickies_menu | tail -10'
 
 # VIM stuff
 alias vi=nvim
@@ -232,24 +276,20 @@ alias :qa=exit
 alias :q=exit
 
 # fzf stuff
-if command -v fzf &>/dev/null; then
+if has_cmd fzf; then
     eval "$(fzf --zsh)"
 
     FD_EXE=""
-    if command -v fdfind &>/dev/null; then
-        FD_EXE=fdfind
-    else command -v fd &>/dev/null then
-        FD_EXE=fd
-    fi
+    for cmd in fdfind fd; do
+        has_cmd $cmd && FD_EXE=$cmd && break
+    done
 
     export BAT_PAGER="less -R"
 
     PREVIEW_CAT="cat"
-    if command -v bat &>/dev/null; then
-        PREVIEW_CAT="bat --style=numbers --color=always"
-    elif command -v batcat &>/dev/null; then
-        PREVIEW_CAT="batcat --style=numbers --color=always"
-    fi
+    for cmd in bat batcat; do
+        has_cmd $cmd && PREVIEW_CAT="$cmd --style=numbers --color=always" && break
+    done
 
     if [ "$FD_EXE" != "" ]; then
         FD_OPTIONS="--follow --hidden --exclude .git --exclude node_modules"
@@ -304,7 +344,7 @@ fi
 
 # Helper aliases and functions
 
-if command -v heroku &> /dev/null; then
+if has_cmd heroku; then
     # Heroku autocomplete setup
     HEROKU_AC_ZSH_SETUP_PATH=~/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
 
@@ -341,8 +381,8 @@ if command -v heroku &> /dev/null; then
             ENV_VARS=$(echo "$ENV_VARS" | grep -vE "^($EXCLUDE)=")
         fi
 
-        echo "$ENV_VARS" | awk -F '=' '{print "export " $1 "='\''" $2 "'\''"}'
         EXPORT_COMMANDS=$(echo "$ENV_VARS" | awk -F '=' '{print "export " $1 "='\''" $2 "'\''"}')
+        echo "$EXPORT_COMMANDS"
 
 
         echo " Running command \"$COMMAND\" with environment from app \"$APP_NAME\"..."
@@ -356,6 +396,9 @@ if [ "$TMUX" != "" ]; then
 elif [ "$TERM" = "xterm-kitty" ]; then
     SESSION_MANAGER="kitty"
 fi
+
+# Helper to sanitize session names
+_sanitize_session_name() { echo "$1" | sed 's/[^a-zA-Z0-9\/]/_/g'; }
 
 ss() {
     local SESSIONS=""
@@ -385,8 +428,7 @@ ss() {
     if [ "$SESSION" = "+new" ]; then
         echo -ne " Enter session name (empty to cancel): "
         read SESSION
-
-        SESSION=$(echo "$SESSION" | sed 's/[^a-zA-Z0-9\/]/_/g')
+        SESSION=$(_sanitize_session_name "$SESSION")
 
         if [ "$SESSION" != "" ]; then
             if [ "$SESSION_MANAGER" = "tmux" ]; then
@@ -398,8 +440,8 @@ ss() {
     elif [ "$SESSION" != "" ]; then
         title "$SESSION_MANAGER" "$SESSION"
 
-        DIR="${PROJECTS_ROOT}/$SESSION"
-        SESSION=$(echo "$SESSION" | sed 's/[^a-zA-Z0-9\/]/_/g')
+        local DIR="${PROJECTS_ROOT}/$SESSION"
+        SESSION=$(_sanitize_session_name "$SESSION")
 
         if [ "$SESSION_MANAGER" = "tmux" ]; then
             if tmux has -t "$SESSION" &> /dev/null; then
@@ -437,11 +479,11 @@ fi
 
 # And now define all other goodies.
 
-if command -v dig &> /dev/null; then
+if has_cmd dig; then
     alias ip='dig +short myip.opendns.com @resolver1.opendns.com'
 fi
 
-if command -v xdg-open &> /dev/null; then
+if has_cmd xdg-open; then
   function open() {
     if [ $# -eq 0 ]; then
       xdg-open .;
@@ -530,12 +572,12 @@ if [ -f "$HOME/.zshrc.local" ]; then
 fi
 
 # Little helper
-if command -v thefuck &> /dev/null; then
-  eval $(thefuck --alias)
+if has_cmd thefuck; then
+  eval "$(thefuck --alias)"
 fi
 
 # AWS
-if command -v awsume &> /dev/null; then
+if has_cmd awsume; then
     alias awsume=". awsume"
 fi
 
@@ -554,7 +596,7 @@ if [ $IS_ARM64_DARWIN -eq 1 ]; then
 fi
 
 # Kubernetes
-if command -v kubectl &> /dev/null; then
+if has_cmd kubectl; then
     kpods () {
         if [ "$1" != "" ]; then
             kubectl get pods -n $1

@@ -365,15 +365,27 @@ DISTRO_ARCH="$(cat /etc/arch-release 2>/dev/null)"
 DISTRO_DEBIAN="$(cat /etc/debian_version 2>/dev/null)"
 DISTRO_DARWIN="$(uname -a | grep Darwin)"
 
+# Base packages (same name across all distros)
+BASE_PACKAGES=(
+  zsh-completions git nvim mc make diffutils less ripgrep bat tree gcc
+  protobuf automake binutils bc bash bzip2 cmake coreutils curl cython
+  dialog docker htop llvm lz4 perl ruby wget zip fzf thefuck ncdu
+  shellcheck luarocks tmux
+)
+
+# GNU/Linux packages (same name on Arch and Debian, but not Darwin)
+GNU_LINUX_PACKAGES=(
+  zsh sed util-linux nodejs npm kitty
+)
+
 if [ "$DISTRO_ARCH" != "" ]; then
   roll "This is an Arch-based distribution '$DISTRO_ARCH'. Checking installed packages..."
 
-  PACKAGES=(
-    yay zsh git nvim fd mc make diffutils less ripgrep sed bat util-linux nodejs npm nvm tree gcc go protobuf
-    automake binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua lz4 perl pyenv
-    python ruby wget zip dotnet-runtime dotnet-sdk mono bind-tools nerd-fonts-noto-sans-mono ttf-nerd-fonts-symbols-mono
-    bluez-tools fzf thefuck ncdu shellcheck luarocks tmux kitty
+  ARCH_PACKAGES=(
+    yay fd nvm go lua pyenv python dotnet-runtime dotnet-sdk mono
+    bind-tools nerd-fonts-noto-sans-mono ttf-nerd-fonts-symbols-mono bluez-tools
   )
+  PACKAGES=("${BASE_PACKAGES[@]}" "${GNU_LINUX_PACKAGES[@]}" "${ARCH_PACKAGES[@]}")
 
   roll "Checking which packages need to be installed..."
   packages_to_install=$(check_and_collect_packages "pacman -Q" "${PACKAGES[@]}")
@@ -386,12 +398,11 @@ if [ "$DISTRO_ARCH" != "" ]; then
 elif [ "$DISTRO_DEBIAN" != "" ]; then
   roll "This is a Debian-based distribution '$DISTRO_DEBIAN'. Checking installed packages..."
 
-  PACKAGES=(
-    zsh git nvim fd-find mc make diffutils less ripgrep sed bat util-linux nodejs npm tree gcc golang-go protobuf
-    automake global binutils bc bash bzip2 cmake coreutils curl cython dialog docker htop llvm lua5.3 lz4
-    mono-runtime perl python3 ruby wget zip bind9-utils bluez fzf apt-utils default-jre thefuck ncdu
-    shellcheck luarocks tmux kitty
+  DEBIAN_PACKAGES=(
+    fd-find golang-go global lua5.3 mono-runtime python3
+    bind9-utils bluez apt-utils default-jre
   )
+  PACKAGES=("${BASE_PACKAGES[@]}" "${GNU_LINUX_PACKAGES[@]}" "${DEBIAN_PACKAGES[@]}")
 
   roll "Checking which packages need to be installed..."
   packages_to_install=$(check_and_collect_packages "dpkg -s" "${PACKAGES[@]}")
@@ -442,13 +453,11 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
 
   # Brew packages
   roll "Checking brew packages..."
-  PACKAGES=(
-    git nvim fd mc make diffutils less ripgrep gnu-sed bat tree gcc
-    golang protobuf automake binutils bc bash bzip2 cmake global coreutils curl
-    cython dialog docker htop llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv
-    pyenv-virtualenv node npm yarn grep jq moreutils thefuck ncdu shellcheck luarocks
-    tmux buf
+  DARWIN_PACKAGES=(
+    fd gnu-sed golang global lua bind nvm pyenv pyenv-virtualenv
+    node npm yarn grep jq moreutils buf
   )
+  PACKAGES=("${BASE_PACKAGES[@]}" "${DARWIN_PACKAGES[@]}")
 
   roll "Checking which packages need to be installed..."
   packages_to_install=$(check_and_collect_packages "brew list" "${PACKAGES[@]}")
@@ -460,12 +469,12 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
 
   # Brew cask packages
   roll "Checking brew cask packages..."
-  PACKAGES=(
+  DARWIN_CASK_PACKAGES=(
     temurin font-hack-nerd-font font-symbols-only-nerd-font font-jetbrains-mono kitty
   )
 
   roll "Checking which cask packages need to be installed..."
-  packages_to_install=$(check_and_collect_packages "brew list" "${PACKAGES[@]}")
+  packages_to_install=$(check_and_collect_packages "brew list" "${DARWIN_CASK_PACKAGES[@]}")
   if [ "$packages_to_install" != "" ]; then
     install_packages "brew install --cask" "$packages_to_install"
   else

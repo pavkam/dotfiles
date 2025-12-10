@@ -43,15 +43,11 @@
   "git.openRepositoryInParentFolders": "never",
   "github.copilot.editor.enableAutoCompletions": true,
   "editor.unicodeHighlight.ambiguousCharacters": false,
-  "cursor.cpp.disabledLanguages": [
-    "plaintext",
-    "markdown",
-    "scminput"
-  ],
+  "cursor.cpp.disabledLanguages": ["plaintext", "markdown", "scminput"],
   "files.autoSave": "onFocusChange",
   "cursor.aipreview.enabled": true,
   "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
-  "workbench.iconTheme": "material-icon-theme",
+  "workbench.iconTheme": "vscode-icons",
   "workbench.activityBar.orientation": "vertical",
   "workbench.activityBar.location": "bottom",
   "[csharp]": {
@@ -144,5 +140,7 @@
   },
   "workbench.colorTheme": "Visual Studio 2019 Dark",
   "cursor.composer.shouldAllowCustomModes": true,
-  "cursor.composer.shouldChimeAfterChatFinishes": true
+  "cursor.composer.shouldChimeAfterChatFinishes": true,
+  "snyk.securityAtInception.autoConfigureSnykMcpServer": true,
+  "snyk.securityAtInception.executionFrequency": "On Code Generation"
 }

@@ -1,3 +1,4 @@
+#!/bin/zsh
 # ---------------------------------------------------------------------------
 # | pavkam's zsh setup. Nothing interesting to see here, please move along! |
 # |                                                                         |
@@ -25,7 +26,7 @@ export IS_DARWIN=0
 export DARWIN_HAS_BREW=0
 
 if [ -d "$HOME/.local/bin" ]; then
-    PATH="$HOME/.local/bin"
+    PATH="$HOME/.local/bin:$PATH"
 fi
 
 if [ -d "$HOME/.dotnet/tools" ]; then
@@ -39,8 +40,8 @@ if [ "$(uname)" = "Darwin" ]; then
         IS_ARM64_DARWIN=1
     fi
 
-    local B="/opt/homebrew/bin/brew"
-    if [ -x $B ]; then
+    B="/opt/homebrew/bin/brew"
+    if [ -x "$B" ]; then
         HOMEBREW_PREFIX="$($B --prefix)"
         PATH="$HOMEBREW_PREFIX/bin:$PATH"
 
@@ -48,31 +49,32 @@ if [ "$(uname)" = "Darwin" ]; then
             PATH="$HOMEBREW_PREFIX/sbin:$PATH"
         fi
 
-        local BREW_PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
+        BREW_PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
         if [ "$PKG_CONFIG_PATH" = "" ]; then
-            PKG_CONFIG_PATH="$BREW_PKG_CONFIG_PATH:$PKG_CONFIG_PATH"
-        else
             PKG_CONFIG_PATH="$BREW_PKG_CONFIG_PATH"
+        else
+            PKG_CONFIG_PATH="$BREW_PKG_CONFIG_PATH:$PKG_CONFIG_PATH"
         fi
-
-        PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/lib/pkgconfig"
     fi
 
     if command -v brew &>/dev/null; then
         DARWIN_HAS_BREW=1
 
-        eval "$(brew shellenv)"
-        PATH="$HOMEBREW_PREFIX:$PATH"
+        # Always run brew shellenv for both interactive and non-interactive shells
+        # Suppress stderr to hide /bin/ps errors in sandbox environments (like Cursor)
+        eval "$(brew shellenv 2>/dev/null)"
 
         _gnu_version () {
-                local P="$(brew --prefix)/opt/$1/libexec/gnubin"
+                local P
+                P="$(brew --prefix)/opt/$1/libexec/gnubin"
                 if [ -d "$P" ]; then
                     PATH="$P:$PATH"
                 fi
             }
 
         _cask_version () {
-            local P="$(brew --prefix $1)/bin"
+            local P
+            P="$(brew --prefix "$1")/bin"
             if [ -d "$P" ]; then
                 PATH="$P:$PATH"
             fi
@@ -91,7 +93,7 @@ if [ "$(uname)" = "Darwin" ]; then
 fi
 
 # Import the local configuration, if any.
-local P=$HOME/.zshenv.local
+P=$HOME/.zshenv.local
 if [ -f "$P" ]; then
     source "$P"
 fi
@@ -102,8 +104,13 @@ if command -v pyenv 1>/dev/null 2>&1; then
     export PYENV_ROOT
     PATH="$PYENV_ROOT/bin:$PATH"
 
-    eval "$(pyenv init --path)"
-    eval "$(pyenv virtualenv-init -)"
+    # Skip pyenv initialization in sandbox environments to avoid rehash errors
+    if [ -w "$PYENV_ROOT/shims" ] 2>/dev/null; then
+        eval "$(pyenv init --path)"
+    else
+        # Still add shims to PATH even if we can't rehash
+        PATH="$PYENV_ROOT/shims:$PATH"
+    fi
 fi
 
 # Java SDK manager.
@@ -130,11 +137,11 @@ fi
 # Ruby package manager.
 
 if [ -s "$HOMEBREW_PREFIX/opt/chruby/share/chruby/chruby.sh" ]; then
-    source $HOMEBREW_PREFIX/opt/chruby/share/chruby/chruby.sh
+    source "$HOMEBREW_PREFIX/opt/chruby/share/chruby/chruby.sh"
 fi
 
 if [ -s "$HOMEBREW_PREFIX/opt/chruby/share/chruby/auto.sh" ]; then
-    source $HOMEBREW_PREFIX/opt/chruby/share/chruby/auto.sh
+    source "$HOMEBREW_PREFIX/opt/chruby/share/chruby/auto.sh"
 fi
 
 # Prepare GO, if installed.
@@ -154,12 +161,12 @@ function declutter_path() {
     local BREW_PATHS=""
 
     # Split PATH into individual components
-    IFS=":" read -A COMPONENTS <<< "$PATH"
+    IFS=":" read -r -A COMPONENTS <<< "$PATH"
 
     # Use an associative array to remove duplicates
     local -A UNIQUE_COMPONENTS
     for COMPONENT in "${COMPONENTS[@]}"; do
-        if [ -z "$COMPONENT" ] || [ "$UNIQUE_COMPONENTS[$COMPONENT]" = "1" ]; then
+        if [ -z "$COMPONENT" ] || [ -n "${UNIQUE_COMPONENTS[$COMPONENT]}" ]; then
             continue
         fi
 
