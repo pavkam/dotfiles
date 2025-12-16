@@ -1,174 +1,249 @@
 {
-  "git.autofetch": true,
-  "security.workspace.trust.untrustedFiles": "open",
-  "terminal.integrated.cursorBlinking": true,
-  "terminal.integrated.cursorStyle": "underline",
-  "terminal.integrated.cursorWidth": 2,
-  "explorer.confirmDelete": false,
-  "git.enableSmartCommit": true,
-  "git.confirmSync": false,
-  "editor.renderWhitespace": "trailing",
-  "files.exclude": {
-    "": true,
-    "**/.classpath": true,
-    "**/.factorypath": true,
-    "**/.nvim": true,
-    "**/.project": true,
-    "**/.settings": true,
-    "**/bin": true,
-    "**/obj": true
-  },
-  "editor.bracketPairColorization.enabled": true,
-  "omnipascal.defaultDevelopmentEnvironment": "FreePascal",
-  "omnipascal.createBuildScripts": true,
-  "editor.formatOnPaste": true,
-  "editor.formatOnSaveMode": "modificationsIfAvailable",
-  "terminal.integrated.fontFamily": "Hack Nerd Font",
-  "workbench.tree.indent": 20,
-  "editor.suggestSelection": "first",
-  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
-  "redhat.telemetry.enabled": true,
-  "editor.inlineSuggest.enabled": true,
-  "[python]": {
-    "editor.formatOnType": true
-  },
-  "explorer.confirmDragAndDrop": false,
-  "[lua]": {
-    "editor.defaultFormatter": "yinfei.luahelper"
-  },
-  "editor.fontFamily": "Hack Nerd Font, Menlo, Monaco, 'Courier New', monospace",
-  "editor.fontLigatures": true,
-  "editor.codeLensFontFamily": "Hack Nerd Font",
-  "go.toolsManagement.autoUpdate": true,
-  "git.openRepositoryInParentFolders": "never",
-  "github.copilot.editor.enableAutoCompletions": true,
-  "editor.unicodeHighlight.ambiguousCharacters": false,
-  "cursor.cpp.disabledLanguages": [
-    "plaintext",
-    "markdown",
-    "scminput"
-  ],
-  "files.autoSave": "onFocusChange",
-  "cursor.aipreview.enabled": true,
-  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
-  "workbench.iconTheme": "material-icon-theme",
-  "workbench.activityBar.orientation": "vertical",
-  "workbench.activityBar.location": "bottom",
-  "[csharp]": {
-    "editor.maxTokenizationLineLength": 2500,
-    "editor.inlineSuggest.suppressSuggestions": false,
-    "editor.defaultFormatter": "ms-dotnettools.csharp"
-  },
-  "editor.formatOnType": true,
-  "diffEditor.codeLens": true,
-  "csharp.debug.logging.diagnosticsLog.debugRuntimeEventTracing": true,
-  "csharp.experimental.debug.hotReload": true,
-  "csharp.preview.improvedLaunchExperience": true,
-  "[jsonc]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "jest.runMode": "on-demand",
-  "editor.minimap.autohide": true,
-  "editor.minimap.enabled": true,
-  "workbench.preferredDarkColorTheme": "Tokyo Night",
-  "workbench.editor.closeOnFileDelete": true,
-  "javascript.experimental.updateImportsOnPaste": true,
-  "javascript.preferences.useAliasesForRenames": false,
-  "javascript.referencesCodeLens.enabled": true,
-  "javascript.updateImportsOnFileMove.enabled": "always",
-  "typescript.experimental.updateImportsOnPaste": true,
-  "typescript.implementationsCodeLens.enabled": true,
-  "typescript.inlayHints.enumMemberValues.enabled": true,
-  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-  "typescript.referencesCodeLens.enabled": true,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "github.customPullRequestTitle": true,
-  "github.preferedMergeMethod": "merge",
-  "githubPullRequests.assignCreated": "${user}",
-  "dotnet.preferVisualStudioCodeFileSystemWatcher": true,
-  "dotnet.previewSolution-freeWorkspaceMode": true,
-  "workbench.editor.editorActionsLocation": "titleBar",
-  "githubPullRequests.pullBranch": "never",
-  "makefile.configureOnOpen": true,
-  "workbench.editor.defaultBinaryEditor": "default",
-  "debug.showSubSessionsInToolBar": true,
-  "debug.toolBarLocation": "commandCenter",
-  "workbench.commandPalette.experimental.suggestCommands": true,
-  "workbench.experimental.cloudChanges.autoStore": "onShutdown",
-  "workbench.experimental.cloudChanges.partialMatches.enabled": true,
-  "workbench.layoutControl.type": "toggles",
-  "chat.experimental.implicitContext": true,
-  "chat.experimental.variables.terminal": true,
-  "chat.experimental.variables.notebook": true,
-  "inlineChat.experimental.enableZoneToolbar": true,
-  "terminal.external.osxExec": "Kitty.app",
-  "problems.showCurrentInStatus": true,
-  "explorer.fileNesting.enabled": true,
-  "editor.cursorSmoothCaretAnimation": "on",
-  "editor.fontVariations": false,
-  "diffEditor.experimental.showMoves": true,
-  "diffEditor.experimental.useTrueInlineView": true,
-  "files.autoGuessEncoding": true,
-  "gitlens.views.scm.grouped.views": {
-    "commits": true,
-    "branches": true,
-    "remotes": true,
-    "stashes": true,
-    "tags": true,
-    "worktrees": true,
-    "contributors": true,
-    "repositories": false,
-    "searchAndCompare": false,
-    "launchpad": true
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "chat.detectParticipant.enabled": true,
-  "files.associations": {
-    ".env": "shellscript"
-  },
-  "explorer.confirmPasteNative": false,
-  "gitlens.rebaseEditor.ordering": "asc",
-  "editor.formatOnSave": true,
-  "[css]": {
-    "editor.defaultFormatter": "vscode.css-language-features"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "terminal.integrated.defaultProfile.osx": "zsh",
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "workbench.colorTheme": "Visual Studio 2019 Dark",
-  "cursor.composer.shouldAllowCustomModes": true,
-  "cursor.composer.shouldChimeAfterChatFinishes": true,
-  "cursor.windowSwitcher.sidebarHoverCollapsed": true,
-  "javascript.inlayHints.parameterNames.enabled": "literals",
-  "typescript.inlayHints.parameterNames.enabled": "literals",
-  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-  "typescript.inlayHints.parameterTypes.enabled": true,
-  "javascript.inlayHints.variableTypes.enabled": true,
-  "javascript.inlayHints.propertyDeclarationTypes.enabled": true,
-  "javascript.inlayHints.functionLikeReturnTypes.enabled": true,
-  "javascript.inlayHints.parameterTypes.enabled": true,
-  "[vue]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "[dockercompose]": {
-    "editor.insertSpaces": true,
-    "editor.tabSize": 2,
-    "editor.autoIndent": "advanced",
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "[github-actions-workflow]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "cursor.agent_layout_browser_beta_setting": true,
-  "cSpell.blockCheckingWhenTextChunkSizeGreaterThan": 10000
+    // ============================================
+    // Editor Settings
+    // ============================================
+    "editor.fontFamily": "Hack Nerd Font, Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontLigatures": true,
+    "editor.fontVariations": false,
+    "editor.codeLensFontFamily": "Hack Nerd Font",
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.renderWhitespace": "trailing",
+    "editor.bracketPairColorization.enabled": true,
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "modificationsIfAvailable",
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": true,
+    "editor.suggestSelection": "first",
+    "editor.inlineSuggest.enabled": true,
+    "editor.minimap.enabled": true,
+    "editor.minimap.autohide": true,
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    // ============================================
+    // Terminal Settings
+    // ============================================
+    "terminal.integrated.fontFamily": "Hack Nerd Font",
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.cursorStyle": "underline",
+    "terminal.integrated.cursorWidth": 2,
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "terminal.external.osxExec": "Kitty.app",
+    // ============================================
+    // Git Settings
+    // ============================================
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.openRepositoryInParentFolders": "never",
+    "gitlens.views.scm.grouped.views": {
+        "commits": true,
+        "branches": true,
+        "remotes": true,
+        "stashes": true,
+        "tags": true,
+        "worktrees": true,
+        "contributors": true,
+        "repositories": false,
+        "searchAndCompare": false,
+        "launchpad": true
+    },
+    "gitlens.rebaseEditor.ordering": "asc",
+    // ============================================
+    // File Settings
+    // ============================================
+    "files.autoSave": "onFocusChange",
+    "files.autoGuessEncoding": true,
+    "files.exclude": {
+        "": true,
+        "**/.classpath": true,
+        "**/.factorypath": true,
+        "**/.nvim": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/bin": true,
+        "**/obj": true
+    },
+    "files.associations": {
+        ".env": "shellscript"
+    },
+    // ============================================
+    // Explorer Settings
+    // ============================================
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmPasteNative": false,
+    "explorer.fileNesting.enabled": true,
+    // ============================================
+    // Workbench Settings
+    // ============================================
+    "workbench.colorTheme": "Visual Studio 2019 Dark",
+    "workbench.preferredDarkColorTheme": "Tokyo Night",
+    "workbench.iconTheme": "vscode-icons",
+    "workbench.activityBar.orientation": "vertical",
+    "workbench.activityBar.location": "bottom",
+    "workbench.tree.indent": 20,
+    "workbench.editor.closeOnFileDelete": true,
+    "workbench.editor.editorActionsLocation": "titleBar",
+    "workbench.editor.defaultBinaryEditor": "default",
+    "workbench.commandPalette.experimental.suggestCommands": true,
+    "workbench.experimental.cloudChanges.autoStore": "onShutdown",
+    "workbench.experimental.cloudChanges.partialMatches.enabled": true,
+    "workbench.layoutControl.type": "toggles",
+    // ============================================
+    // Debug Settings
+    // ============================================
+    "debug.showSubSessionsInToolBar": true,
+    "debug.toolBarLocation": "commandCenter",
+    // ============================================
+    // Diff Editor Settings
+    // ============================================
+    "diffEditor.codeLens": true,
+    "diffEditor.experimental.showMoves": true,
+    "diffEditor.experimental.useTrueInlineView": true,
+    // ============================================
+    // Problems Settings
+    // ============================================
+    "problems.showCurrentInStatus": true,
+    // ============================================
+    // Security Settings
+    // ============================================
+    "security.workspace.trust.untrustedFiles": "open",
+    // ============================================
+    // Chat & AI Settings
+    // ============================================
+    "chat.experimental.implicitContext": true,
+    "chat.experimental.variables.terminal": true,
+    "chat.experimental.variables.notebook": true,
+    "chat.detectParticipant.enabled": true,
+    "inlineChat.experimental.enableZoneToolbar": true,
+    // ============================================
+    // Cursor-Specific Settings
+    // ============================================
+    "cursor.cpp.disabledLanguages": [
+        "plaintext",
+        "markdown",
+        "scminput"
+    ],
+    "cursor.aipreview.enabled": true,
+    "cursor.composer.shouldAllowCustomModes": true,
+    "cursor.composer.shouldChimeAfterChatFinishes": true,
+    "cursor.windowSwitcher.sidebarHoverCollapsed": true,
+    "cursor.agent_layout_browser_beta_setting": true,
+    // ============================================
+    // GitHub Settings
+    // ============================================
+    "github.customPullRequestTitle": true,
+    "github.preferedMergeMethod": "merge",
+    "githubPullRequests.assignCreated": "${user}",
+    "githubPullRequests.pullBranch": "never",
+    // ============================================
+    // GitHub Copilot Settings
+    // ============================================
+    "github.copilot.editor.enableAutoCompletions": true,
+    // ============================================
+    // JavaScript Settings
+    // ============================================
+    "javascript.experimental.updateImportsOnPaste": true,
+    "javascript.preferences.useAliasesForRenames": false,
+    "javascript.referencesCodeLens.enabled": true,
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "javascript.inlayHints.parameterNames.enabled": "literals",
+    "javascript.inlayHints.variableTypes.enabled": true,
+    "javascript.inlayHints.propertyDeclarationTypes.enabled": true,
+    "javascript.inlayHints.functionLikeReturnTypes.enabled": true,
+    "javascript.inlayHints.parameterTypes.enabled": true,
+    // ============================================
+    // TypeScript Settings
+    // ============================================
+    "typescript.experimental.updateImportsOnPaste": true,
+    "typescript.implementationsCodeLens.enabled": true,
+    "typescript.inlayHints.enumMemberValues.enabled": true,
+    "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+    "typescript.inlayHints.parameterNames.enabled": "literals",
+    "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
+    "typescript.inlayHints.parameterTypes.enabled": true,
+    "typescript.referencesCodeLens.enabled": true,
+    "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    // ============================================
+    // C# / .NET Settings
+    // ============================================
+    "csharp.debug.logging.diagnosticsLog.debugRuntimeEventTracing": true,
+    "csharp.experimental.debug.hotReload": true,
+    "csharp.preview.improvedLaunchExperience": true,
+    "dotnet.preferVisualStudioCodeFileSystemWatcher": true,
+    "dotnet.previewSolution-freeWorkspaceMode": true,
+    // ============================================
+    // Go Settings
+    // ============================================
+    "go.toolsManagement.autoUpdate": true,
+    // ============================================
+    // Pascal Settings
+    // ============================================
+    "omnipascal.defaultDevelopmentEnvironment": "FreePascal",
+    "omnipascal.createBuildScripts": true,
+    // ============================================
+    // Jest Settings
+    // ============================================
+    "jest.runMode": "on-demand",
+    // ============================================
+    // Makefile Settings
+    // ============================================
+    "makefile.configureOnOpen": true,
+    // ============================================
+    // VS IntelliCode Settings
+    // ============================================
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    // ============================================
+    // Red Hat Telemetry Settings
+    // ============================================
+    "redhat.telemetry.enabled": true,
+    // ============================================
+    // Spell Checker Settings
+    // ============================================
+    "cSpell.blockCheckingWhenTextChunkSizeGreaterThan": 10000,
+    // ============================================
+    // Language-Specific Formatters
+    // ============================================
+    "[python]": {
+        "editor.formatOnType": true
+    },
+    "[lua]": {
+        "editor.defaultFormatter": "yinfei.luahelper"
+    },
+    "[csharp]": {
+        "editor.maxTokenizationLineLength": 2500,
+        "editor.inlineSuggest.suppressSuggestions": false,
+        "editor.defaultFormatter": "ms-dotnettools.csharp"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[vue]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[css]": {
+        "editor.defaultFormatter": "vscode.css-language-features"
+    },
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[dockercompose]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    }
 }
