@@ -440,8 +440,8 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     git nvim fd mc make diffutils less ripgrep gnu-sed bat tree gcc
     golang protobuf automake binutils bc bash bzip2 cmake global coreutils curl
     cython dialog docker htop llvm lz4 perl ruby wget zip fzf lua bind nvm pyenv
-    pyenv-virtualenv node npm yarn grep jq moreutils thefuck ncdu shellcheck luarocks
-    tmux buf
+    pyenv-virtualenv node npm yarn grep jq moreutils ncdu shellcheck luarocks
+    tmux buf codex
   )
 
   TO_INSTALL=""
@@ -631,16 +631,16 @@ if command -v go 1>$LOG_FILE 2>&1; then
   roll "Finished installing go packages..."
 fi
 
-LOCALF="$HOME/.zshrc.local"
-if [ ! -f "$LOCALF" ]; then
-  echo "# Place all your personalized '.zshrc' commands in this file." >"$LOCALF"
-  roll "Created the $LOCALF file to hold personalized commands."
+local LOCAL_ZSH_CONFIG="$HOME/.zshrc.local"
+if [ ! -f "$LOCAL_ZSH_CONFIG" ]; then
+  echo "# Place all your personalized '.zshrc' commands in this file." >"$LOCAL_ZSH_CONFIG"
+  roll "Created the $LOCAL_ZSH_CONFIG file to hold personalized commands."
 fi
 
-LOCALF="$HOME/.zshenv.local"
-if [ ! -f "$LOCALF" ]; then
-  echo "# Place all your personalized '.zshenv' commands in this file." >"$LOCALF"
-  roll "Created the $LOCALF file to hold personalized commands."
+local LOCAL_ZSHENV_CONFIG="$HOME/.zshenv.local"
+if [ ! -f "$LOCAL_ZSHENV_CONFIG" ]; then
+  echo "# Place all your personalized '.zshenv' commands in this file." >"$LOCAL_ZSHENV_CONFIG"
+  roll "Created the $LOCAL_ZSHENV_CONFIG file to hold personalized commands."
 fi
 
 info

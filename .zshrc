@@ -33,7 +33,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # Other settings and general options
-export EDITOR='nvim'
+export EDITOR='vim'
 export MANPAGER='less -X'
 export LESS_TERMCAP_md="${yellow}"
 export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
@@ -226,8 +226,8 @@ alias ts='date -d @1639018800 "+%F %T"'
 alias h=cat $HOME/.zhistory | sed -n 's|.*;\(.*\)|\1|p' | grep -v quickies_menu | tail -10
 
 # VIM stuff
-alias vi=nvim
-alias vim=nvim
+alias vi=vim
+alias vim=vim
 alias :qa=exit
 alias :q=exit
 
@@ -430,7 +430,7 @@ if [ "$JOURNAL_ROOT" != "" ]; then
             echo "# Diary entry for [$DATE]\n\n---\n*Until next time, Mr. Diary...*" > "$FILE"
         fi
 
-        nvim "$FILE"
+        vim "$FILE"
     }
 fi
 
@@ -571,3 +571,6 @@ if command -v kubectl &> /dev/null; then
         fi
     }
 fi
+
+# Added by Antigravity
+export PATH="/Users/alex/.antigravity/antigravity/bin:$PATH"

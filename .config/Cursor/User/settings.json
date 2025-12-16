@@ -144,5 +144,31 @@
   },
   "workbench.colorTheme": "Visual Studio 2019 Dark",
   "cursor.composer.shouldAllowCustomModes": true,
-  "cursor.composer.shouldChimeAfterChatFinishes": true
+  "cursor.composer.shouldChimeAfterChatFinishes": true,
+  "cursor.windowSwitcher.sidebarHoverCollapsed": true,
+  "javascript.inlayHints.parameterNames.enabled": "literals",
+  "typescript.inlayHints.parameterNames.enabled": "literals",
+  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
+  "typescript.inlayHints.parameterTypes.enabled": true,
+  "javascript.inlayHints.variableTypes.enabled": true,
+  "javascript.inlayHints.propertyDeclarationTypes.enabled": true,
+  "javascript.inlayHints.functionLikeReturnTypes.enabled": true,
+  "javascript.inlayHints.parameterTypes.enabled": true,
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[dockercompose]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "advanced",
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "cursor.agent_layout_browser_beta_setting": true,
+  "cSpell.blockCheckingWhenTextChunkSizeGreaterThan": 10000
 }

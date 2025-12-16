@@ -25,7 +25,7 @@ export IS_DARWIN=0
 export DARWIN_HAS_BREW=0
 
 if [ -d "$HOME/.local/bin" ]; then
-    PATH="$HOME/.local/bin"
+    PATH="$HOME/.local/bin:$PATH"
 fi
 
 if [ -d "$HOME/.dotnet/tools" ]; then
