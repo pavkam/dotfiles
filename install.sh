@@ -283,6 +283,35 @@ function check_or_install_zsh() {
   fi
 }
 
+function has_gui() {
+  # Check if system has a graphical environment (GUI/X11/Wayland/macOS)
+
+  # macOS always has GUI on desktop systems
+  if [ "$DISTRO_DARWIN" != "" ]; then
+    return 0
+  fi
+
+  # Check for X11
+  if [ -n "$DISPLAY" ]; then
+    return 0
+  fi
+
+  # Check for Wayland
+  if [ -n "$WAYLAND_DISPLAY" ]; then
+    return 0
+  fi
+
+  # Check if loginctl shows a graphical session (systemd-based systems)
+  if command -v loginctl &>/dev/null; then
+    if loginctl show-session "$(loginctl --no-legend | awk '{print $1}' | head -1)" -p Type 2>/dev/null | grep -q "Type=wayland\|Type=x11"; then
+      return 0
+    fi
+  fi
+
+  # No GUI detected
+  return 1
+}
+
 echo
 info "$(color_blue "                              MEOW        |\__/,|   (\`\ ")"
 info "$(color_blue "                                  MEOW  _.|o o  |_   ) )")"
@@ -367,15 +396,21 @@ DISTRO_DARWIN="$(uname -a | grep Darwin)"
 
 # Base packages (same name across all distros)
 BASE_PACKAGES=(
-  zsh-completions git nvim mc make diffutils less ripgrep bat tree gcc
-  protobuf automake binutils bc bash bzip2 cmake coreutils curl cython
-  dialog docker htop llvm lz4 perl ruby wget zip fzf thefuck ncdu
+  git mc make diffutils less ripgrep bat tree gcc
+  automake binutils bc bash bzip2 cmake coreutils curl
+  dialog htop llvm lz4 perl ruby wget zip fzf thefuck ncdu
   shellcheck luarocks tmux
 )
 
 # GNU/Linux packages (same name on Arch and Debian, but not Darwin)
+# Note: nodejs/npm are installed via nvm instead to avoid version/dependency conflicts
 GNU_LINUX_PACKAGES=(
-  zsh sed util-linux nodejs npm kitty
+  zsh sed util-linux
+)
+
+# GUI packages for GNU/Linux (only installed if GUI is detected)
+GNU_LINUX_GUI_PACKAGES=(
+  kitty
 )
 
 if [ "$DISTRO_ARCH" != "" ]; then
@@ -383,9 +418,23 @@ if [ "$DISTRO_ARCH" != "" ]; then
 
   ARCH_PACKAGES=(
     yay fd nvm go lua pyenv python dotnet-runtime dotnet-sdk mono
-    bind-tools nerd-fonts-noto-sans-mono ttf-nerd-fonts-symbols-mono bluez-tools
+    bind-tools bluez-tools zsh-completions neovim protobuf cython nodejs npm docker
   )
+
+  # Arch GUI packages (fonts, etc)
+  ARCH_GUI_PACKAGES=(
+    nerd-fonts-noto-sans-mono ttf-nerd-fonts-symbols-mono
+  )
+
   PACKAGES=("${BASE_PACKAGES[@]}" "${GNU_LINUX_PACKAGES[@]}" "${ARCH_PACKAGES[@]}")
+
+  # Add GUI packages if GUI is detected
+  if has_gui; then
+    roll "GUI environment detected. Will install GUI packages..."
+    PACKAGES=("${PACKAGES[@]}" "${GNU_LINUX_GUI_PACKAGES[@]}" "${ARCH_GUI_PACKAGES[@]}")
+  else
+    roll "No GUI environment detected. Skipping GUI packages..."
+  fi
 
   roll "Checking which packages need to be installed..."
   packages_to_install=$(check_and_collect_packages "pacman -Q" "${PACKAGES[@]}")
@@ -401,13 +450,22 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
   DEBIAN_PACKAGES=(
     fd-find golang-go global lua5.3 mono-runtime python3
     bind9-utils bluez apt-utils default-jre
+    neovim protobuf-compiler cython3
   )
   PACKAGES=("${BASE_PACKAGES[@]}" "${GNU_LINUX_PACKAGES[@]}" "${DEBIAN_PACKAGES[@]}")
+
+  # Add GUI packages if GUI is detected
+  if has_gui; then
+    roll "GUI environment detected. Will install GUI packages..."
+    PACKAGES=("${PACKAGES[@]}" "${GNU_LINUX_GUI_PACKAGES[@]}")
+  else
+    roll "No GUI environment detected. Skipping GUI packages..."
+  fi
 
   roll "Checking which packages need to be installed..."
   packages_to_install=$(check_and_collect_packages "dpkg -s" "${PACKAGES[@]}")
   if [ "$packages_to_install" != "" ]; then
-    install_packages "apt install -y" "$packages_to_install"
+    install_packages "sudo apt install -y" "$packages_to_install"
     success "Packages installed successfully"
   else
     success "All packages already installed"
@@ -415,7 +473,7 @@ elif [ "$DISTRO_DEBIAN" != "" ]; then
 
   # Special case over here for bat/rip on some Debian(s)
   roll "Checking if there are issues between 'ripgrep' and 'bat' due to bad packaging..."
-  if ! run apt install -y ripgrep bat; then
+  if ! run sudo apt install -y ripgrep bat; then
     warn "Forcing the installation of 'ripgrep' and 'bat'..."
 
     if ! run sudo apt install -y -o Dpkg::Options::="--force-overwrite" bat ripgrep; then
@@ -456,6 +514,7 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
   DARWIN_PACKAGES=(
     fd gnu-sed golang global lua bind nvm pyenv pyenv-virtualenv
     node npm yarn grep jq moreutils buf codex
+    zsh-completions neovim protobuf
   )
   PACKAGES=("${BASE_PACKAGES[@]}" "${DARWIN_PACKAGES[@]}")
 
@@ -467,18 +526,22 @@ elif [ "$DISTRO_DARWIN" != "" ]; then
     roll "All brew packages already installed."
   fi
 
-  # Brew cask packages
-  roll "Checking brew cask packages..."
-  DARWIN_CASK_PACKAGES=(
-    temurin font-hack-nerd-font font-symbols-only-nerd-font font-jetbrains-mono kitty
-  )
+  # Brew cask packages (GUI-only)
+  if has_gui; then
+    roll "GUI environment detected. Checking brew cask packages..."
+    DARWIN_CASK_PACKAGES=(
+      temurin font-hack-nerd-font font-symbols-only-nerd-font font-jetbrains-mono kitty
+    )
 
-  roll "Checking which cask packages need to be installed..."
-  packages_to_install=$(check_and_collect_packages "brew list" "${DARWIN_CASK_PACKAGES[@]}")
-  if [ "$packages_to_install" != "" ]; then
-    install_packages "brew install --cask" "$packages_to_install"
+    roll "Checking which cask packages need to be installed..."
+    packages_to_install=$(check_and_collect_packages "brew list" "${DARWIN_CASK_PACKAGES[@]}")
+    if [ "$packages_to_install" != "" ]; then
+      install_packages "brew install --cask" "$packages_to_install"
+    else
+      roll "All brew cask packages already installed."
+    fi
   else
-    roll "All brew cask packages already installed."
+    roll "No GUI environment detected. Skipping brew cask packages..."
   fi
 else
   warn "This GNU/Linux distribution is not supported. Install the dependencies by hand."
@@ -494,7 +557,8 @@ if command -v npm &>/dev/null; then
 fi
 
 # Check all required dependencies are installed
-CORE_DEPENDENCIES_CHECK=(git nvim zsh fzf mc gcc java diff make less sed head chsh go node npm tree ln readlink)
+# Note: node/npm are managed via nvm (checked separately via nvm.sh per-distro)
+CORE_DEPENDENCIES_CHECK=(git nvim zsh fzf mc gcc java diff make less sed head chsh go tree ln readlink)
 ARCH_DEPENDENCIES=(fd "$HOME/.nvm/nvm.sh" rg bat pyenv)
 DEBIAN_DEPENDENCIES=(fdfind "$HOME/.nvm/nvm.sh" rg batcat "$HOME/.pyenv/bin/pyenv")
 DARWIN_DEPENDENCIES=(fd "/opt/homebrew/opt/nvm/nvm.sh" rg bat pyenv)
@@ -558,12 +622,17 @@ link .wgetrc
 link .nuget/NuGet/NuGet.Config
 link .config/mc
 link .config/htop
-link .config/kitty
 link .config/bat
 link .config/yazi
 link .docker/config.json
 link .docker/daemon.json
 link .docker/features.json
+
+# GUI-specific symlinks
+if has_gui; then
+  roll "Creating GUI-specific symlinks..."
+  link .config/kitty
+fi
 
 if [ "$DISTRO_DARWIN" = "" ]; then
   link .config/Code/User/settings.json

@@ -126,12 +126,15 @@ fi
 
 if [ -s "/usr/share/nvm/init-nvm.sh" ]; then
     source "/usr/share/nvm/init-nvm.sh"
-elif [ -e "$NVM_DIR/bin/nvm.sh" ]; then
+elif [ -s "$NVM_DIR/nvm.sh" ]; then
     source "$NVM_DIR/nvm.sh"
-    source "$NVM_DIR/bash_completion"
+    [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+elif [ -s "$NVM_DIR/bin/nvm.sh" ]; then
+    source "$NVM_DIR/bin/nvm.sh"
+    [ -s "$NVM_DIR/bin/bash_completion" ] && source "$NVM_DIR/bin/bash_completion"
 elif [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ]; then
     source "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
-    source "$HOMEBREW_PREFIX/etc/bash_completion.d/nvm"
+    [ -s "$HOMEBREW_PREFIX/etc/bash_completion.d/nvm" ] && source "$HOMEBREW_PREFIX/etc/bash_completion.d/nvm"
 fi
 
 # Ruby package manager.

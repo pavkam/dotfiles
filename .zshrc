@@ -277,7 +277,20 @@ alias :q=exit
 
 # fzf stuff
 if has_cmd fzf; then
-    eval "$(fzf --zsh)"
+    # fzf >= 0.48 supports --zsh; older versions need explicit script sourcing
+    if fzf --zsh &>/dev/null; then
+        eval "$(fzf --zsh)"
+    else
+        for fzf_script in \
+            /usr/share/doc/fzf/examples/key-bindings.zsh \
+            /usr/share/doc/fzf/examples/completion.zsh \
+            /usr/share/fzf/key-bindings.zsh \
+            /usr/share/fzf/completion.zsh \
+            "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh" \
+            "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh"; do
+            [ -s "$fzf_script" ] && source "$fzf_script"
+        done
+    fi
 
     FD_EXE=""
     for cmd in fdfind fd; do
@@ -572,7 +585,8 @@ if [ -f "$HOME/.zshrc.local" ]; then
 fi
 
 # Little helper
-if has_cmd thefuck; then
+# thefuck breaks on Python 3.12+ (imp module removed). Skip silently if broken.
+if has_cmd thefuck && thefuck --alias &>/dev/null; then
   eval "$(thefuck --alias)"
 fi
 
