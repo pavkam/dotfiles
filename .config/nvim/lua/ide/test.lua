@@ -2371,13 +2371,169 @@ function M.run(filter)
     end)
 
     -- ═══════════════════════════════════════════════════════
+    -- BUFFER API COVERAGE
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Buffer API: type checks', function()
+        test('is_special on panel buffer', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            buf:set_option('filetype', 'ide-panel')
+            assert_true(Buffer.is_special(buf:id()), 'panel must be special')
+            buf:close(true)
+        end)
+
+        test('is_normal on real file', function()
+            local bufnr = open_fixture('sample.lua', 300)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            assert_true(buf:is_normal(), 'file buffer must be normal')
+            assert_false(Buffer.is_special(bufnr), 'file buffer must not be special')
+            close_buf()
+        end)
+
+        test('is_modifiable on scratch buffer', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            assert_true(buf:is_modifiable(), 'scratch buffer must be modifiable')
+            buf:set_modifiable(false)
+            assert_false(buf:is_modifiable(), 'must be non-modifiable after set')
+            buf:set_modifiable(true)
+            buf:close(true)
+        end)
+    end)
+
+    suite('Buffer API: text operations', function()
+        test('set_text replaces range', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            buf:set_lines(0, -1, { 'hello world' })
+            buf:set_text(0, 0, 0, 5, { 'goodbye' })
+            assert_eq(buf:line(1), 'goodbye world')
+            buf:close(true)
+        end)
+
+        test('changedtick increments on modification', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            local tick1 = buf:changedtick()
+            buf:set_lines(0, -1, { 'change' })
+            local tick2 = buf:changedtick()
+            assert_true(tick2 > tick1, 'changedtick must increment')
+            buf:close(true)
+        end)
+
+        test('undo restores previous content', function()
+            local bufnr = open_fixture('sample.lua', 300)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            local orig = buf:line(1)
+            buf:set_lines(0, 1, { '-- changed' })
+            assert_eq(buf:line(1), '-- changed')
+            buf:undo()
+            assert_eq(buf:line(1), orig, 'undo must restore')
+            close_buf()
+        end)
+    end)
+
+    suite('Buffer API: metadata', function()
+        test('set_name changes raw buffer name', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            buf:set_name('TestName.lua')
+            -- name() returns nil for non-normal buffers (scratch)
+            -- but the raw nvim name should be set
+            local raw = vim.api.nvim_buf_get_name(buf:id())
+            assert_match(raw, 'TestName', 'raw name must update')
+            buf:close(true)
+        end)
+
+        test('var and set_var roundtrip', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            buf:set_var('test_var_xyz', 42)
+            assert_eq(buf:var('test_var_xyz'), 42, 'must read back set var')
+            buf:close(true)
+        end)
+    end)
+
+    suite('Window API: operations', function()
+        test('exec_normal runs normal mode command', function()
+            local bufnr = open_fixture('sample.lua', 300)
+            local Window = require('ide.Window')
+            local win = Window.current()
+            -- Go to line 3
+            win:exec_normal('3gg')
+            assert_eq(win:cursor().row, 3, 'cursor must be at line 3')
+            close_buf()
+        end)
+
+        test('set_buffer changes displayed buffer', function()
+            local Buffer = require('ide.Buffer')
+            local Window = require('ide.Window')
+            local buf1 = Buffer.create({ listed = false, scratch = true })
+            local buf2 = Buffer.create({ listed = false, scratch = true })
+            buf1:set_lines(0, -1, { 'buffer 1' })
+            buf2:set_lines(0, -1, { 'buffer 2' })
+
+            local win = Window.current()
+            win:set_buffer(buf1)
+            assert_eq(win:buffer():id(), buf1:id())
+            win:set_buffer(buf2)
+            assert_eq(win:buffer():id(), buf2:id())
+
+            buf1:close(true)
+            buf2:close(true)
+        end)
+    end)
+
+    suite('Git API: status', function()
+        test('is_repo detects git repository', function()
+            -- We're in the nvim config dir which IS a git repo
+            assert_true(IDE.git:is_repo(), 'must detect git repo')
+        end)
+
+        test('status_counts returns diff numbers', function()
+            local counts = IDE.git:status_counts()
+            assert_not_nil(counts, 'must return counts')
+            assert_type(counts.modified, 'number', 'modified must be number')
+            assert_type(counts.added, 'number', 'added must be number')
+            assert_type(counts.deleted, 'number', 'deleted must be number')
+        end)
+    end)
+
+    suite('FileSystem API: paths', function()
+        test('display_path shortens home directory', function()
+            local home = IDE.fs:home()
+            local display = IDE.fs:display_path(home .. '/test/file.lua')
+            -- display_path should use ~ for home
+            if display then
+                assert_true(not display:find(home, 1, true) or display:find('~'),
+                    'display_path should shorten home dir')
+            end
+        end)
+
+        test('is_link returns boolean', function()
+            local result = IDE.fs:is_link('/tmp')
+            assert_type(result, 'boolean')
+        end)
+
+        test('mkdir creates and removes directory', function()
+            local dir = '/tmp/ide_test_mkdir_' .. os.time()
+            IDE.fs:mkdir(dir)
+            assert_true(IDE.fs:is_directory(dir), 'mkdir must create directory')
+            os.remove(dir)
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
     -- CLEANUP: wipe all test fixture buffers
     -- ═══════════════════════════════════════════════════════
 
     ensure_normal_window()
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         local name = vim.api.nvim_buf_get_name(buf)
-        if name:find('test_fixtures') or name:find('Scratch') or name:find('ide_e2e') then
+        if name:find('test_fixtures') or name:find('Scratch') or name:find('ide_e2e') or name:find('TestName') then
             pcall(vim.api.nvim_buf_delete, buf, { force = true })
         end
     end
