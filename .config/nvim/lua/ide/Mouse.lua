@@ -44,7 +44,8 @@ function Mouse:show_context_menu()
 
     local mouse = vim.fn.getmousepos()
     if mouse and mouse.winid and mouse.winid > 0 then
-        local win = Window(mouse.winid)
+        local win = Window.get(mouse.winid)
+        if not win then return end
         win:focus()
         if mouse.line > 0 then
             win:set_cursor(Position(mouse.line, math.max(1, mouse.column)))

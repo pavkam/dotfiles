@@ -22,7 +22,7 @@ function WindowList:get(id)
 
     if not self._cache[id] then
         local Window = require 'ide.Window'
-        self._cache[id] = Window(id)
+        self._cache[id] = Window.get(id)
     end
 
     return self._cache[id]
@@ -31,7 +31,12 @@ end
 --- The current window.
 ---@return Window
 function WindowList:current()
-    return assert(self:get(vim.api.nvim_get_current_win()))
+    local win = self:get(vim.api.nvim_get_current_win())
+    if not win then
+        local Window = require 'ide.Window'
+        return Window.get(vim.api.nvim_get_current_win()) or Window(vim.api.nvim_get_current_win())
+    end
+    return win
 end
 
 --- All valid windows.

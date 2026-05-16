@@ -70,7 +70,8 @@ end
 --- [■] flush-left and [↕] flush-right within the border line.
 ---@return table[]
 function FramedWindow:_build_title()
-    local buf = Buffer(self._buf_id)
+    local buf = Buffer.get(self._buf_id)
+    if not buf then return { { ' [Invalid] ', 'IDEWinTitle' } } end
     local name = buf:is_valid() and (buf:name() or '[No Name]') or '[Invalid]'
     local modified = (buf:is_valid() and buf:is_modified()) and ' +' or ''
 
