@@ -173,8 +173,7 @@ function Panel:show()
 
     -- Hide cursor in panel windows (non-editable UI)
     if not self._show_cursor then
-        self._saved_guicursor = vim.o.guicursor
-        vim.o.guicursor = 'a:IDEPanelHiddenCursor/IDEPanelHiddenCursor'
+        IDE.ui:hide_cursor()
     end
 
     self:emit('show')
@@ -216,9 +215,8 @@ function Panel:hide()
     self:emit('hide')
 
     -- Restore cursor visibility
-    if self._saved_guicursor then
-        vim.o.guicursor = self._saved_guicursor
-        self._saved_guicursor = nil
+    if not self._show_cursor then
+        IDE.ui:restore_cursor()
     end
 
     if self._shadow then self._shadow:close(); self._shadow = nil end

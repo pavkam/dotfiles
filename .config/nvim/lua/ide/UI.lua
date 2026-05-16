@@ -356,6 +356,37 @@ function UI:redraw()
     vim.cmd 'redraw!'
 end
 
+--- Hide the cursor (reference-counted — nested calls are safe).
+--- Call restore_cursor() to undo. If hide is called 3 times,
+--- restore must be called 3 times to actually show the cursor.
+---@param hl_group? string # highlight group for hidden cursor (default: IDEPanelHiddenCursor)
+function UI:hide_cursor(hl_group)
+    hl_group = hl_group or 'IDEPanelHiddenCursor'
+    self._cursor_hide_count = (self._cursor_hide_count or 0) + 1
+    if self._cursor_hide_count == 1 then
+        self._saved_guicursor = vim.o.guicursor
+        vim.o.guicursor = 'a:' .. hl_group .. '/' .. hl_group
+    end
+end
+
+--- Restore the cursor (reference-counted).
+function UI:restore_cursor()
+    self._cursor_hide_count = math.max(0, (self._cursor_hide_count or 0) - 1)
+    if self._cursor_hide_count == 0 and self._saved_guicursor then
+        vim.o.guicursor = self._saved_guicursor
+        self._saved_guicursor = nil
+    end
+end
+
+--- Force-restore cursor regardless of ref count (emergency cleanup).
+function UI:force_restore_cursor()
+    self._cursor_hide_count = 0
+    if self._saved_guicursor then
+        vim.o.guicursor = self._saved_guicursor
+        self._saved_guicursor = nil
+    end
+end
+
 ---@return string
 function UI:__tostring()
     return 'UI()'
