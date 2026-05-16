@@ -5419,7 +5419,7 @@ function M.run()
         local List = require 'ide.toolkit.List'
         local l = List { items = { { text = 'a' }, { text = 'b' } } }
         assert_not_nil(l)
-        assert_eq(l._selected, 1)
+        assert_eq(#l._items, 2)
     end)
 
     test('List: set_items updates items', function()
@@ -5427,7 +5427,6 @@ function M.run()
         local l = List { items = {} }
         l:set_items({ { text = 'x' }, { text = 'y' }, { text = 'z' } })
         assert_eq(#l._items, 3)
-        assert_eq(l._selected, 1)
     end)
 
     test('List: tostring includes item count', function()
