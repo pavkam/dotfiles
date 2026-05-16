@@ -1750,6 +1750,32 @@ function M.run(filter)
         end)
     end)
 
+    suite('Integration: CommandPalette', function()
+        test('command palette extension is registered', function()
+            local ext = IDE:extension('CommandPalette')
+            assert_not_nil(ext)
+        end)
+        test('app.commandPalette action exists', function()
+            assert_true(IDE.actions:has('app.commandPalette'))
+        end)
+        test('action shortcut reverse-map builds from extension keymaps', function()
+            local count = 0
+            for _, ext in ipairs(IDE:extensions()) do
+                for _, km in ipairs(ext._keymaps or {}) do
+                    if km.action then count = count + 1 end
+                end
+            end
+            assert_true(count > 0, 'must have action-mapped keybindings')
+        end)
+        test('actions have category from name prefix', function()
+            local actions = IDE.actions:list()
+            for _, a in ipairs(actions) do
+                local cat = a.name:match('^([^.]+)%.')
+                assert_not_nil(cat, 'action ' .. a.name .. ' must have a dot-separated name')
+            end
+        end)
+    end)
+
     suite('Integration: KeyManager', function()
         test('keymaps are registered', function()
             assert_true(IDE.keys:count() > 10, 'must have >10 keymaps registered')

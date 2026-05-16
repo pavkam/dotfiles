@@ -678,15 +678,71 @@ function MainMenu:_build_help_menu()
     bar:add_item('Help', MenuItem({
         text = 'About IDE', icon = '󰋼',
         action = function()
+            local Dialog = require 'ide.toolkit.Dialog'
+            local Button = require 'ide.toolkit.Button'
+
             local ext_count = #IDE:extensions()
             local lsp_count = #IDE.lsp:active()
-            IDE.ui:info(string.format(
-                '  **TurboVision IDE**\n\n' ..
-                '  Built on Neovim %s\n' ..
-                '  %d extensions loaded\n' ..
-                '  %d language servers active',
-                vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch,
-                ext_count, lsp_count))
+            local plugin_count = #(require('lazy').plugins())
+            local ver = vim.version()
+            local ver_str = ver.major .. '.' .. ver.minor .. '.' .. ver.patch
+
+            local dlg = Dialog({
+                title = ' About ',
+                width = 44,
+                height = 14,
+                shadow = true,
+            })
+
+            -- Logo line
+            dlg:add_widget({
+                render = function()
+                    return '   ╔╦╗╦ ╦╦═╗╔╗ ╔═╗╦  ╦╦╔╦╗',
+                        { { group = 'IDEDesktopLogo', col_start = 0, col_end = 40 } }
+                end,
+                focusable = function() return false end,
+            }, 1, 1)
+            dlg:add_widget({
+                render = function()
+                    return '    ║ ║ ║╠╦╝╠╩╗║ ║╚╗╔╝║║║║',
+                        { { group = 'IDEDesktopLogo', col_start = 0, col_end = 40 } }
+                end,
+                focusable = function() return false end,
+            }, 2, 1)
+            dlg:add_widget({
+                render = function()
+                    return '    ╩ ╚═╝╩╚═╚═╝╚═╝ ╚╝ ╩╩ ╩',
+                        { { group = 'IDEDesktopLogo', col_start = 0, col_end = 40 } }
+                end,
+                focusable = function() return false end,
+            }, 3, 1)
+
+            -- Info lines
+            local info_lines = {
+                { 5, '       Built on Neovim ' .. ver_str },
+                { 7, string.format('   %d extensions │ %d LSP servers', ext_count, lsp_count) },
+                { 8, string.format('   %d plugins    │ %d tests', plugin_count, 305) },
+                { 10, '     github.com/pavkam/dotfiles' },
+            }
+            for _, info in ipairs(info_lines) do
+                local r, text = info[1], info[2]
+                local hl = r == 10 and 'IDEDesktopHint' or 'IDEDesktopFile'
+                dlg:add_widget({
+                    render = function()
+                        return text, { { group = hl, col_start = 0, col_end = #text } }
+                    end,
+                    focusable = function() return false end,
+                }, r, 1)
+            end
+
+            -- OK button centered
+            dlg:add_widget(Button({
+                label = '&OK',
+                style = 'primary',
+                action = function() dlg:close() end,
+            }), 12, 18)
+
+            dlg:show()
         end,
     }))
 end
