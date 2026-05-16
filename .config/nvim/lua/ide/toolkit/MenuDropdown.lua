@@ -133,9 +133,8 @@ function MenuDropdown:show()
         'Normal:IDEMenuDropdownNormal,FloatBorder:IDEMenuDropdownBorder,CursorLine:IDEMenuItemSelected')
     self._win:set_option('winblend', 0)
 
-    -- Hide cursor in dropdown menus (save + restore on close)
-    self._saved_guicursor = vim.o.guicursor
-    vim.o.guicursor = 'a:IDEMenuItemSelected'
+    -- Hide cursor in dropdown menus
+    IDE.ui:hide_cursor('IDEMenuItemSelected')
 
     c:render(self._buf)
 
@@ -297,10 +296,7 @@ end
 
 function MenuDropdown:close()
     -- Restore cursor
-    if self._saved_guicursor then
-        vim.o.guicursor = self._saved_guicursor
-        self._saved_guicursor = nil
-    end
+    IDE.ui:restore_cursor()
     if self._sub_dropdown then
         self._sub_dropdown:close()
         self._sub_dropdown = nil

@@ -451,9 +451,7 @@ end
 --- Prompt for a filter pattern.
 function QuickFixUI:_prompt_filter()
     -- Temporarily restore cursor so vim.fn.input works
-    if self._saved_guicursor then
-        vim.o.guicursor = self._saved_guicursor
-    end
+    IDE.ui:force_restore_cursor()
     vim.schedule(function()
         local ok, pattern = pcall(vim.fn.input, {
             prompt = 'Filter: ',
@@ -461,8 +459,7 @@ function QuickFixUI:_prompt_filter()
         })
         -- Re-hide cursor
         if not self._show_cursor then
-            self._saved_guicursor = vim.o.guicursor
-            vim.o.guicursor = 'a:IDEPanelHiddenCursor/IDEPanelHiddenCursor'
+            IDE.ui:hide_cursor()
         end
         if ok and pattern ~= nil then
             self:_apply_filter(pattern)

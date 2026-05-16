@@ -114,8 +114,7 @@ function ContextMenu:show()
     self._win:set_option('winhl', 'Normal:IDEMenuDropdownNormal,FloatBorder:IDEMenuDropdownBorder')
     self._win:set_option('winblend', 0)
 
-    self._saved_guicursor = vim.o.guicursor
-    vim.o.guicursor = 'a:IDEMenuItemSelected'
+    IDE.ui:hide_cursor('IDEMenuItemSelected')
 
     -- Find first actionable item
     local first = 1
@@ -211,10 +210,7 @@ function ContextMenu:show()
 end
 
 function ContextMenu:close()
-    if self._saved_guicursor then
-        vim.o.guicursor = self._saved_guicursor
-        self._saved_guicursor = nil
-    end
+    IDE.ui:restore_cursor()
     if self._component then
         C.unmount(self._component)
         self._component = nil

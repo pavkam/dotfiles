@@ -125,8 +125,7 @@ function SearchableList:show()
     end
 
     -- Hide cursor
-    self._saved_guicursor = vim.o.guicursor
-    vim.o.guicursor = 'a:IDEPanelHiddenCursor/IDEPanelHiddenCursor'
+    IDE.ui:hide_cursor()
 
     self:_render()
     self:_bind_keys()
@@ -525,10 +524,7 @@ end
 function SearchableList:close()
     if not self._mounted then return end
     self._mounted = false
-    if self._saved_guicursor then
-        vim.o.guicursor = self._saved_guicursor
-        self._saved_guicursor = nil
-    end
+    IDE.ui:restore_cursor()
     self:_close_preview()
     if self._shadow then self._shadow:close(); self._shadow = nil end
     if self._win and self._win:is_valid() then self._win:close(true) end
