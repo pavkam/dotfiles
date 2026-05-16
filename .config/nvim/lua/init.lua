@@ -759,7 +759,6 @@ function table.merge(...)
     elseif #list == 1 then
         result = list[1] --[[@as table]]
     else
-        -- TODO: make my own
         result = vim.tbl_extend('keep', unpack(list))
     end
 
