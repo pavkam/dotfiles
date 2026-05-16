@@ -17,7 +17,8 @@ function WindowChrome:init()
     Extension.init(self, 'WindowChrome')
     self._frame = nil ---@type FramedWindow|nil
     self._splitter = nil ---@type Splitter|nil
-    self._host_win = nil
+    self._host_win = nil ---@type Window|nil
+    self._blank_buf = nil ---@type Buffer|nil
 end
 
 -- ── Highlights ──────────────────────────────────────────────────
@@ -68,27 +69,27 @@ end
 
 function WindowChrome:_ensure_frame()
     -- Ensure blank buffer options are always correct
-    if self._blank_buf and vim.api.nvim_buf_is_valid(self._blank_buf) then
-        if vim.bo[self._blank_buf].buftype ~= 'nofile' then
-            vim.bo[self._blank_buf].buftype = 'nofile'
-            vim.bo[self._blank_buf].buflisted = false
-            vim.bo[self._blank_buf].bufhidden = 'hide'
+    if self._blank_buf and self._blank_buf:is_valid() then
+        if self._blank_buf:option('buftype') ~= 'nofile' then
+            self._blank_buf:set_option('buftype', 'nofile')
+            self._blank_buf:set_option('buflisted', false)
+            self._blank_buf:set_option('bufhidden', 'hide')
         end
     end
 
-    local cur_win_obj = Window.current()
-    if not cur_win_obj then return end
-    local cur_win = cur_win_obj:id()
+    local cur_win = Window.current()
+    if not cur_win then return end
+    local cur_win_id = cur_win:id()
     local buf = Buffer.current()
     if not buf then return end
-    local cur_buf = buf:id()
+    local cur_buf_id = buf:id()
 
     -- Recover from empty [No Name] buffer after :bd
-    if buf:is_valid() and (buf:name() or '') == '' and vim.bo[cur_buf].buftype == '' then
-        for _, id in ipairs(vim.api.nvim_list_bufs()) do
-            if vim.api.nvim_buf_is_valid(id) and vim.bo[id].buflisted and id ~= cur_buf
-                and (vim.api.nvim_buf_get_name(id) or '') ~= '' then
-                vim.api.nvim_set_current_buf(id)
+    if buf:is_valid() and (buf:name() or '') == '' and buf:option('buftype') == '' then
+        for listed_buf in IDE.buffers:iter() do
+            if listed_buf:is_valid() and listed_buf:is_listed()
+                and listed_buf:id() ~= cur_buf_id and (listed_buf:name() or '') ~= '' then
+                cur_win:set_buffer(listed_buf)
                 return
             end
         end
@@ -105,28 +106,28 @@ function WindowChrome:_ensure_frame()
 
     -- If we're in the host window (a :e or :bp landed there), redirect to the active frame
     -- Skip terminal buffers and other IDE-managed buffers
+    local host_win_id = self._host_win and self._host_win:id() or nil
     local skip = buf:is_valid()
-        and (buf:filetype() == 'ide-terminal' or vim.b[cur_buf].ide_terminal)
-    if self._frame and self._frame:is_valid() and cur_win == self._host_win and not skip then
+        and (buf:filetype() == 'ide-terminal' or vim.b[cur_buf_id].ide_terminal)
+    if self._frame and self._frame:is_valid() and cur_win_id == host_win_id and not skip then
         local target_frame = (self._splitter and self._splitter:active_frame()) or self._frame
-        target_frame:set_buffer(cur_buf)
+        target_frame:set_buffer(cur_buf_id)
         local target_win = Window.get(target_frame:window_id())
         if target_win then target_win:focus() end
         -- Reset host to blank
-        if self._blank_buf and Buffer.is_valid(self._blank_buf) then
-            local host = Window.get(self._host_win)
-            if host then host:set_buffer(Buffer.get(self._blank_buf)) end
+        if self._blank_buf and self._blank_buf:is_valid() and self._host_win then
+            self._host_win:set_buffer(self._blank_buf)
         end
         return
     end
 
     -- Check if current window is a managed frame
-    if self._frame and self._frame:is_valid() and cur_win ~= self._frame:window_id() then
+    if self._frame and self._frame:is_valid() and cur_win_id ~= self._frame:window_id() then
         local managed_frame = nil
         if self._splitter then
             for i = 1, self._splitter:count() do
                 local sf = self._splitter._frames[i]
-                if sf and sf:is_valid() and sf:window_id() == cur_win then
+                if sf and sf:is_valid() and sf:window_id() == cur_win_id then
                     managed_frame = sf
                     break
                 end
@@ -134,31 +135,28 @@ function WindowChrome:_ensure_frame()
         end
 
         if managed_frame then
-            -- Buffer changed inside a managed frame — just refresh its title
             managed_frame:refresh()
             return
         end
 
         -- Stray normal window — close it and redirect
-        if not vim.w[cur_win].ide_terminal then
-            local win = Window.get(cur_win)
-            if not win then return end
-            local cfg = win:config()
+        if not vim.w[cur_win_id].ide_terminal then
+            local cfg = cur_win:config()
             if not cfg.relative or cfg.relative == '' then
-                if #vim.api.nvim_list_wins() <= 2 then return end
+                if #Window.list() <= 2 then return end
                 local target = (self._splitter and self._splitter:active_frame()) or self._frame
                 if not target or not target:is_valid() then return end
-                target:set_buffer(cur_buf)
+                target:set_buffer(cur_buf_id)
                 local tw = Window.get(target:window_id())
                 if tw then tw:focus() end
-                pcall(function() win:close(true) end)
+                pcall(function() cur_win:close(true) end)
                 return
             end
         end
     end
 
     -- Current window IS the primary frame — refresh or switch buffer
-    if self._frame and self._frame:is_valid() and cur_win == self._frame:window_id() then
+    if self._frame and self._frame:is_valid() and cur_win_id == self._frame:window_id() then
         self._frame:refresh()
         return
     end
@@ -170,42 +168,34 @@ function WindowChrome:_ensure_frame()
     end
 
     -- Remember the host window and replace its buffer with an empty one
-    self._host_win = Window.current():id()
-    if not self._blank_buf or not Buffer.is_valid(self._blank_buf) then
-        local blank = Buffer.create({ listed = false, scratch = true })
-        self._blank_buf = blank:id()
+    self._host_win = Window.current()
+    if not self._blank_buf or not self._blank_buf:is_valid() then
+        self._blank_buf = Buffer.create({ listed = false, scratch = true })
     end
-    local blank = Buffer.get(self._blank_buf)
-    if not blank then return end
-    blank:set_option('bufhidden', 'hide')
-    blank:set_option('buftype', 'nofile')
-    blank:set_option('modifiable', false)
-    local host = Window.get(self._host_win)
-    if not host then return end
-    host:set_buffer(blank)
-    host:set_option('number', false)
-    host:set_option('relativenumber', false)
-    vim.wo[self._host_win].signcolumn = 'no'
-    vim.wo[self._host_win].statuscolumn = ''
-    vim.wo[self._host_win].foldcolumn = '0'
-    vim.wo[self._host_win].cursorline = false
-    -- Make host window completely opaque so nothing bleeds through the float
-    vim.wo[self._host_win].winblend = 0
-    vim.wo[self._host_win].winhighlight = 'Normal:IDEHostBg,EndOfBuffer:IDEHostBg,SignColumn:IDEHostBg,FoldColumn:IDEHostBg'
+    self._blank_buf:set_option('bufhidden', 'hide')
+    self._blank_buf:set_option('buftype', 'nofile')
+    self._blank_buf:set_option('modifiable', false)
+    self._host_win:set_buffer(self._blank_buf)
+    self._host_win:set_option('number', false)
+    self._host_win:set_option('relativenumber', false)
+    self._host_win:set_option('signcolumn', 'no')
+    self._host_win:set_option('statuscolumn', '')
+    self._host_win:set_option('foldcolumn', '0')
+    self._host_win:set_option('cursorline', false)
+    self._host_win:set_option('winblend', 0)
+    self._host_win:set_option('winhighlight', 'Normal:IDEHostBg,EndOfBuffer:IDEHostBg,SignColumn:IDEHostBg,FoldColumn:IDEHostBg')
 
     -- Clean up any orphaned scrollbar floats before creating new frame
-    for _, w in ipairs(vim.api.nvim_list_wins()) do
-        if vim.api.nvim_win_is_valid(w) then
-            local cfg = vim.api.nvim_win_get_config(w)
-            if cfg.zindex == 51 and cfg.width == 1 then
-                pcall(vim.api.nvim_win_close, w, true)
-            end
+    for _, w in ipairs(Window.list()) do
+        local cfg = w:config()
+        if cfg.zindex == 51 and cfg.width == 1 then
+            pcall(function() w:close(true) end)
         end
     end
 
     -- Create the frame
     self._frame = FramedWindow({
-        buf = cur_buf,
+        buf = cur_buf_id,
         number = 1,
     })
     self._frame:fill()
@@ -233,7 +223,8 @@ function WindowChrome:close_current()
             self._splitter:layout(row, 0, width, height)
             local active = self._splitter:active_frame()
             if active and active:is_valid() then
-                vim.api.nvim_set_current_win(active:window_id())
+                local aw = Window.get(active:window_id())
+                if aw then aw:focus() end
             end
         end
         return
@@ -243,7 +234,8 @@ function WindowChrome:close_current()
     if not self._frame or not self._frame:is_valid() then return end
     local buf_id = self._frame:buffer_id()
 
-    if vim.bo[buf_id].modified then
+    local close_buf = Buffer.get(buf_id)
+    if close_buf and close_buf:is_modified() then
         self._frame:close()
         self._frame = nil
         vim.schedule(function()
@@ -324,13 +316,12 @@ function WindowChrome:on_register(ctx)
     IDE._window_chrome = self
 
     -- Clean up orphaned FramedWindow floats from previous sessions (z50-51 only, skip toasts/panels)
-    for _, w in ipairs(vim.api.nvim_list_wins()) do
-        if vim.api.nvim_win_is_valid(w) then
-            local cfg = vim.api.nvim_win_get_config(w)
-            if cfg.zindex and cfg.zindex >= 50 and cfg.zindex <= 52 and cfg.relative and cfg.relative ~= '' then
-                if cfg.width == 1 or (cfg.zindex == 50 and w ~= vim.api.nvim_get_current_win()) then
-                    pcall(vim.api.nvim_win_close, w, true)
-                end
+    local cur_win_id = Window.current():id()
+    for _, w in ipairs(Window.list()) do
+        local cfg = w:config()
+        if cfg.zindex and cfg.zindex >= 50 and cfg.zindex <= 52 and cfg.relative and cfg.relative ~= '' then
+            if cfg.width == 1 or (cfg.zindex == 50 and w:id() ~= cur_win_id) then
+                pcall(function() w:close(true) end)
             end
         end
     end
@@ -369,19 +360,20 @@ function WindowChrome:on_register(ctx)
         vim.schedule(function()
             if not chrome._frame or not chrome._frame:is_valid() then return end
             local frame_buf = chrome._frame:buffer_id()
-            if frame_buf == ev.buf or not vim.api.nvim_buf_is_valid(frame_buf) then
+            if frame_buf == ev.buf or not Buffer.is_valid(frame_buf) then
+                -- Find a listed buffer to switch to
                 local next_buf = nil
-                for _, id in ipairs(vim.api.nvim_list_bufs()) do
-                    if vim.api.nvim_buf_is_valid(id) and vim.bo[id].buflisted and id ~= ev.buf then
-                        next_buf = Buffer.get(id)
+                for b in IDE.buffers:iter() do
+                    if b:is_valid() and b:is_listed() and b:id() ~= ev.buf then
+                        next_buf = b
                         break
                     end
                 end
+                -- Fallback: any normal buffer
                 if not next_buf then
-                    for _, id in ipairs(vim.api.nvim_list_bufs()) do
-                        if vim.api.nvim_buf_is_valid(id) and id ~= ev.buf
-                            and vim.bo[id].buftype == '' then
-                            next_buf = Buffer.get(id)
+                    for b in IDE.buffers:iter() do
+                        if b:is_valid() and b:id() ~= ev.buf and b:option('buftype') == '' then
+                            next_buf = b
                             break
                         end
                     end
