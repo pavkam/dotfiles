@@ -41,10 +41,11 @@ function FileSafety:on_register(ctx)
 
     -- Disable swap/undo for temp files
     ctx:hook('BufWritePre', function(evt)
-        if Buffer.is_valid(evt.buf) then
-            Buffer.get(evt.buf):set_option('undofile', false)
+        local buf = Buffer.get(evt.buf)
+        if buf then
+            buf:set_option('undofile', false)
             if evt.file == 'COMMIT_EDITMSG' or evt.file == 'MERGE_MSG' then
-                Buffer.get(evt.buf):set_option('swapfile', false)
+                buf:set_option('swapfile', false)
             end
         end
     end, { pattern = { '/tmp/*', '*.tmp', '*.bak', 'COMMIT_EDITMSG', 'MERGE_MSG' }, desc = 'Disable undo for temp files' })

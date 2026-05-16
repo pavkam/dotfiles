@@ -225,7 +225,7 @@ local function _show_ghost_text(self)
 
     local bufnr = vim.api.nvim_get_current_buf()
     local buf = Buffer.get(bufnr)
-    if not buf:is_valid() then return end
+    if not buf or not buf:is_valid() then return end
 
     -- Clear previous ghost text
     buf:clear_extmarks(self._ghost_ns)
