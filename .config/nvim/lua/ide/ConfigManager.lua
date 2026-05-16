@@ -79,6 +79,7 @@ end
 ---@param name string
 function ConfigManager:unregister_toggle(name)
     self._toggles[name] = nil
+    self:save()
 end
 
 --- Toggle a setting on/off.
