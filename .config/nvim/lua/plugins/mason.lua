@@ -2,7 +2,7 @@ local icons = require 'icons'
 
 return {
     'williamboman/mason.nvim',
-    cond = not ide.process.is_headless,
+    cond = #vim.api.nvim_list_uis() > 0,
     cmd = {
         'Mason',
         'MasonInstall',
@@ -54,13 +54,11 @@ return {
             'prettierd',
             'js-debug-adapter',
             'jsonlint',
-            -- csharp
-            'csharpier',
-            'netcoredbg',
             -- markdown
             'markdownlint',
-            -- python,
+            -- python
             'ruff',
+            'mypy',
             -- general
             'typos-lsp',
         },

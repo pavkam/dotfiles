@@ -364,11 +364,11 @@ local function validate_entry(field_name, entry)
 
     ---@type xassert_schema
     local composite_schema = {}
-    for k, v in pairs(composite_schema) do
+    for k, v in pairs(field_schema) do
         composite_schema[k] = { field_value[k], v }
     end
 
-    return validate(field_name, composite_schema) -- TODO: this does not work for nested tables.
+    return validate(field_name, composite_schema)
 end
 
 -- Validates a given schema.
@@ -445,13 +445,11 @@ end
 ---@param ... any # the values to hash.
 ---@return string # the hash.
 _G.hash = function(...)
-    local key = ''
+    local parts = {}
     for i = 1, select('#', ...) do
-        local v = select(i, ...)
-        key = key .. '|' .. inspect(v)
+        parts[i] = inspect(select(i, ...))
     end
-
-    return vim.fn.sha256(key)
+    return vim.fn.sha256(table.concat(parts, '|'))
 end
 
 -- Memoizes a the value of a function.
@@ -459,20 +457,23 @@ end
 ---@param fn T # the function to memoize.
 ---@return T # the memoized function.
 _G.memoize = function(fn)
+    local SENTINEL = {}
     ---@type table<string, any>
     local data = {}
 
     return function(...)
         local key = hash(...)
-        if not data[key] then
-            data[key] = fn(...)
+        local cached = rawget(data, key)
+        if cached == nil then
+            local result = fn(...)
+            data[key] = result == nil and SENTINEL or result
+            return result
         end
-
-        return data[key]
+        return cached == SENTINEL and nil or cached
     end
 end
 
--- Reuires a module lazyly.
+-- Requires a module lazily.
 ---@param module string # the module to require.
 _G.xrequire = function(module)
     xassert {
@@ -481,28 +482,37 @@ _G.xrequire = function(module)
 
     ---@type any|nil
     local loaded_module
+    local load_attempted = false
+    local function ensure_loaded()
+        if not load_attempted then
+            load_attempted = true
+            local ok, result = pcall(require, module)
+            if ok then loaded_module = result end
+        end
+        return loaded_module
+    end
     return setmetatable({}, {
         __index = function(_, key)
-            loaded_module = loaded_module or require(module)
-            return loaded_module[key]
+            local m = ensure_loaded()
+            return m and m[key]
         end,
         __newindex = function(_, key, value)
-            loaded_module = loaded_module or require(module)
-            loaded_module[key] = value
+            local m = ensure_loaded()
+            if m then m[key] = value end
         end,
         __call = function(_, ...)
-            loaded_module = loaded_module or require(module) --TODO: probably can be made smarter
-            return loaded_module(...)
+            local m = ensure_loaded()
+            if m then return m(...) end
         end,
         __ipairs = function()
-            loaded_module = loaded_module or require(module)
-            local a, b, c = ipairs(loaded_module)
-            return a, b, c
+            local m = ensure_loaded()
+            if m then return ipairs(m) end
+            return ipairs({})
         end,
         __pairs = function()
-            loaded_module = loaded_module or require(module)
-            local a, b, c = pairs(loaded_module)
-            return a, b, c
+            local m = ensure_loaded()
+            if m then return pairs(m) end
+            return pairs({})
         end,
     })
 end
@@ -590,7 +600,7 @@ function _G.inspect(value, opts, depth)
             if mt then
                 if opts.unroll_meta and mt.__tostring then
                     return mt.__tostring(value)
-                elseif opts.unroll_meta and mt.__ipairs or mt.__pairs then
+                elseif opts.unroll_meta and (mt.__ipairs or mt.__pairs) then
                     local unrolled = table.clone(value)
                     return inspect(unrolled, opts, depth)
                 end
@@ -604,7 +614,7 @@ function _G.inspect(value, opts, depth)
                     string.format(
                         '%s = %s',
                         inspect(k, {
-                            newline = '',
+                            new_line = '',
                             unroll_meta = opts.unroll_meta,
                             indent = '',
                             max_depth = 1,
@@ -658,8 +668,10 @@ end
 function table.freeze(table)
     assert(type(table) == 'table', 'expected a table')
 
+    -- Note: # operator returns 0 on frozen tables in LuaJIT (__len is ignored for tables).
+    -- Use ipairs() or pairs() to iterate. Intended for dictionary-style tables.
     return setmetatable({}, {
-        __index = table, -- TODO: freeze deep.
+        __index = table,
         __newindex = function()
             error('attempt to modify read-only table', 2)
         end,
@@ -694,14 +706,8 @@ function table.read_proxy(fn)
     })
 end
 
--- Clears a table.
----@generic T: table
----@param t T # the table to clear.
-function table.clear(t)
-    for k, _ in pairs(t) do
-        t[k] = nil
-    end
-end
+-- Use LuaJIT's native table.clear (C implementation, O(1) via memset)
+require('table.clear')
 
 --- Makes a table weak.
 ---@generic T: table
@@ -740,202 +746,6 @@ end
 --- Creates a new smart table.
 ---@param opts smart_table_options # the options for the smart table.
 ---@return table # the smart table.
-function table.smart(opts)
-    ---@type smart_table_options
-    opts = table.merge(opts, {
-        functions = {},
-        properties = {},
-        entity_functions = {},
-        entity_properties = {},
-    })
-
-    xassert {
-        opts = {
-            opts,
-            {
-                functions = {
-                    'table',
-                    ['*'] = 'callable',
-                },
-                properties = {
-                    'table',
-                    ['*'] = {
-                        get = 'callable',
-                        set = { 'nil', 'callable' },
-                    },
-                },
-                entity_ids = { 'nil', 'callable' },
-                entity_id_valid = 'callable',
-                entity_functions = {
-                    'table',
-                    ['*'] = 'callable',
-                },
-                entity_properties = {
-                    'table',
-                    ['*'] = {
-                        get = 'callable',
-                        set = { 'nil', 'callable' },
-                        cache = { 'nil', 'boolean' },
-                    },
-                },
-            },
-        },
-    }
-
-    local entity_keys =
-        table.list_to_set(table.list_merge(table.keys(opts.entity_functions), table.keys(opts.entity_properties)))
-
-    ---@param root table
-    ---@param entity_id any
-    local function make_entity_table(root, entity_id)
-        return setmetatable({}, {
-            __index = function(entity, key)
-                if key == nil then
-                    return
-                end
-
-                if key == 'id' then
-                    return entity_id
-                end
-
-                local fn = opts.entity_functions[key]
-                if fn then
-                    return function(...)
-                        return fn(root, entity, ...)
-                    end
-                end
-
-                local prop = opts.entity_properties[key]
-                if prop then
-                    if prop.cache then
-                        local value = rawget(entity, key)
-                        if value == nil then
-                            value = prop.get(root, entity)
-                            rawset(entity, key, value)
-                        end
-
-                        return value
-                    end
-
-                    return prop.get(root, entity)
-                end
-
-                error(string.format('unknown function or property `%s`', inspect(key)), 2)
-            end,
-            __newindex = function(entity, key, value)
-                if key == nil then
-                    return
-                end
-
-                if key == 'id' then
-                    error(string.format('property `%s` is read-only', inspect(key)), 2)
-                end
-
-                local prop = opts.entity_properties[key]
-
-                if prop then
-                    if prop.set then
-                        if prop.cache then
-                            rawset(entity, key, value)
-                        end
-
-                        return prop.set(root, entity, value)
-                    else
-                        error(string.format('property `%s` is read-only', inspect(key)), 2)
-                    end
-                end
-
-                error(string.format('unknown property `%s`', inspect(key)), 2)
-            end,
-            __pairs = function(entity)
-                local iter = function(t, k)
-                    k = next(t, k)
-                    return k, entity[k]
-                end
-
-                return iter, entity_keys, nil
-            end,
-        })
-    end
-
-    return setmetatable({}, {
-        __index = function(root, key)
-            local fn = opts.functions[key]
-            if fn then
-                return function(...)
-                    return fn(root, ...)
-                end
-            end
-
-            local prop = opts.properties[key]
-            if prop and prop.get then
-                return prop.get(root)
-            end
-
-            if opts.entity_id_valid(key) then
-                local entity = rawget(root, key)
-                if entity == nil then
-                    entity = make_entity_table(root, key)
-                    rawset(root, key, entity)
-                end
-
-                return entity
-            end
-
-            return nil
-        end,
-        __newindex = function(root, key, value)
-            local prop = opts.properties[key]
-
-            if prop then
-                if prop.set then
-                    prop.set(root, value)
-                    return
-                else
-                    error(string.format('property `%s` is read-only', inspect(key)), 2)
-                end
-            end
-
-            error(string.format('unknown property `%s`', inspect(key)), 2)
-        end,
-        __pairs = opts.entity_ids and function(root)
-            local iter = function(t, k)
-                local v
-                repeat
-                    k, v = next(t, k)
-                until k == nil or opts.entity_id_valid(v)
-
-                if k == nil then
-                    return
-                end
-
-                return k, root[v]
-            end
-
-            return iter, opts.entity_ids(), nil
-        end or function()
-            error 'this table is not enumerable'
-        end,
-        __ipairs = opts.entity_ids and function(root)
-            local iter = function(t, i)
-                local v
-                repeat
-                    i, v = i + 1, t[i]
-                until i > #t or opts.entity_id_valid(v)
-
-                if i > #t then
-                    return
-                end
-
-                return i, root[t[i]]
-            end
-
-            return iter, opts.entity_ids(), 0
-        end or function()
-            error 'this table is not enumerable'
-        end,
-    })
-end
 
 -- Checks if a table has a specific kay/value.
 ---@generic K, V
@@ -1246,12 +1056,12 @@ function table.list_all(list, fn)
     end
 
     for index, item in ipairs(list) do
-        if fn(item, index) then
-            return true
+        if not fn(item, index) then
+            return false
         end
     end
 
-    return false
+    return true
 end
 
 --- Converts the values of a table to a new table.
@@ -1390,39 +1200,7 @@ end
 
 -- luacheck: pop
 
----@class api
-_G.ide = {
-    ---@module 'text'
-    text = xrequire 'text',
-    ---@module 'fs'
-    fs = xrequire 'fs',
-    ---@module 'buf'
-    buf = xrequire 'buf',
-    ---@module 'win'
-    win = xrequire 'win',
-    ---@module 'ft'
-    ft = xrequire 'ft',
-    ---@module 'config'
-    config = xrequire 'config',
-    ---@module 'cmd'
-    cmd = xrequire 'cmd',
-    ---@module 'editor'
-    editor = xrequire 'editor',
-    ---@module 'process'
-    process = xrequire 'process',
-    ---@module 'tui'
-    tui = xrequire 'tui',
-    ---@module 'sched'
-    sched = xrequire 'sched',
-    ---@module 'theme'
-    theme = xrequire 'theme',
-    ---@module 'plugin'
-    plugin = xrequire 'plugin',
-    ---@module 'symb'
-    symb = xrequire 'symb',
-}
-
-require '__unsorted'
+_G.Class = require 'class' --[[@as ClassModule]]
 
 ---@type table<string, boolean>
 local shown_messages = {}
@@ -1436,13 +1214,17 @@ function _G.dbg(...)
         table.insert(objects, inspect(v))
     end
 
-    local trace = ide.process.get_formatted_trace_back(2)
+    local trace = debug.traceback('', 2)
     local formatted = string.format('%s\n\ntraceback:\n%s', table.concat(objects, '\n'), trace)
     local key = vim.fn.sha256(formatted)
 
     if not shown_messages[key] then
         shown_messages[key] = true
-        ide.tui.warn(formatted)
+        if IDE and IDE.ui then
+            IDE.ui:warn(formatted)
+        else
+            vim.notify(formatted, vim.log.levels.WARN)
+        end
 
         vim.defer_fn(function()
             shown_messages[key] = nil

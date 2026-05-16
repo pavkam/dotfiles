@@ -1,0 +1,393 @@
+-- Finder: fuzzy search abstraction.
+-- All methods use owned TurboVision-style pickers (FilePicker, GrepPicker, SelectPicker).
+-- No telescope dependency.
+
+local Finder = Class('Finder')
+
+function Finder:init() end
+
+--- Find files in the workspace.
+---@param opts { cwd?: string, hidden?: boolean }|nil
+function Finder:files(opts)
+    opts = opts or {}
+    local FilePicker = require 'ide.toolkit.FilePicker'
+    FilePicker({
+        title = 'Open File',
+        cwd = opts.cwd,
+        hidden = opts.hidden,
+    }):show()
+end
+
+--- Grep across the workspace.
+---@param opts { cwd?: string, search?: string }|nil
+function Finder:grep(opts)
+    opts = opts or {}
+    local GrepPicker = require 'ide.toolkit.GrepPicker'
+    GrepPicker({
+        title = 'Search in Files',
+        cwd = opts.cwd,
+        search = opts.search,
+    }):show()
+end
+
+--- Search LSP document symbols.
+---@param opts { symbols?: string[] }|nil
+function Finder:symbols(opts)
+    opts = opts or {}
+    local buf = require('ide.Buffer').current()
+    if not buf:is_valid() then return end
+
+    local params = { textDocument = vim.lsp.util.make_text_document_params(buf:id()) }
+    vim.lsp.buf_request(buf:id(), 'textDocument/documentSymbol', params, function(err, result)
+        if err or not result then return end
+        local items = {}
+        local function flatten(symbols, prefix)
+            for _, s in ipairs(symbols) do
+                local name = (prefix ~= '' and prefix .. '.' or '') .. s.name
+                local kind = vim.lsp.protocol.SymbolKind[s.kind] or 'Unknown'
+                items[#items + 1] = {
+                    text = name,
+                    hint = kind,
+                    value = { lnum = s.range.start.line + 1, col = s.range.start.character },
+                }
+                if s.children then flatten(s.children, name) end
+            end
+        end
+        flatten(result, '')
+
+        vim.schedule(function()
+            local SelectPicker = require 'ide.toolkit.SelectPicker'
+            SelectPicker({
+                title = 'Document Symbols',
+                items = items,
+                on_select = function(item)
+                    pcall(vim.api.nvim_win_set_cursor, 0, { item.value.lnum, item.value.col })
+                end,
+            }):show()
+        end)
+    end)
+end
+
+--- Search LSP workspace symbols.
+---@param opts { query?: string }|nil
+function Finder:workspace_symbols(opts)
+    opts = opts or {}
+    vim.lsp.buf_request(0, 'workspace/symbol', { query = opts.query or '' }, function(err, result)
+        if err or not result then return end
+        local items = {}
+        for _, s in ipairs(result) do
+            local kind = vim.lsp.protocol.SymbolKind[s.kind] or 'Unknown'
+            local loc = s.location
+            local path = vim.uri_to_fname(loc.uri)
+            local rel = vim.fn.fnamemodify(path, ':~:.')
+            items[#items + 1] = {
+                text = s.name,
+                hint = kind .. '  ' .. rel,
+                value = { path = path, lnum = loc.range.start.line + 1, col = loc.range.start.character },
+            }
+        end
+
+        vim.schedule(function()
+            local SelectPicker = require 'ide.toolkit.SelectPicker'
+            SelectPicker({
+                title = 'Workspace Symbols',
+                items = items,
+                on_select = function(item)
+                    vim.cmd('edit ' .. vim.fn.fnameescape(item.value.path))
+                    pcall(vim.api.nvim_win_set_cursor, 0, { item.value.lnum, item.value.col })
+                end,
+            }):show()
+        end)
+    end)
+end
+
+--- Browse open buffers.
+function Finder:buffers()
+    local Buffer = require 'ide.Buffer'
+    local bufs = IDE.buffers:listed()
+    local cur_id = Buffer.current():id()
+    local items = {}
+    for i, buf in ipairs(bufs) do
+        if buf:is_valid() then
+            local name = buf:name() or '[No Name]'
+            local modified = buf:is_modified() and ' [+]' or ''
+            local marker = buf:id() == cur_id and '● ' or '  '
+            items[#items + 1] = {
+                text = marker .. i .. '  ' .. name .. modified,
+                value = buf,
+            }
+        end
+    end
+
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    SelectPicker({
+        title = 'Buffers',
+        items = items,
+        on_select = function(item)
+            require('ide.Window').current():set_buffer(item.value)
+        end,
+    }):show()
+end
+
+--- Search recent files.
+function Finder:recent()
+    local oldfiles = vim.v.oldfiles or {}
+    local items = {}
+    for _, path in ipairs(oldfiles) do
+        if vim.fn.filereadable(path) == 1 then
+            local rel = vim.fn.fnamemodify(path, ':~:.')
+            items[#items + 1] = { text = rel, value = path }
+            if #items >= 50 then break end
+        end
+    end
+
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    SelectPicker({
+        title = 'Recent Files',
+        items = items,
+        on_select = function(item)
+            vim.cmd('edit ' .. vim.fn.fnameescape(item.value))
+        end,
+    }):show()
+end
+
+--- Search LSP references.
+function Finder:references()
+    local params = vim.lsp.util.make_position_params()
+    params.context = { includeDeclaration = true }
+    vim.lsp.buf_request(0, 'textDocument/references', params, function(err, result)
+        if err or not result or #result == 0 then
+            vim.notify('No references found', vim.log.levels.INFO)
+            return
+        end
+        vim.schedule(function()
+            self:_show_locations('References', result)
+        end)
+    end)
+end
+
+--- Search LSP definitions.
+---@param opts { reuse_win?: boolean }|nil
+function Finder:definitions(opts)
+    local params = vim.lsp.util.make_position_params()
+    vim.lsp.buf_request(0, 'textDocument/definition', params, function(err, result)
+        if err or not result then return end
+        if vim.islist(result) and #result == 1 then
+            vim.schedule(function() vim.lsp.util.jump_to_location(result[1], 'utf-8', opts and opts.reuse_win) end)
+        elseif vim.islist(result) and #result > 1 then
+            vim.schedule(function() self:_show_locations('Definitions', result) end)
+        else
+            vim.schedule(function() vim.lsp.util.jump_to_location(result, 'utf-8', opts and opts.reuse_win) end)
+        end
+    end)
+end
+
+--- Search LSP implementations.
+function Finder:implementations()
+    local params = vim.lsp.util.make_position_params()
+    vim.lsp.buf_request(0, 'textDocument/implementation', params, function(err, result)
+        if err or not result then return end
+        if vim.islist(result) and #result == 1 then
+            vim.schedule(function() vim.lsp.util.jump_to_location(result[1], 'utf-8', true) end)
+        elseif vim.islist(result) then
+            vim.schedule(function() self:_show_locations('Implementations', result) end)
+        else
+            vim.schedule(function() vim.lsp.util.jump_to_location(result, 'utf-8', true) end)
+        end
+    end)
+end
+
+--- Search LSP type definitions.
+function Finder:type_definitions()
+    local params = vim.lsp.util.make_position_params()
+    vim.lsp.buf_request(0, 'textDocument/typeDefinition', params, function(err, result)
+        if err or not result then return end
+        if vim.islist(result) and #result == 1 then
+            vim.schedule(function() vim.lsp.util.jump_to_location(result[1], 'utf-8', true) end)
+        elseif vim.islist(result) then
+            vim.schedule(function() self:_show_locations('Type Definitions', result) end)
+        else
+            vim.schedule(function() vim.lsp.util.jump_to_location(result, 'utf-8', true) end)
+        end
+    end)
+end
+
+--- Search diagnostics.
+---@param opts { bufnr?: integer }|nil
+function Finder:diagnostics(opts)
+    opts = opts or {}
+    local diags = vim.diagnostic.get(opts.bufnr)
+    local items = {}
+    local sev_names = { 'Error', 'Warn', 'Info', 'Hint' }
+    for _, d in ipairs(diags) do
+        local fname = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(d.bufnr), ':t')
+        items[#items + 1] = {
+            text = string.format('%s:%d: %s', fname, d.lnum + 1, d.message),
+            hint = sev_names[d.severity] or '?',
+            value = { bufnr = d.bufnr, lnum = d.lnum + 1, col = d.col },
+        }
+    end
+
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    SelectPicker({
+        title = 'Diagnostics',
+        items = items,
+        on_select = function(item)
+            if vim.api.nvim_buf_is_valid(item.value.bufnr) then
+                vim.api.nvim_set_current_buf(item.value.bufnr)
+                pcall(vim.api.nvim_win_set_cursor, 0, { item.value.lnum, item.value.col })
+            end
+        end,
+    }):show()
+end
+
+--- Search keymaps.
+function Finder:keymaps()
+    local maps = vim.api.nvim_get_keymap('n')
+    local items = {}
+    for _, m in ipairs(maps) do
+        if m.desc and m.desc ~= '' then
+            items[#items + 1] = {
+                text = m.lhs,
+                hint = m.desc,
+                value = m,
+            }
+        end
+    end
+    table.sort(items, function(a, b) return a.text < b.text end)
+
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    SelectPicker({
+        title = 'Keymaps',
+        items = items,
+        on_select = function(item)
+            local keys = vim.api.nvim_replace_termcodes(item.value.lhs, true, true, true)
+            vim.api.nvim_feedkeys(keys, 'n', false)
+        end,
+    }):show()
+end
+
+--- Search help tags.
+function Finder:help(query)
+    local tags_files = vim.api.nvim_get_runtime_file('doc/tags', true)
+    local items = {}
+    for _, file in ipairs(tags_files) do
+        for line in io.lines(file) do
+            local tag = line:match('^(%S+)')
+            if tag then
+                items[#items + 1] = { text = tag, value = tag }
+            end
+        end
+    end
+
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    SelectPicker({
+        title = 'Help',
+        items = items,
+        on_select = function(item)
+            vim.cmd('help ' .. item.value)
+        end,
+    }):show()
+end
+
+--- Search git branches.
+function Finder:git_branches()
+    local result = vim.fn.systemlist({ 'git', 'branch', '-a', '--format=%(refname:short)' })
+    local items = {}
+    for _, b in ipairs(result) do
+        if b ~= '' then items[#items + 1] = { text = b, value = b } end
+    end
+
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    SelectPicker({
+        title = 'Git Branches',
+        items = items,
+        on_select = function(item)
+            vim.fn.system({ 'git', 'checkout', item.value })
+            vim.cmd('checktime')
+        end,
+    }):show()
+end
+
+--- Search git commits.
+function Finder:git_commits()
+    local result = vim.fn.systemlist({ 'git', 'log', '--oneline', '-50' })
+    local items = {}
+    for _, line in ipairs(result) do
+        local hash, msg = line:match('^(%S+)%s+(.*)$')
+        if hash then items[#items + 1] = { text = hash .. '  ' .. msg, value = hash } end
+    end
+
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    SelectPicker({
+        title = 'Git Commits',
+        items = items,
+        on_select = function(item)
+            vim.cmd('Git show ' .. item.value)
+        end,
+    }):show()
+end
+
+--- Generic picker using vim.ui.select.
+---@generic T
+---@param items T[]
+---@param opts { prompt?: string, format_item?: fun(item: T): string }
+---@param on_choice fun(item: T|nil, idx: integer|nil)
+function Finder:select(items, opts, on_choice)
+    local formatted = {}
+    for i, item in ipairs(items) do
+        local text = opts.format_item and opts.format_item(item) or tostring(item)
+        formatted[#formatted + 1] = { text = text, value = item, _index = i }
+    end
+
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    SelectPicker({
+        title = opts.prompt or 'Select',
+        items = formatted,
+        on_select = function(sel)
+            on_choice(sel.value, sel._index)
+        end,
+    }):show()
+end
+
+--- Prompt for input.
+---@param opts { prompt?: string, default?: string }
+---@param on_confirm fun(input: string|nil)
+function Finder:input(opts, on_confirm)
+    vim.ui.input(opts, on_confirm)
+end
+
+--- Show LSP locations in a SelectPicker.
+---@param title string
+---@param locations table[]
+function Finder:_show_locations(title, locations)
+    local items = {}
+    for _, loc in ipairs(locations) do
+        local uri = loc.uri or loc.targetUri
+        local range = loc.range or loc.targetSelectionRange
+        if uri and range then
+            local path = vim.uri_to_fname(uri)
+            local rel = vim.fn.fnamemodify(path, ':~:.')
+            local lnum = range.start.line + 1
+            items[#items + 1] = {
+                text = string.format('%s:%d', rel, lnum),
+                value = { path = path, lnum = lnum, col = range.start.character },
+            }
+        end
+    end
+
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    SelectPicker({
+        title = title,
+        items = items,
+        on_select = function(item)
+            vim.cmd('edit ' .. vim.fn.fnameescape(item.value.path))
+            pcall(vim.api.nvim_win_set_cursor, 0, { item.value.lnum, item.value.col })
+        end,
+    }):show()
+end
+
+---@return string
+function Finder:__tostring() return 'Finder()' end
+
+return Finder

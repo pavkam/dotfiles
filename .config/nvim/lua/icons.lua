@@ -165,9 +165,6 @@ local M = {
     },
 }
 
----@type boolean|nil # Whether or not the dev-icons are available
-local dev_icons_available = nil
-
 --- Get the icon and highlight for a file.
 ---@param path string # the name of the file.
 ---@param width number|nil # the width to fit the icon to
@@ -175,42 +172,24 @@ local dev_icons_available = nil
 ---@return string, string # the icon and highlight group
 function M.get_file_icon(path, width, ltr)
     ---@type fun(icon: string): string
-    local fit = width ~= nil and function(icon)
-        return M.fit(icon, width, ltr)
-    end or function(icon)
-        return icon
+    local fit = width ~= nil and function(ic)
+        return M.fit(ic, width, ltr)
+    end or function(ic)
+        return ic
     end
 
-    if ide.fs.directory_exists(path) then
+    if IDE.fs:is_directory(path) then
         return fit(M.Files.ClosedFolder), 'Normal'
     end
 
-    if dev_icons_available == nil then
-        local has_dev_icons, dev_icons = pcall(require, 'nvim-web-devicons')
-
-        if has_dev_icons then
-            if not dev_icons.has_loaded() then
-                dev_icons.setup()
-            end
-        end
-
-        dev_icons_available = has_dev_icons
+    if path and #path > 0 then
+        local base_name = vim.fs.basename(path)
+        local ext = base_name:match('%.([^%.]+)$')
+        local icon = IDE.icons:for_file(base_name, ext, { default = true })
+        return fit(icon:char()), icon:hl() or 'Normal'
     end
 
-    if dev_icons_available and path and #path > 0 then
-        local dev_icons = require 'nvim-web-devicons'
-        local _, base_name, _, compound_extension = ide.fs.split_path(path)
-        local icon, icon_highlight = dev_icons.get_icon(base_name, compound_extension, { default = false })
-
-        if not icon then
-            icon, icon_highlight = dev_icons.get_icon(base_name, nil, { default = true })
-            icon = icon or M.Files.Normal
-        end
-
-        return fit(icon), icon_highlight
-    else
-        return fit(M.Files.Normal), 'Normal'
-    end
+    return fit(M.Files.Normal), 'Normal'
 end
 
 ---@param tool string # The name of the tool

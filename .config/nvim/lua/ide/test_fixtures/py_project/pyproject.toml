@@ -1,0 +1,8 @@
+[project]
+name = "py-fixture"
+version = "1.0.0"
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

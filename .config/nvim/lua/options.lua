@@ -10,7 +10,7 @@ g.maplocalleader = ' '
 g.markdown_recommended_style = 0
 
 -- utilities
-o.shell = '/bin/bash -i'
+o.shell = '/bin/bash'
 
 if vim.fn.executable 'rg' then
     o.grepprg = [[rg --vimgrep --no-heading --smart-case]]
@@ -32,12 +32,10 @@ g.border_style = 'rounded'
 o.showmode = false
 o.modeline = false
 o.ruler = false
-o.showcmd = true
+o.showcmd = false
 o.wrap = false
 o.showbreak = icons.fit(icons.TUI.LineContinuation, 2)
 o.nrformats = ''
-o.ttyfast = true
-o.termguicolors = true
 o.encoding = 'utf-8'
 o.lazyredraw = false
 o.winblend = 10
@@ -66,7 +64,7 @@ o.spelloptions:append 'camel'
 
 -- lines
 o.signcolumn = 'yes:1'
-o.relativenumber = true
+o.relativenumber = false
 o.number = true
 o.breakat = [[\ \	;:,!?]]
 
@@ -81,7 +79,7 @@ o.foldtext = ''
 
 -- file management
 g.huge_file_lines = 10000
-o.autowrite = true
+o.autowrite = false
 o.syntax = 'on'
 o.fileformats = { 'unix', 'dos', 'mac' }
 o.autoread = true
@@ -110,13 +108,15 @@ o.cursorline = true
 
 o.keymodel = { 'startsel', 'stopsel' }
 
-o.completeopt = 'menu,menuone,noselect'
+o.completeopt = 'menu,menuone,noselect,popup'
 o.conceallevel = 3
 o.confirm = true
 o.backspace = 'indent,eol,start'
 o.whichwrap:append '<,>,[,]'
 
-vim.cmd [[autocmd FileType * set formatoptions=trqj]]
+vim.api.nvim_create_autocmd('FileType', {
+    callback = function() vim.opt_local.formatoptions = 'trqj' end,
+})
 
 o.smoothscroll = true
 
@@ -149,5 +149,3 @@ o.fillchars = {
 o.list = false
 o.shortmess:append { W = true, I = true, c = true, C = true }
 o.sessionoptions = { 'buffers', 'tabpages', 'winsize', 'help', 'globals', 'skiprtp', 'help', 'folds' }
-
-o.statuscolumn = [[%!v:lua.require'status-column'()]]

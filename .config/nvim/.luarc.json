@@ -1,5 +1,20 @@
 {
     "diagnostics.globals": [
-        "nvim_bufferline"
-    ]
+        "vim",
+        "nvim_bufferline",
+        "IDE",
+        "ide",
+        "Class",
+        "xassert",
+        "xrequire",
+        "inspect",
+        "dbg"
+    ],
+    "diagnostics.disable": [
+        "undefined-doc-name",
+        "inject-field"
+    ],
+    "runtime.version": "LuaJIT",
+    "workspace.library": [],
+    "workspace.checkThirdParty": false
 }

@@ -1,15 +1,12 @@
 local icons = require 'icons'
 
----@module "lspconfig"
-
 return {
     {
         'neovim/nvim-lspconfig',
-        cond = not ide.process.is_headless,
-        event = 'User NormalFile',
+        cond = #vim.api.nvim_list_uis() > 0,
+        event = { 'BufReadPost', 'BufNewFile' },
         dependencies = {
-            'williamboman/mason-lspconfig.nvim', -- TODO: disable autoloading of all servers that mason installed
-            'Hoffs/omnisharp-extended-lsp.nvim',
+            'williamboman/mason-lspconfig.nvim',
         },
         opts = {
             ---@type vim.diagnostic.Opts
@@ -80,10 +77,6 @@ return {
                     },
                 },
             },
-            handlers = {
-                [vim.lsp.protocol.Methods.textDocument_rename] = require 'rename',
-            },
-            ---@type table<string, lspconfig.Config>
             servers = {
                 typos_lsp = {
                     init_options = {
@@ -91,29 +84,20 @@ return {
                     },
                 },
                 bashls = {
-                    bashIde = {
-                        globPattern = '*@(.sh|.inc|.bash|.command)',
+                    settings = {
+                        bashIde = {
+                            globPattern = '*@(.sh|.inc|.bash|.command)',
+                        },
                     },
-                },
-                omnisharp = {
-                    handlers = {
-                        [vim.lsp.protocol.Methods.textDocument_definition] = function(...)
-                            return require('omnisharp_extended').handler(...)
-                        end,
-                    },
-                    enable_roslyn_analyzers = true,
-                    organize_imports_on_format = true,
-                    enable_import_completion = true,
                 },
                 dockerls = {},
                 taplo = {},
                 yamlls = {
-                    on_new_config = function(new_config)
-                        -- add schema-store schemas
-                        new_config.settings.yaml.schemas = new_config.settings.yaml.schemas or {}
-                        vim.list_extend(new_config.settings.yaml.schemas, require('schemastore').yaml.schemas())
+                    before_init = function(_, config)
+                        config.settings.yaml = config.settings.yaml or {}
+                        config.settings.yaml.schemas = config.settings.yaml.schemas or {}
+                        vim.list_extend(config.settings.yaml.schemas, require('schemastore').yaml.schemas())
                     end,
-
                     settings = {
                         yaml = {},
                     },
@@ -128,17 +112,14 @@ return {
                 pyright = {},
                 ruff = {},
                 jsonls = {
-                    on_new_config = function(new_config)
-                        -- add schema-store schemas
-                        new_config.settings.json.schemas = new_config.settings.json.schemas or {}
-                        vim.list_extend(new_config.settings.json.schemas, require('schemastore').json.schemas())
+                    before_init = function(_, config)
+                        config.settings.json = config.settings.json or {}
+                        config.settings.json.schemas = config.settings.json.schemas or {}
+                        vim.list_extend(config.settings.json.schemas, require('schemastore').json.schemas())
                     end,
-
                     settings = {
                         json = {
-                            format = {
-                                enable = true,
-                            },
+                            format = { enable = true },
                             validate = { enable = true },
                         },
                     },
@@ -146,18 +127,10 @@ return {
                 lua_ls = {
                     settings = {
                         Lua = {
-                            workspace = {
-                                checkThirdParty = false,
-                            },
-                            codeLens = {
-                                enable = true,
-                            },
-                            completion = {
-                                callSnippet = 'Replace',
-                            },
-                            doc = {
-                                privateName = { '^_' },
-                            },
+                            workspace = { checkThirdParty = false },
+                            codeLens = { enable = true },
+                            completion = { callSnippet = 'Replace' },
+                            doc = { privateName = { '^_' } },
                             hint = {
                                 enable = true,
                                 setType = false,
@@ -171,6 +144,7 @@ return {
                 },
                 vtsls = {
                     single_file_support = false,
+                    root_markers = { 'tsconfig.json', 'jsconfig.json', 'package.json', '.git' },
                     settings = {
                         typescript = {
                             inlayHints = {
@@ -223,7 +197,7 @@ return {
                                 rangeVariableTypes = true,
                             },
                             analyses = {
-                                fieldalignment = false, -- too noisy
+                                fieldalignment = false,
                                 nilness = true,
                                 unusedparams = true,
                                 unusedwrite = true,
@@ -236,12 +210,10 @@ return {
                             semanticTokens = true,
                         },
                     },
-                    ---@param client vim.lsp.Client
                     on_attach = function(client)
                         if client.server_capabilities.semanticTokensProvider then
                             return
                         end
-
                         local semantic = client.config.capabilities.textDocument.semanticTokens
                         if semantic then
                             client.server_capabilities.semanticTokensProvider = {
@@ -257,148 +229,65 @@ return {
                 },
             },
         },
+        -- Uses the native vim.lsp.config() + vim.lsp.enable() API (nvim 0.12+).
+        -- nvim-lspconfig is kept as a dependency because it provides default cmd/filetypes/root_markers
+        -- for each server, which vim.lsp.config() reads automatically.
         config = function(_, opts)
-            -- set the border for the UI
-            require('lspconfig.ui.windows').default_options.border = vim.g.border_style
+            local Buffer = require 'ide.Buffer'
 
-            local events = require 'events'
-            local lsp = require 'lsp'
-            local features = require 'features'
-
-            -- fix the root_dir for ts-server
-            opts.servers.vtsls.root_dir = require('lspconfig.util').root_pattern(
-                'lerna.json',
-                'tsconfig.json',
-                'jsconfig.json',
-                'package.json',
-                '.git'
-            )
-
-            -- TODO: move this to a new file
-            -- on attach work
-            lsp.on_attach(function(client, buffer)
-                if vim.buf.is_special(buffer) then
+            -- Detach LSP from special buffers (file tree, panels, etc.)
+            IDE.lsp:on_attach(function(client, buffer)
+                if Buffer.is_special(buffer) then
                     vim.schedule(function()
                         vim.lsp.buf_detach_client(buffer, client.id)
                     end)
-                else
-                    features.attach(client, buffer)
                 end
             end)
 
             vim.diagnostic.config(opts.diagnostics)
 
-            -- setup register capability
-            local register_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.client_registerCapability]
-            vim.lsp.handlers[vim.lsp.protocol.Methods.client_registerCapability] = function(err, res, ctx)
-                local ret = register_capability_handler(err, res, ctx)
+            -- Completion is handled by ide/extensions/completion.lua
 
-                local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
-
-                if client.supports_method ~= nil then
-                    features.attach(client, vim.api.nvim_get_current_buf())
-                end
-
-                return ret
-            end
-
-            -- setup progress
-            local progress_capability_handler = vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress]
-            vim.lsp.handlers[vim.lsp.protocol.Methods.dollar_progress] = function(_, msg, info)
-                local stop = ide.sched.monitor_task(
-                    string.format('%s.%s', info.client_id, msg.token),
-                    { data = msg.value, desc = 'lsp', buffer = info.bufnr and ide.buf[info.bufnr] or nil }
-                )
-
-                if msg.value.kind == 'end' then
-                    stop()
-                end
-
-                progress_capability_handler(_, msg, info)
-            end
-
-            -- register nvim-cmp capabilities
-            local cmp_nvim_lsp = require 'cmp_nvim_lsp'
+            -- Capabilities (no more cmp_nvim_lsp)
             local capabilities = table.merge(
                 vim.lsp.protocol.make_client_capabilities(),
-                cmp_nvim_lsp.default_capabilities(),
                 opts.capabilities
             )
 
-            -- configure the servers
-            local function setup(server)
-                local server_opts = opts.servers[server]
+            -- global LSP defaults
+            vim.lsp.config('*', {
+                capabilities = vim.deepcopy(capabilities),
+                root_markers = { '.git' },
+            })
 
-                server_opts = table.merge({
-                    capabilities = vim.deepcopy(capabilities),
-                    handlers = opts.handlers,
-                }, server_opts or {})
-
-                local lsp_server = require('lspconfig')[server]
-                if not lsp_server or not lsp_server.setup then
-                    ide.tui.error(
-                        string.format('Language server `%s` does not appear to be present in `lspconfig`.' .. server)
-                    )
-                    return
+            -- configure each server via vim.lsp.config
+            local server_names = {}
+            for server, server_opts in pairs(opts.servers) do
+                if server_opts and next(server_opts) then
+                    vim.lsp.config(server, server_opts)
                 end
-
-                lsp_server.setup(server_opts)
+                table.insert(server_names, server)
             end
 
-            -- get all the servers that are available through mason-LSP-config
-            local using_mason = ide.plugin.has 'mason.nvim'
-            local mason_packages = using_mason and require('mason-lspconfig.mappings.server').lspconfig_to_package or {}
-
-            local ensure_installed = {}
-            for server, server_opts in pairs(opts.servers) do
-                server_opts = server_opts == true and {} or server_opts
-                local package_name = type(server_opts) == 'table'
-                        and type(server_opts.mason_package) == 'string'
-                        and server_opts.mason_package
-                    or nil
-
-                local mason_package_for_server = mason_packages[server]
-                local mason_package_for_alias = mason_packages[package_name]
-
-                if mason_package_for_server == mason_package_for_alias == nil then
-                    ide.tui.error(string.format('Server `%s` could not be located in mason registry.', server))
-                elseif mason_package_for_server == mason_package_for_alias then
-                    ide.tui.warn(
-                        string.format(
-                            'Server `%s` has the same mason package as its alias `%s`. Consider removing the alias.',
-                            server,
-                            server_opts.mason_package
-                        )
-                    )
-                else
-                    if not mason_package_for_server and not mason_package_for_alias then
-                        setup(package_name or server)
-                    else
-                        table.insert(ensure_installed, package_name or server)
+            -- set up mason-lspconfig if available
+            local using_mason = pcall(require, 'mason')
+            if using_mason and pcall(require, 'mason-lspconfig') then
+                local mason_map = require('mason-lspconfig.mappings').get_mason_map()
+                local ensure_installed = {}
+                for _, server in ipairs(server_names) do
+                    if mason_map.lspconfig_to_package[server] then
+                        table.insert(ensure_installed, server)
                     end
                 end
-            end
 
-            local mason_lsp_config = ide.plugin.has 'mason-lspconfig.nvim' and using_mason and require 'mason-lspconfig'
-                or nil
-
-            if mason_lsp_config then
-                local mason_opts = assert(ide.plugin.config 'mason-lspconfig.nvim')
-
-                mason_lsp_config.setup {
-                    ensure_installed = vim.tbl_deep_extend(
-                        'force',
-                        ensure_installed,
-                        mason_opts.ensure_installed or {}
-                    ),
-                    handlers = { setup },
+                require('mason-lspconfig').setup {
+                    ensure_installed = ensure_installed,
+                    automatic_enable = false,
                 }
             end
 
-            -- re-trigger FileType auto-commands to force LSP to start
-            vim.schedule(function()
-                vim.api.nvim_exec_autocmds('FileType', { data = { buf = vim.api.nvim_get_current_buf() } })
-            end)
+            -- enable all servers
+            vim.lsp.enable(server_names)
         end,
     },
     {
@@ -406,6 +295,6 @@ return {
         dependencies = {
             'neovim/nvim-lspconfig',
         },
-        version = false, -- last release is way too old
+        version = false,
     },
 }
