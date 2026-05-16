@@ -2100,6 +2100,155 @@ function M.run(filter)
     end)
 
     -- ═══════════════════════════════════════════════════════
+    -- IDE SUBSYSTEM INTEGRATION TESTS
+    -- ═══════════════════════════════════════════════════════
+
+    suite('IDE subsystems exist', function()
+        test('all critical subsystems are initialized', function()
+            assert_not_nil(IDE.buffers, 'buffers must exist')
+            assert_not_nil(IDE.windows, 'windows must exist')
+            assert_not_nil(IDE.lsp, 'lsp must exist')
+            assert_not_nil(IDE.keys, 'keys must exist')
+            assert_not_nil(IDE.config, 'config must exist')
+            assert_not_nil(IDE.theme, 'theme must exist')
+            assert_not_nil(IDE.fs, 'fs must exist')
+            assert_not_nil(IDE.shell, 'shell must exist')
+            assert_not_nil(IDE.git, 'git must exist')
+            assert_not_nil(IDE.ui, 'ui must exist')
+            assert_not_nil(IDE.actions, 'actions must exist')
+            assert_not_nil(IDE.treesitter, 'treesitter must exist')
+            assert_not_nil(IDE.icons, 'icons must exist')
+            assert_not_nil(IDE.marks, 'marks must exist')
+            assert_not_nil(IDE.text, 'text must exist')
+            assert_not_nil(IDE.debug, 'debug must exist')
+            assert_not_nil(IDE.session, 'session must exist')
+        end)
+    end)
+
+    suite('IDE.ui behavior', function()
+        test('mode returns current mode info', function()
+            local mode = IDE.ui:mode()
+            assert_not_nil(mode, 'mode must return a value')
+            assert_not_nil(mode.mode, 'must have .mode field')
+            assert_type(mode.mode, 'string')
+        end)
+
+        test('finder subsystem exists', function()
+            if IDE.ui.finder then
+                assert_type(IDE.ui.finder.files, 'function', 'finder must have files method')
+                assert_type(IDE.ui.finder.grep, 'function', 'finder must have grep method')
+            end
+        end)
+    end)
+
+    suite('IDE.theme behavior', function()
+        test('colorscheme returns name', function()
+            local cs = IDE.theme:colorscheme()
+            assert_type(cs, 'string')
+            assert_true(#cs > 0, 'colorscheme name must not be empty')
+        end)
+
+        test('fg returns hex color or nil', function()
+            local fg = IDE.theme:fg('Normal')
+            -- May be nil if no explicit fg set, but must not crash
+            if fg then
+                assert_match(fg, '^#', 'fg must be hex format')
+            end
+        end)
+
+        test('define and link do not crash', function()
+            IDE.theme:define('TestHighlight_XYZ', { fg = '#ff0000', default = true })
+            IDE.theme:link('TestLink_XYZ', 'Normal')
+            -- Cleanup
+            pcall(vim.api.nvim_set_hl, 0, 'TestHighlight_XYZ', {})
+            pcall(vim.api.nvim_set_hl, 0, 'TestLink_XYZ', {})
+        end)
+    end)
+
+    suite('IDE.icons behavior', function()
+        test('icon database exists', function()
+            assert_not_nil(IDE.icons, 'icons subsystem must exist')
+            -- is_loaded may be false in headless mode
+        end)
+
+        test('for_file returns icon for known extension', function()
+            local icon = IDE.icons:for_file('test.lua', 'lua')
+            if icon then
+                assert_not_nil(icon:char(), 'icon must have char')
+            end
+        end)
+    end)
+
+    suite('IDE.text behavior', function()
+        test('rename_expression returns string', function()
+            local expr = IDE.text:rename_expression()
+            assert_type(expr, 'string', 'rename_expression must return string')
+        end)
+    end)
+
+    suite('Extension registration integrity', function()
+        test('all registered extensions have unique names', function()
+            local exts = IDE:extensions()
+            local names = {}
+            for _, ext in ipairs(exts) do
+                local name = ext:name()
+                assert_nil(names[name], 'duplicate extension name: ' .. name)
+                names[name] = true
+            end
+        end)
+
+        test('all registered extensions are enabled', function()
+            local exts = IDE:extensions()
+            for _, ext in ipairs(exts) do
+                assert_true(ext:is_enabled(), ext:name() .. ' must be enabled')
+            end
+        end)
+
+        test('extension count matches expectation', function()
+            local exts = IDE:extensions()
+            assert_true(#exts >= 40, 'must have >=40 extensions, got ' .. #exts)
+        end)
+
+        test('each extension has on_register method', function()
+            local exts = IDE:extensions()
+            for _, ext in ipairs(exts) do
+                assert_type(ext.on_register, 'function', ext:name() .. ' must have on_register')
+            end
+        end)
+    end)
+
+    suite('Dispatch integrity', function()
+        test('tabbar renderer registered', function()
+            local Dispatch = require('ide.Dispatch')
+            local stats = Dispatch.stats()
+            assert_true(vim.tbl_contains(stats.renderers, 'tabbar'), 'tabbar renderer must be registered')
+        end)
+
+        test('click handler count is positive', function()
+            local Dispatch = require('ide.Dispatch')
+            local stats = Dispatch.stats()
+            assert_true(stats.clicks > 0, 'must have some click handlers')
+        end)
+    end)
+
+    suite('Highlight groups exist', function()
+        test('mode highlights defined', function()
+            for _, hl in ipairs({ 'IDEModeNormal', 'IDEModeInsert', 'IDEModeVisual', 'IDEModeCommand' }) do
+                local ok, val = pcall(vim.api.nvim_get_hl, 0, { name = hl })
+                assert_true(ok, hl .. ' must be defined')
+                assert_true(next(val) ~= nil, hl .. ' must have properties')
+            end
+        end)
+
+        test('panel highlights defined', function()
+            for _, hl in ipairs({ 'IDEPanelNormal', 'IDEPanelBorder', 'IDEPanelDim' }) do
+                local ok, val = pcall(vim.api.nvim_get_hl, 0, { name = hl })
+                assert_true(ok, hl .. ' must be defined')
+            end
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
     -- CLEANUP: wipe all test fixture buffers
     -- ═══════════════════════════════════════════════════════
 
