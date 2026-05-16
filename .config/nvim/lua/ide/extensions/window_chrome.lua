@@ -457,6 +457,10 @@ function WindowChrome:on_register(ctx)
         chrome:split_horizontal()
     end, { desc = 'Split window horizontally' })
 
+    ctx:command('IDESplitClose', function()
+        chrome:close_current()
+    end, { desc = 'Close current pane (unsplit if split)' })
+
     -- Resize split with Ctrl+Shift+Arrow keys
     ctx:keymap('n', '<C-S-Left>', function()
         if chrome._splitter then

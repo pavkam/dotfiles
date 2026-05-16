@@ -605,11 +605,12 @@ function MainMenu:_build_window_menu()
         enabled = function() return IDE.windows:count() > 1 end,
     }))
     bar:add_item('Window', MenuItem({
-        text = 'Close', icon = '󰅖', shortcut = 'Ctrl+W C',
+        text = 'Close Pane', icon = '󰅖', shortcut = 'Ctrl+W Q',
         action = function()
-            if IDE.windows:count() > 1 then Window.current():close() end
+            if IDE._window_chrome then
+                IDE._window_chrome:close_current()
+            end
         end,
-        enabled = function() return IDE.windows:count() > 1 end,
     }))
     bar:add_item('Window', MenuItem({
         text = 'Close All Others', icon = '󰅗',
