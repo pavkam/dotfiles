@@ -25,7 +25,9 @@ function BufferGit:diff_summary()
     if not Buffer.is_valid(self._bufnr) then
         return { added = 0, changed = 0, removed = 0 }
     end
-    local dict = Buffer(self._bufnr):var('gitsigns_status_dict')
+    local buf = Buffer.get(self._bufnr)
+    if not buf then return { added = 0, changed = 0, removed = 0 } end
+    local dict = buf:var('gitsigns_status_dict')
     if dict then
         return { added = dict.added or 0, changed = dict.changed or 0, removed = dict.removed or 0 }
     end

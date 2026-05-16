@@ -39,7 +39,7 @@ function InputField:create_buffer()
         end)
     end
 
-    self._buf = Buffer(buf)
+    self._buf = Buffer.get(buf)
 
     -- Set initial text
     if self._initial ~= '' then
