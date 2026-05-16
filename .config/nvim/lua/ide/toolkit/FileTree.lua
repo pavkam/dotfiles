@@ -210,10 +210,9 @@ function FileTree:_render()
         local op_label = self._clipboard.op == 'cut' and 'CUT' or 'COPY'
         footer_parts[#footer_parts + 1] = { ' [' .. op_label .. ': ' .. clip_name .. '] ', 'Special' }
     end
-    pcall(vim.api.nvim_win_set_config, self._win:id(), {
-        footer = footer_parts,
-        footer_pos = 'left',
-    })
+    pcall(function()
+        self._win:update_config({ footer = footer_parts, footer_pos = 'left' })
+    end)
 
     self._buf:set_option('modifiable', false)
 end

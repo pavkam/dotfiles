@@ -287,7 +287,7 @@ function QuickFixUI:_preview()
 
     -- Update title with filename
     local short_name = vim.fn.fnamemodify(filepath, ':t')
-    vim.api.nvim_win_set_config(self._preview_win:id(), {
+    self._preview_win:update_config({
         relative = 'editor',
         row = row_val,
         col = col_val + qf_w + 2,
@@ -404,10 +404,12 @@ function QuickFixUI:_update_title()
     end
 
     local title = table.concat(parts)
-    local config = vim.api.nvim_win_get_config(winid)
-    config.title = ' ' .. title .. ' '
-    config.title_pos = 'center'
-    vim.api.nvim_win_set_config(winid, config)
+    pcall(function()
+        local config = vim.api.nvim_win_get_config(winid)
+        config.title = ' ' .. title .. ' '
+        config.title_pos = 'center'
+        vim.api.nvim_win_set_config(winid, config)
+    end)
 end
 
 --- Override hide to also close the preview pane and reset state.
