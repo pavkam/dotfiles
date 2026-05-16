@@ -24,6 +24,7 @@ function MenuDropdown:init(opts)
     self._mounted = false
     self._sub_dropdown = nil ---@type MenuDropdown|nil
     self._shadow = nil ---@type Shadow|nil
+    self._menu_component = nil
 end
 
 function MenuDropdown:show()
@@ -60,41 +61,49 @@ function MenuDropdown:show()
     local height = #self._visible_items
     if height == 0 then return end
 
-    local icon_col_width = has_any_icon and 3 or 1
+    local CC = require 'ide.toolkit.component'
 
-    -- Build Canvas
-    local Canvas = require 'ide.toolkit.Canvas'
-    local c = Canvas(width, height)
     self._action_map = {}
-
+    local items_data = {}
     for i, item in ipairs(self._visible_items) do
         if item.separator then
-            c:hline(i, 1, width, '─', 'IDEMenuSeparator')
+            items_data[i] = { separator = true }
             self._action_map[i] = nil
         else
             local hl = item:is_enabled() and 'IDEMenuItemNormal' or 'IDEMenuItemDisabled'
-            local col_pos = 2
-
-            -- Icon column
+            local icon_text = ''
             if has_any_icon then
-                if item.icon then
-                    c:text(i, col_pos, item.icon, item:is_enabled() and 'IDEMenuIcon' or hl)
-                    col_pos = col_pos + icon_col_width
-                else
-                    col_pos = col_pos + icon_col_width
-                end
+                icon_text = item.icon and (item.icon .. ' ') or '   '
             end
-
-            -- Text
-            c:text(i, col_pos, item.text, hl)
-
-            -- Right-aligned shortcut
-            if item.shortcut then
-                c:right(i, item.shortcut .. ' ', item:is_enabled() and 'IDEMenuShortcut' or hl)
-            end
-
+            items_data[i] = {
+                icon = icon_text,
+                icon_hl = item:is_enabled() and 'IDEMenuIcon' or hl,
+                text = item.text,
+                text_hl = hl,
+                shortcut = item.shortcut,
+                shortcut_hl = item:is_enabled() and 'IDEMenuShortcut' or hl,
+            }
             self._action_map[i] = item
         end
+    end
+
+    -- Function component for menu items
+    local function MenuView(props)
+        local children = {}
+        for _, d in ipairs(props.items_data) do
+            if d.separator then
+                children[#children + 1] = { type = 'separator', hl = 'IDEMenuSeparator' }
+            else
+                children[#children + 1] = {
+                    type = 'row',
+                    children = {
+                        { type = 'text', text = ' ' .. (d.icon or ''), hl = d.icon_hl },
+                        { type = 'text', text = d.text, hl = d.text_hl },
+                    },
+                }
+            end
+        end
+        return children
     end
 
     -- Position: just below the tabline (row=1), at the menu's column
@@ -136,7 +145,7 @@ function MenuDropdown:show()
     -- Hide cursor in dropdown menus
     IDE.ui:hide_cursor('IDEMenuItemSelected')
 
-    c:render(self._buf)
+    self._menu_component = CC.mount(MenuView, { items_data = items_data }, self._buf, self._win)
 
     -- Move cursor to first actionable item
     self._selected = 0
@@ -297,6 +306,11 @@ end
 function MenuDropdown:close()
     -- Restore cursor
     IDE.ui:restore_cursor()
+    if self._menu_component then
+        local CC = require 'ide.toolkit.component'
+        CC.unmount(self._menu_component)
+        self._menu_component = nil
+    end
     if self._sub_dropdown then
         self._sub_dropdown:close()
         self._sub_dropdown = nil
