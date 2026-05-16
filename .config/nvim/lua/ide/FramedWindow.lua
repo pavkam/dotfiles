@@ -202,6 +202,9 @@ function FramedWindow:show()
         vim.wo[w].statuscolumn = stc
     end
 
+    -- Ensure treesitter highlighting is active
+    pcall(vim.treesitter.start, self._buf_id)
+
     -- Trigger FileType to ensure LSP attaches to the buffer in this float
     local ft = vim.bo[self._buf_id].filetype
     if ft and ft ~= '' then
@@ -393,6 +396,8 @@ function FramedWindow:set_buffer(buf)
         vim.api.nvim_win_set_buf(self._win_id, id)
         vim.wo[self._win_id].number = true
         vim.wo[self._win_id].relativenumber = true
+        -- Ensure treesitter highlighting is active for the new buffer
+        pcall(vim.treesitter.start, id)
         self:refresh()
     end
 end

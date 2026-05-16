@@ -137,7 +137,19 @@ end
 --- Update floating window configuration.
 ---@param config table
 function Window:update_config(config)
-    if self:is_valid() then
+    if not self:is_valid() then return end
+    -- Merge with existing config to preserve required fields (row/col/width/height)
+    -- that nvim_win_set_config demands when relative is set
+    if config.relative then
+        local cur = vim.api.nvim_win_get_config(self._id)
+        local merged = vim.tbl_extend('keep', config, {
+            row = cur.row,
+            col = cur.col,
+            width = cur.width,
+            height = cur.height,
+        })
+        vim.api.nvim_win_set_config(self._id, merged)
+    else
         vim.api.nvim_win_set_config(self._id, config)
     end
 end
