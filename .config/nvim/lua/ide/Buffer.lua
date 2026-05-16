@@ -274,6 +274,36 @@ function Buffer:clear_extmarks(ns, start_row, end_row)
     vim.api.nvim_buf_clear_namespace(self._id, ns, start_row or 0, end_row or -1)
 end
 
+--- Get extmarks in a region.
+---@param ns integer # namespace id (-1 for all namespaces)
+---@param start any # start position {row, col} (0-indexed)
+---@param end_ any # end position {row, col} (0-indexed)
+---@param opts? table # options (details, type, etc.)
+---@return table[] # array of {id, row, col, details?}
+function Buffer:get_extmarks(ns, start, end_, opts)
+    if not self:is_valid() then return {} end
+    return vim.api.nvim_buf_get_extmarks(self._id, ns, start, end_, opts or {})
+end
+
+--- Get text from a buffer region (0-indexed coordinates).
+---@param start_row integer # 0-indexed
+---@param start_col integer # 0-indexed
+---@param end_row integer # 0-indexed
+---@param end_col integer # 0-indexed
+---@return string[]
+function Buffer:get_text(start_row, start_col, end_row, end_col)
+    if not self:is_valid() then return {} end
+    return vim.api.nvim_buf_get_text(self._id, start_row, start_col, end_row, end_col, {})
+end
+
+--- Run a function in the context of this buffer.
+---@param fn function
+---@return any
+function Buffer:call(fn)
+    if not self:is_valid() then return end
+    return vim.api.nvim_buf_call(self._id, fn)
+end
+
 --- Get cursor position in this buffer's first window.
 ---@return Position
 function Buffer:cursor()

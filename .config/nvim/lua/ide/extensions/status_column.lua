@@ -19,10 +19,14 @@ local function format_sign(sign)
     return sign.texthl and ('%#' .. sign.texthl .. '#' .. text .. '%*') or text
 end
 
-local function get_ext_marks(bufnr, lnum)
-    bufnr = bufnr or vim.api.nvim_get_current_buf()
-    local marks = vim.api.nvim_buf_get_extmarks(
-        bufnr, -1, { lnum - 1, 0 }, { lnum - 1, -1 }, { details = true, type = 'sign' })
+local function get_ext_marks(buf, lnum)
+    if not buf then
+        buf = Buffer.current()
+    elseif type(buf) == 'number' then
+        buf = Buffer.get(buf)
+    end
+    if not buf or not buf:is_valid() then return {} end
+    local marks = buf:get_extmarks(-1, { lnum - 1, 0 }, { lnum - 1, -1 }, { details = true, type = 'sign' })
     local result = {}
     for _, m in ipairs(marks) do
         result[#result + 1] = {
@@ -37,8 +41,8 @@ local function get_ext_marks(bufnr, lnum)
 end
 
 local function render_status_column()
-    local win_id = vim.api.nvim_get_var('statusline_winid')
-    if not Window.is_valid(win_id) then return '' end
+    local ok_wid, win_id = pcall(vim.api.nvim_get_var, 'statusline_winid')
+    if not ok_wid or not Window.is_valid(win_id) then return '' end
 
     local win = Window.get(win_id)
     if not win then return '' end
@@ -89,12 +93,10 @@ function StatusColumn:on_register(ctx)
     IDE.config:set_option('statuscolumn', '%!v:lua.IDE_render_statuscol()')
 
     -- Gutter mouse click handler
+    local Position = require 'ide.Position'
     ctx:keymap('n', '<LeftMouse>', function()
-        local win_id = vim.api.nvim_get_current_win()
-        if not Window.is_valid(win_id) then return '<LeftMouse>' end
-
-        local win = Window.get(win_id)
-        if not win then return '<LeftMouse>' end
+        local win = Window.current()
+        if not win or not win:is_valid() then return '<LeftMouse>' end
         local pos = vim.fn.getmousepos()
         local width = win:status_column_width()
 
@@ -109,7 +111,7 @@ function StatusColumn:on_register(ctx)
             end)
             if has_git then
                 vim.schedule(function()
-                    pcall(vim.api.nvim_win_set_cursor, win:id(), { pos.line, 0 })
+                    pcall(function() win:set_cursor(Position(pos.line, 1)) end)
                     IDE.git:preview_hunk()
                 end)
                 return

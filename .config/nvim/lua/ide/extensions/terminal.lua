@@ -36,8 +36,7 @@ function Terminal:show()
         self._buf:set_option('buflisted', false)
         self._buf:set_option('filetype', 'ide-terminal')
 
-        local bufnr = self._buf:id()
-        vim.api.nvim_buf_call(bufnr, function()
+        self._buf:call(function()
             vim.fn.jobstart(vim.o.shell, { term = true,
                 cwd = IDE.fs:cwd(),
                 on_exit = function()

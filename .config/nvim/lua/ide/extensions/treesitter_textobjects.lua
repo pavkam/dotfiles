@@ -14,7 +14,6 @@ function TreesitterTextobjects:init()
 end
 
 --- Read text from a buffer region (0-indexed coordinates).
---- Concentrates the single raw API call needed since Buffer lacks get_text.
 ---@param buf Buffer
 ---@param sr integer # 0-indexed start row
 ---@param sc integer # 0-indexed start col
@@ -22,7 +21,7 @@ end
 ---@param ec integer # 0-indexed end col
 ---@return string[]
 local function buf_get_text(buf, sr, sc, er, ec)
-    return vim.api.nvim_buf_get_text(buf:id(), sr, sc, er, ec, {})
+    return buf:get_text(sr, sc, er, ec)
 end
 
 --- Collect all nodes matching a query capture, sorted by position.
