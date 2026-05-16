@@ -1518,6 +1518,21 @@ function M.run(filter)
             end
         end)
 
+        test('update_config with relative merges existing position', function()
+            local Window = require('ide.Window')
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            local win = Window.open_float(buf, {
+                relative = 'editor', row = 5, col = 10, width = 20, height = 5, style = 'minimal'
+            })
+            -- This previously crashed: "relative requires row/col"
+            win:update_config({ relative = 'editor', title = 'Updated Title', title_pos = 'center' })
+            -- Also test border-only update (no relative)
+            win:update_config({ border = 'rounded' })
+            win:close(true)
+            buf:close(true)
+        end)
+
         test('cursor returns Position', function()
             local Window = require('ide.Window')
             local pos = Window.current():cursor()
