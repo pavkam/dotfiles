@@ -47,6 +47,7 @@ end
 --- Get the buffer displayed in this window.
 ---@return Buffer
 function Window:buffer()
+    if not self:is_valid() then return nil end
     local Buffer = require 'ide.Buffer'
     return Buffer.get(vim.api.nvim_win_get_buf(self._id))
 end
@@ -61,6 +62,7 @@ end
 --- Get cursor position.
 ---@return Position
 function Window:cursor()
+    if not self:is_valid() then return Position(1, 1) end
     return Position.from_cursor(vim.api.nvim_win_get_cursor(self._id))
 end
 
@@ -76,11 +78,13 @@ end
 
 ---@return integer
 function Window:width()
+    if not self:is_valid() then return 0 end
     return vim.api.nvim_win_get_width(self._id)
 end
 
 ---@return integer
 function Window:height()
+    if not self:is_valid() then return 0 end
     return vim.api.nvim_win_get_height(self._id)
 end
 

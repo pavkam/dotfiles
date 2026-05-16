@@ -1349,6 +1349,30 @@ function M.run(filter)
             buf:close(true)
         end)
 
+        test('methods return safe defaults on deleted buffer', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            buf:close(true)
+            -- All these must return safe defaults, not crash
+            assert_eq(buf:filetype(), '', 'filetype must return empty string')
+            assert_eq(buf:line_count(), 0, 'line_count must return 0')
+            buf:set_lines(0, -1, { 'test' })  -- must be no-op, not crash
+            buf:format()  -- must be no-op, not crash
+        end)
+
+        test('Window methods return safe defaults on closed window', function()
+            local Window = require('ide.Window')
+            local Buffer = require('ide.Buffer')
+            local b = Buffer.create({ listed = false, scratch = true })
+            local win = Window.open_float(b, { relative = 'editor', row = 0, col = 0, width = 5, height = 3, style = 'minimal' })
+            win:close(true)
+            b:close(true)
+            assert_nil(win:buffer(), 'buffer must return nil')
+            assert_eq(win:width(), 0, 'width must return 0')
+            assert_eq(win:height(), 0, 'height must return 0')
+            assert_eq(win:cursor().row, 1, 'cursor must return default position')
+        end)
+
         test('events fire on buffer operations', function()
             local Buffer = require('ide.Buffer')
             local buf = Buffer.create({ listed = false, scratch = true })

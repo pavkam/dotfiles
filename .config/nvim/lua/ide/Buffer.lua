@@ -198,11 +198,13 @@ end
 
 ---@return string
 function Buffer:filetype()
+    if not self:is_valid() then return '' end
     return vim.bo[self._id].filetype
 end
 
 ---@return integer
 function Buffer:line_count()
+    if not self:is_valid() then return 0 end
     return vim.api.nvim_buf_line_count(self._id)
 end
 
@@ -231,6 +233,7 @@ end
 ---@param end_line integer # 0-indexed exclusive (-1 = end)
 ---@param lines string[]
 function Buffer:set_lines(start_line, end_line, lines)
+    if not self:is_valid() then return end
     vim.api.nvim_buf_set_lines(self._id, start_line, end_line, false, lines)
 end
 
@@ -363,6 +366,7 @@ end
 ---@param opts { timeout_ms?: integer, async?: boolean, lsp_fallback?: boolean }|nil
 ---@param callback fun(success: boolean)|nil
 function Buffer:format(opts, callback)
+    if not self:is_valid() then return end
     opts = opts or {}
     local self_ref = self
     IDE.formatter:format(self, opts, function(ok)
