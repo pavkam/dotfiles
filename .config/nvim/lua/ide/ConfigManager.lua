@@ -173,16 +173,23 @@ end
 
 --- Save all settings to disk.
 function ConfigManager:save()
-    local data = { toggles = {} }
-    for name, t in pairs(self._toggles) do
-        data.toggles[name] = t.value
+    -- Build sorted JSON manually for deterministic output
+    local names = {}
+    for name in pairs(self._toggles) do names[#names + 1] = name end
+    table.sort(names)
+    local parts = {}
+    for _, name in ipairs(names) do
+        parts[#parts + 1] = string.format('"%s":%s', name, self._toggles[name].value and 'true' or 'false')
     end
-    local json = vim.json.encode(data)
+    local json = '{"toggles":{' .. table.concat(parts, ',') .. '}}'
+
     local path = self:settings_path()
-    local f = io.open(path, 'w')
-    if f then
-        f:write(json)
-        f:close()
+    local existing = ''
+    local rf = io.open(path, 'r')
+    if rf then existing = rf:read('*a') or ''; rf:close() end
+    if json ~= existing then
+        local f = io.open(path, 'w')
+        if f then f:write(json); f:close() end
     end
 end
 

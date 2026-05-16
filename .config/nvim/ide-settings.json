@@ -1,1 +1,1 @@
-{"toggles":{"auto_linting":true,"diagnostics_enabled":true,"spelling":false,"inlay_hint_enabled":false,"code_lens_enabled":false,"semantic_tokens_enabled":true,"treesitter_enabled":true,"auto_formatting":true,"turbovision_theme":true}}
+{"toggles":{"auto_formatting":true,"auto_linting":true,"code_lens_enabled":false,"diagnostics_enabled":true,"inlay_hint_enabled":false,"semantic_tokens_enabled":true,"spelling":false,"treesitter_enabled":true,"turbovision_theme":true}}
