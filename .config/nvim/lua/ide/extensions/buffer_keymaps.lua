@@ -77,6 +77,11 @@ function BufferKeymaps:on_register(ctx)
         IDE.actions:execute('file.save')
     end, { desc = 'Save file' })
 
+    ctx:keymap({ 'n', 'i' }, '<C-S-s>', function()
+        vim.cmd('stopinsert')
+        IDE.actions:execute('file.saveAs')
+    end, { desc = 'Save As' })
+
     ctx:keymap('n', '<C-f>', function()
         IDE.actions:execute('file.grep')
     end, { desc = 'Find in files' })

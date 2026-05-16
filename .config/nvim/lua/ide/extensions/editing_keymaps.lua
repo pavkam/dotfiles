@@ -176,6 +176,14 @@ function EditingKeymaps:on_register(ctx)
         if buf:is_normal() then buf:format() end
     end, { desc = 'Format' })
 
+    -- Ctrl+/ comment toggle (mirrors VS Code)
+    ctx:keymap({ 'n', 'x' }, '<C-/>', 'gcc', { desc = 'Toggle comment', noremap = false })
+    ctx:keymap('i', '<C-/>', '<Esc>gcc', { desc = 'Toggle comment', noremap = false })
+
+    -- Ctrl+Shift+K delete line (VS Code style)
+    ctx:keymap('n', '<C-S-k>', 'dd', { desc = 'Delete line' })
+    ctx:keymap('i', '<C-S-k>', '<Esc>ddi', { desc = 'Delete line' })
+
     -- Terminal
     ctx:keymap('t', '<esc><esc>', '<c-\\><c-n>', { desc = 'Exit terminal' })
 end
