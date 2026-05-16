@@ -34,7 +34,12 @@ end
 --- The current buffer.
 ---@return Buffer
 function BufferList:current()
-    return assert(self:get(vim.api.nvim_get_current_buf()))
+    local buf = self:get(vim.api.nvim_get_current_buf())
+    if not buf then
+        local Buffer = require 'ide.Buffer'
+        return Buffer.get(vim.api.nvim_get_current_buf()) or Buffer(vim.api.nvim_get_current_buf())
+    end
+    return buf
 end
 
 --- All listed buffers.

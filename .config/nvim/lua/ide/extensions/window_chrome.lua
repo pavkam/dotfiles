@@ -76,8 +76,11 @@ function WindowChrome:_ensure_frame()
         end
     end
 
-    local cur_win = Window.current():id()
+    local cur_win_obj = Window.current()
+    if not cur_win_obj then return end
+    local cur_win = cur_win_obj:id()
     local buf = Buffer.current()
+    if not buf then return end
     local cur_buf = buf:id()
 
     -- Recover from empty [No Name] buffer after :bd
