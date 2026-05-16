@@ -1937,6 +1937,169 @@ function M.run(filter)
     end)
 
     -- ═══════════════════════════════════════════════════════
+    -- TABLE.TO_LIST / TABLE.LIST_MERGE
+    -- ═══════════════════════════════════════════════════════
+
+    suite('table.to_list', function()
+        test('nil becomes empty list', function()
+            local result = table.to_list(nil)
+            assert_type(result, 'table')
+            assert_eq(#result, 0)
+        end)
+
+        test('list passes through', function()
+            local input = { 1, 2, 3 }
+            local result = table.to_list(input)
+            assert_eq(result, input, 'list must pass through unchanged')
+        end)
+
+        test('dict extracts values', function()
+            local result = table.to_list({ a = 1, b = 2 })
+            assert_eq(#result, 2)
+        end)
+
+        test('scalar wraps in list', function()
+            local result = table.to_list(42)
+            assert_eq(#result, 1)
+            assert_eq(result[1], 42)
+        end)
+
+        test('string wraps in list', function()
+            local result = table.to_list('hello')
+            assert_eq(#result, 1)
+            assert_eq(result[1], 'hello')
+        end)
+    end)
+
+    suite('table.list_merge', function()
+        test('merges two lists', function()
+            local result = table.list_merge({ 1, 2 }, { 3, 4 })
+            assert_eq(#result, 4)
+            assert_eq(result[1], 1)
+            assert_eq(result[4], 4)
+        end)
+
+        test('empty lists return empty', function()
+            local result = table.list_merge({}, {})
+            assert_eq(#result, 0)
+        end)
+
+        test('single list returns copy', function()
+            local result = table.list_merge({ 'a', 'b' })
+            assert_eq(#result, 2)
+            assert_eq(result[1], 'a')
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- CLASS SYSTEM EDGE CASES
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Class system edges', function()
+        test('is_a with nil returns false', function()
+            local A = Class('TestIsANil')
+            local a = A()
+            assert_false(a:is_a(nil), 'is_a(nil) must be false')
+        end)
+
+        test('mixin does not overwrite existing methods', function()
+            local A = Class('TestMixinPreserve')
+            function A:foo() return 'original' end
+            Class.include(A, { foo = function() return 'mixin' end })
+            assert_eq(A():foo(), 'original', 'original method must be preserved')
+        end)
+
+        test('mixin adds new methods', function()
+            local A = Class('TestMixinAdd')
+            Class.include(A, { bar = function() return 'added' end })
+            assert_eq(A():bar(), 'added')
+        end)
+
+        test('three-level inheritance', function()
+            local A = Class('ThreeA')
+            function A:init() self.level = 'A' end
+            local B = Class('ThreeB', A)
+            function B:init() A.init(self); self.level = 'B' end
+            local C = Class('ThreeC', B)
+            function C:init() B.init(self); self.level = 'C' end
+
+            local c = C()
+            assert_eq(c.level, 'C')
+            assert_true(c:is_a(A), 'C must be_a A')
+            assert_true(c:is_a(B), 'C must be_a B')
+            assert_true(c:is_a(C), 'C must be_a C')
+            assert_eq(Class.name(c), 'ThreeC')
+            assert_eq(Class.super(C), B)
+            assert_eq(Class.super(B), A)
+        end)
+
+        test('__tostring on class instance', function()
+            local A = Class('ToStringTest')
+            function A:__tostring() return 'custom_repr' end
+            assert_eq(tostring(A()), 'custom_repr')
+        end)
+
+        test('default __tostring shows class name', function()
+            local A = Class('DefaultTS')
+            local s = tostring(A())
+            assert_match(s, 'DefaultTS')
+        end)
+
+        test('constructor with no init does not crash', function()
+            local A = Class('NoInit')
+            local a = A()
+            assert_not_nil(a, 'instance must be created even without init')
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- POSITION VALUE OBJECT
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Position edge cases', function()
+        test('from_cursor handles 0-indexed col', function()
+            local P = require('ide.Position')
+            local p = P.from_cursor({ 5, 0 })
+            assert_eq(p.row, 5)
+            assert_eq(p.col, 1, 'col 0 must become 1 (1-indexed)')
+        end)
+
+        test('to_cursor converts back correctly', function()
+            local P = require('ide.Position')
+            local p = P(10, 5)
+            local cursor = p:to_cursor()
+            assert_eq(cursor[1], 10, 'row must be preserved')
+            assert_eq(cursor[2], 4, 'col must be 0-indexed in cursor format')
+        end)
+
+        test('roundtrip preserves values', function()
+            local P = require('ide.Position')
+            local original = { 42, 15 }
+            local p = P.from_cursor(original)
+            local back = p:to_cursor()
+            assert_eq(back[1], original[1])
+            assert_eq(back[2], original[2])
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- TIMER BEHAVIOR
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Timer', function()
+        test('debounce returns callable', function()
+            local fn = IDE.Timer.debounce(100, function() end)
+            assert_type(fn, 'function')
+        end)
+
+        test('delay creates timer that can be stopped', function()
+            local timer = IDE.Timer.delay(10000, function() end)
+            assert_not_nil(timer, 'delay must return timer handle')
+            timer:stop() -- must not crash
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
     -- CLEANUP: wipe all test fixture buffers
     -- ═══════════════════════════════════════════════════════
 
