@@ -29,6 +29,7 @@ end
 ---@param path string
 ---@return boolean
 function FileSystem:is_directory(path)
+    if not path then return false end
     local stat = vim.uv.fs_stat(path)
     return stat ~= nil and stat.type == 'directory'
 end
@@ -37,6 +38,7 @@ end
 ---@param path string
 ---@return boolean
 function FileSystem:exists(path)
+    if not path then return false end
     return vim.uv.fs_stat(path) ~= nil
 end
 
@@ -108,6 +110,7 @@ end
 ---@param path string
 ---@return string|nil, string|nil # contents or nil, error message or nil
 function FileSystem:read(path)
+    if not path then return nil, 'path is nil' end
     local fd, err = vim.uv.fs_open(path, 'r', 438)
     if not fd then return nil, err end
     local stat, stat_err = vim.uv.fs_fstat(fd)
@@ -124,6 +127,7 @@ end
 ---@param content string
 ---@return boolean, string|nil # success, error message
 function FileSystem:write(path, content)
+    if not path then return false, 'path is nil' end
     vim.fn.mkdir(vim.fs.dirname(path), 'p')
     local fd, err = vim.uv.fs_open(path, 'w', 438)
     if not fd then return false, err end

@@ -21,9 +21,10 @@ end
 ---@param id integer
 ---@return Window
 function Window.get(id)
+    if type(id) ~= 'number' then return nil end
     if not vim.api.nvim_win_is_valid(id) then
         _cache[id] = nil
-        return Window(id)
+        return nil
     end
     local cached = _cache[id]
     if cached then return cached end

@@ -26,9 +26,10 @@ end
 ---@param id integer
 ---@return Buffer
 function Buffer.get(id)
+    if type(id) ~= 'number' then return nil end
     if not vim.api.nvim_buf_is_valid(id) then
         _cache[id] = nil
-        return Buffer(id) -- will error, but consistent API
+        return nil
     end
     local cached = _cache[id]
     if cached then return cached end
