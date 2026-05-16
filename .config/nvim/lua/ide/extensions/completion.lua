@@ -12,8 +12,8 @@ local Completion = Class('Completion', Extension)
 function Completion:init()
     Extension.init(self, 'Completion')
     self._ghost_ns = Buffer.create_namespace('ide_completion_ghost')
-    self._doc_winid = nil
-    self._doc_bufnr = nil
+    self._doc_win = nil  ---@type Window|nil
+    self._doc_buf = nil  ---@type Buffer|nil
 end
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -49,8 +49,10 @@ local _source_icons = {
 local function _collect_buffer_words(min_length, max_items, prefix)
     local seen = {}
     local items = {}
-    local current_bufnr = vim.api.nvim_get_current_buf()
-    local current_line = vim.api.nvim_win_get_cursor(0)[1]
+    local cur_buf = Buffer.current()
+    local current_bufnr = cur_buf and cur_buf:id() or -1
+    local cursor = cur_buf and cur_buf:cursor()
+    local current_line = cursor and cursor.row or 0
 
     -- Collect from all listed buffers
     local buffers = IDE.buffers:listed()
@@ -207,9 +209,8 @@ end
 --- Clear ghost text.
 ---@param self Completion
 local function _clear_ghost_text(self)
-    local bufnr = vim.api.nvim_get_current_buf()
-    local ok, buf = pcall(Buffer.get, bufnr)
-    if ok and buf and buf:is_valid() then
+    local buf = Buffer.current()
+    if buf and buf:is_valid() then
         buf:clear_extmarks(self._ghost_ns)
     end
 end
@@ -223,17 +224,17 @@ local function _show_ghost_text(self)
         return
     end
 
-    local bufnr = vim.api.nvim_get_current_buf()
-    local buf = Buffer.get(bufnr)
+    local buf = Buffer.current()
     if not buf or not buf:is_valid() then return end
 
     -- Clear previous ghost text
     buf:clear_extmarks(self._ghost_ns)
 
-    local cursor = vim.api.nvim_win_get_cursor(0)
-    local row = cursor[1] - 1 -- 0-indexed
-    local col = cursor[2]
-    local line = buf:line(cursor[1])
+    local cursor = buf:cursor()
+    if not cursor then return end
+    local row = cursor.row - 1 -- 0-indexed
+    local col = cursor.col - 1 -- 0-indexed byte offset
+    local line = buf:line(cursor.row)
 
     -- Calculate what text would be inserted beyond what's already typed
     local prefix_on_line = line:sub(1, col)
@@ -257,14 +258,14 @@ end
 --- Close the custom documentation popup.
 ---@param self Completion
 local function _close_doc_popup(self)
-    if self._doc_winid and vim.api.nvim_win_is_valid(self._doc_winid) then
-        vim.api.nvim_win_close(self._doc_winid, true)
+    if self._doc_win and self._doc_win:is_valid() then
+        self._doc_win:close(true)
     end
-    self._doc_winid = nil
-    if self._doc_bufnr and vim.api.nvim_buf_is_valid(self._doc_bufnr) then
-        vim.api.nvim_buf_delete(self._doc_bufnr, { force = true })
+    self._doc_win = nil
+    if self._doc_buf and self._doc_buf:is_valid() then
+        self._doc_buf:close(true)
     end
-    self._doc_bufnr = nil
+    self._doc_buf = nil
 end
 
 --- Show documentation for a non-LSP completion item (buffer/path).
@@ -286,8 +287,11 @@ local function _show_source_doc(self, item)
         else
             doc_lines = { 'File: ' .. word }
             -- Try to get file size
+            local cur_buf = Buffer.current()
+            local cur_cursor = cur_buf and cur_buf:cursor()
+            local cur_line = cur_buf and cur_cursor and cur_buf:line(cur_cursor.row) or ''
             local dir_prefix = _extract_path_prefix(
-                vim.api.nvim_get_current_line():sub(1, vim.api.nvim_win_get_cursor(0)[2])
+                cur_line:sub(1, cur_cursor and (cur_cursor.col - 1) or 0)
             )
             if dir_prefix then
                 local dir = _resolve_path(dir_prefix)
@@ -311,10 +315,10 @@ local function _show_source_doc(self, item)
     _close_doc_popup(self)
 
     -- Create scratch buffer for documentation
-    self._doc_bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_lines(self._doc_bufnr, 0, -1, false, doc_lines)
-    vim.bo[self._doc_bufnr].modifiable = false
-    vim.bo[self._doc_bufnr].bufhidden = 'wipe'
+    self._doc_buf = Buffer.create({ listed = false, scratch = true })
+    self._doc_buf:set_lines(0, -1, doc_lines)
+    self._doc_buf:set_option('modifiable', false)
+    self._doc_buf:set_option('bufhidden', 'wipe')
 
     -- Position relative to the popup menu
     local pum = vim.fn.pum_getpos()
@@ -331,7 +335,7 @@ local function _show_source_doc(self, item)
         if col < 0 then return end
     end
 
-    local win = Window.open_float(self._doc_bufnr, {
+    local win = Window.open_float(self._doc_buf, {
         relative = 'editor',
         row = row,
         col = col,
@@ -342,7 +346,7 @@ local function _show_source_doc(self, item)
         focusable = false,
         zindex = 100,
     })
-    self._doc_winid = win:id()
+    self._doc_win = win
     win:set_option('winblend', 10)
     win:set_option('winhighlight', 'Normal:NormalFloat,FloatBorder:FloatBorder')
 end
@@ -372,8 +376,10 @@ end
 local function _completefunc(findstart, base)
     if findstart == 1 then
         -- Find the start of the word
-        local line = vim.api.nvim_get_current_line()
-        local col = vim.api.nvim_win_get_cursor(0)[2]
+        local buf = Buffer.current()
+        local cursor = buf and buf:cursor()
+        local col = cursor and (cursor.col - 1) or 0
+        local line = buf and buf:line(cursor.row) or ''
         local line_to_cursor = line:sub(1, col)
 
         -- Check for path prefix first
@@ -388,8 +394,10 @@ local function _completefunc(findstart, base)
     end
 
     -- findstart == 0: return matches
-    local line = vim.api.nvim_get_current_line()
-    local col = vim.api.nvim_win_get_cursor(0)[2]
+    local buf = Buffer.current()
+    local cursor = buf and buf:cursor()
+    local col = cursor and (cursor.col - 1) or 0
+    local line = buf and buf:line(cursor.row) or ''
     local line_to_cursor = line:sub(1, col)
 
     local items = {}
@@ -444,10 +452,7 @@ function Completion:on_register(ctx)
     ctx:hook('TextChangedI', function()
         if _in_comment_or_string() and keys:popup_visible() then
             -- Dismiss the popup when we detect we're in a comment
-            vim.api.nvim_feedkeys(
-                keys:termcodes('<C-e>'),
-                'n', false
-            )
+            keys:feed(keys:termcodes('<C-e>'), 'n')
         end
     end)
 
@@ -530,11 +535,11 @@ function Completion:on_register(ctx)
     ctx:keymap('i', '<C-b>', function()
         if keys:popup_visible() then
             local info = vim.fn.complete_info({ 'preview_winid' })
-            if info.preview_winid and info.preview_winid > 0
-                and vim.api.nvim_win_is_valid(info.preview_winid) then
-                vim.api.nvim_win_call(info.preview_winid, function()
-                    vim.cmd('normal! 4k')
-                end)
+            if info.preview_winid and info.preview_winid > 0 then
+                local pwin = Window.get(info.preview_winid)
+                if pwin and pwin:is_valid() then
+                    pwin:exec_normal('4k')
+                end
             end
             return ''
         end
@@ -544,11 +549,11 @@ function Completion:on_register(ctx)
     ctx:keymap('i', '<C-f>', function()
         if keys:popup_visible() then
             local info = vim.fn.complete_info({ 'preview_winid' })
-            if info.preview_winid and info.preview_winid > 0
-                and vim.api.nvim_win_is_valid(info.preview_winid) then
-                vim.api.nvim_win_call(info.preview_winid, function()
-                    vim.cmd('normal! 4j')
-                end)
+            if info.preview_winid and info.preview_winid > 0 then
+                local pwin = Window.get(info.preview_winid)
+                if pwin and pwin:is_valid() then
+                    pwin:exec_normal('4j')
+                end
             end
             return ''
         end
@@ -565,8 +570,10 @@ function Completion:on_register(ctx)
         -- Suppress in comments/strings
         if _in_comment_or_string() then return end
 
-        local line = vim.api.nvim_get_current_line()
-        local col = vim.api.nvim_win_get_cursor(0)[2]
+        local buf = Buffer.current()
+        local cursor = buf and buf:cursor()
+        local col = cursor and (cursor.col - 1) or 0
+        local line = buf and buf:line(cursor.row) or ''
         local line_to_cursor = line:sub(1, col)
 
         -- Auto-trigger path completion when typing after /
@@ -576,10 +583,7 @@ function Completion:on_register(ctx)
                 vim.bo.completefunc = 'v:lua.IDE_completefunc'
                 vim.schedule(function()
                     if vim.fn.mode() == 'i' and not keys:popup_visible() then
-                        vim.api.nvim_feedkeys(
-                            keys:termcodes('<C-x><C-u>'),
-                            'n', false
-                        )
+                        keys:feed(keys:termcodes('<C-x><C-u>'), 'n')
                     end
                 end)
             end
@@ -596,10 +600,7 @@ function Completion:on_register(ctx)
 
     ctx:action('editor.completion.buffer', 'Trigger buffer completion', function()
         vim.bo.completefunc = 'v:lua.IDE_completefunc'
-        vim.api.nvim_feedkeys(
-            keys:termcodes('<C-x><C-u>'),
-            'n', false
-        )
+        keys:feed(keys:termcodes('<C-x><C-u>'), 'n')
     end)
 end
 

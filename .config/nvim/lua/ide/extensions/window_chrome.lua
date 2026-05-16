@@ -145,12 +145,13 @@ function WindowChrome:_ensure_frame()
             if not win then return end
             local cfg = win:config()
             if not cfg.relative or cfg.relative == '' then
-                if #vim.api.nvim_list_wins() <= 1 then return end
+                if #vim.api.nvim_list_wins() <= 2 then return end
                 local target = (self._splitter and self._splitter:active_frame()) or self._frame
+                if not target or not target:is_valid() then return end
                 target:set_buffer(cur_buf)
                 local tw = Window.get(target:window_id())
                 if tw then tw:focus() end
-                win:close(true)
+                pcall(function() win:close(true) end)
                 return
             end
         end

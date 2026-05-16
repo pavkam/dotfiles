@@ -229,6 +229,14 @@ function Buffer:line(lnum)
     return vim.fn.getbufoneline(self._id, lnum)
 end
 
+--- Get the line at the cursor position in the current window.
+---@return string
+function Buffer:current_line()
+    local cursor = self:cursor()
+    if not cursor then return '' end
+    return self:line(cursor.row) or ''
+end
+
 --- Set buffer lines (0-indexed, end-exclusive).
 ---@param start_line integer # 0-indexed
 ---@param end_line integer # 0-indexed exclusive (-1 = end)
