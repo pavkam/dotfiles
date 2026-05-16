@@ -40,8 +40,10 @@ local function render_status_column()
     local win_id = vim.api.nvim_get_var('statusline_winid')
     if not Window.is_valid(win_id) then return '' end
 
-    local win = Window(win_id)
+    local win = Window.get(win_id)
+    if not win then return '' end
     local buf = win:buffer()
+    if not buf then return '' end
     local is_file = buf:is_normal()
     local show_signs = win:option('signcolumn') ~= 'no'
 
@@ -91,7 +93,8 @@ function StatusColumn:on_register(ctx)
         local win_id = vim.api.nvim_get_current_win()
         if not Window.is_valid(win_id) then return '<LeftMouse>' end
 
-        local win = Window(win_id)
+        local win = Window.get(win_id)
+        if not win then return '<LeftMouse>' end
         local pos = vim.fn.getmousepos()
         local width = win:status_column_width()
 

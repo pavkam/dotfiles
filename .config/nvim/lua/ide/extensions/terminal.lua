@@ -34,7 +34,7 @@ function Terminal:show()
     if not self._buf or not vim.api.nvim_buf_is_valid(self._buf) then
         self._buf = vim.api.nvim_create_buf(false, true)
         vim.api.nvim_buf_call(self._buf, function()
-            vim.fn.termopen(vim.o.shell, {
+            vim.fn.jobstart(vim.o.shell, { term = true,
                 cwd = IDE.fs:cwd(),
                 on_exit = function()
                     vim.schedule(function() self:_on_exit() end)
@@ -62,7 +62,8 @@ function Terminal:show()
     })
 
     -- Terminal window options
-    local win = Window(self._win)
+    local win = Window.get(self._win)
+    if not win then return end
     win:set_option('number', false)
     win:set_option('relativenumber', false)
     win:set_option('signcolumn', 'no')
