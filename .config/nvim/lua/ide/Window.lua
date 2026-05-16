@@ -245,6 +245,26 @@ function Window:exec_normal(keys)
     self:call(function() vim.cmd('normal! ' .. keys) end)
 end
 
+--- Center the viewport on the current cursor line.
+function Window:center_cursor()
+    self:exec_normal('zz')
+end
+
+--- Enter insert mode in this window.
+function Window:enter_insert()
+    self:call(function() vim.cmd('startinsert') end)
+end
+
+--- Exit insert mode in this window.
+function Window:exit_insert()
+    self:call(function() vim.cmd('stopinsert') end)
+end
+
+--- Select the entire current line (visual line mode).
+function Window:select_line()
+    self:exec_normal('V')
+end
+
 --- Get the fold range at a line (1-indexed).
 ---@param line integer # 1-indexed line number
 ---@return integer|nil, integer|nil # fold start, fold end (1-indexed) or nil if no fold

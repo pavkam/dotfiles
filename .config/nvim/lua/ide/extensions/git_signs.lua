@@ -322,7 +322,7 @@ function GitSigns:reset_buffer()
     if not cwd then return end
     local result = IDE.shell:run_sync('git', { 'checkout', '--', path }, { cwd = cwd })
     if result.code == 0 then
-        vim.cmd('edit!')
+        IDE.buffers:current():reload()
         IDE.ui:info('Buffer reset')
     else
         IDE.ui:error('Failed to reset buffer: ' .. result.stderr)
@@ -375,7 +375,7 @@ function GitSigns:select_hunk()
     local end_line = hunk.new_start + math.max(hunk.new_count, 1) - 1
     local win = Window.current()
     win:set_cursor(Position(start_line, 1))
-    vim.cmd('normal! V')
+    win:select_line()
     win:set_cursor(Position(end_line, 1))
 end
 

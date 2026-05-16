@@ -73,12 +73,12 @@ function BufferKeymaps:on_register(ctx)
 
     -- Standard IDE shortcuts
     ctx:keymap({ 'n', 'i' }, '<C-s>', function()
-        vim.cmd('stopinsert')
+        require('ide.Window').current():exit_insert()
         IDE.actions:execute('file.save')
     end, { desc = 'Save file' })
 
     ctx:keymap({ 'n', 'i' }, '<C-S-s>', function()
-        vim.cmd('stopinsert')
+        require('ide.Window').current():exit_insert()
         IDE.actions:execute('file.saveAs')
     end, { desc = 'Save As' })
 
@@ -114,8 +114,9 @@ function BufferKeymaps:on_register(ctx)
             if not input or input == '' then return end
             local line = tonumber(input)
             if line and line >= 1 and line <= total then
-                require('ide.Window').current():set_cursor(require('ide.Position')(line, 1))
-                vim.cmd('normal! zz')
+                local win = require('ide.Window').current()
+                win:set_cursor(require('ide.Position')(line, 1))
+                win:center_cursor()
             end
         end, { default = tostring(current) })
     end, { desc = 'Go to line' })

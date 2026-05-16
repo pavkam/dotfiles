@@ -69,7 +69,7 @@ function Terminal:show()
     win:set_option('signcolumn', 'no')
     win:set_option('winhl', 'Normal:IDETerminalNormal,FloatBorder:IDETerminalBorder')
 
-    vim.cmd('startinsert')
+    win:enter_insert()
     self._visible = true
     IDE:emit('terminal.show')
 end
@@ -115,16 +115,16 @@ function Terminal:on_register(ctx)
     -- Keymaps
     ctx:keymap('n', '<C-`>', 'terminal.toggle', { desc = 'Toggle terminal' })
     ctx:keymap('t', '<C-`>', function()
-        vim.cmd('stopinsert')
+        Window.current():exit_insert()
         ext:hide()
     end, { desc = 'Hide terminal' })
     ctx:keymap('t', '<C-\\><C-n>', function()
-        vim.cmd('stopinsert')
+        Window.current():exit_insert()
     end, { desc = 'Terminal normal mode' })
 
     -- Escape in terminal returns to editor
     ctx:keymap('t', '<Esc><Esc>', function()
-        vim.cmd('stopinsert')
+        Window.current():exit_insert()
         ext:hide()
     end, { desc = 'Exit terminal' })
 

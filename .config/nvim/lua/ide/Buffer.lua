@@ -396,6 +396,13 @@ function Buffer:save()
     end
 end
 
+--- Reload the buffer from disk, discarding unsaved changes.
+function Buffer:reload()
+    if self:is_valid() then
+        vim.api.nvim_buf_call(self._id, function() vim.cmd('edit!') end)
+    end
+end
+
 --- Close/delete this buffer.
 ---@param force boolean|nil
 function Buffer:close(force)

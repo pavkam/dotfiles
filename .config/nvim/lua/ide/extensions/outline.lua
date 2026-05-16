@@ -236,9 +236,10 @@ function Outline:show()
                 self:hide()
                 vim.schedule(function()
                     if source_buf:is_valid() then
-                        Window.current():set_buffer(source_buf)
+                        local win = Window.current()
+                        win:set_buffer(source_buf)
                         pcall(vim.api.nvim_win_set_cursor, 0, { sym.lnum, (sym.col or 1) - 1 })
-                        vim.cmd('normal! zz')
+                        win:center_cursor()
                     end
                 end)
             end
