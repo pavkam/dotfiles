@@ -298,86 +298,90 @@ function QuickFixUI:_preview()
     })
 end
 
-function QuickFixUI:_render()
-    local Canvas = require 'ide.toolkit.Canvas'
-    local buf = self:buffer()
-    if not buf or not buf:is_valid() then return end
+--- Function component for quickfix item list rendering.
+local function QuickFixView(props)
+    local items = props.items or {}
+    local selections = props.selections or {}
+    local filter_pattern = props.filter_pattern
+    local width = props.width or 80
 
     local sev_hl = {
-        Error = 'DiagnosticError',
-        Warn = 'DiagnosticWarn',
-        Info = 'DiagnosticInfo',
-        Hint = 'DiagnosticHint',
+        Error = 'DiagnosticError', Warn = 'DiagnosticWarn',
+        Info = 'DiagnosticInfo', Hint = 'DiagnosticHint',
     }
     local sev_icon = {
-        Error = ' ',
-        Warn = ' ',
-        Info = ' ',
-        Hint = '󰌵 ',
+        Error = ' ', Warn = ' ', Info = ' ', Hint = '󰌵 ',
     }
 
-    local w = self._current_width or 80
-    local h = math.max(#self._items, 1)
-    local c = Canvas(w, h)
+    local children = {}
 
-    if #self._items == 0 then
-        local msg = self._filter_pattern
-            and ('No items matching: ' .. self._filter_pattern)
+    if #items == 0 then
+        local msg = filter_pattern
+            and ('No items matching: ' .. filter_pattern)
             or 'No items'
-        c:text(1, 3, msg, 'Comment')
-    else
-        for i, item in ipairs(self._items) do
-            local hl = sev_hl[item.severity] or 'Normal'
-            local col_pos = 1
-
-            -- Selection marker
-            if self._selections[i] then
-                c:text(i, col_pos, '▌ ', 'WarningMsg')
-                col_pos = col_pos + vim.api.nvim_strwidth('▌ ')
-            else
-                col_pos = col_pos + 0  -- no offset when not selected
-            end
-
-            -- Severity icon
-            local icon = sev_icon[item.severity] or '  '
-            c:text(i, col_pos, icon, hl)
-            col_pos = col_pos + vim.api.nvim_strwidth(icon)
-
-            -- File name (shortened)
-            local fname = item.filename or ''
-            if #fname > 40 then
-                fname = '…' .. fname:sub(-39)
-            end
-            c:text(i, col_pos, fname, 'Directory')
-            col_pos = col_pos + vim.api.nvim_strwidth(fname)
-
-            -- Line:col
-            if item.lnum and item.lnum > 0 then
-                local loc = string.format(':%d', item.lnum)
-                c:text(i, col_pos, loc, 'LineNr')
-                col_pos = col_pos + #loc
-                if item.col and item.col > 0 then
-                    local col_str = string.format(':%d', item.col)
-                    c:text(i, col_pos, col_str, 'Comment')
-                    col_pos = col_pos + #col_str
-                end
-            end
-
-            -- Separator
-            c:text(i, col_pos, '  │ ', 'Comment')
-            col_pos = col_pos + 4
-
-            -- Message text
-            local text = item.text:gsub('\n', ' ')
-            local max_text = w - col_pos
-            if #text > max_text then
-                text = text:sub(1, max_text - 1) .. '…'
-            end
-            c:text(i, col_pos, text, hl)
-        end
+        children[#children + 1] = { type = 'text', text = '  ' .. msg, hl = 'Comment' }
+        return children
     end
 
-    c:render(buf)
+    for i, item in ipairs(items) do
+        local hl = sev_hl[item.severity] or 'Normal'
+        local parts = {}
+
+        -- Selection marker
+        if selections[i] then
+            parts[#parts + 1] = '▌ '
+        end
+
+        -- Severity icon + filename + location + message
+        local icon = sev_icon[item.severity] or '  '
+        local fname = item.filename or ''
+        if #fname > 40 then fname = '…' .. fname:sub(-39) end
+        local loc = ''
+        if item.lnum and item.lnum > 0 then
+            loc = ':' .. item.lnum
+            if item.col and item.col > 0 then loc = loc .. ':' .. item.col end
+        end
+        local text = (item.text or ''):gsub('\n', ' ')
+        local prefix = table.concat(parts) .. icon .. fname .. loc .. '  │ '
+        local max_text = width - vim.api.nvim_strwidth(prefix)
+        if #text > max_text then text = text:sub(1, math.max(0, max_text - 1)) .. '…' end
+
+        children[#children + 1] = {
+            type = 'row',
+            children = {
+                { type = 'text', text = table.concat(parts), hl = selections[i] and 'WarningMsg' or nil },
+                { type = 'text', text = icon, hl = hl },
+                { type = 'text', text = fname, hl = 'Directory' },
+                { type = 'text', text = loc, hl = 'LineNr' },
+                { type = 'text', text = '  │ ', hl = 'Comment' },
+                { type = 'text', text = text, hl = hl },
+            },
+        }
+    end
+
+    return children
+end
+
+function QuickFixUI:_render()
+    local buf = self:buffer()
+    if not buf or not buf:is_valid() then return end
+    local C = require 'ide.toolkit.component'
+
+    if self._qf_component then
+        C.update(self._qf_component, {
+            items = self._items,
+            selections = self._selections,
+            filter_pattern = self._filter_pattern,
+            width = self._current_width or 80,
+        })
+    else
+        self._qf_component = C.mount(QuickFixView, {
+            items = self._items,
+            selections = self._selections,
+            filter_pattern = self._filter_pattern,
+            width = self._current_width or 80,
+        }, buf, self._win)
+    end
 
     -- Update title with filter and selection info
     self:_update_title()
@@ -415,6 +419,11 @@ end
 --- Override hide to also close the preview pane and reset state.
 function QuickFixUI:hide()
     self:_close_preview()
+    if self._qf_component then
+        local C = require 'ide.toolkit.component'
+        C.unmount(self._qf_component)
+        self._qf_component = nil
+    end
     self._selections = {}
     self._filter_pattern = nil
     Panel.hide(self)
