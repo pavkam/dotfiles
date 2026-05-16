@@ -406,6 +406,50 @@ function M.useLsp()
     return clients
 end
 
+--- useDebouncedEffect: like useEffect but debounces — only fires after
+--- the deps stabilize for `delay` ms. Useful for expensive operations
+--- triggered by rapidly-changing state (search input, cursor movement).
+---@param fn function
+---@param deps any[]
+---@param delay integer # debounce delay in milliseconds
+function M.useDebouncedEffect(fn, deps, delay)
+    local timer_ref = M.useRef(nil)
+    M.useEffect(function()
+        if timer_ref.current then
+            timer_ref.current:stop()
+        end
+        local Timer = require 'ide.Timer'
+        timer_ref.current = Timer.delay(delay, function()
+            fn()
+        end)
+        return function()
+            if timer_ref.current then
+                timer_ref.current:stop()
+                timer_ref.current = nil
+            end
+        end
+    end, deps)
+end
+
+--- useDebouncedState: like useState but the setter debounces updates.
+--- The value updates immediately in the component, but effects/renders
+--- are batched to avoid excessive re-renders.
+---@param initial any
+---@param delay integer # debounce delay in ms
+---@return any value, fun(new: any) setter
+function M.useDebouncedState(initial, delay)
+    local value, setValue = M.useState(initial)
+    local timer_ref = M.useRef(nil)
+    local setter = function(new_value)
+        if timer_ref.current then timer_ref.current:stop() end
+        local Timer = require 'ide.Timer'
+        timer_ref.current = Timer.delay(delay, function()
+            setValue(new_value)
+        end)
+    end
+    return value, setter
+end
+
 -- ── Internal ───────────────────────────────────────────────────
 
 --- Compare two dependency arrays for equality.
