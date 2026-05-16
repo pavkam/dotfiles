@@ -56,8 +56,15 @@ function MessageBox:show()
         on_close = self._on_close,
     })
 
-    -- Add icon + message as static text (not focusable widgets)
-    -- We'll render them in the dialog content directly
+    -- Add message lines as static text widgets
+    for i, line in ipairs(lines) do
+        local text = (self._icon and i == 1) and (self._icon .. '  ' .. line) or ('    ' .. line)
+        local hl = (self._icon and i == 1) and 'IDEDialogTitle' or 'IDEDialogNormal'
+        self._dialog:add_widget({
+            render = function() return text, { { group = hl, col_start = 0, col_end = #text } } end,
+            focusable = function() return false end,
+        }, i, 1)
+    end
 
     -- Add buttons
     local btn_start = math.floor((width - btn_total) / 2)
@@ -76,20 +83,7 @@ function MessageBox:show()
         col = col + #display + 6
     end
 
-    -- Render message text into the dialog via Canvas before showing
-    local Canvas = require 'ide.toolkit.Canvas'
-    local c = Canvas(width, #lines + 1)
-    for i, line in ipairs(lines) do
-        local text = (self._icon and i == 1) and (self._icon .. '  ' .. line) or ('    ' .. line)
-        local hl = (self._icon and i == 1) and 'IDEDialogTitle' or 'IDEDialogNormal'
-        c:text(i, 1, text, hl)
-    end
-
     self._dialog:show()
-
-    if self._dialog:buffer() and self._dialog:buffer():is_valid() then
-        c:render(self._dialog:buffer())
-    end
 end
 
 function MessageBox:close()

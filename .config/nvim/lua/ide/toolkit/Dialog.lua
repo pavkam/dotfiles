@@ -30,6 +30,7 @@ function Dialog:init(opts)
     self._hotkeys = {} ---@type table<string, function>
     self._focus_index = 0
     self._focusable = {} ---@type table[]
+    self._dialog_component = nil
 end
 
 --- Add a widget to the dialog at a specific row.
@@ -142,33 +143,87 @@ function Dialog:show()
     end
 end
 
-function Dialog:_render_content()
-    if not self._buf or not self._buf:is_valid() then return end
+--- Convert widget render output (text + highlights) to VNode children.
+---@param text string
+---@param highlights table[]|nil
+---@return table[] # array of text VNodes
+local function widget_to_vnodes(text, highlights)
+    if not highlights or #highlights == 0 then
+        return { { type = 'text', text = text } }
+    end
+    -- Sort highlights by col_start
+    local sorted = {}
+    for _, hl in ipairs(highlights) do sorted[#sorted + 1] = hl end
+    table.sort(sorted, function(a, b) return a.col_start < b.col_start end)
 
-    local Canvas = require 'ide.toolkit.Canvas'
-    local c = Canvas(self._width, self._height)
+    -- Split text into spans at highlight boundaries
+    local children = {}
+    local pos = 0
+    for _, hl in ipairs(sorted) do
+        if hl.col_start > pos then
+            children[#children + 1] = { type = 'text', text = text:sub(pos + 1, hl.col_start) }
+        end
+        children[#children + 1] = {
+            type = 'text',
+            text = text:sub(hl.col_start + 1, hl.col_end),
+            hl = hl.group,
+        }
+        pos = math.max(pos, hl.col_end)
+    end
+    if pos < #text then
+        children[#children + 1] = { type = 'text', text = text:sub(pos + 1) }
+    end
+    return children
+end
 
-    for _, entry in ipairs(self._widgets) do
-        local w = entry.widget
+--- Function component for dialog content.
+local function DialogView(props)
+    local widgets = props.widgets or {}
+    local height = props.height or 10
+    local children = {}
+
+    -- Pre-fill empty rows
+    for _ = 1, height do
+        children[#children + 1] = { type = 'text', text = '' }
+    end
+
+    -- Overlay widget rows
+    for _, entry in ipairs(widgets) do
         local row = entry.row
-        local col_pos = entry.col
-        local text, highlights = w:render()
-        if text and row <= self._height then
-            c:text(row, col_pos, text)
-            if highlights then
-                for _, hl in ipairs(highlights) do
-                    c._highlights[#c._highlights + 1] = {
-                        row = row,
-                        col_start = hl.col_start + col_pos - 1,
-                        col_end = hl.col_end + col_pos - 1,
-                        group = hl.group,
-                    }
-                end
+        if row >= 1 and row <= height then
+            local text, highlights = entry.widget:render()
+            if text then
+                local indent = (entry.col or 1) - 1
+                local vnodes = widget_to_vnodes(text, highlights)
+                children[row] = {
+                    type = 'row',
+                    children = vim.list_extend(
+                        { { type = 'text', text = string.rep(' ', indent) } },
+                        vnodes
+                    ),
+                }
             end
         end
     end
 
-    c:render(self._buf)
+    return children
+end
+
+function Dialog:_render_content()
+    if not self._buf or not self._buf:is_valid() then return end
+
+    local CC = require 'ide.toolkit.component'
+    if self._dialog_component then
+        CC.update(self._dialog_component, {
+            widgets = self._widgets,
+            height = self._height,
+        })
+    else
+        self._dialog_component = CC.mount(DialogView, {
+            widgets = self._widgets,
+            height = self._height,
+        }, self._buf, self._win)
+    end
 end
 
 function Dialog:_bind_keys()
@@ -311,6 +366,12 @@ end
 function Dialog:close()
     if not self._mounted then return end
     self._mounted = false
+
+    if self._dialog_component then
+        local CC = require 'ide.toolkit.component'
+        CC.unmount(self._dialog_component)
+        self._dialog_component = nil
+    end
 
     if self._win and self._win:is_valid() then
         self._win:close(true)
