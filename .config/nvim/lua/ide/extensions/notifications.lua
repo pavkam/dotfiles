@@ -206,23 +206,22 @@ function Notifications:_show_history()
         self._scroll = 0
     end
 
-    function HistoryList:render_item(canvas, row, item, width)
+    function HistoryList:render_item(item, width)
         local cfg = LEVEL_CONFIG[item.level] or LEVEL_CONFIG[vim.log.levels.INFO]
         local time_str = os.date('%H:%M:%S', item.timestamp)
         local icon = cfg.icon or ' '
         local hl = cfg.hl or 'IDENotifyInfo'
 
-        -- Time
-        canvas:text(row, 5, time_str, 'IDENotifyTimestamp')
-        -- Level icon
-        canvas:text(row, 15, icon, hl)
-        -- Message (first line only, truncated)
         local first_line = vim.split(item.message, '\n')[1] or ''
         local max_msg = width - 20
         if IDE.text:display_width(first_line) > max_msg then
             first_line = first_line:sub(1, max_msg - 1) .. '…'
         end
-        canvas:text(row, 18, first_line, 'IDENotifyBody')
+        return {
+            { type = 'text', text = time_str .. '  ', hl = 'IDENotifyTimestamp' },
+            { type = 'text', text = icon .. ' ', hl = hl },
+            { type = 'text', text = first_line, hl = 'IDENotifyBody' },
+        }
     end
 
     function HistoryList:on_submit(item)

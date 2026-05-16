@@ -1,5 +1,5 @@
 -- SearchableList: base class for searchable picker dialogs.
--- Provides input handling, scrollable list, navigation, Canvas rendering.
+-- Provides input handling, scrollable list, navigation, reactive rendering.
 -- Subclassed by FilePicker, GrepPicker, SelectPicker.
 
 local Buffer = require 'ide.Buffer'
@@ -46,13 +46,13 @@ end
 ---@param query string
 function SearchableList:on_query_change(query) end
 
---- Override: render a single item row on the Canvas.
----@param canvas Canvas
----@param row integer # 1-indexed row on canvas
+--- Override: return VNode children for a single item row.
+--- Each child is a { type = 'text', text = '...', hl = '...' } node.
 ---@param item table
 ---@param width integer
-function SearchableList:render_item(canvas, row, item, width)
-    canvas:text(row, 5, tostring(item))
+---@return table[] # array of VNode children
+function SearchableList:render_item(item, width)
+    return { { type = 'text', text = tostring(item) } }
 end
 
 --- Override: return preview info for an item.
@@ -368,8 +368,8 @@ function SearchableList:_relayout()
     self:_render()
 end
 
---- Function component for SearchableList chrome (search bar + status).
---- Item rendering still uses Canvas via render_item() for subclass compat.
+--- Function component for the full SearchableList view.
+--- Renders search bar, separator, item rows, and status bar.
 local function SearchableListView(props)
     local query = props.query or ''
     local items = props.items or {}
@@ -379,6 +379,7 @@ local function SearchableListView(props)
     local height = props.height or 20
     local width = props.width or 60
     local visible = height - 3
+    local item_rows = props.item_rows or {}
 
     local children = {}
 
@@ -394,19 +395,58 @@ local function SearchableListView(props)
     -- Row 2: separator
     children[#children + 1] = { type = 'separator', hl = 'IDEDialogBorder' }
 
-    -- Rows 3..h-1: items (rendered by Canvas in _render for subclass compat)
+    -- Item rows
     if #items == 0 then
         local msg = query ~= '' and 'No matches' or 'Type to search...'
         children[#children + 1] = { type = 'text', text = '   ' .. msg, hl = 'IDEDialogListDisabled' }
+    else
+        for idx, row_data in ipairs(item_rows) do
+            local actual_idx = scroll + idx
+            if actual_idx == selected then
+                children[#children + 1] = {
+                    type = 'row', hl = 'IDEDialogListSelected',
+                    children = vim.list_extend(
+                        { { type = 'text', text = '▸ ', hl = 'IDEDialogHotkey' } },
+                        row_data
+                    ),
+                }
+            else
+                children[#children + 1] = {
+                    type = 'row',
+                    children = vim.list_extend(
+                        { { type = 'text', text = '  ' } },
+                        row_data
+                    ),
+                }
+            end
+        end
     end
-    -- Item rows are rendered by the Canvas overlay in _render()
+
+    -- Pad remaining rows
+    local used = 2 + #item_rows + (#items == 0 and 1 or 0)
+    for _ = used + 1, height - 1 do
+        children[#children + 1] = { type = 'text', text = '' }
+    end
+
+    -- Status bar (last row)
+    local filtered_count = #items
+    local status_text = filtered_count < total
+        and string.format(' %d/%d of %d ', math.min(selected, filtered_count), filtered_count, total)
+        or string.format(' %d/%d ', math.min(selected, filtered_count), total)
+    local pad = math.max(0, width - #status_text)
+    children[#children + 1] = {
+        type = 'row', hl = 'IDEDialogBorder',
+        children = {
+            { type = 'text', text = string.rep(' ', pad), hl = 'IDEDialogBorder' },
+            { type = 'text', text = status_text, hl = 'IDEDialogTitle' },
+        },
+    }
 
     return children
 end
 
 function SearchableList:_render()
     if not self._buf or not self._buf:is_valid() then return end
-    local Canvas = require 'ide.toolkit.Canvas'
     local CC = require 'ide.toolkit.component'
     local w = self._win:width()
     local h = self._win:height()
@@ -421,45 +461,23 @@ function SearchableList:_render()
         self._scroll = math.max(0, self._selected - 1)
     end
 
-    -- Render chrome via function component
-    if not self._sl_component then
-        self._sl_component = CC.mount(SearchableListView, {
-            query = self._query, items = items, selected = self._selected,
-            scroll = self._scroll, total = self:total_count(),
-            height = h, width = w,
-        }, self._buf, self._win)
-    else
-        CC.update(self._sl_component, {
-            query = self._query, items = items, selected = self._selected,
-            scroll = self._scroll, total = self:total_count(),
-            height = h, width = w,
-        })
+    -- Collect VNode rows from subclass render_item
+    local item_rows = {}
+    local visible_end = math.min(self._scroll + visible, #items)
+    for i = self._scroll + 1, visible_end do
+        item_rows[#item_rows + 1] = self:render_item(items[i], w)
     end
 
-    -- Render items via Canvas overlay (subclass render_item compatibility)
-    if #items > 0 then
-        local c = Canvas(w, h)
-        local visible_end = math.min(self._scroll + visible, #items)
-        for i = self._scroll + 1, visible_end do
-            local row = i - self._scroll + 2
-            if i == self._selected then
-                c:fill(row, 1, w, 1, ' ', 'IDEDialogListSelected')
-                c:text(row, 2, '▸ ', 'IDEDialogHotkey')
-                self:render_item(c, row, items[i], w)
-            else
-                c:text(row, 2, '  ', 'IDEDialogNormal')
-                self:render_item(c, row, items[i], w)
-            end
-        end
-        -- Status bar
-        local total = self:total_count()
-        local filtered_count = #items
-        local status_text = filtered_count < total
-            and string.format(' %d/%d of %d ', math.min(self._selected, filtered_count), filtered_count, total)
-            or string.format(' %d/%d ', math.min(self._selected, filtered_count), total)
-        c:fill(h, 1, w, 1, ' ', 'IDEDialogBorder')
-        c:right(h, status_text, 'IDEDialogTitle')
-        c:render(self._buf)
+    local props = {
+        query = self._query, items = items, selected = self._selected,
+        scroll = self._scroll, total = self:total_count(),
+        height = h, width = w, item_rows = item_rows,
+    }
+
+    if not self._sl_component then
+        self._sl_component = CC.mount(SearchableListView, props, self._buf, self._win)
+    else
+        CC.update(self._sl_component, props)
     end
 
     self:_update_preview()

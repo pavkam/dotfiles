@@ -93,15 +93,22 @@ function FilePicker:preview_path(item)
     return { path = self._cwd .. '/' .. item }
 end
 
-function FilePicker:render_item(canvas, row, item, width)
+function FilePicker:render_item(item, width)
     local icon = '  '
+    local icon_hl = nil
     if IDE and IDE.icons and IDE.icons:is_loaded() then
         local fname = IDE.fs:basename(item)
         local ext = IDE.fs:extension(item)
         local ic = IDE.icons:for_file(fname, ext)
-        if ic then icon = ic:char() .. ' ' end
+        if ic then
+            icon = ic:char() .. ' '
+            icon_hl = ic:highlight()
+        end
     end
-    canvas:text(row, 5, icon .. item)
+    return {
+        { type = 'text', text = icon, hl = icon_hl },
+        { type = 'text', text = item },
+    }
 end
 
 function FilePicker:on_submit(item)

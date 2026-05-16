@@ -84,8 +84,12 @@ function GrepPicker:preview_path(item)
     return { path = item.path, line = item.lnum }
 end
 
-function GrepPicker:render_item(canvas, row, item, width)
-    canvas:text(row, 5, string.format('%s:%d: %s', item.rel, item.lnum, item.text))
+function GrepPicker:render_item(item, width)
+    return {
+        { type = 'text', text = item.rel, hl = 'Directory' },
+        { type = 'text', text = ':' .. item.lnum .. ': ', hl = 'LineNr' },
+        { type = 'text', text = item.text },
+    }
 end
 
 function GrepPicker:on_submit(item)

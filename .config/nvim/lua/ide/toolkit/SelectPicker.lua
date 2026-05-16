@@ -44,12 +44,19 @@ function SelectPicker:on_query_change(query)
     self._scroll = 0
 end
 
-function SelectPicker:render_item(canvas, row, item, width)
+function SelectPicker:render_item(item, width)
     local icon_part = item.icon and (item.icon .. ' ') or '  '
-    canvas:text(row, 2, icon_part .. (item.text or item.name or tostring(item)))
+    local text = item.text or item.name or tostring(item)
+    local children = {
+        { type = 'text', text = icon_part },
+        { type = 'text', text = text },
+    }
     if item.hint then
-        canvas:right(row, item.hint .. ' ')
+        local pad = math.max(1, width - #icon_part - #text - #item.hint - 5)
+        children[#children + 1] = { type = 'text', text = string.rep(' ', pad) }
+        children[#children + 1] = { type = 'text', text = item.hint, hl = 'Comment' }
     end
+    return children
 end
 
 function SelectPicker:__tostring()
