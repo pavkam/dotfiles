@@ -2249,13 +2249,135 @@ function M.run(filter)
     end)
 
     -- ═══════════════════════════════════════════════════════
+    -- END-TO-END USER JOURNEY TESTS
+    -- ═══════════════════════════════════════════════════════
+
+    suite('E2E: file open-edit-save cycle', function()
+        test('open fixture, modify, undo, verify clean', function()
+            local bufnr = open_fixture('sample.lua', 500)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            assert_true(buf:is_valid(), 'buffer must be valid')
+            assert_true(buf:is_normal(), 'fixture must be normal buffer')
+
+            -- Get original content
+            local orig_line = buf:line(1)
+            assert_not_nil(orig_line, 'first line must exist')
+
+            -- Modify
+            buf:set_option('modifiable', true)
+            local test_text = '-- test modification ' .. os.time()
+            buf:set_lines(0, 1, { test_text })
+            assert_true(buf:is_modified(), 'buffer must be modified')
+            assert_eq(buf:line(1), test_text, 'first line must be changed')
+
+            -- Undo
+            buf:undo()
+            assert_eq(buf:line(1), orig_line, 'undo must restore original')
+
+            close_buf()
+        end)
+
+        test('open file, check filetype detected', function()
+            local bufnr = open_fixture('sample.lua', 500)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            assert_eq(buf:filetype(), 'lua', 'Lua file must detect lua filetype')
+            close_buf()
+        end)
+
+        test('open Go file, check filetype', function()
+            local bufnr = open_fixture('sample.go', 1000)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            assert_eq(buf:filetype(), 'go', 'Go file must detect go filetype')
+            close_buf()
+        end)
+
+        test('open HTML file, check filetype', function()
+            local bufnr = open_fixture('sample.html', 500)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            assert_eq(buf:filetype(), 'html', 'HTML file must detect html filetype')
+            close_buf()
+        end)
+    end)
+
+    suite('E2E: buffer list management', function()
+        test('opening file makes it the current buffer', function()
+            open_fixture('sample.go', 500)
+            local cur = IDE.buffers:current()
+            assert_match(cur:name(), 'sample', 'current must match opened file')
+            close_buf()
+        end)
+
+        test('listed returns at least one buffer', function()
+            open_fixture('sample.lua', 300)
+            local listed = IDE.buffers:listed()
+            assert_true(#listed >= 1, 'must have >=1 listed buffer')
+            close_buf()
+        end)
+    end)
+
+    suite('E2E: Buffer API on real files', function()
+        test('line_count matches file', function()
+            local bufnr = open_fixture('sample.lua', 300)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            assert_true(buf:line_count() > 0, 'file must have lines')
+            close_buf()
+        end)
+
+        test('path is absolute', function()
+            local bufnr = open_fixture('sample.lua', 300)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            local path = buf:path()
+            assert_not_nil(path, 'must have a path')
+            assert_match(path, '^/', 'path must be absolute')
+            assert_match(path, 'sample%.lua$', 'path must end with filename')
+            close_buf()
+        end)
+
+        test('name is short filename', function()
+            local bufnr = open_fixture('sample.lua', 300)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            local name = buf:name()
+            assert_eq(name, 'sample.lua', 'name must be just filename')
+            close_buf()
+        end)
+    end)
+
+    suite('E2E: write and read file', function()
+        test('IDE.fs write + read roundtrip on temp file', function()
+            local path = '/tmp/ide_e2e_write_' .. os.time() .. '.txt'
+            local content = 'line1\nline2\nline3'
+            IDE.fs:write(path, content)
+            local read_back = IDE.fs:read(path)
+            assert_eq(read_back, content, 'must read back exactly what was written')
+            os.remove(path)
+        end)
+
+        test('IDE.fs write + read is consistent', function()
+            local path = '/tmp/ide_e2e_consistency_' .. os.time() .. '.txt'
+            -- Write multiple times, verify last write wins
+            IDE.fs:write(path, 'version1')
+            assert_eq(IDE.fs:read(path), 'version1')
+            IDE.fs:write(path, 'version2')
+            assert_eq(IDE.fs:read(path), 'version2')
+            os.remove(path)
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
     -- CLEANUP: wipe all test fixture buffers
     -- ═══════════════════════════════════════════════════════
 
     ensure_normal_window()
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         local name = vim.api.nvim_buf_get_name(buf)
-        if name:find('test_fixtures') or name:find('Scratch') then
+        if name:find('test_fixtures') or name:find('Scratch') or name:find('ide_e2e') then
             pcall(vim.api.nvim_buf_delete, buf, { force = true })
         end
     end
