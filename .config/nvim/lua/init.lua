@@ -445,9 +445,11 @@ end
 ---@param ... any # the values to hash.
 ---@return string # the hash.
 _G.hash = function(...)
+    local args = { ... }
+    local n = select('#', ...)
     local parts = {}
-    for i = 1, select('#', ...) do
-        parts[i] = inspect(select(i, ...))
+    for i = 1, n do
+        parts[i] = inspect(args[i])
     end
     return vim.fn.sha256(table.concat(parts, '|'))
 end
@@ -722,30 +724,6 @@ function table.weak(t, mode)
 
     return setmetatable(t, { __mode = mode or 'k' })
 end
-
----@class (exact) smart_table_entity_prop # The property for a smart table.
----@field get fun(smart_table: table, entity: table): any # the getter function.
----@field set (fun(smart_table: table, entity: table, value: any)) | nil # the setter function (optional).
----@field cache boolean|nil # whether to cache the values (default `false`).
-
----@class (exact) smart_table_prop # The property for a smart table.
----@field get fun(smart_table: table): any # the getter function.
----@field set (fun(smart_table: table, value: any)) | nil # the setter function (optional).
-
----@alias smart_table_func fun(smart_table: table, ...): any # The function for a smart table.
----@alias smart_table_entity_func fun(entity: table, ...): any # The function for an entity.
-
----@class smart_table_options # The options for a synthetic table.
----@field functions table<string, smart_table_func>|nil # the functions for the smart table (optional).
----@field properties table<string, smart_table_prop>|nil # the properties for the smart table (optional).
----@field entity_id_valid fun(id: any): boolean # the function to check if an entity is valid.
----@field entity_ids (fun(): any[])|nil # the entities to make smart tables for (optional).
----@field entity_functions table<string, smart_table_entity_func>|nil # the functions for the smart table (optional).
----@field entity_properties table<string, smart_table_entity_prop>|nil # the properties for the smart table (optional).
-
---- Creates a new smart table.
----@param opts smart_table_options # the options for the smart table.
----@return table # the smart table.
 
 -- Checks if a table has a specific kay/value.
 ---@generic K, V

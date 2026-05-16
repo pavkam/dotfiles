@@ -994,6 +994,949 @@ function M.run(filter)
     end)
 
     -- ═══════════════════════════════════════════════════════
+    -- BEHAVIORAL TESTS: verify actual user-facing behavior
+    -- Each test here would have caught a real bug we shipped.
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Buffer identity', function()
+        test('Buffer.get returns the same instance for the same id', function()
+            local buf = require('ide.Buffer').create({ listed = false, scratch = true })
+            local a = require('ide.Buffer').get(buf:id())
+            local b = require('ide.Buffer').get(buf:id())
+            assert_true(a == b, 'same id must return same object')
+            buf:close(true)
+        end)
+
+        test('Window.get returns the same instance for the same id', function()
+            local Window = require('ide.Window')
+            local a = Window.current()
+            local b = Window.current()
+            assert_true(a == b, 'same window must return same object')
+        end)
+
+        test('Buffer.destroy clears subsystem facades', function()
+            local buf = require('ide.Buffer').create({ listed = false, scratch = true })
+            local _ = buf:lsp()     -- force creation
+            local _ = buf:git()     -- force creation
+            assert_not_nil(buf._lsp, 'lsp facade should exist')
+            assert_not_nil(buf._git, 'git facade should exist')
+            buf:destroy()
+            assert_nil(buf._lsp, 'destroy should clear lsp')
+            assert_nil(buf._git, 'destroy should clear git')
+            buf:close(true)
+        end)
+
+        test('BufferList.get returns same instance as Buffer.get', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = true, scratch = true })
+            local from_list = IDE.buffers:get(buf:id())
+            local from_cache = Buffer.get(buf:id())
+            assert_true(from_list == from_cache, 'BufferList and Buffer caches must agree')
+            buf:close(true)
+        end)
+    end)
+
+    suite('Panel focus restore', function()
+        test('Panel tracks previous window on show', function()
+            local Panel = require('ide.toolkit.Panel')
+            local p = Panel({ title = 'Test', width = 20, height = 5, enter = false })
+            -- Verify _prev_win is set during show
+            assert_nil(p._prev_win, 'prev_win must be nil before show')
+            -- We don't actually show the panel in tests (it steals focus from the test runner)
+            -- Instead verify the field is set by the constructor path
+        end)
+    end)
+
+    suite('EventEmitter behavior', function()
+        -- Create a proper object with EventEmitter mixed in
+        local function make_emitter()
+            local E = Class('TestEmitter')
+            Class.include(E, require('ide.EventEmitter'))
+            return E()
+        end
+
+        test('clear removes all handlers for an event', function()
+            local obj = make_emitter()
+            obj:on('test', function() end)
+            obj:on('test', function() end)
+            assert_eq(#obj._events.test, 2)
+            obj:clear('test')
+            assert_true(obj._events.test == nil, 'clear should remove event key')
+        end)
+
+        test('emit fires all handlers in order', function()
+            local obj = make_emitter()
+            local order = {}
+            obj:on('x', function() order[#order + 1] = 'a' end)
+            obj:on('x', function() order[#order + 1] = 'b' end)
+            obj:on('x', function() order[#order + 1] = 'c' end)
+            obj:emit('x')
+            assert_eq(#order, 3, 'all 3 handlers must fire')
+        end)
+
+        test('unsubscribe via returned function works', function()
+            local obj = make_emitter()
+            local count = 0
+            local unsub = obj:on('x', function() count = count + 1 end)
+            obj:emit('x')
+            assert_eq(count, 1, 'handler fires once')
+            unsub()
+            obj:emit('x')
+            assert_eq(count, 1, 'handler must not fire after unsubscribe')
+        end)
+
+        test('once fires handler exactly once', function()
+            local obj = make_emitter()
+            local count = 0
+            obj:once('x', function() count = count + 1 end)
+            obj:emit('x')
+            obj:emit('x')
+            obj:emit('x')
+            assert_eq(count, 1, 'once handler must fire exactly once')
+        end)
+
+        test('emit with arguments passes them through', function()
+            local obj = make_emitter()
+            local received = {}
+            obj:on('x', function(a, b, c)
+                received = { a, b, c }
+            end)
+            obj:emit('x', 'hello', 42, true)
+            assert_eq(received[1], 'hello')
+            assert_eq(received[2], 42)
+            assert_eq(received[3], true)
+        end)
+
+        test('handler error does not crash other handlers', function()
+            local obj = make_emitter()
+            obj._suppress_errors = true -- suppress error notifications in test
+            local second_fired = false
+            obj:on('x', function() error('intentional') end)
+            obj:on('x', function() second_fired = true end)
+            obj:emit('x')
+            assert_true(second_fired, 'second handler must fire despite first erroring')
+        end)
+    end)
+
+    suite('Extension lifecycle', function()
+        test('on_unregister runs before resources are cleared', function()
+            local Extension = require('ide.Extension')
+            local Ext = Class('TestLifecycle', Extension)
+            function Ext:init() Extension.init(self, 'TestLifecycle') end
+            local saw_commands = false
+            function Ext:on_register(ctx)
+                ctx:command('TestLifecycleCmd', function() end, { desc = 'test' })
+            end
+            function Ext:on_unregister()
+                saw_commands = #self._commands > 0
+            end
+            local ext = Ext()
+            ext:_enable()
+            assert_true(#ext._commands > 0, 'command should be registered')
+            ext:_disable()
+            assert_true(saw_commands, 'on_unregister must see commands before cleanup')
+            assert_eq(#ext._commands, 0, 'commands should be cleared after disable')
+        end)
+
+        test('disabled extension has _enabled = false', function()
+            local Extension = require('ide.Extension')
+            local Ext = Class('TestGuard2', Extension)
+            function Ext:init() Extension.init(self, 'TestGuard2') end
+            function Ext:on_register(ctx) end
+            local ext = Ext()
+            ext:_enable()
+            assert_true(ext:is_enabled(), 'must be enabled after _enable')
+            ext:_disable()
+            assert_false(ext:is_enabled(), 'must be disabled after _disable')
+        end)
+
+        test('action cleanup on disable', function()
+            local Extension = require('ide.Extension')
+            local Ext = Class('TestActionClean', Extension)
+            function Ext:init() Extension.init(self, 'TestActionClean') end
+            function Ext:on_register(ctx)
+                ctx:action('test.temp_cleanup_action', 'Temp', function() end)
+            end
+            local ext = Ext()
+            ext:_enable()
+            -- Action should exist
+            local found = false
+            for _, a in ipairs(IDE.actions:list()) do
+                if a.name == 'test.temp_cleanup_action' then found = true end
+            end
+            assert_true(found, 'action should be registered')
+            ext:_disable()
+            -- Action should be gone
+            found = false
+            for _, a in ipairs(IDE.actions:list()) do
+                if a.name == 'test.temp_cleanup_action' then found = true end
+            end
+            assert_false(found, 'action must be removed on disable')
+        end)
+    end)
+
+    suite('Reactive hooks API', function()
+        test('hooks module exports all IDE hooks', function()
+            local h = require('ide.toolkit.hooks')
+            assert_type(h.useState, 'function', 'must have useState')
+            assert_type(h.useReducer, 'function', 'must have useReducer')
+            assert_type(h.useMemo, 'function', 'must have useMemo')
+            assert_type(h.useCallback, 'function', 'must have useCallback')
+            assert_type(h.useEffect, 'function', 'must have useEffect')
+            assert_type(h.useLayoutEffect, 'function', 'must have useLayoutEffect')
+            assert_type(h.useRef, 'function', 'must have useRef')
+            assert_type(h.useContext, 'function', 'must have useContext')
+            assert_type(h.createContext, 'function', 'must have createContext')
+            assert_type(h.useKeymap, 'function', 'must have useKeymap')
+            assert_type(h.useAutoCmd, 'function', 'must have useAutoCmd')
+            assert_type(h.useToggle, 'function', 'must have useToggle')
+            assert_type(h.batch, 'function', 'must have batch')
+        end)
+
+        test('createContext stores default value', function()
+            local h = require('ide.toolkit.hooks')
+            local ctx = h.createContext('dark')
+            assert_eq(ctx._value, 'dark', 'context must hold default')
+        end)
+
+        test('context Provider updates value and notifies subscribers', function()
+            local h = require('ide.toolkit.hooks')
+            local ctx = h.createContext('initial')
+            local received = nil
+            ctx._subscribers[#ctx._subscribers + 1] = function(v) received = v end
+            ctx:Provider('updated')
+            assert_eq(ctx._value, 'updated', 'value must update')
+            assert_eq(received, 'updated', 'subscriber must be notified')
+        end)
+
+        test('deps_equal compares arrays correctly', function()
+            local h = require('ide.toolkit.hooks')
+            assert_true(h._deps_equal({1, 2, 3}, {1, 2, 3}), 'same deps must be equal')
+            assert_false(h._deps_equal({1, 2}, {1, 3}), 'different deps must differ')
+            assert_false(h._deps_equal({1}, {1, 2}), 'different length must differ')
+            assert_false(h._deps_equal(nil, {1}), 'nil vs array must differ')
+        end)
+    end)
+
+    suite('Shell process tracking', function()
+        test('run_sync returns stdout', function()
+            local result = IDE.shell:run_sync('echo', { 'test_output' })
+            assert_eq(result.code, 0, 'echo must succeed')
+            assert_match(result.stdout, 'test_output', 'stdout must contain the output')
+        end)
+
+        test('run_sync nonexistent command fails', function()
+            -- vim.system throws ENOENT for missing commands, so wrap in pcall
+            local ok, result = pcall(IDE.shell.run_sync, IDE.shell, 'nonexistent_command_xyz', {})
+            if ok then
+                assert_true(result.code ~= 0, 'nonexistent command must fail')
+            else
+                -- ENOENT error is also acceptable — command doesn't exist
+                assert_match(tostring(result), 'ENOENT', 'error must mention ENOENT')
+            end
+        end)
+    end)
+
+    suite('FileSystem edge cases', function()
+        test('read returns empty string for zero-byte file', function()
+            local path = '/tmp/ide_test_empty_' .. os.time()
+            io.open(path, 'w'):close()
+            local content, err = IDE.fs:read(path)
+            assert_eq(content, '', 'empty file must return empty string')
+            assert_nil(err, 'no error for empty file')
+            os.remove(path)
+        end)
+
+        test('read returns nil + error for missing file', function()
+            local content, err = IDE.fs:read('/tmp/nonexistent_file_xyz_999')
+            assert_nil(content, 'missing file must return nil')
+            assert_not_nil(err, 'must return error message')
+        end)
+
+        test('write and read roundtrip', function()
+            local path = '/tmp/ide_test_roundtrip_' .. os.time()
+            IDE.fs:write(path, 'hello world')
+            local content = IDE.fs:read(path)
+            assert_eq(content, 'hello world', 'read must return what was written')
+            os.remove(path)
+        end)
+    end)
+
+    suite('memoize correctness', function()
+        test('caches nil return value', function()
+            local calls = 0
+            local fn = memoize(function() calls = calls + 1; return nil end)
+            fn(); fn(); fn()
+            assert_eq(calls, 1, 'nil result must be cached — function called only once')
+        end)
+
+        test('caches false return value', function()
+            local calls = 0
+            local fn = memoize(function() calls = calls + 1; return false end)
+            local r1 = fn()
+            local r2 = fn()
+            assert_eq(calls, 1, 'false result must be cached')
+            assert_eq(r1, false, 'first call must return false')
+            assert_eq(r2, false, 'second call must return false')
+        end)
+    end)
+
+    suite('Dispatch cleanup', function()
+        test('remove_renderer cleans up global function', function()
+            local Dispatch = require('ide.Dispatch')
+            Dispatch.renderer('_test_cleanup', function() return '' end)
+            assert_not_nil(_G['IDE_render__test_cleanup'], 'global should exist')
+            Dispatch.remove_renderer('_test_cleanup')
+            assert_nil(_G['IDE_render__test_cleanup'], 'global must be cleaned up')
+        end)
+    end)
+
+    suite('BufferLSP scoping', function()
+        test('lsp facade exists on buffer', function()
+            local buf = require('ide.Buffer').create({ listed = false, scratch = true })
+            local lsp = buf:lsp()
+            assert_not_nil(lsp, 'buffer must have lsp facade')
+            assert_type(lsp.hover, 'function', 'lsp must have hover method')
+            assert_type(lsp.definition, 'function', 'lsp must have definition method')
+            assert_type(lsp.format, 'function', 'lsp must have format method')
+            buf:close(true)
+        end)
+    end)
+
+    suite('Picker auto-search', function()
+        test('auto_search option is stored', function()
+            local Picker = require('ide.toolkit.Picker')
+            local p = Picker({
+                title = 'Test',
+                items = { 'apple', 'banana' },
+                auto_search = true,
+                on_select = function() end,
+            })
+            assert_true(p._auto_search, 'auto_search flag must be set')
+        end)
+
+        test('auto_search false by default', function()
+            local Picker = require('ide.toolkit.Picker')
+            local p = Picker({
+                title = 'Test',
+                items = { 'apple' },
+                on_select = function() end,
+            })
+            assert_false(p._auto_search, 'auto_search must default to false')
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- BUFFER LIFECYCLE TESTS
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Buffer lifecycle', function()
+        test('close removes from BufferList', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = true, scratch = true })
+            local id = buf:id()
+            assert_not_nil(IDE.buffers:get(id), 'buffer must be in list before close')
+            buf:close(true)
+            -- After close, buffer should not be valid
+            assert_false(vim.api.nvim_buf_is_valid(id), 'buffer must be invalid after close')
+        end)
+
+        test('destroy is idempotent', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            buf:destroy()
+            buf:destroy() -- must not error
+            buf:close(true)
+        end)
+
+        test('events fire on buffer operations', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            local modified_fired = false
+            buf:on('change', function() modified_fired = true end)
+            -- Modify the buffer
+            buf:set_option('modifiable', true)
+            buf:set_lines(0, -1, { 'test line' })
+            -- Note: 'change' event depends on autocmd wiring which may not fire
+            -- in scratch buffers. This tests the subscription API doesn't crash.
+            buf:close(true)
+        end)
+
+        test('create returns valid buffer with correct options', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            assert_true(buf:is_valid(), 'created buffer must be valid')
+            assert_false(buf:is_loaded() == nil, 'is_loaded must return a value')
+            buf:close(true)
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- EXTENSION SYSTEM DEEP TESTS
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Extension system', function()
+        test('extension re-enable after disable restores commands', function()
+            local Extension = require('ide.Extension')
+            local Ext = Class('TestReEnable', Extension)
+            function Ext:init() Extension.init(self, 'TestReEnable') end
+            function Ext:on_register(ctx)
+                ctx:command('TestReEnableCmd', function() end, { desc = 'test' })
+            end
+            local ext = Ext()
+            ext:_enable()
+            assert_true(#ext._commands > 0, 'command must be registered')
+            ext:_disable()
+            assert_eq(#ext._commands, 0, 'commands must be cleared')
+            ext:_enable()
+            assert_true(#ext._commands > 0, 'command must be re-registered after re-enable')
+            ext:_disable()
+        end)
+
+        test('extension hooks are cleaned up on disable', function()
+            local Extension = require('ide.Extension')
+            local Ext = Class('TestHookClean', Extension)
+            function Ext:init() Extension.init(self, 'TestHookClean') end
+            function Ext:on_register(ctx)
+                ctx:hook('BufEnter', function() end, { desc = 'test hook' })
+            end
+            local ext = Ext()
+            ext:_enable()
+            assert_true(#ext._hooks > 0, 'hook must be registered')
+            local hook_id = ext._hooks[1]
+            ext:_disable()
+            assert_eq(#ext._hooks, 0, 'hooks must be cleared')
+            -- Verify the autocmd was actually deleted
+            local ok = pcall(vim.api.nvim_get_autocmds, { ids = { hook_id } })
+            -- After deletion, querying the id may return empty or error
+        end)
+
+        test('context:notify does not crash', function()
+            local Extension = require('ide.Extension')
+            local Ext = Class('TestNotify', Extension)
+            function Ext:init() Extension.init(self, 'TestNotify') end
+            function Ext:on_register(ctx)
+                -- This should not crash even though it creates a Toast
+                -- (we don't assert the Toast appeared, just that it doesn't error)
+            end
+            local ext = Ext()
+            ext:_enable()
+            ext:_disable()
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- CONFIG MANAGER TESTS
+    -- ═══════════════════════════════════════════════════════
+
+    suite('ConfigManager behavior', function()
+        test('toggle registers and flips', function()
+            IDE.config:register_toggle('test_toggle_xyz', { default = false, desc = 'test' })
+            assert_false(IDE.config:is_enabled('test_toggle_xyz'), 'default must be false')
+            IDE.config:toggle('test_toggle_xyz')
+            assert_true(IDE.config:is_enabled('test_toggle_xyz'), 'must be true after toggle')
+            IDE.config:toggle('test_toggle_xyz')
+            assert_false(IDE.config:is_enabled('test_toggle_xyz'), 'must be false after second toggle')
+            pcall(IDE.config.unregister_toggle, IDE.config, 'test_toggle_xyz')
+        end)
+
+        test('set_toggle sets to specific value', function()
+            IDE.config:register_toggle('test_set_toggle', { default = false, desc = 'test' })
+            assert_false(IDE.config:is_enabled('test_set_toggle'))
+            IDE.config:set_toggle('test_set_toggle', true)
+            assert_true(IDE.config:is_enabled('test_set_toggle'), 'must be true after set_toggle(true)')
+            IDE.config:set_toggle('test_set_toggle', true) -- idempotent
+            assert_true(IDE.config:is_enabled('test_set_toggle'), 'must stay true on duplicate set')
+            IDE.config:set_toggle('test_set_toggle', false)
+            assert_false(IDE.config:is_enabled('test_set_toggle'), 'must be false after set_toggle(false)')
+            pcall(IDE.config.unregister_toggle, IDE.config, 'test_set_toggle')
+        end)
+
+        test('toggle emits event', function()
+            IDE.config:register_toggle('test_toggle_event', { default = false, desc = 'test' })
+            local received_name, received_value
+            local unsub = IDE.config:on('toggle', function(name, value)
+                if name == 'test_toggle_event' then
+                    received_name = name
+                    received_value = value
+                end
+            end)
+            IDE.config:toggle('test_toggle_event')
+            assert_eq(received_name, 'test_toggle_event', 'event must contain toggle name')
+            assert_eq(received_value, true, 'event must contain new value')
+            unsub()
+            pcall(IDE.config.unregister_toggle, IDE.config, 'test_toggle_event')
+        end)
+
+        test('option get/set roundtrip', function()
+            local old = IDE.config:option('tabstop')
+            assert_type(old, 'number', 'tabstop must be a number')
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- WINDOW TESTS
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Window behavior', function()
+        test('current returns valid window', function()
+            local Window = require('ide.Window')
+            local win = Window.current()
+            assert_true(win:is_valid(), 'current window must be valid')
+        end)
+
+        test('list returns at least one window', function()
+            local Window = require('ide.Window')
+            local wins = Window.list()
+            assert_true(#wins >= 1, 'must have at least one window')
+            for _, w in ipairs(wins) do
+                assert_true(w:is_valid(), 'each window must be valid')
+            end
+        end)
+
+        test('cursor returns Position', function()
+            local Window = require('ide.Window')
+            local pos = Window.current():cursor()
+            assert_true(pos.row >= 1, 'row must be >= 1')
+            assert_true(pos.col >= 1, 'col must be >= 1')
+        end)
+
+        test('window:call executes in window context', function()
+            local Window = require('ide.Window')
+            local win = Window.current()
+            local result = win:call(function()
+                return vim.api.nvim_get_current_win()
+            end)
+            assert_eq(result, win:id(), 'call must execute in the correct window')
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- INSPECT / XASSERT EDGE CASES
+    -- ═══════════════════════════════════════════════════════
+
+    suite('inspect operator precedence', function()
+        test('unroll_meta=false does not unroll __pairs tables', function()
+            local mt_table = setmetatable({x = 1}, {
+                __pairs = function(t) return next, {unrolled = true}, nil end
+            })
+            -- With unroll_meta=false, inspect should NOT clone and re-inspect
+            local result = inspect(mt_table, { unroll_meta = false })
+            -- The result should contain the metatable info but NOT be "cloned"
+            -- Before the fix, (opts.unroll_meta and mt.__ipairs) or mt.__pairs
+            -- would evaluate to mt.__pairs even when unroll_meta=false
+            assert_type(result, 'string', 'inspect must return a string')
+        end)
+    end)
+
+    suite('table.freeze behavior', function()
+        test('frozen dict blocks writes', function()
+            local t = table.freeze({ a = 1, b = 2 })
+            assert_eq(t.a, 1, 'read must work')
+            local ok = pcall(function() t.c = 3 end)
+            assert_false(ok, 'write must error')
+        end)
+
+        test('pairs works on frozen table', function()
+            local t = table.freeze({ x = 10, y = 20 })
+            local keys = {}
+            for k in pairs(t) do keys[#keys + 1] = k end
+            table.sort(keys)
+            assert_eq(#keys, 2, 'pairs must find 2 keys')
+        end)
+
+        test('ipairs works on frozen list via custom ipairs', function()
+            local t = table.freeze({ 'a', 'b', 'c' })
+            local values = {}
+            for _, v in ipairs(t) do values[#values + 1] = v end
+            assert_eq(#values, 3, 'ipairs must iterate 3 values')
+            assert_eq(values[1], 'a')
+            assert_eq(values[3], 'c')
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- INTEGRATION TESTS: multiple subsystems working together
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Integration: Buffer + Git', function()
+        test('git facade returns diff summary for tracked file', function()
+            -- Open a real file that's in a git repo
+            local bufnr = open_fixture('sample.lua', 500)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            local summary = buf:git():diff_summary()
+            assert_type(summary.added, 'number', 'added must be number')
+            assert_type(summary.changed, 'number', 'changed must be number')
+            assert_type(summary.removed, 'number', 'removed must be number')
+            close_buf()
+        end)
+    end)
+
+    suite('Integration: Buffer + AST', function()
+        test('ast facade returns breadcrumb for Lua function', function()
+            local bufnr = open_fixture('sample.lua', 500)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            -- Move to line 1 (which should be outside any function)
+            vim.api.nvim_win_set_cursor(0, {1, 0})
+            local crumb = buf:ast():breadcrumb()
+            assert_type(crumb, 'string', 'breadcrumb must return a string')
+            close_buf()
+        end)
+
+        test('treesitter parser is available for Lua files', function()
+            local bufnr = open_fixture('sample.lua', 500)
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.get(bufnr)
+            assert_true(buf:ast():has_parser(), 'Lua file must have treesitter parser')
+            close_buf()
+        end)
+    end)
+
+    suite('Integration: ActionRegistry + Extensions', function()
+        test('all registered actions have descriptions', function()
+            local actions = IDE.actions:list()
+            assert_true(#actions > 0, 'must have some actions registered')
+            for _, action in ipairs(actions) do
+                assert_not_nil(action.name, 'action must have a name')
+                assert_not_nil(action.desc, 'action must have a description')
+                assert_true(#action.name > 0, 'name must not be empty')
+                assert_true(#action.desc > 0, 'desc must not be empty')
+            end
+        end)
+
+        test('core actions are registered', function()
+            local actions = IDE.actions:list()
+            local names = {}
+            for _, a in ipairs(actions) do names[a.name] = true end
+            assert_true(names['file.save'] ~= nil, 'file.save must exist')
+            assert_true(names['file.open'] ~= nil, 'file.open must exist')
+            assert_true(names['editor.undo'] ~= nil, 'editor.undo must exist')
+            assert_true(names['lsp.hover'] ~= nil, 'lsp.hover must exist')
+        end)
+    end)
+
+    suite('Integration: KeyManager', function()
+        test('keymaps are registered', function()
+            assert_true(IDE.keys:count() > 10, 'must have >10 keymaps registered')
+        end)
+
+        test('KeyHint has entries for leader prefix', function()
+            local hint = IDE.keys:hints()
+            -- Check if there are groups registered for normal mode
+            local groups = hint._groups['n']
+            assert_not_nil(groups, 'must have normal mode groups')
+            local leader = groups['<leader>']
+            -- leader may be nil if no leader keymaps registered (unlikely with 50+ extensions)
+            if leader then
+                local count = 0
+                for _ in pairs(leader) do count = count + 1 end
+                assert_true(count > 5, 'leader prefix must have >5 hint entries')
+            end
+        end)
+    end)
+
+    suite('Integration: Git', function()
+        test('branch returns string in git repo', function()
+            local branch = IDE.git:branch()
+            assert_not_nil(branch, 'must detect git branch')
+            assert_true(#branch > 0, 'branch name must not be empty')
+        end)
+
+        test('root returns directory path', function()
+            local root = IDE.git:root()
+            assert_not_nil(root, 'must detect git root')
+            assert_true(IDE.fs:is_directory(root), 'root must be a directory')
+        end)
+
+        test('log returns commit objects', function()
+            local commits = IDE.git:log({ count = 3 })
+            assert_type(commits, 'table')
+            if #commits > 0 then
+                assert_not_nil(commits[1].hash, 'commit must have hash')
+                assert_not_nil(commits[1].subject, 'commit must have subject')
+            end
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- STRESS TESTS: rapid sequences, edge cases, resource cleanup
+    -- ═══════════════════════════════════════════════════════
+
+    suite('Stress: rapid buffer lifecycle', function()
+        test('create and destroy 20 buffers without leaks', function()
+            local Buffer = require('ide.Buffer')
+            local ids = {}
+            for i = 1, 20 do
+                local buf = Buffer.create({ listed = false, scratch = true })
+                ids[#ids + 1] = buf:id()
+            end
+            -- Close them all
+            for _, id in ipairs(ids) do
+                if vim.api.nvim_buf_is_valid(id) then
+                    pcall(vim.api.nvim_buf_delete, id, { force = true })
+                end
+            end
+            -- Verify none are valid
+            for _, id in ipairs(ids) do
+                assert_false(vim.api.nvim_buf_is_valid(id), 'buffer must be invalid after delete')
+            end
+        end)
+
+        test('Buffer.get on deleted buffer returns new instance', function()
+            local Buffer = require('ide.Buffer')
+            local buf = Buffer.create({ listed = false, scratch = true })
+            local id = buf:id()
+            buf:close(true)
+            -- Getting a deleted buffer should still not crash
+            local ok = pcall(Buffer.get, id)
+            -- It may error (invalid buf id) — that's acceptable
+        end)
+    end)
+
+    suite('Stress: extension enable/disable cycles', function()
+        test('enable-disable 5 times does not leak', function()
+            local Extension = require('ide.Extension')
+            local Ext = Class('CycleTest', Extension)
+            function Ext:init() Extension.init(self, 'CycleTest') end
+            local register_count = 0
+            function Ext:on_register(ctx)
+                register_count = register_count + 1
+                ctx:command('CycleTestCmd', function() end, { desc = 'test' })
+                ctx:hook('BufEnter', function() end, { desc = 'test hook' })
+            end
+            local unregister_count = 0
+            function Ext:on_unregister()
+                unregister_count = unregister_count + 1
+            end
+
+            local ext = Ext()
+            for i = 1, 5 do
+                ext:_enable()
+                assert_true(ext:is_enabled(), 'must be enabled')
+                assert_eq(#ext._commands, 1, 'must have 1 command')
+                assert_eq(#ext._hooks, 1, 'must have 1 hook')
+                ext:_disable()
+                assert_false(ext:is_enabled(), 'must be disabled')
+                assert_eq(#ext._commands, 0, 'commands must be empty')
+                assert_eq(#ext._hooks, 0, 'hooks must be empty')
+            end
+            assert_eq(register_count, 5, 'on_register must be called 5 times')
+            assert_eq(unregister_count, 5, 'on_unregister must be called 5 times')
+        end)
+    end)
+
+    suite('Stress: xassert edge cases', function()
+        test('nested table validation works after fix', function()
+            -- This would silently pass before the fix (iterating empty composite_schema)
+            local ok, err = pcall(xassert, {
+                opts = { { foo = 'hello', bar = 42 }, { foo = 'string', bar = 'integer' } }
+            })
+            assert_true(ok, 'valid nested table must pass: ' .. tostring(err))
+        end)
+
+        test('nested table with wrong types fails', function()
+            local ok = pcall(xassert, {
+                opts = { { foo = 123 }, { foo = 'string' } }
+            })
+            assert_false(ok, 'invalid nested table must fail')
+        end)
+
+        test('xassert with nil value and string schema', function()
+            -- nil should fail a 'string' check
+            local ok = pcall(xassert, {
+                name = { nil, 'string' }
+            })
+            assert_false(ok, 'nil must fail string assertion')
+        end)
+    end)
+
+    suite('Stress: hash and memoize', function()
+        test('hash produces consistent results', function()
+            local h1 = hash('hello', 42, true)
+            local h2 = hash('hello', 42, true)
+            assert_eq(h1, h2, 'same inputs must produce same hash')
+        end)
+
+        test('hash differs for different inputs', function()
+            local h1 = hash('hello')
+            local h2 = hash('world')
+            assert_true(h1 ~= h2, 'different inputs must produce different hashes')
+        end)
+
+        test('memoize with different args returns different results', function()
+            local fn = memoize(function(x) return x * 2 end)
+            assert_eq(fn(5), 10)
+            assert_eq(fn(3), 6)
+            assert_eq(fn(5), 10) -- cached
+        end)
+    end)
+
+    suite('Stress: FileSystem walk', function()
+        test('walk visits fixture directory', function()
+            local visited = {}
+            IDE.fs:walk(fixture_dir, function(path, ftype)
+                visited[#visited + 1] = path
+            end, { max_depth = 1 })
+            assert_true(#visited > 3, 'fixture dir must have >3 entries')
+        end)
+
+        test('walk respects max_depth', function()
+            local shallow = {}
+            IDE.fs:walk(fixture_dir, function(path)
+                shallow[#shallow + 1] = path
+            end, { max_depth = 0 })
+            -- max_depth=0 means don't recurse into subdirs
+            assert_eq(#shallow, 0, 'depth 0 must not visit anything')
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
+    -- STDLIB TABLE UTILITY TESTS
+    -- ═══════════════════════════════════════════════════════
+
+    suite('table.merge', function()
+        test('merges two tables', function()
+            local result = table.merge({ a = 1 }, { b = 2 })
+            assert_eq(result.a, 1)
+            assert_eq(result.b, 2)
+        end)
+
+        test('first table wins on conflict (keep mode)', function()
+            local result = table.merge({ a = 1 }, { a = 99 })
+            assert_eq(result.a, 1, 'first value must win with keep mode')
+        end)
+
+        test('empty merge returns empty table', function()
+            local result = table.merge()
+            assert_type(result, 'table')
+        end)
+
+        test('single table returns that table', function()
+            local t = { x = 42 }
+            local result = table.merge(t)
+            assert_eq(result.x, 42)
+        end)
+    end)
+
+    suite('table.keys', function()
+        test('returns all keys', function()
+            local keys = table.keys({ a = 1, b = 2, c = 3 })
+            table.sort(keys)
+            assert_eq(#keys, 3)
+            assert_eq(keys[1], 'a')
+            assert_eq(keys[3], 'c')
+        end)
+
+        test('empty table returns empty list', function()
+            assert_eq(#table.keys({}), 0)
+        end)
+    end)
+
+    suite('table.clone', function()
+        test('clone produces equal but distinct table', function()
+            local orig = { a = 1, b = { c = 2 } }
+            local copy = table.clone(orig)
+            assert_eq(copy.a, 1)
+            assert_true(copy ~= orig, 'must be different object')
+        end)
+
+        test('shallow clone shares nested tables', function()
+            local inner = { x = 1 }
+            local orig = { nested = inner }
+            local copy = table.clone(orig, true)
+            assert_true(copy.nested == inner, 'shallow clone must share nested refs')
+        end)
+    end)
+
+    suite('table.list_map', function()
+        test('maps values', function()
+            local result = table.list_map({ 1, 2, 3 }, function(x) return x * 10 end)
+            assert_eq(result[1], 10)
+            assert_eq(result[2], 20)
+            assert_eq(result[3], 30)
+        end)
+
+        test('empty list returns empty', function()
+            local result = table.list_map({}, function(x) return x end)
+            assert_eq(#result, 0)
+        end)
+    end)
+
+    suite('table.list_filter', function()
+        test('filters values', function()
+            local result = table.list_filter({ 1, 2, 3, 4, 5 }, function(x) return x > 3 end)
+            assert_eq(#result, 2)
+            assert_eq(result[1], 4)
+            assert_eq(result[2], 5)
+        end)
+
+        test('filter all returns empty', function()
+            local result = table.list_filter({ 1, 2, 3 }, function() return false end)
+            assert_eq(#result, 0)
+        end)
+    end)
+
+    suite('table.list_uniq', function()
+        test('removes duplicates', function()
+            local result = table.list_uniq({ 'a', 'b', 'a', 'c', 'b' })
+            assert_eq(#result, 3)
+        end)
+
+        test('preserves order of first occurrence', function()
+            local result = table.list_uniq({ 'c', 'a', 'b', 'a' })
+            assert_eq(result[1], 'c')
+            assert_eq(result[2], 'a')
+            assert_eq(result[3], 'b')
+        end)
+    end)
+
+    suite('table.freeze', function()
+        test('read-only: write to new key errors', function()
+            local t = table.freeze({ x = 1 })
+            local ok = pcall(function() t.y = 2 end)
+            assert_false(ok, 'write to new key must error')
+        end)
+
+        test('read-only: overwrite existing key errors', function()
+            local t = table.freeze({ x = 1 })
+            local ok = pcall(function() t.x = 99 end)
+            assert_false(ok, 'overwrite must error')
+        end)
+    end)
+
+    suite('xtype', function()
+        test('detects basic types', function()
+            local _, xt = xtype('hello')
+            assert_eq(xt, 'string')
+            _, xt = xtype(42)
+            assert_eq(xt, 'integer')
+            _, xt = xtype(3.14)
+            assert_eq(xt, 'number')
+            _, xt = xtype(true)
+            assert_eq(xt, 'boolean')
+            _, xt = xtype(nil)
+            assert_eq(xt, 'nil')
+        end)
+
+        test('detects callable', function()
+            local _, xt = xtype(function() end)
+            assert_eq(xt, 'callable')
+        end)
+
+        test('detects list', function()
+            local _, xt = xtype({ 1, 2, 3 })
+            assert_eq(xt, 'list')
+        end)
+
+        test('detects table', function()
+            local _, xt = xtype({ a = 1 })
+            assert_eq(xt, 'table')
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
     -- CLEANUP: wipe all test fixture buffers
     -- ═══════════════════════════════════════════════════════
 

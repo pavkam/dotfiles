@@ -139,6 +139,8 @@ function WindowChrome:_ensure_frame()
             local win = Window(cur_win)
             local cfg = win:config()
             if not cfg.relative or cfg.relative == '' then
+                -- Don't close the last window (crashes with E444)
+                if #vim.api.nvim_list_wins() <= 1 then return end
                 local target = (self._splitter and self._splitter:active_frame()) or self._frame
                 target:set_buffer(cur_buf)
                 Window(target:window_id()):focus()

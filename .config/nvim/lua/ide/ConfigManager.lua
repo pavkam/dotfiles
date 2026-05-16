@@ -96,6 +96,19 @@ function ConfigManager:toggle(name)
     return t.value
 end
 
+--- Set a toggle to a specific value (unlike toggle() which flips).
+---@param name string
+---@param value boolean
+function ConfigManager:set_toggle(name, value)
+    local t = self._toggles[name]
+    if not t then return end
+    if t.value == value then return end
+    t.value = value
+    if t.on_toggle then pcall(t.on_toggle, value) end
+    self:emit('toggle', name, value)
+    self:save()
+end
+
 --- Get toggle value.
 ---@param name string
 ---@return boolean
