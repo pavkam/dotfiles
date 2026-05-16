@@ -1,17 +1,20 @@
 -- Desktop Extension: TurboVision-style desktop background.
--- Shows a ░ pattern fill when no normal buffers are open,
--- like the classic Turbo Pascal / Borland C++ desktop.
+-- Shows logo, recent files, and quick actions when no buffers are open.
+-- Uses reactive function component for content rendering.
 
 local Extension = require 'ide.Extension'
 local Buffer = require 'ide.Buffer'
 local Window = require 'ide.Window'
 local Timer = require 'ide.Timer'
+local hooks = require 'ide.toolkit.hooks'
+local C = require 'ide.toolkit.component'
 
 local Desktop = Class('Desktop', Extension)
 
 function Desktop:init()
     Extension.init(self, 'Desktop')
     self._buf = nil
+    self._component = nil
     self._active = false
 end
 
@@ -29,15 +32,120 @@ end
 function Desktop:_is_desktop_needed()
     local bufs = IDE.buffers:listed()
     if #bufs == 0 then return true end
-    -- Also show desktop if the only buffer is unnamed and empty
     if #bufs == 1 then
         local buf = bufs[1]
         if buf:is_valid() and (not buf:name() or buf:name() == '') then
-            local lines = buf:line_count()
-            if lines <= 1 then return true end
+            if buf:line_count() <= 1 then return true end
         end
     end
     return false
+end
+
+--- Gather recent file paths from oldfiles + listed buffers.
+---@return string[]
+local function gather_recent_files()
+    local paths = {}
+    local seen = {}
+    for _, path in ipairs(vim.v.oldfiles or {}) do
+        if #paths >= 6 then break end
+        if not seen[path] and IDE.fs:is_file(path) then
+            local rel = IDE.fs:display_path(path)
+            if rel and #rel < 60 then
+                seen[path] = true
+                paths[#paths + 1] = path
+            end
+        end
+    end
+    if #paths == 0 then
+        for buf_obj in IDE.buffers:iter() do
+            if #paths >= 6 then break end
+            local p = buf_obj:path()
+            if p and not seen[p] and IDE.fs:is_file(p) then
+                seen[p] = true
+                paths[#paths + 1] = p
+            end
+        end
+    end
+    return paths
+end
+
+--- Function component for desktop content.
+local function DesktopView(props)
+    local recent = props.recent_files or {}
+    local width = props.width or 80
+    local height = props.height or 30
+
+    local content_height = 20
+    local mid = math.max(1, math.floor((height - content_height) / 2))
+
+    local children = {}
+
+    -- Blank lines before logo
+    for i = 1, mid - 1 do
+        children[#children + 1] = { type = 'text', text = '' }
+    end
+
+    -- Logo
+    local logo = {
+        '╔╦╗╦ ╦╦═╗╔╗ ╔═╗╦  ╦╦╔╦╗',
+        ' ║ ║ ║╠╦╝╠╩╗║ ║╚╗╔╝║║║║',
+        ' ╩ ╚═╝╩╚═╚═╝╚═╝ ╚╝ ╩╩ ╩',
+    }
+    for _, line in ipairs(logo) do
+        local pad = math.max(0, math.floor((width - vim.api.nvim_strwidth(line)) / 2))
+        children[#children + 1] = { type = 'text', text = string.rep(' ', pad) .. line, hl = 'IDEDesktopLogo' }
+    end
+
+    -- Version
+    children[#children + 1] = { type = 'text', text = '' }
+    local ver = 'Neovim ' .. vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch
+    local vpad = math.max(0, math.floor((width - #ver) / 2))
+    children[#children + 1] = { type = 'text', text = string.rep(' ', vpad) .. ver, hl = 'IDEDesktopVersion' }
+
+    -- Recent files
+    children[#children + 1] = { type = 'text', text = '' }
+    children[#children + 1] = { type = 'text', text = '' }
+    local sec = '─── Recent Files ───'
+    local spad = math.max(0, math.floor((width - vim.api.nvim_strwidth(sec)) / 2))
+    children[#children + 1] = { type = 'text', text = string.rep(' ', spad) .. sec, hl = 'IDEDesktopSection' }
+
+    if #recent > 0 then
+        for i, path in ipairs(recent) do
+            local rel = IDE.fs:display_path(path)
+            local icon = ''
+            if IDE.icons and IDE.icons:is_loaded() then
+                local ic = IDE.icons:for_file(IDE.fs:basename(path), IDE.fs:extension(path))
+                if ic then icon = ic:char() .. ' ' end
+            end
+            local entry = string.format(' %d  %s%s', i, icon, rel or path)
+            local epad = math.max(0, math.floor((width - vim.api.nvim_strwidth(entry)) / 2))
+            children[#children + 1] = { type = 'text', text = string.rep(' ', epad) .. entry, hl = 'IDEDesktopFile' }
+        end
+    else
+        local hint = 'Press Ctrl+P to open a file'
+        local hpad = math.max(0, math.floor((width - #hint) / 2))
+        children[#children + 1] = { type = 'text', text = string.rep(' ', hpad) .. hint, hl = 'IDEDesktopHint' }
+    end
+
+    -- Quick actions
+    children[#children + 1] = { type = 'text', text = '' }
+    local asec = '─── Quick Actions ───'
+    local apad = math.max(0, math.floor((width - vim.api.nvim_strwidth(asec)) / 2))
+    children[#children + 1] = { type = 'text', text = string.rep(' ', apad) .. asec, hl = 'IDEDesktopSection' }
+
+    local actions = {
+        { 'Ctrl+P', 'Open file',        '' },
+        { 'Ctrl+E', 'File explorer',    '󰙅' },
+        { 'Ctrl+F', 'Search in files',  '' },
+        { 'F10',    'Menu bar',         '' },
+    }
+    for _, a in ipairs(actions) do
+        local line = string.format('%s  %-10s  %s', a[3], a[1], a[2])
+        local lpad = math.max(0, math.floor((width - vim.api.nvim_strwidth(line)) / 2))
+        children[#children + 1] = { type = 'text', text = string.rep(' ', lpad) .. line, hl = 'IDEDesktopKey' }
+    end
+
+    return children
 end
 
 function Desktop:_show_desktop()
@@ -48,113 +156,38 @@ function Desktop:_show_desktop()
     buf:set_option('filetype', 'ide-desktop')
     buf:set_option('buftype', 'nofile')
 
-    local Canvas = require 'ide.toolkit.Canvas'
     local area = Window.content_area and Window.content_area() or { width = 80, height = 40 }
-    local width = area.width
-    local height = area.height
+    local recent = gather_recent_files()
 
-    local c = Canvas(width, height)
-    -- Center content vertically: logo(3) + version(1) + gap(2) + section(1) + files(2) + gap(1) + section(1) + actions(4) = ~15 lines
-    local content_height = 20
-    local mid = math.max(3, math.floor((height - content_height) / 2))
+    self._component = C.mount(DesktopView, {
+        recent_files = recent,
+        width = area.width,
+        height = area.height,
+    }, buf)
 
-    -- ASCII art logo — bright cyan/blue for impact
-    local logo = {
-        '╔╦╗╦ ╦╦═╗╔╗ ╔═╗╦  ╦╦╔╦╗',
-        ' ║ ║ ║╠╦╝╠╩╗║ ║╚╗╔╝║║║║',
-        ' ╩ ╚═╝╩╚═╚═╝╚═╝ ╚╝ ╩╩ ╩',
-    }
-    for i, line in ipairs(logo) do
-        c:center(mid + i - 1, line, 'IDEDesktopLogo')
-    end
-    c:center(mid + 4, 'Neovim ' .. vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch, 'IDEDesktopVersion')
-
-    -- Gather recent files from oldfiles + recent buffers
-    local recent_paths = {}
-    local seen = {}
-
-    -- Try oldfiles first (shada)
-    for _, path in ipairs(vim.v.oldfiles or {}) do
-        if #recent_paths >= 8 then break end
-        if not seen[path] and IDE.fs:is_file(path) then
-            local rel = IDE.fs:display_path(path)
-            if #rel < 60 then
-                seen[path] = true
-                recent_paths[#recent_paths + 1] = path
-            end
-        end
-    end
-
-    -- Fall back to listed buffers if oldfiles is empty
-    if #recent_paths == 0 then
-        for buf_obj in IDE.buffers:iter() do
-            if #recent_paths >= 8 then break end
-            local p = buf_obj:path()
-            if p and not seen[p] and IDE.fs:is_file(p) then
-                seen[p] = true
-                recent_paths[#recent_paths + 1] = p
-            end
-        end
-    end
-
-    self._recent_paths = recent_paths
-
-    -- Recent files section
-    local row = mid + 7
-    c:center(row, '─── Recent Files ───', 'IDEDesktopSection')
-    row = row + 1
-    if #recent_paths > 0 then
-        for i, path in ipairs(recent_paths) do
-            row = row + 1
-            local rel = IDE.fs:display_path(path)
-            local icon = ''
-            if IDE.icons and IDE.icons:is_loaded() then
-                local ic = IDE.icons:for_file(IDE.fs:basename(path), IDE.fs:extension(path))
-                if ic then icon = ic:char() .. ' ' end
-            end
-            c:center(row, string.format(' %d  %s%s', i, icon, rel), 'IDEDesktopFile')
-        end
-    else
-        row = row + 1
-        c:center(row, 'Press Ctrl+P to open a file', 'IDEDesktopHint')
-    end
-
-    -- Quick actions section
-    row = row + 2
-    c:center(row, '─── Quick Actions ───', 'IDEDesktopSection')
-    local actions = {
-        { 'Ctrl+P', 'Open file',        '' },
-        { 'Ctrl+E', 'File explorer',    '󰙅' },
-        { 'Ctrl+F', 'Search in files',  '' },
-        { 'F10',    'Menu bar',         '' },
-    }
-    for _, a in ipairs(actions) do
-        row = row + 1
-        c:center(row, string.format('%s  %-10s  %s', a[3], a[1], a[2]), 'IDEDesktopKey')
-    end
-
-    c:render(buf)
-
-    -- Show in FramedWindow if available, otherwise in current window
+    -- Show in FramedWindow if available
     if IDE._window_chrome and IDE._window_chrome._frame and IDE._window_chrome._frame:is_valid() then
         IDE._window_chrome._frame:set_buffer(buf:id())
     else
         local win = Window.current()
-        win:set_buffer(buf)
-        win:set_option('cursorline', false)
-        win:set_option('number', false)
-        win:set_option('relativenumber', false)
-        win:set_option('signcolumn', 'no')
-        win:set_option('statuscolumn', '')
-        win:set_option('winhl', 'Normal:IDEDesktop')
+        if win then
+            win:set_buffer(buf)
+            win:set_option('cursorline', false)
+            win:set_option('number', false)
+            win:set_option('relativenumber', false)
+            win:set_option('signcolumn', 'no')
+            win:set_option('statuscolumn', '')
+            win:set_option('winhl', 'Normal:IDEDesktop')
+        end
     end
 
     self._buf = buf
+    self._recent_paths = recent
     self._active = true
 
     -- Bind number keys to open recent files
-    for i = 1, math.min(#self._recent_paths, 6) do
-        local path = self._recent_paths[i]
+    for i = 1, math.min(#recent, 6) do
+        local path = recent[i]
         buf:bind_key('n', tostring(i), function()
             Buffer.open(path)
         end)
@@ -163,6 +196,7 @@ end
 
 function Desktop:_hide_desktop()
     if not self._active then return end
+    if self._component then C.unmount(self._component); self._component = nil end
     if self._buf and self._buf:is_valid() then
         pcall(function() self._buf:close(true) end)
     end
@@ -182,7 +216,6 @@ function Desktop:on_register(ctx)
         end
     end)
 
-    -- Delayed startup check — wait for FramedWindow to be ready
     vim.defer_fn(function() check() end, 500)
 
     ctx:hook({ 'BufAdd', 'BufDelete', 'BufWipeout', 'VimEnter' }, function()
@@ -192,6 +225,10 @@ end
 
 function Desktop:on_unregister()
     self:_hide_desktop()
+end
+
+function Desktop:show_desktop()
+    self:_show_desktop()
 end
 
 function Desktop:__tostring()
