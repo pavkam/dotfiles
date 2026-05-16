@@ -46,7 +46,7 @@ end
 
 function Folding:peek()
     if self._peek_win and Window.is_valid(self._peek_win) then
-        Window(self._peek_win):close(true)
+        pcall(vim.api.nvim_win_close, self._peek_win, true)
         self._peek_win = nil
         return
     end
@@ -95,7 +95,7 @@ function Folding:peek()
     local self_ref = self
     self._ctx:hook({ 'CursorMoved', 'BufLeave', 'WinLeave' }, function()
         if self_ref._peek_win and Window.is_valid(self_ref._peek_win) then
-            Window(self_ref._peek_win):close(true)
+            pcall(vim.api.nvim_win_close, self_ref._peek_win, true)
             self_ref._peek_win = nil
         end
     end, { once = true })

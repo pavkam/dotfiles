@@ -55,7 +55,8 @@ function MarkdownPreview:open()
         self._preview_win = new_win:id()
     end
 
-    local preview_win = Window(self._preview_win)
+    local preview_win = Window.get(self._preview_win)
+    if not preview_win then return end
     preview_win:set_buffer(preview)
     preview_win:set_option('wrap', true)
     preview_win:set_option('number', false)
@@ -68,7 +69,7 @@ end
 
 function MarkdownPreview:close()
     if self._preview_win and Window.is_valid(self._preview_win) then
-        Window(self._preview_win):close(true)
+        pcall(vim.api.nvim_win_close, self._preview_win, true)
         self._preview_win = nil
     end
     if self._preview_buf and Buffer.is_valid(self._preview_buf) then

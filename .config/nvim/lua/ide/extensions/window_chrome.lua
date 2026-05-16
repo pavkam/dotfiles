@@ -110,10 +110,12 @@ function WindowChrome:_ensure_frame()
     if self._frame and self._frame:is_valid() and cur_win == self._host_win and not skip then
         local target_frame = (self._splitter and self._splitter:active_frame()) or self._frame
         target_frame:set_buffer(cur_buf)
-        Window(target_frame:window_id()):focus()
+        local target_win = Window.get(target_frame:window_id())
+        if target_win then target_win:focus() end
         -- Reset host to blank
         if self._blank_buf and Buffer.is_valid(self._blank_buf) then
-            Window(self._host_win):set_buffer(Buffer.get(self._blank_buf))
+            local host = Window.get(self._host_win)
+            if host then host:set_buffer(Buffer.get(self._blank_buf)) end
         end
         return
     end
@@ -139,14 +141,15 @@ function WindowChrome:_ensure_frame()
 
         -- Stray normal window — close it and redirect
         if not vim.w[cur_win].ide_terminal then
-            local win = Window(cur_win)
+            local win = Window.get(cur_win)
+            if not win then return end
             local cfg = win:config()
             if not cfg.relative or cfg.relative == '' then
-                -- Don't close the last window (crashes with E444)
                 if #vim.api.nvim_list_wins() <= 1 then return end
                 local target = (self._splitter and self._splitter:active_frame()) or self._frame
                 target:set_buffer(cur_buf)
-                Window(target:window_id()):focus()
+                local tw = Window.get(target:window_id())
+                if tw then tw:focus() end
                 win:close(true)
                 return
             end
@@ -172,10 +175,12 @@ function WindowChrome:_ensure_frame()
         self._blank_buf = blank:id()
     end
     local blank = Buffer.get(self._blank_buf)
+    if not blank then return end
     blank:set_option('bufhidden', 'hide')
     blank:set_option('buftype', 'nofile')
     blank:set_option('modifiable', false)
-    local host = Window(self._host_win)
+    local host = Window.get(self._host_win)
+    if not host then return end
     host:set_buffer(blank)
     host:set_option('number', false)
     host:set_option('relativenumber', false)
