@@ -207,6 +207,10 @@ function FramedWindow:show()
     pcall(vim.treesitter.start, self._buf_id)
 
     -- Trigger FileType to ensure LSP attaches to the buffer in this float
+    if not vim.api.nvim_buf_is_valid(self._buf_id) then
+        self:emit('show')
+        return
+    end
     local ft = vim.bo[self._buf_id].filetype
     if ft and ft ~= '' then
         vim.schedule(function()
