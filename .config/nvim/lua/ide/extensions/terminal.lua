@@ -9,14 +9,14 @@ local Terminal = Class('Terminal', Extension)
 
 function Terminal:init()
     Extension.init(self, 'Terminal')
-    self._buf = nil  ---@type integer|nil
-    self._win = nil  ---@type integer|nil
+    self._buf = nil  ---@type Buffer|nil
+    self._win = nil  ---@type Window|nil
     self._height = 15
     self._visible = false
 end
 
 function Terminal:is_visible()
-    return self._visible and self._win ~= nil and vim.api.nvim_win_is_valid(self._win)
+    return self._visible and self._win ~= nil and self._win:is_valid()
 end
 
 function Terminal:toggle()
@@ -31,9 +31,13 @@ function Terminal:show()
     if self:is_visible() then return end
 
     -- Create terminal buffer if needed
-    if not self._buf or not vim.api.nvim_buf_is_valid(self._buf) then
-        self._buf = vim.api.nvim_create_buf(false, true)
-        vim.api.nvim_buf_call(self._buf, function()
+    if not self._buf or not self._buf:is_valid() then
+        self._buf = Buffer.create({ listed = false, scratch = true })
+        self._buf:set_option('buflisted', false)
+        self._buf:set_option('filetype', 'ide-terminal')
+
+        local bufnr = self._buf:id()
+        vim.api.nvim_buf_call(bufnr, function()
             vim.fn.jobstart(vim.o.shell, { term = true,
                 cwd = IDE.fs:cwd(),
                 on_exit = function()
@@ -41,8 +45,6 @@ function Terminal:show()
                 end,
             })
         end)
-        vim.bo[self._buf].buflisted = false
-        vim.bo[self._buf].filetype = 'ide-terminal'
     end
 
     -- Use a floating window at the bottom — window_chrome ignores floats
@@ -50,7 +52,7 @@ function Terminal:show()
     local eh = Window.editor_height()
     local row = eh - self._height - 1
 
-    self._win = vim.api.nvim_open_win(self._buf, true, {
+    self._win = Window.open_float(self._buf, {
         relative = 'editor',
         row = row,
         col = 0,
@@ -61,22 +63,21 @@ function Terminal:show()
         zindex = 55,
     })
 
-    -- Terminal window options
-    local win = Window.get(self._win)
-    if not win then return end
-    win:set_option('number', false)
-    win:set_option('relativenumber', false)
-    win:set_option('signcolumn', 'no')
-    win:set_option('winhl', 'Normal:IDETerminalNormal,FloatBorder:IDETerminalBorder')
+    self._win:set_option('number', false)
+    self._win:set_option('relativenumber', false)
+    self._win:set_option('signcolumn', 'no')
+    self._win:set_option('winhl', 'Normal:IDETerminalNormal,FloatBorder:IDETerminalBorder')
 
-    win:enter_insert()
+    self._win:enter_insert()
     self._visible = true
     IDE:emit('terminal.show')
 end
 
 function Terminal:hide()
     if not self:is_visible() then return end
-    pcall(vim.api.nvim_win_close, self._win, true)
+    if self._win and self._win:is_valid() then
+        self._win:close(true)
+    end
     self._win = nil
     self._visible = false
     IDE:emit('terminal.hide')
@@ -90,8 +91,8 @@ end
 --- Send text to the terminal.
 ---@param text string
 function Terminal:send(text)
-    if not self._buf or not vim.api.nvim_buf_is_valid(self._buf) then return end
-    local chan = vim.bo[self._buf].channel
+    if not self._buf or not self._buf:is_valid() then return end
+    local chan = vim.bo[self._buf:id()].channel
     if chan and chan > 0 then
         vim.fn.chansend(chan, text .. '\n')
     end
@@ -155,8 +156,8 @@ end
 
 function Terminal:on_unregister()
     self:hide()
-    if self._buf and vim.api.nvim_buf_is_valid(self._buf) then
-        pcall(vim.api.nvim_buf_delete, self._buf, { force = true })
+    if self._buf and self._buf:is_valid() then
+        self._buf:close(true)
     end
     self._buf = nil
     IDE.terminal = nil

@@ -92,7 +92,7 @@ local function DesktopView(props)
         ' ╩ ╚═╝╩╚═╚═╝╚═╝ ╚╝ ╩╩ ╩',
     }
     for _, line in ipairs(logo) do
-        local pad = math.max(0, math.floor((width - vim.api.nvim_strwidth(line)) / 2))
+        local pad = math.max(0, math.floor((width - IDE.text:display_width(line)) / 2))
         children[#children + 1] = { type = 'text', text = string.rep(' ', pad) .. line, hl = 'IDEDesktopLogo' }
     end
 
@@ -106,7 +106,7 @@ local function DesktopView(props)
     children[#children + 1] = { type = 'text', text = '' }
     children[#children + 1] = { type = 'text', text = '' }
     local sec = '─── Recent Files ───'
-    local spad = math.max(0, math.floor((width - vim.api.nvim_strwidth(sec)) / 2))
+    local spad = math.max(0, math.floor((width - IDE.text:display_width(sec)) / 2))
     children[#children + 1] = { type = 'text', text = string.rep(' ', spad) .. sec, hl = 'IDEDesktopSection' }
 
     if #recent > 0 then
@@ -118,7 +118,7 @@ local function DesktopView(props)
                 if ic then icon = ic:char() .. ' ' end
             end
             local entry = string.format(' %d  %s%s', i, icon, rel or path)
-            local epad = math.max(0, math.floor((width - vim.api.nvim_strwidth(entry)) / 2))
+            local epad = math.max(0, math.floor((width - IDE.text:display_width(entry)) / 2))
             children[#children + 1] = { type = 'text', text = string.rep(' ', epad) .. entry, hl = 'IDEDesktopFile' }
         end
     else
@@ -130,7 +130,7 @@ local function DesktopView(props)
     -- Quick actions
     children[#children + 1] = { type = 'text', text = '' }
     local asec = '─── Quick Actions ───'
-    local apad = math.max(0, math.floor((width - vim.api.nvim_strwidth(asec)) / 2))
+    local apad = math.max(0, math.floor((width - IDE.text:display_width(asec)) / 2))
     children[#children + 1] = { type = 'text', text = string.rep(' ', apad) .. asec, hl = 'IDEDesktopSection' }
 
     local actions = {
@@ -141,7 +141,7 @@ local function DesktopView(props)
     }
     for _, a in ipairs(actions) do
         local line = string.format('%s  %-10s  %s', a[3], a[1], a[2])
-        local lpad = math.max(0, math.floor((width - vim.api.nvim_strwidth(line)) / 2))
+        local lpad = math.max(0, math.floor((width - IDE.text:display_width(line)) / 2))
         children[#children + 1] = { type = 'text', text = string.rep(' ', lpad) .. line, hl = 'IDEDesktopKey' }
     end
 

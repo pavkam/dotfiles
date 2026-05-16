@@ -219,7 +219,7 @@ function Notifications:_show_history()
         -- Message (first line only, truncated)
         local first_line = vim.split(item.message, '\n')[1] or ''
         local max_msg = width - 20
-        if vim.api.nvim_strwidth(first_line) > max_msg then
+        if IDE.text:display_width(first_line) > max_msg then
             first_line = first_line:sub(1, max_msg - 1) .. '…'
         end
         canvas:text(row, 18, first_line, 'IDENotifyBody')

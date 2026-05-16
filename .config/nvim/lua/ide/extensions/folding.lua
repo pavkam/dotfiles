@@ -45,8 +45,8 @@ function Folding:close_level()
 end
 
 function Folding:peek()
-    if self._peek_win and Window.is_valid(self._peek_win) then
-        pcall(vim.api.nvim_win_close, self._peek_win, true)
+    if self._peek_win and self._peek_win:is_valid() then
+        self._peek_win:close(true)
         self._peek_win = nil
         return
     end
@@ -86,7 +86,7 @@ function Folding:peek()
         border = 'rounded',
         zindex = 100,
     })
-    self._peek_win = peek_win:id()
+    self._peek_win = peek_win
 
     peek_win:set_option('cursorline', false)
     peek_win:set_option('number', true)
@@ -94,8 +94,8 @@ function Folding:peek()
 
     local self_ref = self
     self._ctx:hook({ 'CursorMoved', 'BufLeave', 'WinLeave' }, function()
-        if self_ref._peek_win and Window.is_valid(self_ref._peek_win) then
-            pcall(vim.api.nvim_win_close, self_ref._peek_win, true)
+        if self_ref._peek_win and self_ref._peek_win:is_valid() then
+            self_ref._peek_win:close(true)
             self_ref._peek_win = nil
         end
     end, { once = true })

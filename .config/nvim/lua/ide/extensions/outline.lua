@@ -238,7 +238,8 @@ function Outline:show()
                     if source_buf:is_valid() then
                         local win = Window.current()
                         win:set_buffer(source_buf)
-                        pcall(vim.api.nvim_win_set_cursor, 0, { sym.lnum, (sym.col or 1) - 1 })
+                        local Position = require 'ide.Position'
+                        win:set_cursor(Position(sym.lnum, sym.col or 1))
                         win:center_cursor()
                     end
                 end)

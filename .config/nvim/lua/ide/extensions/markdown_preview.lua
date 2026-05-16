@@ -68,14 +68,16 @@ function MarkdownPreview:open()
 end
 
 function MarkdownPreview:close()
-    if self._preview_win and Window.is_valid(self._preview_win) then
-        pcall(vim.api.nvim_win_close, self._preview_win, true)
-        self._preview_win = nil
+    local win = self._preview_win and Window.get(self._preview_win)
+    if win and win:is_valid() then
+        win:close(true)
     end
-    if self._preview_buf and Buffer.is_valid(self._preview_buf) then
-        Buffer.get(self._preview_buf):close(true)
-        self._preview_buf = nil
+    self._preview_win = nil
+    local buf = self._preview_buf and Buffer.get(self._preview_buf)
+    if buf and buf:is_valid() then
+        buf:close(true)
     end
+    self._preview_buf = nil
 end
 
 function MarkdownPreview:toggle()
