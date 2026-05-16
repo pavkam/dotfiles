@@ -178,7 +178,7 @@ function TmuxIntegration:manage_sessions()
         if not idx then return end
         local picked = display_data[idx]
         if picked.new then
-            vim.ui.input({ prompt = 'Session name: ' }, function(name)
+            IDE.ui:input('Session name:', function(name)
                 if not name or name == '' then return end
                 name = name:gsub('%.', '_')
                 self:_tmux_run({ 'new', '-d', '-s', name, '-c', project_dir })
