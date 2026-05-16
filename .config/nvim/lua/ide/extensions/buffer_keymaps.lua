@@ -100,16 +100,19 @@ function BufferKeymaps:on_register(ctx)
     ctx:keymap('n', '<M-Right>', '<C-i>', { desc = 'Go forward' })
 
     ctx:keymap('n', '<C-g>', function()
-        vim.ui.input({ prompt = 'Go to line: ' }, function(input)
-            if input and input ~= '' then
-                local line = tonumber(input)
-                if line then
-                    pcall(function()
-                        require('ide.Window').current():set_cursor(require('ide.Position')(line, 1))
-                    end)
-                end
+        local buf = IDE.buffers:current()
+        if not buf or not buf:is_normal() then return end
+        local total = buf:line_count()
+        local current = require('ide.Window').current():cursor().row
+
+        IDE.ui:input('Go to line (1-' .. total .. '): ', function(input)
+            if not input or input == '' then return end
+            local line = tonumber(input)
+            if line and line >= 1 and line <= total then
+                require('ide.Window').current():set_cursor(require('ide.Position')(line, 1))
+                vim.cmd('normal! zz')
             end
-        end)
+        end, { default = tostring(current) })
     end, { desc = 'Go to line' })
 end
 
