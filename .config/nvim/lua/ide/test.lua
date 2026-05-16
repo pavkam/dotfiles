@@ -2124,6 +2124,114 @@ function M.run(filter)
     end)
 
     -- ═══════════════════════════════════════════════════════
+    -- REENTRANCE AND CONCURRENCY SAFETY
+    -- ═══════════════════════════════════════════════════════
+
+    suite('EventEmitter reentrance', function()
+        local function make()
+            local E = Class('ReentTest')
+            Class.include(E, require('ide.EventEmitter'))
+            local o = E()
+            o._suppress_errors = true
+            return o
+        end
+
+        test('emit during emit fires inner handlers', function()
+            local obj = make()
+            local inner_count = 0
+            obj:on('outer', function() obj:emit('inner') end)
+            obj:on('inner', function() inner_count = inner_count + 1 end)
+            obj:emit('outer')
+            assert_eq(inner_count, 1, 'inner must fire')
+        end)
+
+        test('subscribe during emit does not fire in same cycle', function()
+            local obj = make()
+            local late = 0
+            obj:on('x', function()
+                obj:on('x', function() late = late + 1 end)
+            end)
+            obj:emit('x')
+            assert_eq(late, 0, 'new handler must not fire in same emit')
+        end)
+
+        test('clear during emit does not skip remaining handlers', function()
+            local obj = make()
+            local second = false
+            obj:on('x', function() obj:clear('x') end)
+            obj:on('x', function() second = true end)
+            obj:emit('x')
+            assert_true(second, 'second handler must fire despite clear')
+        end)
+    end)
+
+    suite('Mass buffer operations', function()
+        test('create and close 50 buffers', function()
+            local Buffer = require('ide.Buffer')
+            local ids = {}
+            for i = 1, 50 do
+                ids[i] = Buffer.create({ listed = false, scratch = true }):id()
+            end
+            for _, id in ipairs(ids) do
+                pcall(vim.api.nvim_buf_delete, id, { force = true })
+            end
+            for _, id in ipairs(ids) do
+                assert_false(vim.api.nvim_buf_is_valid(id))
+            end
+        end)
+
+        test('rapid buffer switch stays consistent', function()
+            local Buffer = require('ide.Buffer')
+            local a = Buffer.create({ listed = false, scratch = true })
+            local b = Buffer.create({ listed = false, scratch = true })
+            for i = 1, 10 do
+                vim.api.nvim_set_current_buf(a:id())
+                vim.api.nvim_set_current_buf(b:id())
+            end
+            assert_true(Buffer.current():is_valid())
+            a:close(true); b:close(true)
+        end)
+    end)
+
+    suite('Extension stress', function()
+        test('50 hooks register and cleanup', function()
+            local Extension = require('ide.Extension')
+            local E = Class('HookStress', Extension)
+            function E:init() Extension.init(self, 'HookStress') end
+            function E:on_register(ctx)
+                for i = 1, 50 do
+                    ctx:hook('BufEnter', function() end, { desc = 'h' .. i })
+                end
+            end
+            local ext = E()
+            ext:_enable()
+            assert_eq(#ext._hooks, 50, 'must register 50')
+            ext:_disable()
+            assert_eq(#ext._hooks, 0, 'must clean 50')
+        end)
+    end)
+
+    suite('Nil argument safety', function()
+        test('Buffer.get(nil) returns nil', function()
+            assert_nil(require('ide.Buffer').get(nil))
+        end)
+        test('Buffer.get(string) returns nil', function()
+            assert_nil(require('ide.Buffer').get('bad'))
+        end)
+        test('Window.get(nil) returns nil', function()
+            assert_nil(require('ide.Window').get(nil))
+        end)
+        test('fs:exists(nil) returns false', function()
+            assert_false(IDE.fs:exists(nil))
+        end)
+        test('fs:read(nil) returns nil + error', function()
+            local c, e = IDE.fs:read(nil)
+            assert_nil(c)
+            assert_not_nil(e)
+        end)
+    end)
+
+    -- ═══════════════════════════════════════════════════════
     -- IDE SUBSYSTEM INTEGRATION TESTS
     -- ═══════════════════════════════════════════════════════
 
