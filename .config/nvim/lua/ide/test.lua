@@ -3207,6 +3207,19 @@ function M.run(filter)
         test('view.extensions action exists', function()
             assert_true(IDE.actions:has('view.extensions'))
         end)
+        test('view.profile action exists', function()
+            assert_true(IDE.actions:has('view.profile'))
+        end)
+        test('extensions have load time data', function()
+            local exts = IDE:extensions()
+            local has_timing = 0
+            for _, ext in ipairs(exts) do
+                if ext._load_time_ms and ext._load_time_ms >= 0 then
+                    has_timing = has_timing + 1
+                end
+            end
+            assert_true(has_timing > 40, 'most extensions should have timing data')
+        end)
     end)
 
     suite('Extension: Outline', function()

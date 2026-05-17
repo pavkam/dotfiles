@@ -152,6 +152,49 @@ function Panels:_show_extensions()
     }):show()
 end
 
+function Panels:_show_profile()
+    local SelectPicker = require 'ide.toolkit.SelectPicker'
+    local exts = IDE:extensions()
+
+    -- Sort by load time descending
+    local sorted = {}
+    local total_ms = 0
+    for _, ext in ipairs(exts) do
+        local ms = ext._load_time_ms or 0
+        total_ms = total_ms + ms
+        sorted[#sorted + 1] = { ext = ext, ms = ms }
+    end
+    table.sort(sorted, function(a, b) return a.ms > b.ms end)
+
+    local items = {}
+    for _, entry in ipairs(sorted) do
+        local ext = entry.ext
+        local ms = entry.ms
+        local bar_len = total_ms > 0 and math.floor(ms / total_ms * 20) or 0
+        local bar = string.rep('█', bar_len) .. string.rep('░', 20 - bar_len)
+        items[#items + 1] = {
+            text = string.format('%s  %s', ext:name(), bar),
+            hint = string.format('%.1fms', ms),
+            icon = ms > 5 and '󰔛' or '󰔟',
+        }
+    end
+
+    -- Add lazy.nvim stats if available
+    local lazy_ok, lazy_stats = pcall(function() return require('lazy').stats() end)
+    local title_extra = ''
+    if lazy_ok and lazy_stats then
+        title_extra = string.format(' — startup %dms', lazy_stats.startuptime or 0)
+    end
+
+    SelectPicker({
+        title = string.format('  Profile (%.0fms total)%s', total_ms, title_extra),
+        items = items,
+        width = 0.6,
+        height = math.min(#items + 3, 30),
+        on_select = function(item) end,
+    }):show()
+end
+
 function Panels:on_register(ctx)
     local ext = self
 
@@ -161,11 +204,14 @@ function Panels:on_register(ctx)
     ctx:action('view.gitStatus', 'Git Status', function() ext:_show_git() end)
     ctx:action('view.extensions', 'Extensions', function() ext:_show_extensions() end)
 
+    ctx:action('view.profile', 'Startup Profile', function() ext:_show_profile() end)
+
     -- Commands (call through actions)
     ctx:command('IDEStatus', function() IDE.actions:execute('view.ideStatus') end, { desc = 'Show IDE status panel' })
     ctx:command('IDELsp', function() IDE.actions:execute('view.lspStatus') end, { desc = 'Show LSP status' })
     ctx:command('IDEGit', function() IDE.actions:execute('view.gitStatus') end, { desc = 'Show git status' })
     ctx:command('IDEExtensions', function() IDE.actions:execute('view.extensions') end, { desc = 'List IDE extensions' })
+    ctx:command('IDEProfile', function() IDE.actions:execute('view.profile') end, { desc = 'Show startup profile' })
 end
 
 return Panels

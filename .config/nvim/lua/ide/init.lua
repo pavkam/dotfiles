@@ -240,7 +240,10 @@ function IDE:register_extension(ext)
         self:unregister_extension(ext:name())
     end
     self._extensions[ext:name()] = ext
+    local start = vim.uv.hrtime()
     local ok, err = pcall(function() ext:_enable() end)
+    local elapsed = (vim.uv.hrtime() - start) / 1e6
+    ext._load_time_ms = elapsed
     if not ok then
         ext._error = tostring(err)
         vim.schedule(function()
