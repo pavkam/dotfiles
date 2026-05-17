@@ -2990,6 +2990,29 @@ function M.run(filter)
         end)
     end)
 
+    suite('Extension: GitSigns', function()
+        test('extension is registered', function()
+            assert_not_nil(IDE:extension('GitSigns'))
+        end)
+        test('git actions are registered', function()
+            assert_true(IDE.actions:has('git.stageHunk'))
+            assert_true(IDE.actions:has('git.resetHunk'))
+            assert_true(IDE.actions:has('git.blameLine'))
+            assert_true(IDE.actions:has('git.nextHunk'))
+            assert_true(IDE.actions:has('git.diffThis'))
+        end)
+        test('git keymaps use action names for palette discovery', function()
+            local ext = IDE:extension('GitSigns')
+            local action_keymaps = 0
+            for _, km in ipairs(ext._keymaps or {}) do
+                if km.action and km.action:match('^git%.') then
+                    action_keymaps = action_keymaps + 1
+                end
+            end
+            assert_true(action_keymaps >= 10, 'should have >= 10 git action keymaps, got ' .. action_keymaps)
+        end)
+    end)
+
     suite('Extension: Terminal', function()
         test('extension is registered', function()
             assert_not_nil(IDE:extension('Terminal'))
