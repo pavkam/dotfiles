@@ -156,7 +156,6 @@ function Desktop:_show_desktop()
     buf:set_option('filetype', 'ide-desktop')
     buf:set_option('buftype', 'nofile')
 
-    local area = Window.content_area and Window.content_area() or { width = 80, height = 40 }
     local recent = gather_recent_files()
 
     -- Show in FramedWindow if available, otherwise use current window
@@ -180,11 +179,15 @@ function Desktop:_show_desktop()
         target_win:set_option('winhl', 'Normal:IDEDesktop,EndOfBuffer:IDEDesktop')
     end
 
+    -- Use actual window dimensions for centering (not content_area which is larger)
+    local win_w = target_win and target_win:is_valid() and target_win:width() or 80
+    local win_h = target_win and target_win:is_valid() and target_win:height() or 40
+
     -- Mount component with the target window so Canvas uses correct dimensions
     self._component = C.mount(DesktopView, {
         recent_files = recent,
-        width = area.width,
-        height = area.height,
+        width = win_w,
+        height = win_h,
     }, buf, target_win)
 
     self._buf = buf

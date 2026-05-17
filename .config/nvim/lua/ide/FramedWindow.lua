@@ -229,7 +229,9 @@ function FramedWindow:refresh()
     if not self._win_id or not vim.api.nvim_win_is_valid(self._win_id) then return end
     self._buf_id = vim.api.nvim_win_get_buf(self._win_id)
 
-    if not vim.wo[self._win_id].number then
+    -- Only re-enable line numbers for normal file buffers (not desktop, panels, etc.)
+    local buf = require('ide.Buffer').get(self._buf_id)
+    if buf and buf:is_normal() and not vim.wo[self._win_id].number then
         vim.wo[self._win_id].number = true
         vim.wo[self._win_id].relativenumber = true
     end
