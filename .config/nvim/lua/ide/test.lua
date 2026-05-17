@@ -1823,6 +1823,32 @@ function M.run(filter)
         end)
     end)
 
+    suite('Integration: Keybinding conflicts', function()
+        test('no unexpected normal-mode keybinding conflicts', function()
+            local bindings = {}
+            local conflicts = {}
+            -- Intentional overlaps that are OK
+            local allowed = { ['i:<Tab>'] = true, ['i:<S-Tab>'] = true }
+            for _, ext in ipairs(IDE:extensions()) do
+                for _, km in ipairs(ext._keymaps or {}) do
+                    if not km.buffer then
+                        local modes = type(km.mode) == 'table' and km.mode or { km.mode }
+                        for _, mode in ipairs(modes) do
+                            local key = mode .. ':' .. km.lhs
+                            if bindings[key] and not allowed[key] then
+                                conflicts[#conflicts+1] = key .. ' (' .. bindings[key] .. ' vs ' .. ext._name .. ')'
+                            elseif not allowed[key] then
+                                bindings[key] = ext._name
+                            end
+                        end
+                    end
+                end
+            end
+            assert_true(#conflicts == 0,
+                'keybinding conflicts found: ' .. table.concat(conflicts, ', '))
+        end)
+    end)
+
     suite('Integration: KeyManager', function()
         test('keymaps are registered', function()
             assert_true(IDE.keys:count() > 10, 'must have >10 keymaps registered')

@@ -172,41 +172,10 @@ end
 
 --- Find a visible LSP hover/signature float and scroll it by `delta` lines.
 --- Uses IDE Window/Buffer abstractions for float detection and cursor control.
----@param delta integer # positive = scroll down, negative = scroll up
----@return boolean # true if a float was found and scrolled
-function LspKeymaps:_scroll_hover(delta)
-    local Position = require 'ide.Position'
-    for _, win in ipairs(Window.list()) do
-        if win:is_floating() then
-            local buf = win:buffer()
-            local ft = buf:filetype()
-            if ft == 'markdown' or ft == 'lspinfo' or ft == '' then
-                local cur = win:cursor()
-                local line_count = buf:line_count()
-                local new_row = math.max(1, math.min(line_count, cur.row + delta))
-                pcall(function() win:set_cursor(Position(new_row, 1)) end)
-                return true
-            end
-        end
-    end
-    return false
-end
+
 
 function LspKeymaps:on_register(ctx)
     local ext = self
-
-    -- Scroll LSP hover/signature popups (Ctrl+F down, Ctrl+B up)
-    ctx:keymap('n', '<C-f>', function()
-        if not ext:_scroll_hover(4) then
-            IDE.keys:feed(IDE.keys:termcodes('<C-f>'))
-        end
-    end, { desc = 'Scroll hover down / Page down' })
-
-    ctx:keymap('n', '<C-b>', function()
-        if not ext:_scroll_hover(-4) then
-            IDE.keys:feed(IDE.keys:termcodes('<C-b>'))
-        end
-    end, { desc = 'Scroll hover up / Page up' })
 
     ctx:hook('LspAttach', function(evt)
         local client = IDE.lsp:client_by_id(evt.data.client_id)

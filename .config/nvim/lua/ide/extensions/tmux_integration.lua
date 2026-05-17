@@ -264,13 +264,15 @@ function TmuxIntegration:on_register(ctx)
         ctx:keymap('n', '<leader>s', function() ext:manage_sessions() end, { desc = 'Tmux sessions' })
     end
 
-    -- Window/pane navigation — works both in and out of tmux.
-    -- Alt+Arrow keys move between vim windows; if at the edge, move to tmux pane.
-    ctx:keymap('n', '<M-Tab>', function() ext:navigate('p') end, { desc = 'Switch window/pane' })
-    ctx:keymap('n', '<M-Left>', function() ext:navigate('h') end, { desc = 'Left pane' })
-    ctx:keymap('n', '<M-Right>', function() ext:navigate('l') end, { desc = 'Right pane' })
-    ctx:keymap('n', '<M-Down>', function() ext:navigate('j') end, { desc = 'Pane below' })
-    ctx:keymap('n', '<M-Up>', function() ext:navigate('k') end, { desc = 'Pane above' })
+    -- Tmux pane navigation — only when inside tmux, to avoid conflicting
+    -- with Alt+Left/Right (Go back/forward) from buffer_keymaps.
+    if self:in_tmux() then
+        ctx:keymap('n', '<M-Tab>', function() ext:navigate('p') end, { desc = 'Switch tmux pane' })
+        ctx:keymap('n', '<M-Left>', function() ext:navigate('h') end, { desc = 'Left tmux pane' })
+        ctx:keymap('n', '<M-Right>', function() ext:navigate('l') end, { desc = 'Right tmux pane' })
+        ctx:keymap('n', '<M-Down>', function() ext:navigate('j') end, { desc = 'Tmux pane below' })
+        ctx:keymap('n', '<M-Up>', function() ext:navigate('k') end, { desc = 'Tmux pane above' })
+    end
 
     -- Terminal title sync — update tmux window title on buffer/directory change
     if self:in_tmux() then

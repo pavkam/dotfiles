@@ -34,16 +34,7 @@ function EditorDefaults:on_register(ctx)
     -- Disable default right-click popup (replaced by IDE.mouse)
     IDE.ui:clear_popup_menu()
 
-    -- F12 toggles between insert and normal mode
-    ctx:keymap('n', '<F12>', 'i', { desc = 'Insert mode' })
-    ctx:keymap('i', '<F12>', '<Esc>', { desc = 'Normal mode' })
-
-    -- j/k and arrows respect word wrap
-    ctx:keymap('n', 'k', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
-    ctx:keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
-    ctx:keymap('n', '<Up>', "v:count == 0 ? 'gk' : 'k'", { desc = 'Move cursor up', expr = true })
-    ctx:keymap('n', '<Down>', "v:count == 0 ? 'gj' : 'j'", { desc = 'Move cursor down', expr = true })
-
+    -- F12, j/k, Up/Down are registered by EditingKeymaps (with visual mode support)
     ctx:notify('Editor defaults active')
 end
 
