@@ -106,6 +106,14 @@ end
 function M.run(filter)
     results = {}
 
+    -- Safety: save all modified buffers before tests can touch them
+    for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_valid(buf_id) and vim.bo[buf_id].modified
+            and vim.bo[buf_id].buftype == '' and vim.api.nvim_buf_get_name(buf_id) ~= '' then
+            pcall(function() vim.api.nvim_buf_call(buf_id, function() vim.cmd('write') end) end)
+        end
+    end
+
     -- Safety: remember the original state so we can restore it
     local original_buf = vim.api.nvim_get_current_buf()
     local original_cwd = vim.uv.cwd()
