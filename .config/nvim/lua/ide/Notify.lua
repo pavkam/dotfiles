@@ -88,6 +88,47 @@ function Notify:clear_history()
     self._history = {}
 end
 
+--- Show a progress notification that can be updated.
+--- Returns a handle with :update(msg, pct) and :finish(msg) methods.
+---@param msg string # initial message
+---@param opts? { title?: string }
+---@return { update: fun(self, msg: string, pct?: number), finish: fun(self, msg?: string) }
+function Notify:progress(msg, opts)
+    opts = opts or {}
+    local handle = {
+        _msg = msg,
+        _pct = 0,
+        _done = false,
+        _notify = self,
+        _title = opts.title,
+    }
+
+    function handle:update(new_msg, pct)
+        if self._done then return end
+        self._msg = new_msg
+        self._pct = pct or self._pct
+        local display = new_msg
+        if pct then
+            display = string.format('%s (%d%%)', new_msg, math.floor(pct * 100))
+        end
+        self._notify:info(display, { title = self._title })
+    end
+
+    function handle:finish(final_msg)
+        if self._done then return end
+        self._done = true
+        self._pct = 1
+        if final_msg then
+            self._notify:info(final_msg, { title = self._title })
+        end
+    end
+
+    -- Show initial message
+    self:info(msg, opts)
+
+    return handle
+end
+
 ---@return string
 function Notify:__tostring() return 'Notify()' end
 

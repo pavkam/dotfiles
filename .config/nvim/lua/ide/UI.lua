@@ -47,6 +47,16 @@ function UI:error(msg, opts) self._notify:error(msg, opts) end
 ---@param opts { title?: string }|nil
 function UI:debug(msg, opts) self._notify:debug(msg, opts) end
 
+--- Show a progress notification. Returns a handle with :update() and :finish().
+---@param msg string
+---@param opts? { title?: string }
+---@return table # progress handle
+function UI:progress(msg, opts) return self._notify:progress(msg, opts) end
+
+--- Get the notification history.
+---@return table[]
+function UI:notification_history() return self._notify:history() end
+
 -- Input/selection (uses vim.ui which dressing.nvim enhances)
 
 --- Prompt for text input.

@@ -218,8 +218,8 @@ function WindowChrome:close_current()
         else
             -- Re-layout remaining frames
             local row = 1
-            local width = vim.o.columns - 2
-            local height = vim.o.lines - 5
+            local width = Window.editor_width() - 2
+            local height = Window.editor_height() - 5
             self._splitter:layout(row, 0, width, height)
             local active = self._splitter:active_frame()
             if active and active:is_valid() then
@@ -417,7 +417,7 @@ function WindowChrome:on_register(ctx)
         IDE.config:set_option('laststatus', 3)
         vim.schedule(function()
             if chrome._splitter and chrome._splitter:count() > 1 then
-                chrome._splitter:layout(1, 0, vim.o.columns - 2, vim.o.lines - 5)
+                chrome._splitter:layout(1, 0, Window.editor_width() - 2, Window.editor_height() - 5)
             elseif chrome._frame and chrome._frame:is_valid() then
                 chrome._frame:fill()
             end
@@ -458,14 +458,14 @@ function WindowChrome:on_register(ctx)
     ctx:keymap('n', '<C-S-Left>', function()
         if chrome._splitter then
             chrome._splitter:resize(-0.05)
-            chrome._splitter:layout(1, 0, vim.o.columns - 2, vim.o.lines - 5)
+            chrome._splitter:layout(1, 0, Window.editor_width() - 2, Window.editor_height() - 5)
         end
     end, { desc = 'Shrink split' })
 
     ctx:keymap('n', '<C-S-Right>', function()
         if chrome._splitter then
             chrome._splitter:resize(0.05)
-            chrome._splitter:layout(1, 0, vim.o.columns - 2, vim.o.lines - 5)
+            chrome._splitter:layout(1, 0, Window.editor_width() - 2, Window.editor_height() - 5)
         end
     end, { desc = 'Grow split' })
 end
