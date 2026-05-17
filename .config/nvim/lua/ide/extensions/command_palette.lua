@@ -23,27 +23,50 @@ function CommandPalette:on_register(ctx)
     end, { desc = 'Open command palette' })
 end
 
+--- Format a key sequence for display.
+---@param lhs string
+---@return string
+local function format_key(lhs)
+    return lhs
+        :gsub('<leader>', 'SPC ')
+        :gsub('<C%-', 'Ctrl+'):gsub('<S%-', 'Shift+')
+        :gsub('<M%-', 'Alt+'):gsub('<CR>', 'Enter')
+        :gsub('<F(%d+)>', 'F%1')
+        :gsub('>', '')
+end
+
 --- Build a reverse lookup: action_name → keybinding display string.
+--- Uses two sources: (1) extension keymap metadata, (2) vim keymap desc matching.
 ---@return table<string, string>
 local function build_shortcut_map()
     local map = {}
     if not IDE then return map end
+
+    -- Source 1: extension keymaps with explicit action names
     for _, ext in ipairs(IDE:extensions()) do
         for _, km in ipairs(ext._keymaps or {}) do
             if km.action and not km.buffer then
                 local modes = type(km.mode) == 'table' and km.mode or { km.mode }
                 for _, mode in ipairs(modes) do
                     if mode == 'n' and not map[km.action] then
-                        map[km.action] = km.lhs
-                            :gsub('<leader>', 'SPC ')
-                            :gsub('<C%-', 'Ctrl+'):gsub('<S%-', 'Shift+')
-                            :gsub('<M%-', 'Alt+'):gsub('<CR>', 'Enter')
-                            :gsub('>', '')
+                        map[km.action] = format_key(km.lhs)
                     end
                 end
             end
         end
     end
+
+    -- Source 2: vim normal-mode keymaps whose desc matches an action desc
+    local desc_to_action = {}
+    for _, a in ipairs(IDE.actions:list()) do
+        if a.desc then desc_to_action[a.desc] = a.name end
+    end
+    for _, km in ipairs(vim.api.nvim_get_keymap('n')) do
+        if km.desc and desc_to_action[km.desc] and not map[desc_to_action[km.desc]] then
+            map[desc_to_action[km.desc]] = format_key(km.lhs)
+        end
+    end
+
     return map
 end
 
