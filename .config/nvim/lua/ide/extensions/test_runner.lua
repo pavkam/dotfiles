@@ -47,7 +47,14 @@ end
 function TestRunner:on_register(ctx)
     ctx:command('IDETest', function()
         clear_test_modules()
+
+        IDE.ui:info('Running base tests...', { title = 'IDETest' })
+        vim.cmd('redraw')
         local base = load_fresh('ide.test').run()
+
+        IDE.ui:info(string.format('Base: %d/%d. Running extended tests...',
+            base.passed, base.total), { title = 'IDETest' })
+        vim.cmd('redraw')
         local ext = load_fresh('ide.test_extended').run()
 
         local total_pass = base.passed + ext.passed
