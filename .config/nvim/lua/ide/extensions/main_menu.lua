@@ -665,6 +665,10 @@ function MainMenu:_build_help_menu()
     }))
     bar:add_separator('Help')
     bar:add_item('Help', MenuItem({
+        text = 'Startup Profile', icon = '󰔛',
+        action = function() IDE.actions:execute('view.profile') end,
+    }))
+    bar:add_item('Help', MenuItem({
         text = 'Health Check', icon = '󰓙',
         action = function() IDE:healthcheck() end,
     }))

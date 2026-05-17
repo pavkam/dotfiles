@@ -46,6 +46,15 @@ end
 function Notes:on_register(ctx)
     local ext = self
 
+    -- Actions for command palette discovery
+    ctx:action('app.noteOpen', 'Open daily note', function() ext:edit(false) end)
+    ctx:action('app.noteSearch', 'Search notes', function() ext:grep(false) end)
+
+    -- Keymaps
+    ctx:keymap('n', '<leader>nn', 'app.noteOpen', { desc = 'Open daily note' })
+    ctx:keymap('n', '<leader>ns', 'app.noteSearch', { desc = 'Search notes' })
+    IDE.keys:group('<leader>n', { desc = 'Notes' })
+
     ctx:command('Note', function(args)
         local sub = args.fargs[1]
 
