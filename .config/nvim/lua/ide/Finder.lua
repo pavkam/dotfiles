@@ -107,13 +107,23 @@ function Finder:buffers()
     local bufs = IDE.buffers:listed()
     local cur_id = Buffer.current():id()
     local items = {}
-    for i, buf in ipairs(bufs) do
+    for _, buf in ipairs(bufs) do
         if buf:is_valid() then
             local name = buf:name() or '[No Name]'
-            local modified = buf:is_modified() and ' [+]' or ''
-            local marker = buf:id() == cur_id and '● ' or '  '
+            local modified = buf:is_modified() and ' ●' or ''
+            local is_current = buf:id() == cur_id
+            -- File icon
+            local icon = ''
+            if IDE.icons and IDE.icons:is_loaded() and name ~= '[No Name]' then
+                local fname = IDE.fs:basename(name)
+                local ext = IDE.fs:extension(name)
+                local ic = IDE.icons:for_file(fname, ext)
+                if ic then icon = ic:char() end
+            end
             items[#items + 1] = {
-                text = marker .. i .. '  ' .. name .. modified,
+                text = (is_current and '● ' or '  ') .. name .. modified,
+                icon = icon,
+                hint = buf:filetype(),
                 value = buf,
             }
         end
@@ -121,7 +131,7 @@ function Finder:buffers()
 
     local SelectPicker = require 'ide.toolkit.SelectPicker'
     SelectPicker({
-        title = 'Buffers',
+        title = '  Buffers',
         items = items,
         on_select = function(item)
             require('ide.Window').current():set_buffer(item.value)
@@ -243,23 +253,41 @@ end
 
 --- Search keymaps.
 function Finder:keymaps()
-    local maps = vim.api.nvim_get_keymap('n')
     local items = {}
-    for _, m in ipairs(maps) do
-        if m.desc and m.desc ~= '' then
-            items[#items + 1] = {
-                text = m.lhs,
-                hint = m.desc,
-                value = m,
-            }
+    local seen = {}
+
+    for _, mode in ipairs({ 'n', 'v', 'i' }) do
+        local maps = vim.api.nvim_get_keymap(mode)
+        for _, m in ipairs(maps) do
+            if m.desc and m.desc ~= '' then
+                local key = mode .. ':' .. m.lhs
+                if not seen[key] then
+                    seen[key] = true
+                    local mode_label = ({ n = 'N', v = 'V', i = 'I' })[mode] or mode
+                    local formatted = m.lhs
+                        :gsub('<leader>', 'SPC ')
+                        :gsub('<C%-', 'Ctrl+'):gsub('<S%-', 'Shift+')
+                        :gsub('<M%-', 'Alt+'):gsub('<CR>', 'Enter')
+                        :gsub('<F(%d+)>', 'F%1')
+                        :gsub('>', '')
+                    items[#items + 1] = {
+                        text = m.desc,
+                        icon = mode_label,
+                        hint = formatted,
+                        value = m,
+                    }
+                end
+            end
         end
     end
     table.sort(items, function(a, b) return a.text < b.text end)
 
     local SelectPicker = require 'ide.toolkit.SelectPicker'
     SelectPicker({
-        title = 'Keymaps',
+        title = '  Keymaps',
         items = items,
+        width = 0.6,
+        height = math.min(#items + 3, 25),
         on_select = function(item)
             local keys = vim.api.nvim_replace_termcodes(item.value.lhs, true, true, true)
             vim.api.nvim_feedkeys(keys, 'n', false)
