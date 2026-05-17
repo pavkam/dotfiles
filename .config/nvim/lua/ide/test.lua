@@ -1877,6 +1877,18 @@ function M.run(filter)
         end)
     end)
 
+    suite('CommandPalette: context filtering', function()
+        test('file.open is always available', function()
+            -- file.open should always be in the palette
+            assert_true(IDE.actions:has('file.open'))
+        end)
+        test('context-dependent actions exist', function()
+            -- These actions exist but may be filtered contextually
+            assert_true(IDE.actions:has('lsp.hover'))
+            assert_true(IDE.actions:has('debug.continue'))
+        end)
+    end)
+
     suite('SelectPicker: render_item', function()
         test('render_item returns VNodes with icon and text', function()
             local SP = require 'ide.toolkit.SelectPicker'

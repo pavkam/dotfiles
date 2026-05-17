@@ -109,17 +109,40 @@ function CommandPalette:_open()
         recent_set[name] = i
     end
 
+    -- Context detection for action filtering
+    local buf = IDE.buffers:current()
+    local has_lsp = buf and buf:is_valid() and buf:is_normal() and #buf:lsp_clients() > 0
+    local has_file = buf and buf:is_valid() and buf:is_normal()
+
     local items = {}
     for _, a in ipairs(actions) do
         local cat = a.category or (a.name:match('^([^.]+)%.') or '')
         local icon = _category_icons[cat] or '󰀻'
-        items[#items + 1] = {
-            text = a.desc or a.name,
-            icon = icon,
-            hint = shortcuts[a.name] or '',
-            _action_name = a.name,
-            _recent_rank = recent_set[a.name] or 999,
-        }
+        -- Context-aware hint: show availability
+        local hint = shortcuts[a.name] or ''
+        local available = true
+        if cat == 'lsp' and not has_lsp then
+            available = false
+        elseif cat == 'debug' and not IDE.debug:is_active() then
+            if a.name ~= 'debug.continue' and a.name ~= 'debug.toggleBreakpoint' then
+                available = false
+            end
+        elseif (cat == 'editor' or cat == 'file') and not has_file then
+            if a.name ~= 'file.open' and a.name ~= 'file.new' and a.name ~= 'file.recent'
+                and a.name ~= 'file.explorer' and a.name ~= 'app.commandPalette' then
+                available = false
+            end
+        end
+
+        if available then
+            items[#items + 1] = {
+                text = a.desc or a.name,
+                icon = icon,
+                hint = hint,
+                _action_name = a.name,
+                _recent_rank = recent_set[a.name] or 999,
+            }
+        end
     end
 
     -- Sort: recently used first, then alphabetical
