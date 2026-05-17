@@ -1906,14 +1906,17 @@ function M.run()
             end
             assert_true(found)
         end)
-        test('= key is default indent operator (not remapped)', function()
+        test('= key is mapped to format action', function()
             local maps = vim.api.nvim_get_keymap('n')
+            local found = false
             for _, m in ipairs(maps) do
                 if m.lhs == '=' then
-                    assert_false(m.desc == 'Format buffer', '= should not be remapped to format')
+                    found = true
+                    assert_match(m.desc or '', 'Format', '= should be mapped to Format')
                     break
                 end
             end
+            assert_true(found, '= keymap should exist')
         end)
         test('gd mapped for LSP (when LSP attached)', function()
             open_fix('sample.lua', 1500)
