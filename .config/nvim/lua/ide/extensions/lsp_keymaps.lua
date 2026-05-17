@@ -21,7 +21,9 @@ function LspKeymaps:_rename_with_summary(buf)
     IDE.ui:input('Rename', function(new_name)
         if not new_name or new_name == '' or new_name == word then return end
 
-        local params = vim.lsp.util.make_position_params(0, 'utf-8')
+        local clients = vim.lsp.get_clients({ bufnr = bufnr })
+        local encoding = clients[1] and clients[1].offset_encoding or 'utf-16'
+        local params = vim.lsp.util.make_position_params(0, encoding)
         params.newName = new_name
 
         vim.lsp.buf_request(bufnr, 'textDocument/rename', params, function(err, result)

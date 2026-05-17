@@ -6,6 +6,13 @@ local Finder = Class('Finder')
 
 function Finder:init() end
 
+--- Get the position encoding for the current buffer's LSP client.
+---@return string
+local function lsp_encoding()
+    local clients = vim.lsp.get_clients({ bufnr = 0 })
+    return clients[1] and clients[1].offset_encoding or 'utf-16'
+end
+
 --- Find files in the workspace.
 ---@param opts { cwd?: string, hidden?: boolean }|nil
 function Finder:files(opts)
@@ -212,7 +219,7 @@ end
 
 --- Search LSP references.
 function Finder:references()
-    local params = vim.lsp.util.make_position_params()
+    local params = vim.lsp.util.make_position_params(0, lsp_encoding())
     params.context = { includeDeclaration = true }
     vim.lsp.buf_request(0, 'textDocument/references', params, function(err, result)
         if err or not result or #result == 0 then
@@ -228,7 +235,7 @@ end
 --- Search LSP definitions.
 ---@param opts { reuse_win?: boolean }|nil
 function Finder:definitions(opts)
-    local params = vim.lsp.util.make_position_params()
+    local params = vim.lsp.util.make_position_params(0, lsp_encoding())
     vim.lsp.buf_request(0, 'textDocument/definition', params, function(err, result)
         if err or not result then return end
         if vim.islist(result) and #result == 1 then
@@ -243,7 +250,7 @@ end
 
 --- Search LSP implementations.
 function Finder:implementations()
-    local params = vim.lsp.util.make_position_params()
+    local params = vim.lsp.util.make_position_params(0, lsp_encoding())
     vim.lsp.buf_request(0, 'textDocument/implementation', params, function(err, result)
         if err or not result then return end
         if vim.islist(result) and #result == 1 then
@@ -258,7 +265,7 @@ end
 
 --- Search LSP type definitions.
 function Finder:type_definitions()
-    local params = vim.lsp.util.make_position_params()
+    local params = vim.lsp.util.make_position_params(0, lsp_encoding())
     vim.lsp.buf_request(0, 'textDocument/typeDefinition', params, function(err, result)
         if err or not result then return end
         if vim.islist(result) and #result == 1 then
