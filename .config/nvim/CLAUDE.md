@@ -22,7 +22,7 @@ This is not a "dotfiles" repo. This is a **custom IDE built on top of Neovim** u
    
    **Core (stays in IDE singleton):** Buffer, Window, BufferList, WindowList, LspManager, KeyManager, UI, ConfigManager, ThemeManager, Treesitter, Git, QuickFix, Marks, Text, IconDB, FileSystem, Shell, Extension registry, EventEmitter.
    
-   **Extensions (55 registered in IDE:_register_extensions):** notifications, statusline, git_signs, autotag, icon_picker, markdown_preview, ts_comments, ts_error_translator, indent_guides, jump, folding, desktop, window_chrome, main_menu, command_palette, buffer_keymaps, editing_keymaps, debug_keymaps, lsp_keymaps, search_keymaps, quickfix_keymaps, file_operations, file_safety, file_palette, buffer_picker, diagnostics_panel, panels, test_runner, feature_toggles, context_menus, ui_select, completion, snippets, spelling, notes, terminal, lazygit, tmux_integration, session_persistence, format_on_save, lint_on_change, find_replace, cursor_effects, editor_defaults, status_column, mark_signs, message_filter, shell_commands, turbovision_theme, and more.
+   **Extensions (56 registered in IDE:_register_extensions):** notifications, statusline, git_signs, autotag, icon_picker, markdown_preview, ts_comments, ts_error_translator, indent_guides, jump, folding, desktop, window_chrome, main_menu, command_palette, buffer_keymaps, editing_keymaps, debug_keymaps, lsp_keymaps, search_keymaps, quickfix_keymaps, file_operations, file_safety, file_palette, buffer_picker, diagnostics_panel, panels, test_runner, feature_toggles, context_menus, ui_select, completion, snippets, spelling, notes, terminal, lazygit, tmux_integration, session_persistence, format_on_save, lint_on_change, find_replace, cursor_effects, editor_defaults, status_column, mark_signs, message_filter, shell_commands, turbovision_theme, outline, treesitter_textobjects, and more.
 
 6. **Toolkit components are shared UI primitives.** Panel, List, Picker, ContextMenu, ToggleMenu, Toast, KeyHint, StyledLine, StyledText, Icon, StatusBar, TabBar, WinBar — these live in `lua/ide/toolkit/` and are used by any extension. No UI code should be inlined in extensions — extract reusable components into the toolkit.
 
@@ -73,7 +73,7 @@ lua/ide/
   Project.lua              -- Project detection (root, type)
   FormatterRunner.lua      -- Format pipeline
   LinterRunner.lua         -- Lint pipeline
-  toolkit/                 -- 44 shared UI components
+  toolkit/                 -- 44 shared UI components (fully reactive VNode rendering)
     Panel.lua, List.lua, Picker.lua, Canvas.lua,
     ContextMenu.lua, ToggleMenu.lua, InfoPanel.lua,
     StatusBar.lua, TabBar.lua, WinBar.lua,
@@ -87,10 +87,10 @@ lua/ide/
     ComboBox.lua, ListBox.lua, ProgressBar.lua, Tooltip.lua,
     VirtualText.lua, QuickFix.lua,
     hooks.lua, component.lua  -- React-like function component runtime
-  extensions/              -- 56 feature extensions (diamond architecture)
-  test.lua                 -- Base test suite (128 tests)
-  test_extended.lua        -- Extended tests (1057 tests)
-  test_visual.lua          -- Visual snapshot tests (51 tests, tmux-based)
+  extensions/              -- 56 feature extensions (diamond architecture, 75 actions)
+  test.lua                 -- Base test suite (374 tests)
+  test_extended.lua        -- Extended tests (1095 tests)
+  test_visual.lua          -- Visual snapshot tests (57 tests, tmux-based)
   test_fixtures/           -- Fixture projects (Go, TS, Python, broken Lua)
 ```
 
@@ -128,19 +128,19 @@ IDE:register_extension(MyExt())
 
 ## Testing
 
-There are **1273 tests** across three suites. All tests run inside Neovim itself.
+There are **1526 tests** across three suites. All tests run inside Neovim itself.
 
-### Unit + Integration Tests (1222 tests)
+### Unit + Integration Tests (1469 tests)
 
 Run from inside Neovim:
 ```vim
 :IDETest
 ```
-This executes `ide/test.lua` (128 base) + `ide/test_extended.lua` (1094 extended). Tests cover class instantiation, buffer lifecycle, LSP integration, diagnostics, filesystem ops, event emitter, config manager, command builder, toolkit components, extensions, and more.
+This executes `ide/test.lua` (374 base) + `ide/test_extended.lua` (1095 extended). Tests cover class instantiation, buffer lifecycle, LSP integration, diagnostics, filesystem ops, event emitter, config manager, command builder, toolkit components, extensions, and more.
 
 Test files use fixture projects in `ide/test_fixtures/` (Go, TypeScript, Python, intentionally broken Lua).
 
-### Visual Snapshot Tests (51 tests, tmux required)
+### Visual Snapshot Tests (57 tests, tmux required)
 
 These tests capture what the user actually sees on screen. They require a **tmux session**.
 
@@ -222,7 +222,7 @@ ABSORBED (36 plugins replaced by extensions):
 
 | Command | What it does |
 |---------|--------------|
-| `:IDETest` | Run 1273-test suite (base + extended) |
+| `:IDETest` | Run 1526-test suite (base + extended) with progress |
 | `:IDEStatus` | Buffer, project, LSP, diagnostics panel |
 | `:IDELsp` | Per-client LSP status |
 | `:IDEGit` | Branch + recent commits |
