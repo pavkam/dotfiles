@@ -45,10 +45,12 @@ function Finder:symbols(opts)
             for _, s in ipairs(symbols) do
                 local name = (prefix ~= '' and prefix .. '.' or '') .. s.name
                 local kind = vim.lsp.protocol.SymbolKind[s.kind] or 'Unknown'
+                local icon = _symbol_icons[kind] or '󰀫'
                 items[#items + 1] = {
                     text = name,
+                    icon = icon,
                     hint = kind,
-                    value = { lnum = s.range.start.line + 1, col = s.range.start.character },
+                    value = { lnum = s.range.start.line + 1, col = s.range.start.character + 1 },
                 }
                 if s.children then flatten(s.children, name) end
             end
@@ -56,17 +58,37 @@ function Finder:symbols(opts)
         flatten(result, '')
 
         vim.schedule(function()
+            local Window = require 'ide.Window'
+            local Position = require 'ide.Position'
             local SelectPicker = require 'ide.toolkit.SelectPicker'
             SelectPicker({
-                title = 'Document Symbols',
+                title = '  Document Symbols',
                 items = items,
+                width = 0.5,
+                height = math.min(#items + 3, 25),
                 on_select = function(item)
-                    pcall(vim.api.nvim_win_set_cursor, 0, { item.value.lnum, item.value.col })
+                    local win = Window.current()
+                    if win then
+                        win:set_cursor(Position(item.value.lnum, item.value.col))
+                        win:center_cursor()
+                    end
                 end,
             }):show()
         end)
     end)
 end
+
+--- LSP symbol kind icons.
+local _symbol_icons = {
+    File = '', Module = '', Namespace = '󰦮', Package = '',
+    Class = '󰌗', Method = '', Property = '', Field = '',
+    Constructor = '', Enum = '', Interface = '',
+    Function = '󰊕', Variable = '󰀫', Constant = '󰏿',
+    String = '', Number = '󰎠', Boolean = '◩', Array = '󰅪',
+    Object = '', Key = '󰌋', Null = '󰟢', EnumMember = '',
+    Struct = '', Event = '', Operator = '',
+    TypeParameter = '󰗴',
+}
 
 --- Search LSP workspace symbols.
 ---@param opts { query?: string }|nil
@@ -80,21 +102,32 @@ function Finder:workspace_symbols(opts)
             local loc = s.location
             local path = vim.uri_to_fname(loc.uri)
             local rel = vim.fn.fnamemodify(path, ':~:.')
+            local icon = _symbol_icons[kind] or '󰀫'
             items[#items + 1] = {
                 text = s.name,
+                icon = icon,
                 hint = kind .. '  ' .. rel,
-                value = { path = path, lnum = loc.range.start.line + 1, col = loc.range.start.character },
+                value = { path = path, lnum = loc.range.start.line + 1, col = loc.range.start.character + 1 },
             }
         end
 
         vim.schedule(function()
+            local Buffer = require 'ide.Buffer'
+            local Window = require 'ide.Window'
+            local Position = require 'ide.Position'
             local SelectPicker = require 'ide.toolkit.SelectPicker'
             SelectPicker({
-                title = 'Workspace Symbols',
+                title = '  Workspace Symbols',
                 items = items,
+                width = 0.6,
+                height = math.min(#items + 3, 25),
                 on_select = function(item)
-                    vim.cmd('edit ' .. vim.fn.fnameescape(item.value.path))
-                    pcall(vim.api.nvim_win_set_cursor, 0, { item.value.lnum, item.value.col })
+                    Buffer.open(item.value.path)
+                    local win = Window.current()
+                    if win then
+                        win:set_cursor(Position(item.value.lnum, item.value.col))
+                        win:center_cursor()
+                    end
                 end,
             }):show()
         end)
@@ -141,22 +174,38 @@ end
 
 --- Search recent files.
 function Finder:recent()
+    local Buffer = require 'ide.Buffer'
     local oldfiles = vim.v.oldfiles or {}
     local items = {}
     for _, path in ipairs(oldfiles) do
         if vim.fn.filereadable(path) == 1 then
             local rel = vim.fn.fnamemodify(path, ':~:.')
-            items[#items + 1] = { text = rel, value = path }
+            local icon = ''
+            if IDE.icons and IDE.icons:is_loaded() then
+                local fname = IDE.fs:basename(path)
+                local ext = IDE.fs:extension(path)
+                local ic = IDE.icons:for_file(fname, ext)
+                if ic then icon = ic:char() end
+            end
+            local dir = vim.fn.fnamemodify(rel, ':h')
+            items[#items + 1] = {
+                text = rel,
+                icon = icon,
+                hint = dir ~= '.' and dir or '',
+                value = path,
+            }
             if #items >= 50 then break end
         end
     end
 
     local SelectPicker = require 'ide.toolkit.SelectPicker'
     SelectPicker({
-        title = 'Recent Files',
+        title = '  Recent Files',
         items = items,
+        width = 0.5,
+        height = math.min(#items + 3, 25),
         on_select = function(item)
-            vim.cmd('edit ' .. vim.fn.fnameescape(item.value))
+            Buffer.open(item.value)
         end,
     }):show()
 end
@@ -226,26 +275,36 @@ end
 ---@param opts { bufnr?: integer }|nil
 function Finder:diagnostics(opts)
     opts = opts or {}
+    local Buffer = require 'ide.Buffer'
+    local Window = require 'ide.Window'
+    local Position = require 'ide.Position'
     local diags = vim.diagnostic.get(opts.bufnr)
     local items = {}
     local sev_names = { 'Error', 'Warn', 'Info', 'Hint' }
+    local sev_icons = { ' ', ' ', ' ', '󰌵 ' }
     for _, d in ipairs(diags) do
-        local fname = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(d.bufnr), ':t')
+        local buf = Buffer.get(d.bufnr)
+        local fname = buf and buf:name() and vim.fn.fnamemodify(buf:name(), ':t') or '?'
         items[#items + 1] = {
-            text = string.format('%s:%d: %s', fname, d.lnum + 1, d.message),
+            text = string.format('%s:%d: %s', fname, d.lnum + 1, d.message:gsub('\n', ' ')),
+            icon = sev_icons[d.severity] or ' ',
             hint = sev_names[d.severity] or '?',
-            value = { bufnr = d.bufnr, lnum = d.lnum + 1, col = d.col },
+            value = { bufnr = d.bufnr, lnum = d.lnum + 1, col = d.col + 1 },
         }
     end
 
     local SelectPicker = require 'ide.toolkit.SelectPicker'
     SelectPicker({
-        title = 'Diagnostics',
+        title = '  Diagnostics',
         items = items,
+        width = 0.6,
+        height = math.min(#items + 3, 25),
         on_select = function(item)
-            if vim.api.nvim_buf_is_valid(item.value.bufnr) then
-                vim.api.nvim_set_current_buf(item.value.bufnr)
-                pcall(vim.api.nvim_win_set_cursor, 0, { item.value.lnum, item.value.col })
+            local buf = Buffer.get(item.value.bufnr)
+            if buf and buf:is_valid() then
+                Window.current():set_buffer(buf)
+                Window.current():set_cursor(Position(item.value.lnum, item.value.col))
+                Window.current():center_cursor()
             end
         end,
     }):show()
@@ -289,8 +348,7 @@ function Finder:keymaps()
         width = 0.6,
         height = math.min(#items + 3, 25),
         on_select = function(item)
-            local keys = vim.api.nvim_replace_termcodes(item.value.lhs, true, true, true)
-            vim.api.nvim_feedkeys(keys, 'n', false)
+            IDE.keys:feed(IDE.keys:termcodes(item.value.lhs), 'n')
         end,
     }):show()
 end
@@ -389,6 +447,9 @@ end
 ---@param title string
 ---@param locations table[]
 function Finder:_show_locations(title, locations)
+    local Buffer = require 'ide.Buffer'
+    local Window = require 'ide.Window'
+    local Position = require 'ide.Position'
     local items = {}
     for _, loc in ipairs(locations) do
         local uri = loc.uri or loc.targetUri
@@ -397,9 +458,17 @@ function Finder:_show_locations(title, locations)
             local path = vim.uri_to_fname(uri)
             local rel = vim.fn.fnamemodify(path, ':~:.')
             local lnum = range.start.line + 1
+            local icon = ''
+            if IDE.icons and IDE.icons:is_loaded() then
+                local fname = IDE.fs:basename(path)
+                local ext = IDE.fs:extension(path)
+                local ic = IDE.icons:for_file(fname, ext)
+                if ic then icon = ic:char() end
+            end
             items[#items + 1] = {
                 text = string.format('%s:%d', rel, lnum),
-                value = { path = path, lnum = lnum, col = range.start.character },
+                icon = icon,
+                value = { path = path, lnum = lnum, col = range.start.character + 1 },
             }
         end
     end
@@ -409,8 +478,12 @@ function Finder:_show_locations(title, locations)
         title = title,
         items = items,
         on_select = function(item)
-            vim.cmd('edit ' .. vim.fn.fnameescape(item.value.path))
-            pcall(vim.api.nvim_win_set_cursor, 0, { item.value.lnum, item.value.col })
+            Buffer.open(item.value.path)
+            local win = Window.current()
+            if win then
+                win:set_cursor(Position(item.value.lnum, item.value.col))
+                win:center_cursor()
+            end
         end,
     }):show()
 end
