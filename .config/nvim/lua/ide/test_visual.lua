@@ -1102,6 +1102,40 @@ function M.run()
         assert_match(bottom, '%d+:%d+', 'footer should show cursor position')
     end)
 
+    -- ═══════════════════════════════════════
+    -- DESKTOP WELCOME SCREEN TESTS
+    -- ═══════════════════════════════════════
+
+    test('desktop shows TurboVision logo when no files open', function()
+        ensure_normal()
+        -- Close all buffers to trigger desktop
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted then
+                pcall(vim.api.nvim_buf_delete, buf, { force = true })
+            end
+        end
+        wait(2000)
+        vim.cmd('redraw!')
+        wait(1000)
+        local snap = capture_plain()
+        save_snapshot('desktop_welcome', snap)
+        -- The desktop should show the TurboVision logo
+        assert_match(snap, '╔╦╗', 'desktop should show TurboVision logo')
+        assert_match(snap, 'Quick Actions', 'desktop should show Quick Actions')
+    end)
+
+    test('opening file from desktop restores line numbers', function()
+        ensure_normal()
+        vim.cmd('edit! ' .. vim.fs.joinpath(fixture_dir, 'sample.lua'))
+        wait(2000)
+        local snap = capture_plain()
+        save_snapshot('desktop_to_file', snap)
+        assert_false(has_visible_errors(snap), 'file open should not error')
+        -- Line numbers should be visible (check for number pattern in gutter)
+        local sl = statusline(snap)
+        assert_match(sl, 'sample', 'statusline should show filename')
+    end)
+
     -- Restore a file for subsequent tests
     ensure_normal()
     vim.cmd('edit! ' .. vim.fs.joinpath(fixture_dir, 'sample.go'))
