@@ -116,11 +116,15 @@ function Folding:on_register(ctx)
         win:set_option('foldcolumn', '1')
     end, { desc = 'Set folding options' })
 
-    ctx:keymap('n', 'zR', function() ext:open_all() end, { desc = 'Open all folds' })
-    ctx:keymap('n', 'zM', function() ext:close_all() end, { desc = 'Close all folds' })
+    ctx:action('editor.foldOpenAll', 'Open all folds', function() ext:open_all() end)
+    ctx:action('editor.foldCloseAll', 'Close all folds', function() ext:close_all() end)
+    ctx:action('editor.foldPeek', 'Peek fold', function() ext:peek() end)
+
+    ctx:keymap('n', 'zR', 'editor.foldOpenAll', { desc = 'Open all folds' })
+    ctx:keymap('n', 'zM', 'editor.foldCloseAll', { desc = 'Close all folds' })
     ctx:keymap('n', 'zr', function() ext:open_level() end, { desc = 'Fold less' })
     ctx:keymap('n', 'zm', function() ext:close_level() end, { desc = 'Fold more' })
-    ctx:keymap('n', 'zp', function() ext:peek() end, { desc = 'Peek fold' })
+    ctx:keymap('n', 'zp', 'editor.foldPeek', { desc = 'Peek fold' })
 
     ctx:notify('Enhanced folding active')
 end

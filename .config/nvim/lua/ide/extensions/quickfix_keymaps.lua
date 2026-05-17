@@ -26,13 +26,11 @@ function QuickfixKeymaps:on_register(ctx)
         qf:toggle_list('l', false)
     end, { desc = 'Clear locations' })
 
-    ctx:keymap('n', '<leader>qq', function()
-        qf:toggle_list('c', true)
-    end, { desc = 'Toggle quickfix' })
+    ctx:action('view.quickfix', 'Toggle quickfix list', function() qf:toggle_list('c', true) end)
+    ctx:action('view.locationList', 'Toggle location list', function() qf:toggle_list('l', true) end)
 
-    ctx:keymap('n', '<leader>ql', function()
-        qf:toggle_list('l', true)
-    end, { desc = 'Toggle locations' })
+    ctx:keymap('n', '<leader>qq', 'view.quickfix', { desc = 'Toggle quickfix' })
+    ctx:keymap('n', '<leader>ql', 'view.locationList', { desc = 'Toggle locations' })
 
     ctx:keymap('n', ']q', '<cmd>cnext<cr>', { desc = 'Next quickfix' })
     ctx:keymap('n', '[q', '<cmd>cprev<cr>', { desc = 'Prev quickfix' })

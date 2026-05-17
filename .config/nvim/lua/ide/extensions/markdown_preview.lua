@@ -96,9 +96,8 @@ function MarkdownPreview:on_register(ctx)
         self_ref:toggle()
     end, { desc = 'Toggle markdown preview' })
 
-    ctx:keymap('n', '<leader>p', function()
-        self_ref:toggle()
-    end, { desc = 'Toggle markdown preview' })
+    ctx:action('view.markdownPreview', 'Toggle markdown preview', function() self_ref:toggle() end)
+    ctx:keymap('n', '<leader>p', 'view.markdownPreview', { desc = 'Toggle markdown preview' })
 
     ctx:hook('BufWritePost', function(args)
         if self_ref._source_buf == args.buf and self_ref._preview_buf
