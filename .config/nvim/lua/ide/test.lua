@@ -3289,7 +3289,21 @@ function M.run(filter)
     local f = io.open('/tmp/ide_test_results.txt', 'w')
     if f then f:write(summary); f:close() end
     print(summary)
-    return { passed = passed, failed = failed, total = passed + failed }
+    -- Collect structured failure data for the test runner panel
+    local failures = {}
+    for _, r in ipairs(results) do
+        if not r.passed then
+            local file, line = (r.error or ''):match('([^:]+):(%d+):')
+            failures[#failures + 1] = {
+                name = r.name,
+                error = r.error or '?',
+                file = file,
+                line = tonumber(line),
+            }
+        end
+    end
+
+    return { passed = passed, failed = failed, total = passed + failed, failures = failures }
 end
 
 return M

@@ -68,6 +68,48 @@ function TestRunner:on_register(ctx)
 
         if total_fail > 0 then
             IDE.ui:error('Tests: ' .. summary)
+            -- Show failures in a navigable picker
+            local all_failures = {}
+            for _, fail in ipairs(base.failures or {}) do
+                all_failures[#all_failures + 1] = fail
+            end
+            for _, fail in ipairs(ext.failures or {}) do
+                all_failures[#all_failures + 1] = fail
+            end
+            if #all_failures > 0 then
+                vim.schedule(function()
+                    local SelectPicker = require 'ide.toolkit.SelectPicker'
+                    local Buffer = require 'ide.Buffer'
+                    local Window = require 'ide.Window'
+                    local Position = require 'ide.Position'
+                    local items = {}
+                    for _, fail in ipairs(all_failures) do
+                        local short_err = fail.error:match('[^:]+:%d+: (.+)') or fail.error:sub(1, 60)
+                        items[#items + 1] = {
+                            text = fail.name,
+                            icon = ' ',
+                            hint = short_err:sub(1, 40),
+                            value = fail,
+                        }
+                    end
+                    SelectPicker({
+                        title = string.format('  %d Test Failures', #items),
+                        items = items,
+                        width = 0.7,
+                        height = math.min(#items + 3, 20),
+                        on_select = function(item)
+                            if item.value.file and item.value.line then
+                                Buffer.open(item.value.file)
+                                local win = Window.current()
+                                if win then
+                                    win:set_cursor(Position(item.value.line, 1))
+                                    win:center_cursor()
+                                end
+                            end
+                        end,
+                    }):show()
+                end)
+            end
         else
             IDE.ui:info('Tests: ' .. summary)
         end
