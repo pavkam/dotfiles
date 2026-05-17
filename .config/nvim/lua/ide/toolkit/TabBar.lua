@@ -81,6 +81,23 @@ function TabBar:render()
     return table.concat(parts, ' ')
 end
 
+--- Render a single named section.
+---@param name string # section name registered via left/center/right
+---@return string
+function TabBar:render_section(name)
+    for _, sections in ipairs({ self._left, self._center, self._right }) do
+        for _, s in ipairs(sections) do
+            if s.name == name and (not s.cond or s.cond()) then
+                local text, hl = s.provider()
+                if text and text ~= '' then
+                    return hl and string.format('%%#%s#%s%%*', hl, text) or text
+                end
+            end
+        end
+    end
+    return ''
+end
+
 --- Apply as native tabline.
 function TabBar:apply_native()
     local Dispatch = require 'ide.Dispatch'

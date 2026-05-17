@@ -224,6 +224,15 @@ function MenuBar:render()
     end
 
     parts[#parts + 1] = '%#IDEMenuBar#%='
+
+    -- Append buffer tabs from the tabbar if available
+    if _G.IDE and IDE.tabbar then
+        local tab_content = IDE.tabbar:render_section('buffer_tabs')
+        if tab_content and tab_content ~= '' then
+            parts[#parts + 1] = tab_content
+        end
+    end
+
     parts[#parts + 1] = '%#IDEMenuBar# '
     return table.concat(parts, '')
 end
