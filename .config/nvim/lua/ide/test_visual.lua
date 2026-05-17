@@ -456,6 +456,22 @@ function M.run()
         assert_match(tl, 'Help', 'tabline should show Help menu')
     end)
 
+    test('menu bar shows buffer tabs on the right', function()
+        ensure_normal()
+        -- Open multiple files to populate buffer tabs
+        vim.cmd('edit! ' .. vim.fs.joinpath(fixture_dir, 'sample.lua'))
+        wait(1000)
+        vim.cmd('edit! ' .. vim.fs.joinpath(fixture_dir, 'sample.go'))
+        wait(1000)
+        local snap = capture_plain()
+        save_snapshot('menubar_with_tabs', snap)
+        local tl = tabline(snap)
+        -- Menu items on the left
+        assert_match(tl, 'File', 'tabline should show File menu')
+        -- Buffer tabs on the right
+        assert_match(tl, 'sample', 'tabline should show buffer tab filename')
+    end)
+
     test('F10 opens File menu dropdown', function()
         ensure_normal()
         wait(500)
