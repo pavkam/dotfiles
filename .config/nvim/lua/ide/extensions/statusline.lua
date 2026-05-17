@@ -291,9 +291,20 @@ function Statusline:_build_tabbar()
         local StatusBar = require 'ide.toolkit.StatusBar'
         for i, buf in ipairs(bufs) do
             local name = buf:name() or '[No Name]'
-            local hl = buf:id() == cur and 'IDETabActive' or 'IDETabInactive'
+            local is_active = buf:id() == cur
+            local hl = is_active and 'IDETabActive' or 'IDETabInactive'
+            -- File icon
+            local icon = ''
+            if IDE.icons and IDE.icons:is_loaded() and name ~= '[No Name]' then
+                local fname = IDE.fs:basename(name)
+                local ext = IDE.fs:extension(name)
+                local ic = IDE.icons:for_file(fname, ext)
+                if ic then icon = ic:char() .. ' ' end
+            end
+            -- Modified indicator
+            local mod = buf:is_modified() and '● ' or ''
             local tab_id = 'tab_' .. buf:id()
-            local label = string.format('%%#%s# %d %s ', hl, i, name)
+            local label = string.format('%%#%s# %s%s%s%s', hl, mod, icon, name, ' ')
             parts[#parts + 1] = StatusBar.click(tab_id, function()
                 if buf:is_valid() then
                     Window.current():set_buffer(buf)
