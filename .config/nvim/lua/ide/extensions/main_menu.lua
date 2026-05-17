@@ -98,7 +98,7 @@ function MainMenu:_build_file_menu()
         action = function() IDE.actions:execute('file.new') end,
     }))
     bar:add_item('File', MenuItem({
-        text = 'Open...', icon = '󰝰', shortcut = 'Ctrl+O',
+        text = 'Open...', icon = '󰝰', shortcut = 'Ctrl+P',
         action = function() IDE.actions:execute('file.open') end,
     }))
     bar:add_item('File', MenuItem({
@@ -187,21 +187,18 @@ function MainMenu:_build_edit_menu()
     }))
     bar:add_separator('Edit')
     bar:add_item('Edit', MenuItem({
-        text = 'Find...', icon = '', shortcut = 'Ctrl+F',
+        text = 'Find and Replace...', icon = '', shortcut = 'Ctrl+H',
         action = function() IDE.actions:execute('editor.findReplace') end,
     }))
     bar:add_item('Edit', MenuItem({
-        text = 'Find in Files', icon = '󰱼', shortcut = 'Ctrl+Shift+F',
+        text = 'Find in Files', icon = '󰱼', shortcut = 'Ctrl+F',
         action = function() IDE.actions:execute('file.grep') end,
     }))
-    bar:add_item('Edit', MenuItem({
-        text = 'Replace', icon = '󰛔', shortcut = 'Ctrl+H',
-        action = function() IDE.actions:execute('editor.findReplace') end,
-    }))
+
     bar:add_separator('Edit')
     bar:add_item('Edit', MenuItem({
-        text = 'Format', icon = '󰉶', shortcut = 'Ctrl+Shift+I',
-        action = function() IDE.actions:execute('lsp.format') end,
+        text = 'Format', icon = '󰉶', shortcut = '=',
+        action = function() IDE.actions:execute('editor.format') end,
         enabled = has_normal_buf,
     }))
     bar:add_item('Edit', MenuItem({
@@ -239,7 +236,7 @@ function MainMenu:_build_view_menu()
         action = function() IDE.actions:execute('file.open') end,
     }))
     bar:add_item('View', MenuItem({
-        text = 'Search in Files...', icon = '󰱼', shortcut = 'Ctrl+Shift+F',
+        text = 'Search in Files...', icon = '󰱼', shortcut = 'Ctrl+F',
         action = function() IDE.actions:execute('file.grep') end,
     }))
     bar:add_separator('View')
