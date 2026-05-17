@@ -244,6 +244,13 @@ function Desktop:on_register(ctx)
     ctx:hook({ 'BufAdd', 'BufDelete', 'BufWipeout', 'VimEnter' }, function()
         check()
     end, { desc = 'Desktop: check if desktop needed' })
+
+    -- Hide immediately when a normal file buffer is entered (no debounce)
+    ctx:hook('BufEnter', function()
+        if desktop._active and not desktop:_is_desktop_needed() then
+            desktop:_hide_desktop()
+        end
+    end, { desc = 'Desktop: hide on file open' })
 end
 
 function Desktop:on_unregister()
