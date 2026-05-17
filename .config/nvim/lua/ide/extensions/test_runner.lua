@@ -9,6 +9,15 @@ function TestRunner:init()
     Extension.init(self, 'TestRunner')
 end
 
+--- Clear test module entries from package.loaded.
+--- load_fresh handles re-reading from disk; this just ensures
+--- the test modules aren't returned from package.loaded.
+local function clear_test_modules()
+    package.loaded['ide.test'] = nil
+    package.loaded['ide.test_extended'] = nil
+    package.loaded['ide.test_visual'] = nil
+end
+
 --- Load a test module fresh from disk, bypassing ALL bytecode caches.
 --- Uses io.open + load to avoid vim.loader cache issues.
 ---@param mod_name string
@@ -37,6 +46,7 @@ end
 
 function TestRunner:on_register(ctx)
     ctx:command('IDETest', function()
+        clear_test_modules()
         local base = load_fresh('ide.test').run()
         local ext = load_fresh('ide.test_extended').run()
 

@@ -78,6 +78,11 @@ end
 --- Open a fixture file and wait for LSP/treesitter
 local function open_fixture(name, wait_ms)
     ensure_normal_window()
+    -- If FramedWindow is active, open the file via the frame
+    if IDE and IDE._window_chrome and IDE._window_chrome._frame and IDE._window_chrome._frame:is_valid() then
+        local frame = IDE._window_chrome._frame
+        pcall(vim.api.nvim_set_current_win, frame:window_id())
+    end
     vim.cmd('edit ' .. vim.fs.joinpath(fixture_dir, name))
     vim.wait(wait_ms or 500, function() return false end)
     return vim.api.nvim_get_current_buf()
@@ -1924,7 +1929,12 @@ function M.run(filter)
             local bindings = {}
             local conflicts = {}
             -- Intentional overlaps that are OK
-            local allowed = { ['i:<Tab>'] = true, ['i:<S-Tab>'] = true }
+            local allowed = {
+                ['i:<Tab>'] = true, ['i:<S-Tab>'] = true,
+                -- Alt+Arrows: tmux pane nav overrides go-back/forward when in tmux
+                ['n:<M-Left>'] = true, ['n:<M-Right>'] = true,
+                ['n:<M-Up>'] = true, ['n:<M-Down>'] = true,
+            }
             for _, ext in ipairs(IDE:extensions()) do
                 for _, km in ipairs(ext._keymaps or {}) do
                     if not km.buffer then
