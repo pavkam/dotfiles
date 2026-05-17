@@ -1860,6 +1860,35 @@ function M.run(filter)
             assert_eq(hint_node.text, 'Ctrl+S')
             assert_eq(hint_node.hl, 'Comment')
         end)
+        test('fuzzy or substring matching filters items', function()
+            local SP = require 'ide.toolkit.SelectPicker'
+            local items = {
+                { text = 'file.save' },
+                { text = 'file.saveAs' },
+                { text = 'view.symbols' },
+                { text = 'editor.format' },
+            }
+            local picker = SP({ items = items })
+            picker:on_query_change('save')
+            local filtered = picker:items()
+            assert_true(#filtered >= 2, 'should match at least 2 items for "save"')
+            for _, item in ipairs(filtered) do
+                assert_match(item.text:lower(), 'save', 'each result should match query')
+            end
+        end)
+        test('empty query returns all items', function()
+            local SP = require 'ide.toolkit.SelectPicker'
+            local items = { { text = 'a' }, { text = 'b' }, { text = 'c' } }
+            local picker = SP({ items = items })
+            picker:on_query_change('')
+            assert_eq(#picker:items(), 3)
+        end)
+        test('non-matching query returns empty', function()
+            local SP = require 'ide.toolkit.SelectPicker'
+            local picker = SP({ items = { { text = 'hello' } } })
+            picker:on_query_change('zzzzz')
+            assert_eq(#picker:items(), 0)
+        end)
         test('render_item with empty hint skips padding', function()
             local SP = require 'ide.toolkit.SelectPicker'
             local picker = SP({ items = {} })

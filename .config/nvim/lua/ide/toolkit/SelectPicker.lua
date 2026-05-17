@@ -32,12 +32,33 @@ function SelectPicker:on_query_change(query)
         self._filtered = self._all_items
     else
         local q = query:lower()
-        self._filtered = {}
+        -- Try fuzzy scoring (FuzzyScorer uses fzf-native FFI when available)
+        local fuzzy = self._fuzzy
+        if not fuzzy then
+            local ok, FuzzyScorer = pcall(require, 'ide.FuzzyScorer')
+            if ok then
+                fuzzy = FuzzyScorer()
+                self._fuzzy = fuzzy
+            end
+        end
+        local use_fuzzy = fuzzy and fuzzy:is_available()
+        local scored = {}
         for _, item in ipairs(self._all_items) do
             local text = (item.text or item.name or tostring(item)):lower()
-            if text:find(q, 1, true) then
-                self._filtered[#self._filtered + 1] = item
+            local score = 0
+            if use_fuzzy then
+                score = fuzzy:score(text, query)
             end
+            if score > 0 then
+                scored[#scored + 1] = { item = item, score = score }
+            elseif text:find(q, 1, true) then
+                scored[#scored + 1] = { item = item, score = 1 }
+            end
+        end
+        table.sort(scored, function(a, b) return a.score > b.score end)
+        self._filtered = {}
+        for _, s in ipairs(scored) do
+            self._filtered[#self._filtered + 1] = s.item
         end
     end
     self._selected = 1
