@@ -48,55 +48,22 @@ return {
             jest,
         }
 
-        -- neotest-progress-consumer was removed (absorbed)
-
         return opts
     end,
-    config = function(spec, opts)
-        -- register neo-test virtual text
+    config = function(_, opts)
+        -- Register neotest virtual text diagnostics namespace
         local neotest_ns = vim.api.nvim_create_namespace 'neotest'
         vim.diagnostic.config({
             virtual_text = {
                 format = function(diagnostic)
-                    local message = diagnostic.message:gsub('\n', ' '):gsub('\t', ' '):gsub('%s+', ' '):gsub('^%s+', '')
-                    return message
+                    return diagnostic.message:gsub('\n', ' '):gsub('\t', ' '):gsub('%s+', ' '):gsub('^%s+', '')
                 end,
             },
         }, neotest_ns)
 
-        local function confirm_saved()
-            local buf = IDE.buffers:current()
-            if buf:is_modified() then buf:save() end
-            return true
-        end
+        -- Keymaps are handled by ide/extensions/test_runner.lua
+        -- (avoids duplication and uses IDE abstractions)
 
-        -- register neotest mappings via IDE KeyManager
-        IDE.keys:attach(spec.ft, function(set)
-            local neotest = require 'neotest'
-
-            set('n', '<leader>tU', function() neotest.summary.toggle() end, { desc = 'Toggle summary view' })
-            set('n', '<leader>to', function() neotest.output.open() end, { desc = 'Show test output' })
-            set('n', '<leader>tw', function() neotest.watch.toggle() end, { desc = 'Toggle test watching' })
-            set('n', '<leader>tf', function()
-                neotest.run.run(vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf()))
-            end, { desc = 'Run all tests' })
-            set('n', '<leader>tr', function()
-                if confirm_saved() then neotest.run.run() end
-            end, { desc = 'Run nearest test' })
-            set('n', '<leader>td', function()
-                if not confirm_saved() then return end
-                local ft = vim.bo.filetype
-                if ft == 'go' then
-                    require('dap-go').debug_test()
-                else
-                    neotest.run.run { strategy = 'dap', suite = false }
-                end
-            end, { desc = 'Debug nearest test' })
-        end, true)
-
-        IDE.keys:group('<leader>t', { desc = 'Testing' })
-
-        local neotest = require 'neotest'
-        neotest.setup(opts)
+        require('neotest').setup(opts)
     end,
 }
