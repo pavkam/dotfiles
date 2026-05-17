@@ -100,8 +100,14 @@ function WindowChrome:_ensure_frame()
         end
     end
 
-    -- Don't frame special buffers
-    if not buf:is_normal() then return end
+    -- If frame was lost (window closed by neovim during buffer ops), recreate it
+    if self._frame and not self._frame:is_valid() then
+        self._frame = nil
+        self._splitter = nil
+    end
+
+    -- Don't frame special buffers (but allow frame recreation if frame was lost)
+    if not buf:is_normal() and self._frame then return end
     if buf:filetype() == 'lazy' then return end
 
     -- If we're in the host window (a :e or :bp landed there), redirect to the active frame
