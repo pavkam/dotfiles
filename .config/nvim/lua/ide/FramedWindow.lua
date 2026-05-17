@@ -90,7 +90,14 @@ function FramedWindow:_build_title()
     local center_w = vim.api.nvim_strwidth(center)
     local close_w = 3  -- [■]
     local max_w = 3    -- [↕]
-    local total_border = self._width - close_w - max_w - center_w
+    local available = self._width - close_w - max_w
+    -- Truncate center text if it exceeds available width
+    if center_w > available - 2 then
+        local trunc_w = math.max(10, available - 4)
+        center = string.format(' [%d] %s%s… ', self._number, icon, name:sub(1, trunc_w))
+        center_w = vim.api.nvim_strwidth(center)
+    end
+    local total_border = available - center_w
     local left_pad = math.max(1, math.floor(total_border / 2))
     local right_pad = math.max(1, total_border - left_pad)
 
@@ -121,8 +128,12 @@ function FramedWindow:_build_footer()
         local ok, crumb = pcall(function() return buf:ast():breadcrumb() end)
         if ok and crumb and crumb ~= '' then
             local max_w = self._width - vim.api.nvim_strwidth(pos) - 4
-            if #crumb > max_w then
-                crumb = '…' .. crumb:sub(-max_w + 1)
+            if vim.api.nvim_strwidth(crumb) > max_w then
+                -- Truncate from the left, keeping the rightmost (most specific) part
+                while vim.api.nvim_strwidth(crumb) > max_w - 1 and #crumb > 1 do
+                    crumb = crumb:sub(vim.fn.byteidx(crumb, 1) + 1)
+                end
+                crumb = '…' .. crumb
             end
             scope = ' ' .. crumb .. ' '
         end

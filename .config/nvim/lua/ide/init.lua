@@ -99,8 +99,8 @@ function IDE:init()
         return result
     end
 
-    self.buffers = safe_init('BufferList', BufferList) or {}
-    self.windows = safe_init('WindowList', WindowList) or {}
+    self.buffers = safe_init('BufferList', BufferList)
+    self.windows = safe_init('WindowList', WindowList)
     self.fs = safe_init('FileSystem', FileSystem)
     self.shell = safe_init('Shell', Shell)
     self.lsp = safe_init('LspManager', LspManager)
@@ -160,18 +160,24 @@ end
 --- Safely require and register an extension.
 ---@param mod string
 function IDE:_safe_register(mod)
+    local function report_error(msg)
+        vim.schedule(function()
+            if self.ui then
+                self.ui:error(msg)
+            else
+                vim.notify(msg, vim.log.levels.ERROR)
+            end
+        end)
+    end
+
     local ok, ext_or_err = pcall(require, mod)
     if not ok then
-        vim.schedule(function()
-            IDE.ui:error(string.format('Extension "%s" failed to require: %s', mod, tostring(ext_or_err)))
-        end)
+        report_error(string.format('Extension "%s" failed to require: %s', mod, tostring(ext_or_err)))
         return
     end
     local ok2, inst_or_err = pcall(ext_or_err)
     if not ok2 then
-        vim.schedule(function()
-            IDE.ui:error(string.format('Extension "%s" failed to instantiate: %s', mod, tostring(inst_or_err)))
-        end)
+        report_error(string.format('Extension "%s" failed to instantiate: %s', mod, tostring(inst_or_err)))
         return
     end
     self:register_extension(inst_or_err)
@@ -336,10 +342,10 @@ end
 
 --- Wire all autocommand-based events.
 function IDE:_wire_events()
-    self.buffers:_wire_events()
-    self.windows:_wire_events()
-    self.lsp:_wire_events()
-    self.theme:_wire_events()
+    if self.buffers then self.buffers:_wire_events() end
+    if self.windows then self.windows:_wire_events() end
+    if self.lsp then self.lsp:_wire_events() end
+    if self.theme then self.theme:_wire_events() end
 
     -- Bubble buffer events to IDE level
     self.buffers:on('open', function(buf)
@@ -579,7 +585,9 @@ function IDE:_register_core_actions()
     self.actions:register('app.help', { desc = 'Help', fn = function() self:help() end })
     self.actions:register('app.healthcheck', { desc = 'Health check', fn = function() self:healthcheck() end })
     self.actions:register('app.keyHints', { desc = 'Key hints', fn = function() self.keys:show_hints('<leader>', 'n') end })
-    self.actions:register('app.menu', { desc = 'Open menu', fn = function() self.menu_bar:open('&File') end })
+    self.actions:register('app.menu', { desc = 'Open menu', fn = function()
+        if self.menu_bar then self.menu_bar:open('&File') end
+    end })
 end
 
 -- Re-export classes for direct use

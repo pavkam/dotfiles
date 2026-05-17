@@ -223,10 +223,8 @@ function WindowChrome:close_current()
             self._frame:fill()
         else
             -- Re-layout remaining frames
-            local row = 1
-            local width = Window.editor_width() - 2
-            local height = Window.editor_height() - 5
-            self._splitter:layout(row, 0, width, height)
+            local area = Window.content_area()
+            self._splitter:layout(area.row, area.col, area.width, area.height)
             local active = self._splitter:active_frame()
             if active and active:is_valid() then
                 local aw = Window.get(active:window_id())
@@ -423,7 +421,7 @@ function WindowChrome:on_register(ctx)
         IDE.config:set_option('laststatus', 3)
         vim.schedule(function()
             if chrome._splitter and chrome._splitter:count() > 1 then
-                chrome._splitter:layout(1, 0, Window.editor_width() - 2, Window.editor_height() - 5)
+                local _area = Window.content_area(); chrome._splitter:layout(_area.row, _area.col, _area.width, _area.height)
             elseif chrome._frame and chrome._frame:is_valid() then
                 chrome._frame:fill()
             end
@@ -464,14 +462,14 @@ function WindowChrome:on_register(ctx)
     ctx:keymap('n', '<C-S-Left>', function()
         if chrome._splitter then
             chrome._splitter:resize(-0.05)
-            chrome._splitter:layout(1, 0, Window.editor_width() - 2, Window.editor_height() - 5)
+            local _area = Window.content_area(); chrome._splitter:layout(_area.row, _area.col, _area.width, _area.height)
         end
     end, { desc = 'Shrink split' })
 
     ctx:keymap('n', '<C-S-Right>', function()
         if chrome._splitter then
             chrome._splitter:resize(0.05)
-            chrome._splitter:layout(1, 0, Window.editor_width() - 2, Window.editor_height() - 5)
+            local _area = Window.content_area(); chrome._splitter:layout(_area.row, _area.col, _area.width, _area.height)
         end
     end, { desc = 'Grow split' })
 end

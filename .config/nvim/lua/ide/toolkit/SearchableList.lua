@@ -554,7 +554,7 @@ function SearchableList:_move(dir)
     self._selected = self._selected + dir
     if self._selected < 1 then self._selected = #items end
     if self._selected > #items then self._selected = 1 end
-    local visible = self._win:height() - 2
+    local visible = self._win:height() - 3 -- search bar + separator + status bar
     if self._selected <= self._scroll then self._scroll = self._selected - 1
     elseif self._selected > self._scroll + visible then self._scroll = self._selected - visible end
     self:_render()

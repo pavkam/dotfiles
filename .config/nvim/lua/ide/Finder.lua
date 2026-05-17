@@ -239,11 +239,11 @@ function Finder:definitions(opts)
     vim.lsp.buf_request(0, 'textDocument/definition', params, function(err, result)
         if err or not result then return end
         if vim.islist(result) and #result == 1 then
-            vim.schedule(function() vim.lsp.util.jump_to_location(result[1], 'utf-8', opts and opts.reuse_win) end)
+            vim.schedule(function() vim.lsp.util.jump_to_location(result[1], lsp_encoding(), opts and opts.reuse_win) end)
         elseif vim.islist(result) and #result > 1 then
             vim.schedule(function() self:_show_locations('Definitions', result) end)
         else
-            vim.schedule(function() vim.lsp.util.jump_to_location(result, 'utf-8', opts and opts.reuse_win) end)
+            vim.schedule(function() vim.lsp.util.jump_to_location(result, lsp_encoding(), opts and opts.reuse_win) end)
         end
     end)
 end
@@ -254,11 +254,11 @@ function Finder:implementations()
     vim.lsp.buf_request(0, 'textDocument/implementation', params, function(err, result)
         if err or not result then return end
         if vim.islist(result) and #result == 1 then
-            vim.schedule(function() vim.lsp.util.jump_to_location(result[1], 'utf-8', true) end)
+            vim.schedule(function() vim.lsp.util.jump_to_location(result[1], lsp_encoding(), true) end)
         elseif vim.islist(result) then
             vim.schedule(function() self:_show_locations('Implementations', result) end)
         else
-            vim.schedule(function() vim.lsp.util.jump_to_location(result, 'utf-8', true) end)
+            vim.schedule(function() vim.lsp.util.jump_to_location(result, lsp_encoding(), true) end)
         end
     end)
 end
@@ -269,11 +269,11 @@ function Finder:type_definitions()
     vim.lsp.buf_request(0, 'textDocument/typeDefinition', params, function(err, result)
         if err or not result then return end
         if vim.islist(result) and #result == 1 then
-            vim.schedule(function() vim.lsp.util.jump_to_location(result[1], 'utf-8', true) end)
+            vim.schedule(function() vim.lsp.util.jump_to_location(result[1], lsp_encoding(), true) end)
         elseif vim.islist(result) then
             vim.schedule(function() self:_show_locations('Type Definitions', result) end)
         else
-            vim.schedule(function() vim.lsp.util.jump_to_location(result, 'utf-8', true) end)
+            vim.schedule(function() vim.lsp.util.jump_to_location(result, lsp_encoding(), true) end)
         end
     end)
 end

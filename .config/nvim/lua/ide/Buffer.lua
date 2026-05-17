@@ -565,13 +565,13 @@ end
 --- Get the word under the cursor (vim <cword>).
 ---@return string
 function Buffer:word_under_cursor()
-    return vim.fn.expand('<cword>')
+    return self:call(function() return vim.fn.expand('<cword>') end) or ''
 end
 
 --- Get the WORD under the cursor (vim <cWORD>).
 ---@return string
 function Buffer:WORD_under_cursor()
-    return vim.fn.expand('<cWORD>')
+    return self:call(function() return vim.fn.expand('<cWORD>') end) or ''
 end
 
 --- Prompt to save if modified, then invoke callback.
