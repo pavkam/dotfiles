@@ -171,14 +171,26 @@ function EditingKeymaps:on_register(ctx)
     ctx:keymap('i', '<RightMouse>', '<Esc><RightMouse>', { desc = 'Right-click exits insert' })
 
     -- Format buffer/selection with =
-    ctx:keymap({ 'n', 'x' }, '=', function()
+    ctx:keymap('n', '=', 'editor.format', { desc = 'Format buffer' })
+    ctx:keymap('x', '=', function()
         local buf = Buffer.current()
         if buf:is_normal() then buf:format() end
-    end, { desc = 'Format' })
+    end, { desc = 'Format selection' })
 
     -- Ctrl+/ comment toggle (mirrors VS Code)
     ctx:keymap({ 'n', 'x' }, '<C-/>', 'gcc', { desc = 'Toggle comment', noremap = false })
     ctx:keymap('i', '<C-/>', '<Esc>gcc', { desc = 'Toggle comment', noremap = false })
+
+    -- Move line up/down (Alt+Up/Down, VS Code style)
+    ctx:keymap('n', '<M-j>', 'editor.moveLineDown', { desc = 'Move line down' })
+    ctx:keymap('n', '<M-k>', 'editor.moveLineUp', { desc = 'Move line up' })
+    ctx:keymap('i', '<M-j>', '<Esc>:m .+1<CR>==gi', { desc = 'Move line down' })
+    ctx:keymap('i', '<M-k>', '<Esc>:m .-2<CR>==gi', { desc = 'Move line up' })
+    ctx:keymap('x', '<M-j>', ":m '>+1<CR>gv=gv", { desc = 'Move selection down' })
+    ctx:keymap('x', '<M-k>', ":m '<-2<CR>gv=gv", { desc = 'Move selection up' })
+
+    -- Duplicate line (Ctrl+Shift+D, VS Code style)
+    ctx:keymap('n', '<C-S-d>', 'editor.duplicateLine', { desc = 'Duplicate line' })
 
     -- Ctrl+Shift+K delete line (VS Code style)
     ctx:keymap('n', '<C-S-k>', 'dd', { desc = 'Delete line' })
