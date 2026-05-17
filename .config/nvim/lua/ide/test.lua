@@ -1923,6 +1923,28 @@ function M.run(filter)
         end)
     end)
 
+    suite('Integration: Menu shortcut accuracy', function()
+        test('menu Open shortcut matches actual keymap', function()
+            -- Ctrl+P is bound to file.open
+            local found = false
+            for _, ext in ipairs(IDE:extensions()) do
+                for _, km in ipairs(ext._keymaps or {}) do
+                    if km.lhs == '<C-p>' and km.action == 'file.open' then found = true end
+                end
+            end
+            assert_true(found, 'Ctrl+P should be bound to file.open')
+        end)
+        test('menu Find in Files shortcut matches actual keymap', function()
+            local found = false
+            for _, ext in ipairs(IDE:extensions()) do
+                for _, km in ipairs(ext._keymaps or {}) do
+                    if km.lhs == '<C-f>' and km.action == 'file.grep' then found = true end
+                end
+            end
+            assert_true(found, 'Ctrl+F should be bound to file.grep')
+        end)
+    end)
+
     suite('Integration: KeyManager', function()
         test('keymaps are registered', function()
             assert_true(IDE.keys:count() > 10, 'must have >10 keymaps registered')
