@@ -159,27 +159,33 @@ function Desktop:_show_desktop()
     local area = Window.content_area and Window.content_area() or { width = 80, height = 40 }
     local recent = gather_recent_files()
 
+    -- Show in FramedWindow if available, otherwise use current window
+    local target_win = nil
+    if IDE._window_chrome and IDE._window_chrome._frame and IDE._window_chrome._frame:is_valid() then
+        local frame = IDE._window_chrome._frame
+        frame:set_buffer(buf:id())
+        local win_id = frame:window_id()
+        target_win = Window.get(win_id)
+    else
+        target_win = Window.current()
+        if target_win then target_win:set_buffer(buf) end
+    end
+
+    if target_win and target_win:is_valid() then
+        target_win:set_option('number', false)
+        target_win:set_option('relativenumber', false)
+        target_win:set_option('signcolumn', 'no')
+        target_win:set_option('statuscolumn', '')
+        target_win:set_option('cursorline', false)
+        target_win:set_option('winhl', 'Normal:IDEDesktop,EndOfBuffer:IDEDesktop')
+    end
+
+    -- Mount component with the target window so Canvas uses correct dimensions
     self._component = C.mount(DesktopView, {
         recent_files = recent,
         width = area.width,
         height = area.height,
-    }, buf)
-
-    -- Show in FramedWindow if available
-    if IDE._window_chrome and IDE._window_chrome._frame and IDE._window_chrome._frame:is_valid() then
-        IDE._window_chrome._frame:set_buffer(buf:id())
-    else
-        local win = Window.current()
-        if win then
-            win:set_buffer(buf)
-            win:set_option('cursorline', false)
-            win:set_option('number', false)
-            win:set_option('relativenumber', false)
-            win:set_option('signcolumn', 'no')
-            win:set_option('statuscolumn', '')
-            win:set_option('winhl', 'Normal:IDEDesktop')
-        end
-    end
+    }, buf, target_win)
 
     self._buf = buf
     self._recent_paths = recent
@@ -202,6 +208,17 @@ function Desktop:_hide_desktop()
     end
     self._buf = nil
     self._active = false
+    -- Restore frame window settings that desktop overrode
+    if IDE._window_chrome and IDE._window_chrome._frame and IDE._window_chrome._frame:is_valid() then
+        local win_id = IDE._window_chrome._frame:window_id()
+        local win = Window.get(win_id)
+        if win and win:is_valid() then
+            win:set_option('number', true)
+            win:set_option('relativenumber', true)
+            win:set_option('signcolumn', 'yes:1')
+            win:set_option('cursorline', true)
+        end
+    end
 end
 
 function Desktop:on_register(ctx)
@@ -216,7 +233,10 @@ function Desktop:on_register(ctx)
         end
     end)
 
+    -- Check after other extensions finish loading
     vim.defer_fn(function() check() end, 500)
+    -- Re-check after the frame is created (handles race with window_chrome)
+    vim.defer_fn(function() check() end, 1500)
 
     ctx:hook({ 'BufAdd', 'BufDelete', 'BufWipeout', 'VimEnter' }, function()
         check()
