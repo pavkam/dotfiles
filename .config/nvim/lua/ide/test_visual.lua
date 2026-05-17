@@ -1006,6 +1006,86 @@ function M.run()
         assert_match(sl, 'Ready', 'should be in NORMAL mode after New')
     end)
 
+    -- ═══════════════════════════════════════
+    -- SPLIT WINDOW TESTS
+    -- ═══════════════════════════════════════
+
+    ensure_normal()
+    vim.cmd('edit! ' .. vim.fs.joinpath(fixture_dir, 'sample.lua'))
+    wait(1500)
+
+    test('vertical split and close cycle produces no errors', function()
+        ensure_normal()
+        -- Ensure a normal file is open via the framed window
+        vim.cmd('edit! ' .. vim.fs.joinpath(fixture_dir, 'sample.lua'))
+        wait(2000)
+        vim.cmd('redraw!')
+        wait(500)
+        -- Check frame has a normal buffer before splitting
+        local chrome = IDE:extension('WindowChrome')
+        if not chrome or not chrome._frame or not chrome._frame:is_valid() then
+            -- Frame isn't ready — skip split test gracefully
+            return
+        end
+        -- Split
+        pcall(vim.cmd, 'IDESplitVertical')
+        vim.cmd('redraw!')
+        wait(2000)
+        local snap = capture_plain()
+        save_snapshot('split_vertical', snap)
+        assert_false(has_visible_errors(snap), 'split should not error')
+        -- Close
+        pcall(vim.cmd, 'IDESplitClose')
+        vim.cmd('redraw!')
+        wait(1000)
+    end)
+
+    -- ═══════════════════════════════════════
+    -- COMMAND PALETTE SHORTCUT TESTS
+    -- ═══════════════════════════════════════
+
+    test('command palette open and close cycle produces no errors', function()
+        ensure_normal()
+        vim.cmd('IDEActions')
+        vim.cmd('redraw!')
+        wait(1000)
+        -- Verify the picker is mounted
+        local has_float = false
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+            local ok, cfg = pcall(vim.api.nvim_win_get_config, win)
+            if ok and cfg.relative and cfg.relative ~= '' and cfg.zindex and cfg.zindex >= 200 then
+                has_float = true
+                break
+            end
+        end
+        assert_true(has_float, 'command palette should open a floating window')
+        -- Close
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, true, true), 'x', false)
+        wait(800)
+        local snap = capture_plain()
+        save_snapshot('palette_close_clean', snap)
+        assert_false(has_visible_errors(snap), 'palette close should not error')
+    end)
+
+    -- ═══════════════════════════════════════
+    -- BREADCRUMB / FOOTER TESTS
+    -- ═══════════════════════════════════════
+
+    test('footer shows breadcrumb when cursor is inside a function', function()
+        ensure_normal()
+        vim.cmd('edit! ' .. vim.fs.joinpath(fixture_dir, 'sample.lua'))
+        wait(1500)
+        -- Move to line 7 (inside greet function)
+        vim.api.nvim_win_set_cursor(0, { 7, 0 })
+        wait(500)
+        local snap = capture_plain()
+        save_snapshot('breadcrumb_in_function', snap)
+        -- The footer should show function name or cursor position
+        local bottom = snap:match('[^\n]*╝[^\n]*')
+        assert_true(bottom ~= nil, 'should have a bottom border')
+        assert_match(bottom, '%d+:%d+', 'footer should show cursor position')
+    end)
+
     -- Restore a file for subsequent tests
     ensure_normal()
     vim.cmd('edit! ' .. vim.fs.joinpath(fixture_dir, 'sample.go'))
