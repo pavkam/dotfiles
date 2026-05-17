@@ -53,6 +53,8 @@ function Buffer._evict(id)
     local buf = _cache[id]
     if buf then buf:destroy() end
     _cache[id] = nil
+    -- Clean buf_hooks (method defined later in the module, safe to call at runtime)
+    if Buffer._cleanup_hooks then Buffer._cleanup_hooks(id) end
 end
 
 --- Get the cached instance count (for diagnostics).
@@ -701,6 +703,12 @@ end
 -- Usage: buf:on_enter(fn), buf:on_save(fn), buf:on_modify(fn)
 
 local _buf_hooks = {} -- bufnr → { event → autocmd_id[] }
+
+--- Clean up buf_hooks entries for a deleted buffer.
+--- Called from _evict via deferred setup (avoids forward reference).
+function Buffer._cleanup_hooks(id)
+    _buf_hooks[id] = nil
+end
 
 --- Subscribe to a buffer-scoped event (abstracts autocmds).
 ---@param event string # 'enter', 'leave', 'save', 'modify', 'close', 'filetype'

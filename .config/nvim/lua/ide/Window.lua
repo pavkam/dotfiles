@@ -17,6 +17,12 @@ function Window:init(id)
     self._id = id
 end
 
+--- Evict a window from the cache (called when window is closed).
+---@param id integer
+function Window._evict(id)
+    _cache[id] = nil
+end
+
 --- Get a cached Window instance (identity-stable).
 ---@param id integer
 ---@return Window

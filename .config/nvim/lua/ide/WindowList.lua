@@ -100,6 +100,8 @@ function WindowList:_wire_events()
         callback = function(args)
             local win_id = tonumber(args.match)
             if win_id then
+                local Window = require 'ide.Window'
+                Window._evict(win_id)
                 local win = self._cache[win_id]
                 if win then
                     self:emit('close', win)
