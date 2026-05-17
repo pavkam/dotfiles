@@ -1,6 +1,7 @@
 -- Command Palette Extension: Ctrl+Shift+P to browse and execute all IDE actions.
 -- Lists all registered actions from the ActionRegistry with fuzzy search.
 -- Shows keybinding shortcuts right-aligned for each action.
+-- Recently used actions appear at the top.
 
 local Extension = require 'ide.Extension'
 
@@ -8,6 +9,7 @@ local CommandPalette = Class('CommandPalette', Extension)
 
 function CommandPalette:init()
     Extension.init(self, 'CommandPalette')
+    self._recent = {} -- ordered list of recently executed action names
 end
 
 function CommandPalette:on_register(ctx)
@@ -21,6 +23,19 @@ function CommandPalette:on_register(ctx)
     ctx:command('IDEActions', function()
         self:_open()
     end, { desc = 'Open command palette' })
+end
+
+--- Track an action as recently used.
+---@param name string
+function CommandPalette:_track_recent(name)
+    -- Remove existing entry if present
+    for i, n in ipairs(self._recent) do
+        if n == name then table.remove(self._recent, i); break end
+    end
+    -- Insert at front
+    table.insert(self._recent, 1, name)
+    -- Cap at 10
+    if #self._recent > 10 then self._recent[#self._recent] = nil end
 end
 
 --- Format a key sequence for display.
@@ -88,6 +103,12 @@ function CommandPalette:_open()
 
     local shortcuts = build_shortcut_map()
 
+    -- Build items with MRU sorting: recent actions first, then alphabetical
+    local recent_set = {}
+    for i, name in ipairs(self._recent) do
+        recent_set[name] = i
+    end
+
     local items = {}
     for _, a in ipairs(actions) do
         local cat = a.category or (a.name:match('^([^.]+)%.') or '')
@@ -97,15 +118,26 @@ function CommandPalette:_open()
             icon = icon,
             hint = shortcuts[a.name] or '',
             _action_name = a.name,
+            _recent_rank = recent_set[a.name] or 999,
         }
     end
 
+    -- Sort: recently used first, then alphabetical
+    table.sort(items, function(a, b)
+        if a._recent_rank ~= b._recent_rank then
+            return a._recent_rank < b._recent_rank
+        end
+        return a.text < b.text
+    end)
+
+    local cp = self
     SelectPicker({
         title = '  Command Palette',
         items = items,
         width = 0.5,
         height = math.min(#items + 3, 25),
         on_select = function(item)
+            cp:_track_recent(item._action_name)
             IDE.actions:execute(item._action_name)
         end,
     }):show()

@@ -1833,12 +1833,34 @@ function M.run(filter)
             assert_true(found >= 5, 'should find at least 5 desc-matched keymaps, got ' .. found)
         end)
         test('shortcut format converts modifier keys', function()
-            local cp = require('ide.extensions.command_palette')
-            -- The format_key function is local, but we can verify the output
-            -- by checking that built shortcuts don't contain raw angle brackets
-            -- (This tests the integration path)
             local ext = IDE:extension('CommandPalette')
             assert_not_nil(ext)
+        end)
+        test('MRU tracking records executed actions', function()
+            local ext = IDE:extension('CommandPalette')
+            ext._recent = {} -- clear
+            ext:_track_recent('file.save')
+            ext:_track_recent('editor.undo')
+            assert_eq(#ext._recent, 2)
+            assert_eq(ext._recent[1], 'editor.undo')
+            assert_eq(ext._recent[2], 'file.save')
+        end)
+        test('MRU deduplicates on re-use', function()
+            local ext = IDE:extension('CommandPalette')
+            ext._recent = {}
+            ext:_track_recent('file.save')
+            ext:_track_recent('editor.undo')
+            ext:_track_recent('file.save')
+            assert_eq(#ext._recent, 2)
+            assert_eq(ext._recent[1], 'file.save')
+        end)
+        test('MRU caps at 10 entries', function()
+            local ext = IDE:extension('CommandPalette')
+            ext._recent = {}
+            for i = 1, 15 do
+                ext:_track_recent('action.' .. i)
+            end
+            assert_true(#ext._recent <= 10)
         end)
     end)
 
