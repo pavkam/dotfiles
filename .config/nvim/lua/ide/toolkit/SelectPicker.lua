@@ -51,8 +51,9 @@ function SelectPicker:render_item(item, width)
         { type = 'text', text = icon_part },
         { type = 'text', text = text },
     }
-    if item.hint then
-        local pad = math.max(1, width - #icon_part - #text - #item.hint - 5)
+    if item.hint and item.hint ~= '' then
+        local sw = vim.api.nvim_strwidth
+        local pad = math.max(1, width - sw(icon_part) - sw(text) - sw(item.hint) - 5)
         children[#children + 1] = { type = 'text', text = string.rep(' ', pad) }
         children[#children + 1] = { type = 'text', text = item.hint, hl = 'Comment' }
     end

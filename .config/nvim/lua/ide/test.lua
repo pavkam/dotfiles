@@ -1797,6 +1797,32 @@ function M.run(filter)
         end)
     end)
 
+    suite('SelectPicker: render_item', function()
+        test('render_item returns VNodes with icon and text', function()
+            local SP = require 'ide.toolkit.SelectPicker'
+            local picker = SP({ items = { { text = 'Test', icon = '' } } })
+            local nodes = picker:render_item({ text = 'Hello', icon = '' }, 60)
+            assert_type(nodes, 'table')
+            assert_true(#nodes >= 2, 'must have icon + text nodes')
+            assert_eq(nodes[2].text, 'Hello')
+        end)
+        test('render_item includes hint with correct display-width padding', function()
+            local SP = require 'ide.toolkit.SelectPicker'
+            local picker = SP({ items = {} })
+            local nodes = picker:render_item({ text = 'Save', icon = '󰀻', hint = 'Ctrl+S' }, 60)
+            assert_true(#nodes >= 4, 'must have icon + text + pad + hint nodes')
+            local hint_node = nodes[#nodes]
+            assert_eq(hint_node.text, 'Ctrl+S')
+            assert_eq(hint_node.hl, 'Comment')
+        end)
+        test('render_item with empty hint skips padding', function()
+            local SP = require 'ide.toolkit.SelectPicker'
+            local picker = SP({ items = {} })
+            local nodes = picker:render_item({ text = 'Test', icon = '', hint = '' }, 60)
+            assert_eq(#nodes, 2, 'empty hint should not add padding nodes')
+        end)
+    end)
+
     suite('Integration: KeyManager', function()
         test('keymaps are registered', function()
             assert_true(IDE.keys:count() > 10, 'must have >10 keymaps registered')

@@ -96,7 +96,13 @@ function GrepPicker:on_submit(item)
     self:close()
     vim.schedule(function()
         Buffer.open(item.path)
-        pcall(vim.api.nvim_win_set_cursor, 0, { item.lnum, item.col - 1 })
+        local Position = require 'ide.Position'
+        local Window = require 'ide.Window'
+        local win = Window.current()
+        if win then
+            win:set_cursor(Position(item.lnum, item.col))
+            win:center_cursor()
+        end
         if self._ext_on_select then self._ext_on_select(item.path, item.lnum) end
     end)
 end
