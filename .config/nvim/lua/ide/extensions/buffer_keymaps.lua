@@ -66,25 +66,25 @@ function BufferKeymaps:on_register(ctx)
     end, { desc = 'Manage options' })
 
     -- File navigation shortcuts
-    ctx:keymap('n', '<C-e>', function() IDE.actions:execute('file.explorer') end, { desc = 'File Explorer' })
-    ctx:keymap('n', '<leader>e', function() IDE.actions:execute('file.explorer') end, { desc = 'File Explorer' })
-    ctx:keymap('n', '<C-p>', function() IDE.actions:execute('file.open') end, { desc = 'Open file' })
-    ctx:keymap('n', '<C-b>', function() IDE.actions:execute('view.buffers') end, { desc = 'Buffer picker' })
+    ctx:keymap('n', '<C-e>', 'file.explorer', { desc = 'File Explorer' })
+    ctx:keymap('n', '<leader>e', 'file.explorer', { desc = 'File Explorer' })
+    ctx:keymap('n', '<C-p>', 'file.open', { desc = 'Open file' })
+    ctx:keymap('n', '<C-b>', 'view.buffers', { desc = 'Buffer picker' })
 
-    -- Standard IDE shortcuts
-    ctx:keymap({ 'n', 'i' }, '<C-s>', function()
+    -- Standard IDE shortcuts (action names enable command palette discovery)
+    ctx:keymap('n', '<C-s>', 'file.save', { desc = 'Save file' })
+    ctx:keymap('i', '<C-s>', function()
         require('ide.Window').current():exit_insert()
         IDE.actions:execute('file.save')
     end, { desc = 'Save file' })
 
-    ctx:keymap({ 'n', 'i' }, '<C-S-s>', function()
+    ctx:keymap('n', '<C-S-s>', 'file.saveAs', { desc = 'Save As' })
+    ctx:keymap('i', '<C-S-s>', function()
         require('ide.Window').current():exit_insert()
         IDE.actions:execute('file.saveAs')
     end, { desc = 'Save As' })
 
-    ctx:keymap('n', '<C-f>', function()
-        IDE.actions:execute('file.grep')
-    end, { desc = 'Find in files' })
+    ctx:keymap('n', '<C-f>', 'file.grep', { desc = 'Find in files' })
 
     ctx:keymap('n', '<C-z>', function()
         local buf = IDE.buffers:current()
@@ -96,9 +96,7 @@ function BufferKeymaps:on_register(ctx)
         if buf:is_normal() then buf:redo() end
     end, { desc = 'Redo' })
 
-    ctx:keymap('n', '<C-w>', function()
-        IDE.actions:execute('editor.close')
-    end, { desc = 'Close buffer' })
+    ctx:keymap('n', '<C-w>', 'editor.close', { desc = 'Close buffer' })
 
     -- Navigation history (like VS Code Alt+Left/Right)
     ctx:keymap('n', '<M-Left>', '<C-o>', { desc = 'Go back' })

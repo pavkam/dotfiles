@@ -148,8 +148,8 @@ function EditingKeymaps:on_register(ctx)
     ctx:keymap('n', '<BS>', '<Nop>', { desc = 'Disabled' })
 
     -- Window splits (Shift+Alt to avoid menu hotkey conflicts)
-    ctx:keymap('n', '<M-S-v>', function() IDE.actions:execute('window.splitV') end, { desc = 'Split vertical' })
-    ctx:keymap('n', '<M-S-h>', function() IDE.actions:execute('window.splitH') end, { desc = 'Split horizontal' })
+    ctx:keymap('n', '<M-S-v>', 'window.splitV', { desc = 'Split vertical' })
+    ctx:keymap('n', '<M-S-h>', 'window.splitH', { desc = 'Split horizontal' })
 
     -- Jump list navigation
     -- ]] and [[ left for treesitter textobjects (function/class navigation)
